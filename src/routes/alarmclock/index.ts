@@ -7,7 +7,7 @@ export default class Alarmclock {
 
   handleRequest(req: any, res: any) {
     if (isAuthenticated(req.body.authKey)) {
-      console.log(this.alarmClockData);
+      console.log(JSON.stringify(this.alarmClockData));
       res.json(JSON.stringify(this.alarmClockData));
     } else {
       res.send(`Not authenticated with ${req.body.authKey}`);
@@ -16,10 +16,8 @@ export default class Alarmclock {
 
   async fetchEspDataInterval() {
     fetch('http://192.168.1.110/getESPData')
-      .then(data => data.json())
-      .then(json => {
-        console.log(json);
-        this.alarmClockData = json;
-      });
+      .then(res => res.json())
+      .then(data => (this.alarmClockData = data))
+      .then(() => console.log(this.alarmClockData));
   }
 }

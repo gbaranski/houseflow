@@ -8,4 +8,5 @@ curl --header "Content-Type: application/json" \
   }
 EOF
 ) \
+  -H "Accept: application/json" \
   http://localhost:8080/getAlarmClock

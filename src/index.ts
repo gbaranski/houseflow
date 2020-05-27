@@ -12,7 +12,9 @@ app.use(express.json()); // for parsing application/json
 //   res.json(req.body);
 // });
 
-setInterval(alarmClock.fetchEspDataInterval, 1000);
+setInterval(async () => {
+  alarmClock.fetchEspDataInterval();
+}, 1500);
 
 app.post('/getAlarmClock', (req, res) => alarmClock.handleRequest(req, res));
 
