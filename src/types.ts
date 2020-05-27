@@ -4,3 +4,7 @@ export enum AlarmRequestType {
   SWITCH_STATE = '/setAlarmState',
   TEST_ALARM = '/testAlarm',
 }
+export enum WaterRequestType {
+  GET_DATA = '/getESPData',
+  START_MIXING = '/startMixing',
+}

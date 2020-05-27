@@ -1,12 +1,14 @@
 /* eslint-disable no-console */
 import express from 'express';
 import Alarmclock from './alarmclock';
-import { AlarmRequestType } from './types';
+import Watermixer from './watermixer';
+import { AlarmRequestType, WaterRequestType } from './types';
 
 const httpPort = 8080;
 
 const app = express();
 const alarmClock = new Alarmclock();
+const waterMixer = new Watermixer();
 app.use(express.json()); // for parsing application/json
 
 // app.post('/getAlarmClock', (req, res) => {
@@ -16,6 +18,10 @@ app.use(express.json()); // for parsing application/json
 
 setInterval(async () => {
   alarmClock.fetchEspDataInterval();
+}, 1000);
+
+setInterval(async () => {
+  waterMixer.fetchEspDataInterval();
 }, 1000);
 
 app.post('/getAlarmclockData', (req, res) => {
@@ -32,6 +38,10 @@ app.post('/setAlarmTime', (req, res) => {
 
 app.post('/switchAlarmState', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.SWITCH_STATE);
+});
+
+app.post('/startMixing', (req, res) => {
+  waterMixer.handleRequest(req, res, WaterRequestType.START_MIXING);
 });
 
 app.listen(httpPort, () => console.log(`Example app listening at http://localhost:${httpPort}`));
