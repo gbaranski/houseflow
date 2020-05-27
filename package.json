@@ -1,5 +1,5 @@
 {
-  "name": "stellot-emails-auth",
+  "name": "controlapp-backend",
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
@@ -15,22 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stasbar/stellar-voting.git"
+    "url": "https://github.com/gbaranski/control-home-api"
   },
   "keywords": [
-    "stellar",
-    "smart",
-    "contract",
-    "blockchain",
-    "voting",
-    "election"
+    "smart-home",
+    "controlapp"
   ],
-  "author": "Stanislaw Baranski",
+  "author": "Grzegorz Baranski",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/stasbar/stellar-voting/issues"
-  },
-  "homepage": "https://github.com/stasbar/stellar-voting#readme",
   "dependencies": {
     "@sendgrid/mail": "^7.1.0",
     "cookie-parser": "~1.4.4",

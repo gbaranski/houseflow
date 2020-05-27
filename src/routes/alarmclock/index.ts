@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-import { isAuthenticated } from '../auth';
+import { isAuthenticated } from '../../auth';
 
 export default class Alarmclock {
   private alarmClockData: any;
@@ -17,7 +17,9 @@ export default class Alarmclock {
   async fetchEspDataInterval() {
     fetch('http://192.168.1.110/getESPData')
       .then(res => res.json())
-      .then(data => (this.alarmClockData = data))
+      .then(data => {
+        this.alarmClockData = data;
+      })
       .then(() => console.log(this.alarmClockData));
   }
 }
