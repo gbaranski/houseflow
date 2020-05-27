@@ -10,7 +10,8 @@ export default class Alarmclock {
       console.log(JSON.stringify(this.alarmClockData));
       res.json(JSON.stringify(this.alarmClockData));
     } else {
-      res.send(`Not authenticated with ${req.body.authKey}`);
+      console.log(`${req.ip} was not authenticated`);
+      res.status(401).end();
     }
   }
 
