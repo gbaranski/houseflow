@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
 import fetch from 'node-fetch';
 import { WaterRequestType } from '../types';
 
 import { isAuthenticated } from '../auth';
+import { sendMessage } from '../firebase';
 
 export default class Watermixer {
   private waterMixerData: any;
@@ -12,7 +12,7 @@ export default class Watermixer {
   private url: string = 'http://192.168.1.120';
 
   async handleRequest(req: any, res: any, requestType: WaterRequestType) {
-    if (!isAuthenticated(req.header('authKey'))) {
+    if (!isAuthenticated(req.header('username'), req.header('authKey'))) {
       res.status(401).end();
       return;
     }
@@ -27,6 +27,7 @@ export default class Watermixer {
         res.status(500).end();
         break;
     }
+    sendMessage(req.header('username'), requestType);
   }
 
   async fetchUrl(path: string): Promise<number> {
@@ -58,7 +59,6 @@ export default class Watermixer {
       .then(data => {
         this.waterMixerData = data;
       })
-      .then(() => console.log(this.waterMixerData))
       .finally(() => {
         this.isProcessing = false;
       });

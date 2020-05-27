@@ -1,5 +1,3 @@
-import { keys } from './private/keys';
-
-export function isAuthenticated(key: string) {
-  return keys.authKeys.includes(key);
+export function isAuthenticated(username: string, key: string) {
+  return process.env[username.toUpperCase()] === key;
 }

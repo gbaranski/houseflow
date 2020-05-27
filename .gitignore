@@ -1,2 +1,5 @@
 node_modules
 src/private/keys.ts
+src/private/firebase.json
+.env
+firebase.json

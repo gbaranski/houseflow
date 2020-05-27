@@ -1,9 +1,14 @@
 /* eslint-disable no-console */
 import express from 'express';
+import './firebase';
 import Alarmclock from './alarmclock';
 import Watermixer from './watermixer';
 import { AlarmRequestType, WaterRequestType } from './types';
 
+if (!process.env.GBARANSKI) {
+  throw new Error('missing env AUTH_KEY_GBARANSKI');
+}
+// export GOOGLE_APPLICATION_CREDENTIALS="/Users/gbaranski/code/firebase/firebase.json"
 const httpPort = 8080;
 
 const app = express();
@@ -17,10 +22,12 @@ app.use(express.json()); // for parsing application/json
 // });
 
 setInterval(async () => {
+  // remove async
   alarmClock.fetchEspDataInterval();
 }, 1000);
 
 setInterval(async () => {
+  // remove async
   waterMixer.fetchEspDataInterval();
 }, 1000);
 

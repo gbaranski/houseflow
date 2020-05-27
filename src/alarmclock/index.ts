@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
 import fetch, { Headers } from 'node-fetch';
 import { AlarmRequestType } from '../types';
 
 import { isAuthenticated } from '../auth';
+import { sendMessage } from '../firebase';
 
 export default class Alarmclock {
   private alarmClockData: any;
@@ -12,7 +12,7 @@ export default class Alarmclock {
   private url: string = 'http://192.168.1.110';
 
   async handleRequest(req: any, res: any, requestType: AlarmRequestType) {
-    if (!isAuthenticated(req.header('authKey'))) {
+    if (!isAuthenticated(req.header('username'), req.header('authKey'))) {
       res.status(401).end();
       return;
     }
@@ -36,12 +36,12 @@ export default class Alarmclock {
         res.status(500).end();
         break;
     }
+    sendMessage(req.header('username'), requestType);
   }
 
   async fetchUrl(path: string, headers: Headers): Promise<number> {
     this.isProcessing = true;
     let statusCode = 0;
-    console.log(headers);
     await fetch(this.url + path, {
       method: 'POST',
       headers,
@@ -69,7 +69,6 @@ export default class Alarmclock {
       .then(data => {
         this.alarmClockData = data;
       })
-      .then(() => console.log(this.alarmClockData))
       .finally(() => {
         this.isProcessing = false;
       });
