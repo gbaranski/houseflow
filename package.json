@@ -8,7 +8,7 @@
     "lint:js": "eslint --cache --ext .js,.jsx,.ts,.tsx --format=pretty ./src",
     "lint:prettier": "check-prettier lint",
     "start": "ts-node -r dotenv/config .",
-    "start:dev": "ts-node-dev -r dotenv/config src/main.ts",
+    "start:dev": "ts-node-dev -r dotenv/config .",
     "test": "jest --watchAll",
     "prettier": "prettier -c --write \"**/*\"",
     "format-imports": "import-sort --write '**/*.{js,jsx,ts,tsx}'"

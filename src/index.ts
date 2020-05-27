@@ -1,5 +1,7 @@
+/* eslint-disable no-console */
 import express from 'express';
-import Alarmclock from './routes/alarmclock';
+import Alarmclock from './alarmclock';
+import { AlarmRequestType } from './types';
 
 const httpPort = 8080;
 
@@ -14,8 +16,22 @@ app.use(express.json()); // for parsing application/json
 
 setInterval(async () => {
   alarmClock.fetchEspDataInterval();
-}, 1500);
+}, 1000);
 
-app.post('/getAlarmClock', (req, res) => alarmClock.handleRequest(req, res));
+app.post('/getAlarmclockData', (req, res) => {
+  alarmClock.handleRequest(req, res, AlarmRequestType.GET_DATA);
+});
+
+app.post('/testAlarmclock', (req, res) => {
+  alarmClock.handleRequest(req, res, AlarmRequestType.TEST_ALARM);
+});
+
+app.post('/setAlarmTime', (req, res) => {
+  alarmClock.handleRequest(req, res, AlarmRequestType.SET_TIME);
+});
+
+app.post('/switchAlarmState', (req, res) => {
+  alarmClock.handleRequest(req, res, AlarmRequestType.SWITCH_STATE);
+});
 
 app.listen(httpPort, () => console.log(`Example app listening at http://localhost:${httpPort}`));
