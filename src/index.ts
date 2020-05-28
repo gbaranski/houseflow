@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import express from 'express';
+import cors from 'cors';
 import './firebase';
 import Alarmclock from './alarmclock';
 import Watermixer from './watermixer';
@@ -12,6 +13,9 @@ if (!process.env.GBARANSKI) {
 const httpPort = 8000;
 
 const app = express();
+const whitelist = ['https://control.gbaranski.com', 'http://localhost:3000'];
+app.use(cors({ origin: whitelist }));
+
 const alarmClock = new Alarmclock();
 const waterMixer = new Watermixer();
 app.use(express.json()); // for parsing application/json
