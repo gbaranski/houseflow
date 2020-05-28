@@ -58,6 +58,7 @@ export default class Watermixer {
       .then(res => res.json())
       .then(data => {
         this.waterMixerData = data;
+        console.log(data);
       })
       .finally(() => {
         this.isProcessing = false;

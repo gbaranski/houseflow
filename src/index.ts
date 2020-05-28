@@ -9,7 +9,7 @@ if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
 }
 // export GOOGLE_APPLICATION_CREDENTIALS="/Users/gbaranski/code/firebase/firebase.json"
-const httpPort = 8080;
+const httpPort = 8000;
 
 const app = express();
 const alarmClock = new Alarmclock();

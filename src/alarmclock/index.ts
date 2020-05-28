@@ -68,6 +68,7 @@ export default class Alarmclock {
       .then(res => res.json())
       .then(data => {
         this.alarmClockData = data;
+        console.log(data);
       })
       .finally(() => {
         this.isProcessing = false;
