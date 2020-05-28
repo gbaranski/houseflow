@@ -12,7 +12,7 @@ export default class Watermixer {
   private url: string = 'http://192.168.1.120';
 
   async handleRequest(req: any, res: any, requestType: WaterRequestType) {
-    if (!isAuthenticated(req.header('username'), req.header('authKey'))) {
+    if (!isAuthenticated(req.header('username'), req.header('password'))) {
       res.status(401).end();
       return;
     }

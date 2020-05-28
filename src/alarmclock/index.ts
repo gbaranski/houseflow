@@ -12,7 +12,7 @@ export default class Alarmclock {
   private url: string = 'http://192.168.1.110';
 
   async handleRequest(req: any, res: any, requestType: AlarmRequestType) {
-    if (!isAuthenticated(req.header('username'), req.header('authKey'))) {
+    if (!isAuthenticated(req.header('username'), req.header('password'))) {
       res.status(401).end();
       return;
     }
