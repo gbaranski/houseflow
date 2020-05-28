@@ -31,24 +31,28 @@ setInterval(async () => {
   waterMixer.fetchEspDataInterval();
 }, 1000);
 
-app.post('/getAlarmclockData', (req, res) => {
+app.post('/api/alarmclock/getData', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.GET_DATA);
 });
 
-app.post('/testAlarmclock', (req, res) => {
+app.post('/api/alarmclock/testSiren', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.TEST_ALARM);
 });
 
-app.post('/setAlarmTime', (req, res) => {
+app.post('/api/alarmclock/setTime', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.SET_TIME);
 });
 
-app.post('/switchAlarmState', (req, res) => {
+app.post('/api/alarmclock/switchState', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.SWITCH_STATE);
 });
 
-app.post('/startMixing', (req, res) => {
+app.post('/api/watermixer/start', (req, res) => {
   waterMixer.handleRequest(req, res, WaterRequestType.START_MIXING);
+});
+
+app.post('/api/watermixer/getData', (req, res) => {
+  waterMixer.handleRequest(req, res, WaterRequestType.GET_DATA);
 });
 
 app.listen(httpPort, () => console.log(`Example app listening at http://localhost:${httpPort}`));

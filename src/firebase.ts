@@ -1,7 +1,9 @@
 import * as admin from 'firebase-admin';
 
+const serviceAccount = require('./firebaseConfig.json');
+
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+  credential: admin.credential.cert(serviceAccount),
 });
 
 export function sendMessage(username: string, requestTypeString: string) {
