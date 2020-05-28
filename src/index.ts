@@ -35,6 +35,10 @@ setInterval(async () => {
   waterMixer.fetchEspDataInterval();
 }, 1000);
 
+app.get('/', (req, res) => {
+  res.send('Hello from API server');
+});
+
 app.post('/api/alarmclock/getData', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.GET_DATA);
 });

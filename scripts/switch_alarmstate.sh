@@ -7,5 +7,4 @@ curl -v \
   -H "Accept: application/json" \
   -H "username: $username" \
   -H "authKey: $authKey" \
-  -H "state: $state" \
-  http://localhost:8080/switchAlarmState
+  https://api.gbaranski.com:8230/api/alarmclock/getData
