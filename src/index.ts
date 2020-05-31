@@ -5,6 +5,7 @@ import './firebase';
 import Alarmclock from './alarmclock';
 import Watermixer from './watermixer';
 import { AlarmRequestType, WaterRequestType } from './types';
+import { isAuthenticated } from './auth';
 
 if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
@@ -37,6 +38,20 @@ setInterval(async () => {
 
 app.get('/', (req, res) => {
   res.send('Hello from API server');
+});
+
+app.post('/api/login', (req, res) => {
+  const username = req.header('username');
+  const password = req.header('password');
+  if (username && password) {
+    if (isAuthenticated(username, password)) {
+      res.send(200).end();
+    } else {
+      res.send(401).end();
+    }
+  } else {
+    res.send(401).end();
+  }
 });
 
 app.post('/api/alarmclock/getData', (req, res) => {
