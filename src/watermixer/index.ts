@@ -22,12 +22,12 @@ export default class Watermixer {
         break;
       case WaterRequestType.START_MIXING:
         await res.status(await this.fetchUrl(WaterRequestType.START_MIXING)).end();
+        sendMessage(req.header('username'), requestType);
         break;
       default:
         res.status(500).end();
         break;
     }
-    sendMessage(req.header('username'), requestType);
   }
 
   async fetchUrl(path: string): Promise<number> {

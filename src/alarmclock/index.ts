@@ -23,20 +23,22 @@ export default class Alarmclock {
         break;
       case AlarmRequestType.TEST_ALARM:
         await res.status(await this.fetchUrl(AlarmRequestType.TEST_ALARM, headers)).end();
+        sendMessage(req.header('username'), requestType);
         break;
       case AlarmRequestType.SET_TIME:
         headers.append('time', req.header('time'));
         await res.status(await this.fetchUrl(AlarmRequestType.SET_TIME, headers)).end();
+        sendMessage(req.header('username'), requestType);
         break;
       case AlarmRequestType.SWITCH_STATE:
         headers.append('state', req.header('state'));
         await res.status(await this.fetchUrl(AlarmRequestType.SWITCH_STATE, headers)).end();
+        sendMessage(req.header('username'), requestType);
         break;
       default:
         res.status(500).end();
         break;
     }
-    sendMessage(req.header('username'), requestType);
   }
 
   async fetchUrl(path: string, headers: Headers): Promise<number> {
