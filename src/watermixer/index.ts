@@ -59,9 +59,10 @@ export default class Watermixer {
     }
     this.isProcessing = true;
     fetch(this.url + WaterRequestType.GET_DATA)
-      .then(response => {
-        this.waterMixerData = response.json();
-        console.log(`Fetched watermixer data with response ${response.status}`);
+    .then(res => res.json())
+    .then(data => {
+        this.waterMixerData = data;
+        console.log('Fetched watermixer data');
       })
       .finally(() => {
         this.isProcessing = false;

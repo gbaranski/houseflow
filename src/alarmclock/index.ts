@@ -75,9 +75,10 @@ export default class Alarmclock {
     }
     this.isProcessing = true;
     fetch(this.url + AlarmRequestType.GET_DATA)
-      .then(response => {
-        this.alarmClockData = response.json();
-        console.log(`Fetched alarmclock data with response ${response.status}`);
+      .then(res => res.json())
+      .then(data => {
+        this.alarmClockData = data;
+        console.log(`Fetched alarmclock data`);
       })
       .finally(() => {
         this.isProcessing = false;
