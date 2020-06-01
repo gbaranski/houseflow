@@ -13,9 +13,11 @@ export default class Watermixer {
 
   async handleRequest(req: any, res: any, requestType: WaterRequestType) {
     if (!isAuthenticated(req.header('username'), req.header('password'))) {
+      console.log(`${req.ip} with ${req.hostname} on ${requestType} not authenticated`);
       res.status(401).end();
       return;
     }
+    console.log(`${req.ip} with ${req.hostname} on ${requestType} authenticated`);
     switch (requestType) {
       case WaterRequestType.GET_DATA:
         res.json(JSON.stringify(this.waterMixerData));

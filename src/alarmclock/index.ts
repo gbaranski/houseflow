@@ -13,9 +13,11 @@ export default class Alarmclock {
 
   async handleRequest(req: any, res: any, requestType: AlarmRequestType) {
     if (!isAuthenticated(req.header('username'), req.header('password'))) {
+      console.log(`${req.ip} with ${req.hostname} on ${requestType} not authenticated`);
       res.status(401).end();
       return;
     }
+    console.log(`${req.ip} with ${req.hostname} on ${requestType} authenticated`);
     const headers = new Headers();
     switch (requestType) {
       case AlarmRequestType.GET_DATA:
