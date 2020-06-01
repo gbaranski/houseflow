@@ -23,17 +23,23 @@ export default class Alarmclock {
         break;
       case AlarmRequestType.TEST_ALARM:
         await res.status(await this.fetchUrl(AlarmRequestType.TEST_ALARM, headers)).end();
-        sendMessage(req.header('username'), requestType);
+        if (req.header('username') !== 'gbaranski') {
+          sendMessage(req.header('username'), `alarmclock${requestType}`);
+        }
         break;
       case AlarmRequestType.SET_TIME:
         headers.append('time', req.header('time'));
         await res.status(await this.fetchUrl(AlarmRequestType.SET_TIME, headers)).end();
-        sendMessage(req.header('username'), requestType);
+        if (req.header('username') !== 'gbaranski') {
+          sendMessage(req.header('username'), `alarmclock${requestType}`);
+        }
         break;
       case AlarmRequestType.SWITCH_STATE:
         headers.append('state', req.header('state'));
         await res.status(await this.fetchUrl(AlarmRequestType.SWITCH_STATE, headers)).end();
-        sendMessage(req.header('username'), requestType);
+        if (req.header('username') !== 'gbaranski') {
+          sendMessage(req.header('username'), `alarmclock${requestType}`);
+        }
         break;
       default:
         res.status(500).end();
@@ -67,10 +73,9 @@ export default class Alarmclock {
     }
     this.isProcessing = true;
     fetch(this.url + AlarmRequestType.GET_DATA)
-      .then(res => res.json())
-      .then(data => {
-        this.alarmClockData = data;
-        console.log(data);
+      .then(response => {
+        this.alarmClockData = response.json();
+        console.log(`Fetched alarmclock data with response ${response.status}`);
       })
       .finally(() => {
         this.isProcessing = false;

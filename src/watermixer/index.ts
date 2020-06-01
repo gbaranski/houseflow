@@ -22,7 +22,9 @@ export default class Watermixer {
         break;
       case WaterRequestType.START_MIXING:
         await res.status(await this.fetchUrl(WaterRequestType.START_MIXING)).end();
-        sendMessage(req.header('username'), requestType);
+        if (req.header('username') !== 'gbaranski') {
+          sendMessage(req.header('username'), `watermixer${requestType}`);
+        }
         break;
       default:
         res.status(500).end();
@@ -55,10 +57,9 @@ export default class Watermixer {
     }
     this.isProcessing = true;
     fetch(this.url + WaterRequestType.GET_DATA)
-      .then(res => res.json())
-      .then(data => {
-        this.waterMixerData = data;
-        console.log(data);
+      .then(response => {
+        this.waterMixerData = response.json();
+        console.log(`Fetched watermixer data with response ${response.status}`);
       })
       .finally(() => {
         this.isProcessing = false;
