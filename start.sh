@@ -1,1 +1,1 @@
-1 npm start 2>&1 | tee logs/log1.txt
+docker run -p 8000:8000 -d gbaranski/control-api
