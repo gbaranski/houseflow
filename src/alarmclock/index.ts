@@ -79,6 +79,8 @@ export default class Alarmclock {
       .then(data => {
         this.alarmClockData = data;
         console.log(`Fetched alarmclock data`);
+      }).catch(error => {
+        console.log("Error while fetching alarmclock", error)
       })
       .finally(() => {
         this.isProcessing = false;
