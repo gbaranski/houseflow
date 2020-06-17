@@ -1,11 +1,13 @@
 import fetch, { Headers } from 'node-fetch';
-import { AlarmRequestType } from '../types';
+import { AlarmRequestType, AlarmclockData } from '../types';
 
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
 
 export default class Alarmclock {
-  private alarmClockData: any;
+  private data: any;
+
+  private temperaturesArr: number[] = [];
 
   private isProcessing: boolean = false;
 
@@ -21,7 +23,7 @@ export default class Alarmclock {
     const headers = new Headers();
     switch (requestType) {
       case AlarmRequestType.GET_DATA:
-        res.json(JSON.stringify(this.alarmClockData));
+        res.json(JSON.stringify(this.data));
         break;
       case AlarmRequestType.TEST_ALARM:
         await res.status(await this.fetchUrl(AlarmRequestType.TEST_ALARM, headers)).end();
@@ -71,16 +73,24 @@ export default class Alarmclock {
   async fetchEspDataInterval() {
     if (this.isProcessing) {
       console.log('Connection overloaded');
+      this.temperaturesArr.push(this.data);
       return;
     }
     this.isProcessing = true;
     fetch(this.url + AlarmRequestType.GET_DATA)
       .then(res => res.json())
-      .then(data => {
-        this.alarmClockData = data;
-        console.log(`Fetched alarmclock data`);
-      }).catch(error => {
-        console.log("Error while fetching alarmclock", error)
+      .then((data: AlarmclockData) => {
+        this.data = data;
+        this.temperaturesArr.push(data.temperature);
+
+        const secondsInDay = 86400;
+        if (this.temperaturesArr.length > secondsInDay) {
+          this.temperaturesArr.shift();
+        }
+        console.log('Fetched alarmclock data');
+      })
+      .catch(error => {
+        console.log('Error while fetching alarmclock', error);
       })
       .finally(() => {
         this.isProcessing = false;
