@@ -4,10 +4,12 @@ import { AlarmRequestType, AlarmclockData } from '../types';
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
 
+const SECONDS_IN_DAY = 86400;
+
 export default class Alarmclock {
   private data: any;
 
-  private temperaturesArr: number[] = [];
+  private temperaturesArr: number[] = new Array(SECONDS_IN_DAY);
 
   private isProcessing: boolean = false;
 
@@ -76,6 +78,7 @@ export default class Alarmclock {
   async fetchEspDataInterval() {
     if (this.isProcessing) {
       console.log('Connection overloaded');
+      this.temperaturesArr.shift();
       this.temperaturesArr.push(this.data);
       return;
     }
@@ -84,12 +87,8 @@ export default class Alarmclock {
       .then(res => res.json())
       .then((data: AlarmclockData) => {
         this.data = data;
+        this.temperaturesArr.shift();
         this.temperaturesArr.push(data.temperature);
-
-        const secondsInDay = 86400;
-        if (this.temperaturesArr.length > secondsInDay) {
-          this.temperaturesArr.shift();
-        }
         console.log('Fetched alarmclock data');
       })
       .catch(error => {
