@@ -1,5 +1,6 @@
 export enum AlarmRequestType {
   GET_DATA = '/getESPData',
+  GET_TEMP_ARRAY = '/getTempArray',
   SET_TIME = '/setAlarm',
   SWITCH_STATE = '/setAlarmState',
   TEST_ALARM = '/testAlarm',

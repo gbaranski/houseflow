@@ -25,6 +25,9 @@ export default class Alarmclock {
       case AlarmRequestType.GET_DATA:
         res.json(JSON.stringify(this.data));
         break;
+      case AlarmRequestType.GET_TEMP_ARRAY:
+        res.json(JSON.stringify(this.temperaturesArr));
+        break;
       case AlarmRequestType.TEST_ALARM:
         await res.status(await this.fetchUrl(AlarmRequestType.TEST_ALARM, headers)).end();
         if (req.header('username') !== 'gbaranski') {

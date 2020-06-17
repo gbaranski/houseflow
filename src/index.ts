@@ -58,6 +58,10 @@ app.post('/api/alarmclock/getData', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.GET_DATA);
 });
 
+app.post('/api/alarmclock/getTempArray', (req, res) => {
+  alarmClock.handleRequest(req, res, AlarmRequestType.GET_TEMP_ARRAY);
+});
+
 app.post('/api/alarmclock/testSiren', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.TEST_ALARM);
 });
