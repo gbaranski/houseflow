@@ -14,7 +14,7 @@ if (!process.env.GBARANSKI) {
 const httpPort = 8000;
 
 const app = express();
-const whitelist = ['https://control.gbaranski.com', 'http://localhost:3000'];
+const whitelist = ['https://control.gbaranski.com', 'http://localhost:3000', '*'];
 app.use(cors({ origin: whitelist }));
 
 const alarmClock = new Alarmclock();
