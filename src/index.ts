@@ -3,9 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import './firebase';
 import Alarmclock from './alarmclock';
-import Watermixer from './watermixer';
 import { AlarmRequestType, WaterRequestType } from './types';
 import { isAuthenticated } from './auth';
+import { waterMixerHandleRequest, waterMixerFetchEspDataInterval } from './watermixer';
 
 if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
@@ -18,7 +18,6 @@ const whitelist = ['https://control.gbaranski.com', 'http://localhost:3000', '*'
 app.use(cors({ origin: whitelist }));
 
 const alarmClock = new Alarmclock();
-const waterMixer = new Watermixer();
 app.use(express.json()); // for parsing application/json
 
 // app.post('/getAlarmClock', (req, res) => {
@@ -33,7 +32,7 @@ setInterval(async () => {
 
 setInterval(async () => {
   // remove async
-  waterMixer.fetchEspDataInterval();
+  waterMixerFetchEspDataInterval();
 }, 1000);
 
 app.get('/', (req, res) => {
@@ -75,11 +74,11 @@ app.post('/alarmclock/switchState', (req, res) => {
 });
 
 app.post('/watermixer/start', (req, res) => {
-  waterMixer.handleRequest(req, res, WaterRequestType.START_MIXING);
+  waterMixerHandleRequest(req, res, WaterRequestType.START_MIXING);
 });
 
 app.post('/watermixer/getData', (req, res) => {
-  waterMixer.handleRequest(req, res, WaterRequestType.GET_DATA);
+  waterMixerHandleRequest(req, res, WaterRequestType.GET_DATA);
 });
 
 app.listen(httpPort, () => console.log(`Example app listening at http://localhost:${httpPort}`));

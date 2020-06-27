@@ -1,11 +1,11 @@
 import express from 'express';
 import fetch, { Headers } from 'node-fetch';
+import { TempArray } from '@gbaranski/types';
 import { AlarmRequestType, AlarmclockData } from '../types';
 
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
 import { getIp } from '../helpers';
-import { TempArray } from '@gbaranski/types';
 
 const SECONDS_IN_DAY = 86400;
 
