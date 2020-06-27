@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
   res.send('Hello from API server');
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/login', (req, res) => {
   const username = req.header('username');
   const password = req.header('password');
   if (username && password) {
@@ -54,31 +54,31 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-app.post('/api/alarmclock/getData', (req, res) => {
+app.post('/alarmclock/getData', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.GET_DATA);
 });
 
-app.post('/api/alarmclock/getTempArray', (req, res) => {
+app.post('/alarmclock/getTempArray', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.GET_TEMP_ARRAY);
 });
 
-app.post('/api/alarmclock/testSiren', (req, res) => {
+app.post('/alarmclock/testSiren', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.TEST_ALARM);
 });
 
-app.post('/api/alarmclock/setTime', (req, res) => {
+app.post('/alarmclock/setTime', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.SET_TIME);
 });
 
-app.post('/api/alarmclock/switchState', (req, res) => {
+app.post('/alarmclock/switchState', (req, res) => {
   alarmClock.handleRequest(req, res, AlarmRequestType.SWITCH_STATE);
 });
 
-app.post('/api/watermixer/start', (req, res) => {
+app.post('/watermixer/start', (req, res) => {
   waterMixer.handleRequest(req, res, WaterRequestType.START_MIXING);
 });
 
-app.post('/api/watermixer/getData', (req, res) => {
+app.post('/watermixer/getData', (req, res) => {
   waterMixer.handleRequest(req, res, WaterRequestType.GET_DATA);
 });
 
