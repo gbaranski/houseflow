@@ -1,8 +1,10 @@
+import express from 'express';
 import fetch from 'node-fetch';
 import { WaterRequestType } from '../types';
 
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
+import { getIp } from '../helpers';
 
 export default class Watermixer {
   private waterMixerData: any;
@@ -11,13 +13,15 @@ export default class Watermixer {
 
   private url: string = 'http://192.168.1.120';
 
-  async handleRequest(req: any, res: any, requestType: WaterRequestType) {
-    if (!isAuthenticated(req.header('username'), req.header('password'))) {
-      console.log(`${req.ip} with ${req.hostname} on ${requestType} not authenticated`);
+  async handleRequest(req: express.Request, res: express.Response, requestType: WaterRequestType) {
+    if (!isAuthenticated(req.header('username') || '', req.header('password') || '')) {
+      console.log(
+        `${getIp(req)} with ${req.get('user-agent')} on ${requestType} not authenticated`,
+      );
       res.status(401).end();
       return;
     }
-    console.log(`${req.ip} with ${req.hostname} on ${requestType} authenticated`);
+    console.log(`${getIp(req)} with ${req.get('user-agent')} on ${requestType} authenticated`);
     switch (requestType) {
       case WaterRequestType.GET_DATA:
         res.json(JSON.stringify(this.waterMixerData));
@@ -25,7 +29,7 @@ export default class Watermixer {
       case WaterRequestType.START_MIXING:
         await res.status(await this.fetchUrl(WaterRequestType.START_MIXING)).end();
         if (req.header('username') !== 'gbaranski') {
-          sendMessage(req.header('username'), `watermixer${requestType}`);
+          sendMessage(req.header('username') || '', `watermixer${requestType}`);
         }
         break;
       default:
@@ -59,8 +63,8 @@ export default class Watermixer {
     }
     this.isProcessing = true;
     fetch(this.url + WaterRequestType.GET_DATA)
-    .then(res => res.json())
-    .then(data => {
+      .then(res => res.json())
+      .then(data => {
         this.waterMixerData = data;
         console.log('Fetched watermixer data');
       })

@@ -1,8 +1,10 @@
+import express from 'express';
 import fetch, { Headers } from 'node-fetch';
 import { AlarmRequestType, AlarmclockData } from '../types';
 
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
+import { getIp } from '../helpers';
 
 const SECONDS_IN_DAY = 86400;
 
@@ -15,13 +17,15 @@ export default class Alarmclock {
 
   private url: string = 'http://192.168.1.110';
 
-  async handleRequest(req: any, res: any, requestType: AlarmRequestType) {
-    if (!isAuthenticated(req.header('username'), req.header('password'))) {
-      console.log(`${req.ip} with ${req.hostname} on ${requestType} not authenticated`);
+  async handleRequest(req: express.Request, res: express.Response, requestType: AlarmRequestType) {
+    if (!isAuthenticated(req.header('username') || '', req.header('password') || '')) {
+      console.log(
+        `${getIp(req)} with ${req.get('user-agent')} on ${requestType} not authenticated`,
+      );
       res.status(401).end();
       return;
     }
-    console.log(`${req.ip} with ${req.hostname} on ${requestType} authenticated`);
+    console.log(`${getIp(req)} with ${req.get('user-agent')} on ${requestType} authenticated`);
     const headers = new Headers();
     switch (requestType) {
       case AlarmRequestType.GET_DATA:
@@ -33,21 +37,21 @@ export default class Alarmclock {
       case AlarmRequestType.TEST_ALARM:
         await res.status(await this.fetchUrl(AlarmRequestType.TEST_ALARM, headers)).end();
         if (req.header('username') !== 'gbaranski') {
-          sendMessage(req.header('username'), `alarmclock${requestType}`);
+          sendMessage(req.header('username') || '', `alarmclock${requestType}`);
         }
         break;
       case AlarmRequestType.SET_TIME:
-        headers.append('time', req.header('time'));
+        headers.append('time', req.header('time') || '');
         await res.status(await this.fetchUrl(AlarmRequestType.SET_TIME, headers)).end();
         if (req.header('username') !== 'gbaranski') {
-          sendMessage(req.header('username'), `alarmclock${requestType}`);
+          sendMessage(req.header('username') || '', `alarmclock${requestType}`);
         }
         break;
       case AlarmRequestType.SWITCH_STATE:
-        headers.append('state', req.header('state'));
+        headers.append('state', req.header('state') || '');
         await res.status(await this.fetchUrl(AlarmRequestType.SWITCH_STATE, headers)).end();
         if (req.header('username') !== 'gbaranski') {
-          sendMessage(req.header('username'), `alarmclock${requestType}`);
+          sendMessage(req.header('username') || '', `alarmclock${requestType}`);
         }
         break;
       default:
