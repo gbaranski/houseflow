@@ -5,13 +5,14 @@ import { AlarmRequestType, AlarmclockData } from '../types';
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
 import { getIp } from '../helpers';
+import { TempArray } from '@gbaranski/types';
 
 const SECONDS_IN_DAY = 86400;
 
 export default class Alarmclock {
   private data: any;
 
-  private temperaturesArr: number[] = new Array(SECONDS_IN_DAY);
+  private temperaturesArr: TempArray[] = new Array(SECONDS_IN_DAY);
 
   private isProcessing: boolean = false;
 
@@ -83,7 +84,7 @@ export default class Alarmclock {
     if (this.isProcessing) {
       console.log('Connection overloaded');
       this.temperaturesArr.shift();
-      this.temperaturesArr.push(this.data);
+      this.temperaturesArr.push({ unixTime: new Date().getTime(), temp: this.data.temperature });
       return;
     }
     this.isProcessing = true;
@@ -92,7 +93,7 @@ export default class Alarmclock {
       .then((data: AlarmclockData) => {
         this.data = data;
         this.temperaturesArr.shift();
-        this.temperaturesArr.push(data.temperature);
+        this.temperaturesArr.push({ unixTime: new Date().getTime(), temp: this.data.temperature });
         console.log('Fetched alarmclock data');
       })
       .catch(error => {

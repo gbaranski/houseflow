@@ -24,6 +24,7 @@
   "author": "Grzegorz Baranski",
   "license": "ISC",
   "dependencies": {
+    "@gbaranski/types": "^1.1.3",
     "@sendgrid/mail": "^7.1.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
