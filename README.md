@@ -1,4 +1,9 @@
 # Control-home API server
+Build image
+```
+docker build -t <your username>/node-web-app .
+```
+
 Start server
 ```
 sudo chmod +x start.sh
