@@ -20,38 +20,48 @@ Verify username and password
 ```
 POST /api/login
 ```
+
+Get device status
+```
+GET /getDeviceStatus
+```
+Get requests history
+```
+GET /getHistory
+```
+
 # Alarmclock
 Get data // To change to GET request
 ```
-POST /api/alarmclock/getData
+POST /alarmclock/getData
 
 ```
 Get temperatures array
 ```
-POST /api/alarmclock/getTempArray
+POST /alarmclock/getTempArray
 ```
 Test alarmclock siren
 ```
-POST /api/alarmclock/testSiren
+POST /alarmclock/testSiren
 ```
 Set time
 ```
-POST /api/alarmclock/setTime
+POST /alarmclock/setTime
 headers:
 - time
 ```
 Switch state
 ```
-POST /api/alarmclock/switchState
+POST /alarmclock/switchState
 headers:
 - state
 ```
 # Watermixer
 Start mixing
 ```
-POST /api/watermixer/start
+POST /watermixer/start
 ```
 Get data
 ```
-POST /api/watermixer/getData
+POST /watermixer/getData
 ```
