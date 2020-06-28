@@ -5,7 +5,7 @@ import './firebase';
 import { AlarmRequestType, WaterRequestType, RequestHistory } from './types';
 import { isAuthenticated } from './auth';
 import { waterMixerHandleRequest, waterMixerFetchEspDataInterval } from './watermixer';
-import { getHistory, createHistory } from './helpers';
+import { getHistory, createHistory, getIp, getIpStr } from './helpers';
 import { AlarmclockFetchEspDataInterval, AlarmclockHandleRequest } from './alarmclock';
 
 if (!process.env.GBARANSKI) {
@@ -93,6 +93,7 @@ app.post('/alarmclock/testSiren', (req, res) => {
     user: req.header('username') || '',
     requestType: AlarmRequestType.TEST_ALARM,
     date: new Date(),
+    ip: getIpStr(req),
   };
   createHistory(reqHistory);
 });

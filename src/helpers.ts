@@ -11,6 +11,9 @@ export function getIp(req: express.Request) {
     req.connection.remoteAddress
   );
 }
+export function getIpStr(req: express.Request) {
+  return String(getIp(req));
+}
 
 async function createFile() {
   await fs.createFile(historyFile);

@@ -34,4 +34,5 @@ export interface RequestHistory {
   user: string;
   requestType: AlarmRequestType | WaterRequestType;
   date: Date;
+  ip: string;
 }
