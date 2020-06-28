@@ -12,14 +12,12 @@ const SECONDS_IN_HOUR = 3600;
 
 let secondsPassed = SECONDS_IN_HOUR;
 
-const last24HoursUnixStamps = new Array(HOURS_IN_DAY).fill('');
-last24HoursUnixStamps.map(
-  (element, index) => new Date(new Date().getTime() - 60 * 60 * (index + 1) * 1000),
-);
-
-const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY).fill({
-  last24HoursUnixStamps,
-  temp: 0,
+const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY).fill(undefined);
+temperaturesArr.forEach((elem, index) => {
+  temperaturesArr[index] = {
+    unixTime: new Date(new Date().getTime() - 60 * 60 * (index + 1) * 1000).getTime(),
+    temp: 0,
+  };
 });
 
 let data: AlarmclockData;
