@@ -34,6 +34,7 @@
     "express": "~4.17.1",
     "fetch": "^1.1.0",
     "firebase-admin": "^8.12.1",
+    "fs-extra": "^9.0.1",
     "http": "0.0.0",
     "http-errors": "^1.7.3",
     "http-status-codes": "latest",

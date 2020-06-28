@@ -24,3 +24,9 @@ export interface WatermixerData {
   remainingSeconds: string;
   isTimerOn: string;
 }
+
+export interface RequestHistory {
+  user: string;
+  requestType: AlarmRequestType | WaterRequestType;
+  date: Date;
+}
