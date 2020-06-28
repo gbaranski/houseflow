@@ -3,3 +3,4 @@ src/private/keys.ts
 src/private/firebase.json
 .env
 src/firebaseConfig.json
+temp/
