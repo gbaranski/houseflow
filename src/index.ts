@@ -2,10 +2,10 @@
 import express from 'express';
 import cors from 'cors';
 import './firebase';
-import { AlarmRequestType, WaterRequestType, RequestHistory } from './types';
+import { AlarmRequestType, WaterRequestType, RequestHistory } from '@gbaranski/types';
 import { isAuthenticated } from './auth';
 import { waterMixerHandleRequest, waterMixerFetchEspDataInterval } from './watermixer';
-import { getHistory, createHistory, getIp, getIpStr } from './helpers';
+import { getHistory, createHistory, getIpStr } from './helpers';
 import { AlarmclockFetchEspDataInterval, AlarmclockHandleRequest } from './alarmclock';
 
 if (!process.env.GBARANSKI) {
@@ -104,6 +104,7 @@ app.post('/alarmclock/setTime', (req, res) => {
     user: req.header('username') || '',
     requestType: AlarmRequestType.SET_TIME,
     date: new Date(),
+    ip: getIpStr(req),
   };
   createHistory(reqHistory);
 });
@@ -114,6 +115,7 @@ app.post('/alarmclock/switchState', (req, res) => {
     user: req.header('username') || '',
     requestType: AlarmRequestType.SWITCH_STATE,
     date: new Date(),
+    ip: getIpStr(req),
   };
   createHistory(reqHistory);
 });
@@ -124,6 +126,7 @@ app.post('/watermixer/start', (req, res) => {
     user: req.header('username') || '',
     requestType: WaterRequestType.START_MIXING,
     date: new Date(),
+    ip: getIpStr(req),
   };
   createHistory(reqHistory);
 });

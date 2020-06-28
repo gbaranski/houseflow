@@ -1,6 +1,6 @@
 import express from 'express';
 import fs from 'fs-extra';
-import { RequestHistory } from './types';
+import { RequestHistory } from '@gbaranski/types';
 
 const historyFile = './temp/req_history.json';
 

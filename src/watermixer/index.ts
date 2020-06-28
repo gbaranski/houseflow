@@ -1,11 +1,10 @@
 import express from 'express';
 import fetch from 'node-fetch';
-import { WaterRequestType } from '../types';
+import { WatermixerData, WaterRequestType } from '@gbaranski/types';
 
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
 import { getIp } from '../helpers';
-import { WatermixerData } from '@gbaranski/types';
 
 const url: string = 'http://192.168.1.120';
 let isProcessing: boolean = false;

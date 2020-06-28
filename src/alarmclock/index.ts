@@ -1,7 +1,6 @@
 import express from 'express';
 import fetch, { Headers } from 'node-fetch';
-import { TempArray } from '@gbaranski/types';
-import { AlarmRequestType, AlarmclockData } from '../types';
+import { AlarmRequestType, TempArray, AlarmclockData } from '@gbaranski/types';
 
 import { isAuthenticated } from '../auth';
 import { sendMessage } from '../firebase';
