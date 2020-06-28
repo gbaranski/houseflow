@@ -12,7 +12,7 @@ const SECONDS_IN_HOUR = 3600;
 
 let secondsPassed = SECONDS_IN_HOUR;
 
-const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY);
+const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY).fill(0);
 
 let data: AlarmclockData;
 
