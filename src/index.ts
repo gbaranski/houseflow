@@ -72,6 +72,12 @@ app.get('/getHistory', (req, res) => {
   }
   res.json(getHistory());
 });
+app.get('/getDeviceStatus', (req, res) => {
+  if (!isAuthenticated(req.header('username') || '', req.header('password') || '')) {
+    res.send(401).end();
+  }
+  res.json(JSON.stringify(deviceStatus));
+});
 
 app.post('/alarmclock/getData', (req, res) => {
   AlarmclockHandleRequest(req, res, AlarmRequestType.GET_DATA);
