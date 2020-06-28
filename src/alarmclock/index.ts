@@ -12,7 +12,15 @@ const SECONDS_IN_HOUR = 3600;
 
 let secondsPassed = SECONDS_IN_HOUR;
 
-const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY).fill(0);
+const last24HoursUnixStamps = new Array(HOURS_IN_DAY).fill('');
+last24HoursUnixStamps.map(
+  (element, index) => new Date(new Date().getTime() - 60 * 60 * (index + 1) * 1000),
+);
+
+const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY).fill({
+  last24HoursUnixStamps,
+  temp: 0,
+});
 
 let data: AlarmclockData;
 
@@ -95,10 +103,10 @@ export async function AlarmclockFetchEspDataInterval(setStatus: (state: boolean)
     .then(res => res.json())
     .then((_data: AlarmclockData) => {
       data = _data;
-      secondsPassed += 1;
       if (secondsPassed >= SECONDS_IN_HOUR) {
         temperaturesArr.shift();
         temperaturesArr.push({ unixTime: new Date().getTime(), temp: _data.temperature });
+        secondsPassed = 0;
       }
       setStatus(true);
       console.log('Fetched alarmclock data');
