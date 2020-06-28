@@ -2,12 +2,11 @@
 import express from 'express';
 import cors from 'cors';
 import './firebase';
-import Alarmclock from './alarmclock';
 import { AlarmRequestType, WaterRequestType, RequestHistory } from './types';
 import { isAuthenticated } from './auth';
 import { waterMixerHandleRequest, waterMixerFetchEspDataInterval } from './watermixer';
-import { request } from 'http';
 import { getHistory, createHistory } from './helpers';
+import { AlarmclockFetchEspDataInterval, AlarmclockHandleRequest } from './alarmclock';
 
 if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
@@ -19,7 +18,6 @@ const app = express();
 const whitelist = ['https://control.gbaranski.com', 'http://localhost:3000', '*'];
 app.use(cors({ origin: whitelist }));
 
-const alarmClock = new Alarmclock();
 app.use(express.json()); // for parsing application/json
 
 // app.post('/getAlarmClock', (req, res) => {
@@ -29,7 +27,7 @@ app.use(express.json()); // for parsing application/json
 
 setInterval(async () => {
   // remove async
-  alarmClock.fetchEspDataInterval();
+  AlarmclockFetchEspDataInterval();
 }, 1000);
 
 setInterval(async () => {
@@ -62,15 +60,15 @@ app.get('/getHistory', (req, res) => {
 });
 
 app.post('/alarmclock/getData', (req, res) => {
-  alarmClock.handleRequest(req, res, AlarmRequestType.GET_DATA);
+  AlarmclockHandleRequest(req, res, AlarmRequestType.GET_DATA);
 });
 
 app.post('/alarmclock/getTempArray', (req, res) => {
-  alarmClock.handleRequest(req, res, AlarmRequestType.GET_TEMP_ARRAY);
+  AlarmclockHandleRequest(req, res, AlarmRequestType.GET_TEMP_ARRAY);
 });
 
 app.post('/alarmclock/testSiren', (req, res) => {
-  alarmClock.handleRequest(req, res, AlarmRequestType.TEST_ALARM);
+  AlarmclockHandleRequest(req, res, AlarmRequestType.TEST_ALARM);
   const reqHistory: RequestHistory = {
     user: req.header('username') || '',
     requestType: AlarmRequestType.TEST_ALARM,
@@ -80,7 +78,7 @@ app.post('/alarmclock/testSiren', (req, res) => {
 });
 
 app.post('/alarmclock/setTime', (req, res) => {
-  alarmClock.handleRequest(req, res, AlarmRequestType.SET_TIME);
+  AlarmclockHandleRequest(req, res, AlarmRequestType.SET_TIME);
   const reqHistory: RequestHistory = {
     user: req.header('username') || '',
     requestType: AlarmRequestType.SET_TIME,
@@ -90,7 +88,7 @@ app.post('/alarmclock/setTime', (req, res) => {
 });
 
 app.post('/alarmclock/switchState', (req, res) => {
-  alarmClock.handleRequest(req, res, AlarmRequestType.SWITCH_STATE);
+  AlarmclockHandleRequest(req, res, AlarmRequestType.SWITCH_STATE);
   const reqHistory: RequestHistory = {
     user: req.header('username') || '',
     requestType: AlarmRequestType.SWITCH_STATE,
