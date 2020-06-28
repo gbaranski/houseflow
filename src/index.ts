@@ -25,14 +25,28 @@ app.use(express.json()); // for parsing application/json
 //   res.json(req.body);
 // });
 
+const deviceStatus = {
+  alarmclock: false,
+  watermixer: false,
+  gate: false,
+  garage: false,
+};
+
+const setAlarmclockStatus = (state: boolean): void => {
+  deviceStatus.alarmclock = state;
+};
+
+const setWatermixerStatus = (state: boolean): void => {
+  deviceStatus.watermixer = state;
+};
 setInterval(async () => {
   // remove async
-  AlarmclockFetchEspDataInterval();
+  AlarmclockFetchEspDataInterval(setAlarmclockStatus);
 }, 1000);
 
 setInterval(async () => {
   // remove async
-  waterMixerFetchEspDataInterval();
+  waterMixerFetchEspDataInterval(setWatermixerStatus);
 }, 1000);
 
 app.get('/', (req, res) => {

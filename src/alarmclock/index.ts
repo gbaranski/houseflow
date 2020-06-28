@@ -83,7 +83,7 @@ async function fetchURL(path: string, headers: Headers): Promise<number> {
   return statusCode;
 }
 
-export async function AlarmclockFetchEspDataInterval() {
+export async function AlarmclockFetchEspDataInterval(setStatus: (state: boolean) => void) {
   if (isProcessing) {
     console.log('Connection overloaded');
     temperaturesArr.shift();
@@ -101,9 +101,11 @@ export async function AlarmclockFetchEspDataInterval() {
         temperaturesArr.push({ unixTime: new Date().getTime(), temp: _data.temperature });
         secondsPassed = 0;
       }
+      setStatus(true);
       console.log('Fetched alarmclock data');
     })
     .catch(error => {
+      setStatus(false);
       console.log('Error while fetching alarmclock', error);
     })
     .finally(() => {

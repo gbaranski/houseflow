@@ -55,7 +55,7 @@ export async function waterMixerFetchUrl(path: string): Promise<number> {
   return statusCode;
 }
 
-export async function waterMixerFetchEspDataInterval() {
+export async function waterMixerFetchEspDataInterval(setStatus: (state: boolean) => void) {
   if (isProcessing) {
     console.log('Connection overloaded');
     return;
@@ -66,6 +66,11 @@ export async function waterMixerFetchEspDataInterval() {
     .then(data => {
       watermixerData = data;
       console.log('Fetched watermixer data');
+      setStatus(true);
+    })
+    .catch(e => {
+      setStatus(false);
+      console.log(e);
     })
     .finally(() => {
       isProcessing = false;
