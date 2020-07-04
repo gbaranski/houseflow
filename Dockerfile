@@ -1,4 +1,4 @@
-FROM node-alpine
+FROM node:12-alpine AS build
 EXPOSE 8000
 # Create app directory
 WORKDIR /server
