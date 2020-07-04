@@ -80,8 +80,8 @@ async function fetchURL(path: string, headers: Headers): Promise<number> {
       console.log('Success:', _data.status);
       statusCode = _data.status;
     })
-    .catch(error => {
-      console.error('Error:', error);
+    .catch(() => {
+      console.error('Error while fetching alarmclock');
       statusCode = 503;
     });
   isProcessing = false;

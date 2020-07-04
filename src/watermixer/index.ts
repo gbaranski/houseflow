@@ -46,8 +46,8 @@ export async function waterMixerFetchUrl(path: string): Promise<number> {
       console.log('Success:', data.status);
       statusCode = data.status;
     })
-    .catch(error => {
-      console.error('Error:', error);
+    .catch(() => {
+      console.error('Error while fetching watermixer');
       statusCode = 503;
     });
   isProcessing = false;
