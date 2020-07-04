@@ -1,14 +1,6 @@
 # Control-home API server
-Start server
-```
-sudo chmod +x start.sh
-./start.sh
-```
-
-Manually
-```
-docker run -p 8000:8000 -d .
-```
+`docker pull gbaranski19/control-home-api:latest`
+`docker-compose up`
 
 All requests must include username and password headers
 Verify username and password
