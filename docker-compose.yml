@@ -3,6 +3,10 @@ services:
   server:
     container_name: "controlhome-api"
     image: gbaranski19/control-home-api
+    env_file: ./.env
     ports:
       - 8000:8000
     restart: 'unless-stopped'
+    volumes:
+      - ./src/config:/server/src/config
+

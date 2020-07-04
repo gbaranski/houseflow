@@ -2,5 +2,5 @@ node_modules
 src/private/keys.ts
 src/private/firebase.json
 .env
-src/firebaseConfig.json
+firebaseConfig.json
 temp/
