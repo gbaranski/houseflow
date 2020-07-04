@@ -8,5 +8,5 @@ services:
       - 8000:8000
     restart: 'unless-stopped'
     volumes:
-      - ./src/firebaseConfig.json:/server/src/firebaseConfig.json
+      - ${PWD}/src/firebaseConfig.json:/src/firebaseConfig.json
 
