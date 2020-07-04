@@ -1,4 +1,4 @@
-FROM arm32v7/node:12-alpine
+FROM node-alpine AS build
 EXPOSE 8000
 # Create app directory
 WORKDIR /server
@@ -13,4 +13,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+FROM arm32v7/node:12-alpine
+COPY --from=build /server .
 CMD [ "npm", "run", "start" ]
