@@ -1,5 +1,5 @@
-FROM node:12-alpine
-
+FROM arm32v7/node:12-alpine
+EXPOSE 8000
 # Create app directory
 WORKDIR /server
 
