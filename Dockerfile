@@ -2,7 +2,6 @@ FROM node:12-alpine AS build
 EXPOSE 8000
 # Create app directory
 WORKDIR /server
-RUN touch /server/src/firebaseConfig.json
 # Install app dependencies
 COPY package*.json ./
 
@@ -12,6 +11,7 @@ RUN npm install
 
 # Bundle app source
 COPY . .
+RUN touch /server/src/firebaseConfig.json
 
 FROM arm32v7/node:12-alpine
 COPY --from=build /server .
