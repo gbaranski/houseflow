@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  server:
+    container_name: "controlhome-api"
+    image: gbaranski19/control-home-api
+    ports:
+      - 8000:8000
+    restart: 'unless-stopped'
