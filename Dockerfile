@@ -2,7 +2,7 @@ FROM node:12-alpine AS build
 EXPOSE 8000
 # Create app directory
 WORKDIR /server
-
+RUN touch /server/src/firebaseConfig.json
 # Install app dependencies
 COPY package*.json ./
 
