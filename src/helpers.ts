@@ -1,8 +1,5 @@
+/* eslint-disable no-console */
 import express from 'express';
-import fs from 'fs-extra';
-import { RequestHistory } from '@gbaranski/types';
-
-const historyFile = './temp/req_history.json';
 
 export function getIp(req: express.Request) {
   return (
@@ -15,25 +12,19 @@ export function getIpStr(req: express.Request) {
   return String(getIp(req));
 }
 
-async function createFile() {
-  await fs.createFile(historyFile);
-  await fs.writeJson(historyFile, []);
-  return 0;
-}
-
-export async function createHistory(data: RequestHistory) {
-  try {
-    if (!(await fs.pathExists(historyFile))) {
-      await createFile();
-    }
-    const fileData = await fs.readJson(historyFile);
-    fileData.push(data);
-    await fs.outputJson(historyFile, fileData);
-  } catch (e) {
-    console.log(e);
-  }
-}
-
-export function getHistory() {
-  return fs.readJsonSync(historyFile);
+export async function fetchURL(url: string, path: string, headers: Headers): Promise<number> {
+  let statusCode = 0;
+  await fetch(`${url}${path}`, {
+    method: 'POST',
+    headers,
+  })
+    .then(_data => {
+      console.log('Success:', _data.status);
+      statusCode = _data.status;
+    })
+    .catch(() => {
+      console.error(`Error while fetching ${ip}`);
+      statusCode = 503;
+    });
+  return statusCode;
 }
