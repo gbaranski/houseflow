@@ -5,6 +5,7 @@ import { isAuthenticated } from './auth';
 import { alarmclockInterval } from './routes/alarmclock/interval';
 import { watermixerInterval } from './routes/watermixer/interval';
 import { CORS_WHITELIST } from './config';
+import { getIpStr } from './helpers';
 
 const URL_WITHOUT_LOGIN = ['/api/login'];
 
@@ -13,9 +14,16 @@ app.use(cors({ origin: CORS_WHITELIST }));
 app.use(express.json()); // for parsing application/json
 
 app.use((req, res, next): void => {
-  console.log('attempt');
+  console.log(`
+    ====================                     \n
+    IP: ${getIpStr(req)}                     \n
+    User-agent: ${req.get('user-agent')}     \n
+    URL: ${req.url}                          \n
+    HTTPS: ${req.secure}                     \n
+    XHR: ${req.xhr}                          \n
+    ==================== 
+  `);
   if (URL_WITHOUT_LOGIN.includes(req.url)) {
-    console.log('Bypassing login');
     next();
     return;
   }
@@ -23,16 +31,15 @@ app.use((req, res, next): void => {
   const password = req.header('password');
   if (!isAuthenticated(username, password)) {
     res.sendStatus(401);
-    console.log('Unathenticated');
     return;
   } else {
-    console.log('authenticated');
     next();
   }
 });
 
 app.use('/', routes);
 
+console.log('\x1b[36m%s\x1b[0m', 'Starting IoT data fetch interval');
 setInterval(alarmclockInterval, 1000);
 setInterval(watermixerInterval, 1000);
 

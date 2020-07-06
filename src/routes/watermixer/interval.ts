@@ -16,10 +16,9 @@ export async function watermixerInterval(): Promise<void> {
     .then((res): Promise<WatermixerData> => res.json())
     .then((_data): void => {
       data = _data;
-      console.log('Fetched watermixer data');
     })
-    .catch((e): void => {
-      console.log(e);
+    .catch((): void => {
+      console.log('Error when fetching watermixer!');
     })
     .finally((): void => {
       setProcessingWatermixer(false);
