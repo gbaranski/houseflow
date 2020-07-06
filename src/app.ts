@@ -5,7 +5,7 @@ import { isAuthenticated } from './auth';
 import { alarmclockInterval } from './routes/alarmclock/interval';
 import { watermixerInterval } from './routes/watermixer/interval';
 import { CORS_WHITELIST } from './config';
-import { getIpStr } from './helpers';
+import { getIpStr, getCountryStr } from './helpers';
 
 const URL_WITHOUT_LOGIN = ['/api/login'];
 
@@ -22,8 +22,7 @@ app.use((req, res, next): void => {
     IP: ${getIpStr(req)}                     \n
     User-agent: ${req.get('user-agent')}     \n
     URL: ${req.url}                          \n
-    HTTPS: ${req.secure}                     \n
-    XHR: ${req.xhr}                          \n
+    COUNTRY: ${getCountryStr(req)}           \n
     ==================== 
   `,
   );
