@@ -14,15 +14,19 @@ app.use(cors({ origin: CORS_WHITELIST }));
 app.use(express.json()); // for parsing application/json
 
 app.use((req, res, next): void => {
-  console.log(`
-    ====================                     \n
+  console.log(
+    // magenta color
+    '\x1b[35m',
+    `
+    ==================== 
     IP: ${getIpStr(req)}                     \n
     User-agent: ${req.get('user-agent')}     \n
     URL: ${req.url}                          \n
     HTTPS: ${req.secure}                     \n
     XHR: ${req.xhr}                          \n
     ==================== 
-  `);
+  `,
+  );
   if (URL_WITHOUT_LOGIN.includes(req.url)) {
     next();
     return;

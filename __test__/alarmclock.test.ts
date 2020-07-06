@@ -27,6 +27,11 @@ describe('Alarmclock endpoints', () => {
         password: password,
       },
     });
+    const resJson = await JSON.parse(await res.json());
+    const entries = Object.entries(resJson);
+    const realTypeLength = 7; // sorry for hardcoded, but i couldn't get length of interface
+    expect(entries.length).toEqual(realTypeLength);
+
     expect(res.status).toEqual(200);
   });
 });
