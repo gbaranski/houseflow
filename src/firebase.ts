@@ -1,12 +1,13 @@
 import * as admin from 'firebase-admin';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('./firebaseConfig.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-export function sendMessage(username: string, requestTypeString: string) {
+export function sendMessage(username: string, requestTypeString: string): void {
   const message = {
     name: 'Alert',
     data: {
@@ -22,10 +23,11 @@ export function sendMessage(username: string, requestTypeString: string) {
   admin
     .messaging()
     .send(message)
-    .then(response => {
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    .then((response): void => {
       console.log('Successfully sent message:', response);
     })
-    .catch(error => {
+    .catch((error): void => {
       console.log('Error sending message:', error);
     });
 }

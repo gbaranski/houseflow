@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { DeviceStatus, RequestHistory, Devices } from '@gbaranski/types';
+import { DeviceStatus, RequestHistory } from '@gbaranski/types';
 import fs from 'fs-extra';
 
 const deviceStatusPattern = {
@@ -27,13 +27,13 @@ export function getDeviceStatus(): DeviceStatus {
 
 const historyFile = '@/log/req_history.json';
 
-async function createFile() {
+async function createFile(): Promise<0> {
   await fs.createFile(historyFile);
   await fs.writeJson(historyFile, []);
   return 0;
 }
 
-export async function createHistory(data: RequestHistory) {
+export async function createHistory(data: RequestHistory): Promise<void> {
   try {
     if (!(await fs.pathExists(historyFile))) {
       await createFile();
@@ -46,11 +46,11 @@ export async function createHistory(data: RequestHistory) {
   }
 }
 
-export function getHistory() {
+export function getHistory(): RequestHistory[] {
   return fs.readJsonSync(historyFile);
 }
 
-export function setProcessing(newIsProcessing: DeviceStatus) {
+export function setProcessing(newIsProcessing: DeviceStatus): void {
   isProcessing = newIsProcessing;
 }
 

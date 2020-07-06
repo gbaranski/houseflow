@@ -2,11 +2,10 @@
 import express from 'express';
 import cors from 'cors';
 import './firebase';
-import { AlarmRequestType, WaterRequestType, RequestHistory } from '@gbaranski/types';
 import { isAuthenticated } from './auth';
-import { waterMixerHandleRequest, waterMixerFetchEspDataInterval } from './watermixer';
-import { getHistory, createHistory, getIpStr } from './helpers';
-import { AlarmclockFetchEspDataInterval, AlarmclockHandleRequest } from './alarmclock';
+import { alarmclockInterval } from './routes/alarmclock/interval';
+import { watermixerInterval } from './routes/watermixer/interval';
+import { getProcessing } from './routes/globals';
 
 if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
@@ -15,38 +14,32 @@ if (!process.env.GBARANSKI) {
 const httpPort = 8000;
 
 const app = express();
-const whitelist = ['https://control.gbaranski.com', 'http://localhost:3000', '*'];
-app.use(cors({ origin: whitelist }));
+const whitelist = [
+  'https://control.gbaranski.com',
+  'http://localhost:3000',
+  '*',
+];
 
+app.use(cors({ origin: whitelist }));
 app.use(express.json()); // for parsing application/json
 
-// app.post('/getAlarmClock', (req, res) => {
-//   console.log(req.body);
-//   res.json(req.body);
-// });
+app.use((req, res, next): void => {
+  if (req.method !== 'POST') {
+    next();
+    return;
+  }
+  const username = req.header('username');
+  const password = req.header('password');
+  if (!isAuthenticated(username, password)) {
+    res.status(401).end();
+  } else {
+    next();
+  }
+});
 
-const deviceStatus = {
-  alarmclock: false,
-  watermixer: false,
-  gate: false,
-  garage: false,
-};
+setInterval(alarmclockInterval, 1000);
+setInterval(watermixerInterval, 1000);
 
-const setAlarmclockStatus = (state: boolean): void => {
-  deviceStatus.alarmclock = state;
-};
-
-const setWatermixerStatus = (state: boolean): void => {
-  deviceStatus.watermixer = state;
-};
-setInterval(async () => {
-  // remove async
-  AlarmclockFetchEspDataInterval(setAlarmclockStatus);
-}, 1000);
-
-setInterval(async () => {
-  // remove async
-  waterMixerFetchEspDataInterval(setWatermixerStatus);
-}, 1000);
-
-app.listen(httpPort, () => console.log(`Example app listening at http://localhost:${httpPort}`));
+app.listen(httpPort, (): void =>
+  console.log(`API-Server listening at http://localhost:${httpPort}`),
+);

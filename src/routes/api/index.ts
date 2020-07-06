@@ -1,8 +1,10 @@
 import express from 'express';
+import { isAuthenticated } from '../../auth';
+import { getHistory, getDeviceStatus } from '../globals';
 
 const router = express.Router();
 
-router.post('/login', (req, res) => {
+router.post('/login', (req, res): void => {
   const username = req.header('username');
   const password = req.header('password');
   if (username && password) {
@@ -16,18 +18,22 @@ router.post('/login', (req, res) => {
   }
 });
 
-router.get('/getHistory', (req, res) => {
-  if (!isAuthenticated(req.header('username') || '', req.header('password') || '')) {
+router.get('/getHistory', (req, res): void => {
+  if (
+    !isAuthenticated(req.header('username') || '', req.header('password') || '')
+  ) {
     res.send(401).end();
   }
   res.json(getHistory());
 });
 
-router.get('/getDeviceStatus', (req, res) => {
-  if (!isAuthenticated(req.header('username') || '', req.header('password') || '')) {
+router.get('/getDeviceStatus', (req, res): void => {
+  if (
+    !isAuthenticated(req.header('username') || '', req.header('password') || '')
+  ) {
     res.send(401).end();
   }
-  res.json(JSON.stringify(deviceStatus));
+  res.json(JSON.stringify(getDeviceStatus()));
 });
 
 export default router;
