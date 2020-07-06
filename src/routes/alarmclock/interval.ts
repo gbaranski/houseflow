@@ -52,14 +52,10 @@ export async function alarmclockInterval(): Promise<void> {
       console.log('Fetched alarmclock data');
     })
     .catch((error): void => {
-      setDeviceStatus({
-        ...getDeviceStatus(),
-        alarmclock: false,
-      });
       console.log('Error while fetching alarmclock', error);
     })
     .finally((): void => {
-      setProcessingAlarmclock(true);
+      setProcessingAlarmclock(false);
     });
 }
 
