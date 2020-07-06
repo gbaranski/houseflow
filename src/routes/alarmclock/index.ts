@@ -36,7 +36,7 @@ router.post(
         ),
       )
       .end();
-    setProcessingAlarmclock(true);
+    setProcessingAlarmclock(false);
     sendMessage(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.TEST_ALARM}`,

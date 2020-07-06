@@ -36,9 +36,7 @@ export async function alarmclockInterval(): Promise<void> {
   fetch(ALARMCLOCK_URL + AlarmRequestType.GET_DATA)
     .then((res): Promise<AlarmclockData> => res.json())
     .then((_data: AlarmclockData): void => {
-      data = {
-        ..._data,
-      };
+      data = _data;
       if (secondsPassed >= SECONDS_IN_HOUR) {
         temperaturesArr.shift();
         temperaturesArr.push({
