@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { WATERMIXER_URL } from '../../config';
-import { getProcessing } from '../globals';
+import { getProcessing, getDeviceStatus, setDeviceStatus } from '../globals';
 import { WatermixerData, WaterRequestType } from '@gbaranski/types';
 import { setProcessingWatermixer } from '.';
 
@@ -16,9 +16,17 @@ export async function watermixerInterval(): Promise<void> {
     .then((res): Promise<WatermixerData> => res.json())
     .then((_data): void => {
       data = _data;
+      setDeviceStatus({
+        ...getDeviceStatus(),
+        watermixer: false,
+      });
     })
     .catch((): void => {
       console.log('Error when fetching watermixer!');
+      setDeviceStatus({
+        ...getDeviceStatus(),
+        watermixer: false,
+      });
     })
     .finally((): void => {
       setProcessingWatermixer(false);
