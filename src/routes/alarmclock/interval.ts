@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { AlarmRequestType, AlarmclockData, TempArray } from '@gbaranski/types';
-import { getProcessing, setDeviceStatus, getDeviceStatus } from '../globals';
+import { getProcessing } from '../globals';
 import { setProcessingAlarmclock } from '.';
 import { ALARMCLOCK_URL } from '../../config';
 

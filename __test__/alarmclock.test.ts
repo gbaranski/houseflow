@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import fetch from 'node-fetch';
 import { username, password } from './globals';
+import { AlarmclockData, AlarmRequestType } from '@gbaranski/types';
+import { ALARMCLOCK_URL } from '../src/config';
 
 describe('Alarmclock endpoints', () => {
   it('attempting to get alarmclock data with no credentials', async () => {
@@ -56,5 +58,33 @@ describe('Alarmclock endpoints', () => {
       },
     });
     expect(res.status).toEqual(200);
+  });
+  it('attempting to set alarmclck time with invalid credentials', async () => {
+    const res = await fetch('http://localhost:8000/alarmclock/setTime', {
+      method: 'POST',
+      headers: {
+        username: 'randomUsername',
+        password: 'randomPassword',
+        time: '12:30',
+      },
+    });
+    expect(res.status).toEqual(401);
+  });
+  it('attempting to set alarmclck time with valid credentials', async () => {
+    const time = '12:30';
+    const res = await fetch('http://localhost:8000/alarmclock/setTime', {
+      method: 'POST',
+      headers: {
+        username: username,
+        password: password,
+        time,
+      },
+    });
+    expect(res.status).toEqual(200);
+
+    // check if it really set to proper time
+    const getDataRes = await fetch(ALARMCLOCK_URL + AlarmRequestType.GET_DATA);
+    const alarmTimeRes: AlarmclockData = await getDataRes.json();
+    expect(alarmTimeRes.alarmTime).toEqual(time);
   });
 });
