@@ -5,3 +5,4 @@ src/private/firebase.json
 firebaseConfig.json
 temp/
 .DS_Store
+logs/

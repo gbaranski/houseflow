@@ -25,7 +25,7 @@ export function getDeviceStatus(): DeviceStatus {
   return deviceStatus;
 }
 
-const historyFile = '@/log/req_history.json';
+const historyFile = 'logs/req_history.json';
 
 async function createFile(): Promise<0> {
   await fs.createFile(historyFile);

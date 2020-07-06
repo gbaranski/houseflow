@@ -16,7 +16,7 @@ export const setProcessingWatermixer = (state: boolean): void => {
 };
 
 router.post(
-  '/watermixer/start',
+  '/startMixing',
   async (req, res): Promise<void> => {
     const reqHistory: RequestHistory = {
       user: req.header('username') || '',
@@ -26,13 +26,9 @@ router.post(
     };
     createHistory(reqHistory);
 
-    const headers = new Headers();
-
     setProcessingWatermixer(true);
     res
-      .status(
-        await fetchURL(WATERMIXER_URL, WaterRequestType.START_MIXING, headers),
-      )
+      .status(await fetchURL(WATERMIXER_URL, WaterRequestType.START_MIXING))
       .end();
     setProcessingWatermixer(false);
 
@@ -43,7 +39,7 @@ router.post(
   },
 );
 
-router.get('/watermixer/getData', (req, res): void => {
+router.get('/getData', (req, res): void => {
   res.json(JSON.stringify(getData()));
 });
 
