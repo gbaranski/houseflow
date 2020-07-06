@@ -5,7 +5,8 @@
   "scripts": {
     "start": "ts-node -r dotenv/config .",
     "start:dev": "ts-node-dev -r dotenv/config .",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test": "jest --setupFiles dotenv/config"
   },
   "repository": {
     "type": "git",
@@ -73,9 +74,9 @@
     "eslint-plugin-react": "^7.20.3",
     "eslint-plugin-react-hooks": "^4.0.0",
     "eslint-plugin-standard": "^4.0.1",
-    "jest": "^24.8.0",
+    "jest": "^24.9.0",
     "supertest": "^4.0.2",
-    "ts-jest": "^24.0.2",
+    "ts-jest": "^24.3.0",
     "ts-node": "^8.6.2",
     "ts-node-dev": "^1.0.0-pre.43",
     "typescript": "^3.6.3"

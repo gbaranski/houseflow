@@ -7,14 +7,15 @@ const router = express.Router();
 router.post('/login', (req, res): void => {
   const username = req.header('username');
   const password = req.header('password');
-  if (username && password) {
-    if (isAuthenticated(username, password)) {
-      res.send(200).end();
-    } else {
-      res.send(401).end();
-    }
+  if (!username || !password) {
+    res.sendStatus(401);
+    return;
+  }
+
+  if (isAuthenticated(username, password)) {
+    res.sendStatus(200);
   } else {
-    res.send(401).end();
+    res.sendStatus(401);
   }
 });
 
