@@ -4,3 +4,4 @@ src/private/firebase.json
 .env
 firebaseConfig.json
 temp/
+.DS_Store
