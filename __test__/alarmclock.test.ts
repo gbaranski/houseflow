@@ -28,10 +28,33 @@ describe('Alarmclock endpoints', () => {
       },
     });
     const resJson = await JSON.parse(await res.json());
+    console.dir(await resJson);
+
     const entries = Object.entries(resJson);
     const realTypeLength = 7; // sorry for hardcoded, but i couldn't get length of interface
     expect(entries.length).toEqual(realTypeLength);
 
+    expect(res.status).toEqual(200);
+  });
+
+  it('attempting to test alarmclock siren with invalid credentials', async () => {
+    const res = await fetch('http://localhost:8000/alarmclock/testSiren', {
+      method: 'POST',
+      headers: {
+        username: 'randomUsername',
+        password: 'randomPassword',
+      },
+    });
+    expect(res.status).toEqual(401);
+  });
+  it('attempting to test alarmclock siren with valid credentials', async () => {
+    const res = await fetch('http://localhost:8000/alarmclock/testSiren', {
+      method: 'POST',
+      headers: {
+        username: username,
+        password: password,
+      },
+    });
     expect(res.status).toEqual(200);
   });
 });

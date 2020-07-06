@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import express from 'express';
+import fetch, { Headers } from 'node-fetch';
 
 export function getIp(req: express.Request): string | string[] | undefined {
   return (
@@ -15,12 +16,12 @@ export function getIpStr(req: express.Request): string {
 export async function fetchURL(
   url: string,
   path: string,
-  headers: Headers,
+  headers?: Headers,
 ): Promise<number> {
   let statusCode = 0;
   await fetch(`${url}${path}`, {
     method: 'POST',
-    headers,
+    headers: headers ? headers : new Headers(),
   })
     .then(_data => {
       console.log('Success:', _data.status);

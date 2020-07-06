@@ -32,30 +32,24 @@ export async function alarmclockInterval(): Promise<void> {
     });
     return;
   }
+
   setProcessingAlarmclock(true);
-  fetch(ALARMCLOCK_URL + AlarmRequestType.GET_DATA)
-    .then((res): Promise<AlarmclockData> => res.json())
-    .then((_data: AlarmclockData): void => {
-      data = _data;
-      if (secondsPassed >= SECONDS_IN_HOUR) {
-        temperaturesArr.shift();
-        temperaturesArr.push({
-          unixTime: new Date().getTime(),
-          temp: _data.temperature,
-        });
-        secondsPassed = 0;
-      }
-      setDeviceStatus({
-        ...getDeviceStatus(),
-        alarmclock: true,
+  try {
+    const res = await fetch(ALARMCLOCK_URL + AlarmRequestType.GET_DATA);
+    data = await res.json();
+
+    if (secondsPassed >= SECONDS_IN_HOUR) {
+      temperaturesArr.shift();
+      temperaturesArr.push({
+        unixTime: new Date().getTime(),
+        temp: data.temperature,
       });
-    })
-    .catch((): void => {
-      console.log('Error while fetching alarmclock!');
-    })
-    .finally((): void => {
-      setProcessingAlarmclock(false);
-    });
+      secondsPassed = 0;
+    }
+  } catch {
+    console.log('Error while fetching alarmclock');
+  }
+  setProcessingAlarmclock(false);
 }
 
 export function getData(): AlarmclockData {

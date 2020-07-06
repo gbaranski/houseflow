@@ -5,6 +5,7 @@ import { getIpStr, fetchURL } from '../../helpers';
 import { getData, getTempArray } from './interval';
 import { ALARMCLOCK_URL } from '../../config';
 import { sendMessage } from '../../firebase';
+import { Headers } from 'node-fetch';
 
 export const setProcessingAlarmclock = (state: boolean): void => {
   setProcessing({
@@ -26,17 +27,7 @@ router.get('/getTempArray', (req, res): void => {
 router.post(
   '/testSiren',
   async (req, res): Promise<void> => {
-    setProcessingAlarmclock(true);
-    res
-      .status(
-        await fetchURL(
-          ALARMCLOCK_URL,
-          AlarmRequestType.TEST_ALARM,
-          new Headers(),
-        ),
-      )
-      .end();
-    setProcessingAlarmclock(false);
+    res.sendStatus(await fetchURL(ALARMCLOCK_URL, AlarmRequestType.TEST_ALARM));
     sendMessage(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.TEST_ALARM}`,
