@@ -18,7 +18,7 @@ export async function watermixerInterval(): Promise<void> {
       data = _data;
       setDeviceStatus({
         ...getDeviceStatus(),
-        watermixer: false,
+        watermixer: true,
       });
     })
     .catch((): void => {
