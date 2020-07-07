@@ -9,4 +9,5 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ${PWD}/src/firebaseConfig.json:/src/firebaseConfig.json
+      - ${PWD}/logs/req_history.json:/logs/req_history.json
 
