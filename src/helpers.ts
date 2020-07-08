@@ -2,15 +2,12 @@
 import express from 'express';
 import fetch, { Headers } from 'node-fetch';
 
-export function getIp(req: express.Request): string | string[] | undefined {
-  return (
-    req.headers['cf-connecting-ip'] ||
-    req.headers['x-forwarded-for'] ||
-    req.connection.remoteAddress
-  );
-}
 export function getIpStr(req: express.Request): string {
-  return String(getIp(req));
+  return String(req.get('cf-connecting-ip') || req.connection.remoteAddress);
+}
+
+export function getCountryStr(req: express.Request): string {
+  return String(req.header('Cf-Ipcountry'));
 }
 
 export async function fetchURL(

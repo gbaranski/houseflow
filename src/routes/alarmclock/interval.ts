@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { AlarmRequestType, AlarmclockData, TempArray } from '@gbaranski/types';
-import { getProcessing } from '../globals';
+import { getProcessing, setDeviceStatus, getDeviceStatus } from '../globals';
 import { setProcessingAlarmclock } from '.';
 import { ALARMCLOCK_URL } from '../../config';
 
@@ -38,6 +38,11 @@ export async function alarmclockInterval(): Promise<void> {
     const res = await fetch(ALARMCLOCK_URL + AlarmRequestType.GET_DATA);
     data = await res.json();
 
+    setDeviceStatus({
+      ...getDeviceStatus(),
+      alarmclock: true,
+    });
+
     if (secondsPassed >= SECONDS_IN_HOUR) {
       temperaturesArr.shift();
       temperaturesArr.push({
@@ -47,6 +52,10 @@ export async function alarmclockInterval(): Promise<void> {
       secondsPassed = 0;
     }
   } catch {
+    setDeviceStatus({
+      ...getDeviceStatus(),
+      alarmclock: false,
+    });
     console.log('Error while fetching alarmclock');
   }
   setProcessingAlarmclock(false);
