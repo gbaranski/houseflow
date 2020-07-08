@@ -7,8 +7,6 @@ import { watermixerInterval } from './routes/watermixer/interval';
 import { CORS_WHITELIST } from './config';
 import { getIpStr, getCountryStr } from './helpers';
 
-const URL_WITHOUT_LOGIN = ['/api/login'];
-
 const app = express();
 app.use(cors({ origin: CORS_WHITELIST }));
 app.use(express.json()); // for parsing application/json
@@ -26,19 +24,19 @@ app.use((req, res, next): void => {
     ==================== 
   `,
   );
-  if (URL_WITHOUT_LOGIN.includes(req.url)) {
-    next();
-    return;
-  }
-  const username = req.header('username');
-  const password = req.header('password');
-  if (!isAuthenticated(username, password)) {
-    res.sendStatus(401);
-    return;
-  } else {
-    next();
-  }
+  isAuthenticated(req, res, next);
 });
+app.use(
+  (
+    err: { message: string },
+    req: express.Request,
+    res: express.Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _next: express.NextFunction,
+  ): void => {
+    res.status(401).send(err.message);
+  },
+);
 
 app.use('/', routes);
 

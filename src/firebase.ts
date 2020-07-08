@@ -6,15 +6,14 @@ const serviceAccount = require('./firebaseConfig.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://controlhome-7bbcc.firebaseio.com/',
 });
 
-const db = admin.database();
-const ref = db.ref('/');
-const requestsRef = ref.child('/requests');
+const db = admin.firestore();
+const requestsCollection = db.collection('requests');
 
-export function saveRequestToDb(history: RequestHistory): void {
-  requestsRef.push(history);
+export async function saveRequestToDb(history: RequestHistory): Promise<void> {
+  const res = await requestsCollection.add(history);
+  console.log(`Added history to firestore with id: ${res.id}`);
 }
 
 export function sendMessage(username: string, requestTypeString: string): void {
