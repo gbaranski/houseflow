@@ -1,6 +1,6 @@
 import express from 'express';
 import { isAuthenticated } from '../../auth';
-import { getHistory, getDeviceStatus } from '../globals';
+import { getDeviceStatus } from '../globals';
 
 const router = express.Router();
 
@@ -17,15 +17,6 @@ router.post('/login', (req, res): void => {
   } else {
     res.sendStatus(401);
   }
-});
-
-router.get('/getHistory', (req, res): void => {
-  if (
-    !isAuthenticated(req.header('username') || '', req.header('password') || '')
-  ) {
-    res.send(401).end();
-  }
-  res.json(getHistory());
 });
 
 router.get('/getDeviceStatus', (req, res): void => {

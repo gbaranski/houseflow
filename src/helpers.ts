@@ -7,7 +7,7 @@ export function getIpStr(req: express.Request): string {
 }
 
 export function getCountryStr(req: express.Request): string {
-  return String(req.header('Cf-Ipcountry'));
+  return String(req.header('cf-ipcountry'));
 }
 
 export async function fetchURL(

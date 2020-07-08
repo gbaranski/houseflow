@@ -1,11 +1,11 @@
 import express from 'express';
-import { RequestHistory, AlarmRequestType } from '@gbaranski/types';
-import { createHistory, setProcessing, getProcessing } from '../globals';
-import { getIpStr, fetchURL } from '../../helpers';
+import { AlarmRequestType } from '@gbaranski/types';
+import { fetchURL } from '../../helpers';
 import { getData, getTempArray } from './interval';
 import { ALARMCLOCK_URL } from '../../config';
 import { sendMessage } from '../../firebase';
 import { Headers } from 'node-fetch';
+import { setProcessing, getProcessing } from '../globals';
 
 export const setProcessingAlarmclock = (state: boolean): void => {
   setProcessing({
@@ -16,11 +16,11 @@ export const setProcessingAlarmclock = (state: boolean): void => {
 
 const router = express.Router();
 
-router.get('/getData', (req, res): void => {
+router.get('/getData', (req, res: express.Response): void => {
   res.json(JSON.stringify(getData()));
 });
 
-router.get('/getTempArray', (req, res): void => {
+router.get('/getTempArray', (req, res: express.Response): void => {
   res.json(JSON.stringify(getTempArray()));
 });
 
@@ -32,14 +32,6 @@ router.post(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.TEST_ALARM}`,
     );
-
-    const reqHistory: RequestHistory = {
-      user: req.header('username') || '',
-      requestType: AlarmRequestType.TEST_ALARM,
-      date: new Date(),
-      ip: getIpStr(req),
-    };
-    createHistory(reqHistory);
   },
 );
 
@@ -58,28 +50,12 @@ router.post(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.SET_TIME}`,
     );
-
-    const reqHistory: RequestHistory = {
-      user: req.header('username') || '',
-      requestType: AlarmRequestType.SET_TIME,
-      date: new Date(),
-      ip: getIpStr(req),
-    };
-    createHistory(reqHistory);
   },
 );
 
 router.post(
   '/switchState',
   async (req, res): Promise<void> => {
-    const reqHistory: RequestHistory = {
-      user: req.header('username') || '',
-      requestType: AlarmRequestType.SWITCH_STATE,
-      date: new Date(),
-      ip: getIpStr(req),
-    };
-    createHistory(reqHistory);
-
     const headers = new Headers();
     const state = req.header('state');
     if (!state) {
