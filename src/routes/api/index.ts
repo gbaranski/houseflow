@@ -1,5 +1,4 @@
 import express from 'express';
-import { isAuthenticated } from '../../auth';
 import { getDeviceStatus } from '../globals';
 
 const router = express.Router();
