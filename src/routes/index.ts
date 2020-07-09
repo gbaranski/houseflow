@@ -21,7 +21,7 @@ router.use(
       saveRequestToDb({
         user: String(req.get('username')),
         requestPath: req.url,
-        date: new Date(),
+        unixTime: new Date().getTime(),
         ip: getIpStr(req),
         userAgent: String(req.get('user-agent')),
         country: getCountryStr(req),
