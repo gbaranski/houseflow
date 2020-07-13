@@ -22,3 +22,12 @@ export function isAuthenticated(
   validateCredentials(username, password);
   next();
 }
+
+export function authenticateDevice(device: string, token: string): void {
+  if (!token || !device) {
+    throw new Error('No token or device name');
+  }
+  if (token !== process.env[device.toUpperCase()]) {
+    throw new Error('Invalid token or device name');
+  }
+}
