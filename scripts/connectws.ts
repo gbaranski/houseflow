@@ -19,11 +19,12 @@ const rl = readline.createInterface({
   });
 
   const resText = await (await res).text();
-  const ws = new WebSocket(`ws://localhost:${process.env.PORT}`, {
+  const ws = new WebSocket(`ws://localhost:${process.env.PORT}/`, {
     headers: { token: resText },
   });
   ws.on('open', async () => {
     console.log('Logged in');
+    ws.on('message', console.log);
     const recursiveAsyncReadLine = function() {
       rl.question('Command: ', function(answer) {
         if (answer == 'exit' || answer == '^C') {

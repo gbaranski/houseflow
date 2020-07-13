@@ -1,6 +1,8 @@
 import express from 'express';
 import { getDeviceStatus } from '../globals';
 import jwt from 'jsonwebtoken';
+import { authenticateDevice } from '../../auth';
+import wss from '../../index';
 
 const router = express.Router();
 
@@ -13,10 +15,22 @@ router.get('/getDeviceStatus', (req, res): void => {
 });
 
 router.get('/getToken', (req, res): void => {
-  const token = jwt.sign({ foo: 'bar' }, process.env.JWT_KEY as string, {
-    expiresIn: '1h',
+  const device = req.get('device');
+  const reqToken = req.get('token');
+  if (!device || !reqToken) {
+    res.send(400);
+    return;
+  }
+  authenticateDevice(device, reqToken);
+  const token = jwt.sign({ device }, process.env.JWT_KEY as string, {
+    expiresIn: '5m',
   });
+  res.type('html');
   res.send(token);
+});
+
+router.get('/getClients', (req, res): void => {
+  res.send(JSON.stringify(wss.clients));
 });
 
 export default router;

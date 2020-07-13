@@ -46,7 +46,7 @@ app.use(
 app.use('/', routes);
 
 console.log('\x1b[36m%s\x1b[0m', 'Starting IoT data fetch interval');
-setInterval(alarmclockInterval, 1000);
+// setInterval(alarmclockInterval, 1000);
 setInterval(watermixerInterval, 1000);
 
 export default app;
