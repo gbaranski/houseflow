@@ -70,7 +70,7 @@ export const verifyClient = (
         callback(false, 401, 'Unauthorized');
         console.log('client has invalid token');
       } else {
-        info.req.headers.device = decoded.device;
+        info.req.headers.device = (decoded as { device: string }).device;
         callback(true);
       }
     });
