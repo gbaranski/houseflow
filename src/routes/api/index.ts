@@ -2,7 +2,7 @@ import express from 'express';
 import { getDeviceStatus } from '../globals';
 import jwt from 'jsonwebtoken';
 import { authenticateDevice } from '../../auth';
-import wss from '../../index';
+import { wss } from '../globals';
 
 const router = express.Router();
 

@@ -2,7 +2,7 @@
 import http from 'http';
 import app from './app';
 import './firebase';
-import initializeWebsocket from './websocket';
+import initializeWebsocket from './routes/globals';
 
 if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
