@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import fetch from 'node-fetch';
-import { username, password } from './globals';
 
 describe('testing watermixer mixing', () => {
   it('attempting to start watermixer mixing with no credentials', async () => {

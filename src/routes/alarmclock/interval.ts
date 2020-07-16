@@ -1,70 +1,41 @@
-import fetch from 'node-fetch';
-import { AlarmRequestType, AlarmclockData, TempArray } from '@gbaranski/types';
-import { getProcessing, setDeviceStatus, getDeviceStatus } from '../globals';
-import { setProcessingAlarmclock } from '.';
-import { ALARMCLOCK_URL } from '../../config';
+import { AlarmclockData } from '@gbaranski/types';
+import { devices } from '../globals';
 
-const HOURS_IN_DAY = 24;
 const SECONDS_IN_HOUR = 3600;
-
 let secondsPassed = SECONDS_IN_HOUR;
 
-const temperaturesArr: TempArray[] = new Array(HOURS_IN_DAY).fill(undefined);
-temperaturesArr.forEach((elem, index): void => {
-  temperaturesArr[index] = {
-    unixTime: new Date(
-      new Date().getTime() - 60 * 60 * (index + 1) * 1000,
-    ).getTime(),
-    temp: 0,
-  };
-});
-
-let data: AlarmclockData;
-
-export async function alarmclockInterval(): Promise<void> {
+export function alarmclockInterval(): void {
   secondsPassed += 1;
-  if (getProcessing().alarmclock) {
-    console.log('Connection overloaded at alarmclock');
-    temperaturesArr.shift();
-    temperaturesArr.push({
-      unixTime: new Date().getTime(),
-      temp: data.temperature,
-    });
+  if (!devices.alarmclock.ws) {
+    console.log('Waiting for alarmclock to connect!');
+    handleTempArray();
     return;
   }
-
-  setProcessingAlarmclock(true);
-  try {
-    const res = await fetch(ALARMCLOCK_URL + AlarmRequestType.GET_DATA);
-    data = await res.json();
-
-    setDeviceStatus({
-      ...getDeviceStatus(),
-      alarmclock: true,
-    });
-
-    if (secondsPassed >= SECONDS_IN_HOUR) {
-      temperaturesArr.shift();
-      temperaturesArr.push({
-        unixTime: new Date().getTime(),
-        temp: data.temperature,
-      });
-      secondsPassed = 0;
-    }
-  } catch {
-    setDeviceStatus({
-      ...getDeviceStatus(),
-      alarmclock: false,
-    });
-    console.log('Error while fetching alarmclock');
+  if (!devices.alarmclock.status) {
+    console.log('Error during connection with alarmclock');
+    handleTempArray();
+    return;
   }
-  setProcessingAlarmclock(false);
+  devices.alarmclock.ws.send('GET_DATA');
+  devices.alarmclock.ws.addEventListener(
+    'message',
+    (message: { data: string; type: string; target: WebSocket }) => {
+      console.dir(devices.alarmclock.data);
+      devices.alarmclock.data = JSON.parse(message.data) as AlarmclockData;
+      handleTempArray();
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    { once: true },
+  );
 }
 
-export function getData(): AlarmclockData {
-  return data;
-}
-
-export function getTempArray(): TempArray[] {
-  return temperaturesArr;
-}
+const handleTempArray = () => {
+  if (secondsPassed >= SECONDS_IN_HOUR) {
+    devices.alarmclock.tempArray.shift();
+    devices.alarmclock.tempArray.push({
+      temp: devices.alarmclock.data.temperature,
+      unixTime: new Date().getTime(),
+    });
+  }
+};
