@@ -37,27 +37,80 @@ export function getProcessing(): DeviceStatus {
   return isProcessing;
 }
 
+const setDeviceStatusByString = (device: string, state: boolean) => {
+  switch (device) {
+    case 'ALARMCLOCK':
+      deviceStatus.alarmclock = state;
+      break;
+    case 'WATERMIXER':
+      deviceStatus.watermixer = state;
+      break;
+    default:
+      console.error('Couldnt find device, sending false');
+      break;
+  }
+};
+
+const getDeviceStatusByString = (device: string) => {
+  switch (device) {
+    case 'ALARMCLOCK':
+      return deviceStatus.alarmclock;
+    case 'WATERMIXER':
+      return deviceStatus.watermixer;
+    default:
+      console.error('Couldnt find device, sending false');
+      return false;
+  }
+};
+
 export default function initializeWebsocket(): void {
+  setInterval(() => {
+    console.dir(getDeviceStatus());
+  }, 1000);
+
   wss = new WebSocket.Server({
     server: httpServer,
     clientTracking: true,
     verifyClient,
   });
 
-  wss.on('connection', function connection(ws, req) {
-    console.log(
-      `Websocket Connection device: ${req.headers.device} from IP: ${req.socket.remoteAddress} at PORT: ${req.socket.remotePort}`,
-    );
-    let i = 0;
-    setInterval(() => {
-      ws.send('Interval: ' + i);
-      i++;
-    }, 1000);
+  wss.on('connection', (ws, req) => {
+    const deviceName = req.headers.device as string;
 
-    ws.on('message', function incoming(message) {
+    if (!deviceName) {
+      console.log("Couldn't recognize device, will terminate in a moment");
+    }
+    console.log(
+      `Websocket Connection device: ${deviceName} from IP: ${req.socket.remoteAddress} at PORT: ${req.socket.remotePort}`,
+    );
+
+    setDeviceStatusByString(deviceName, true);
+
+    const pingInterval = setInterval(() => {
+      if (getDeviceStatusByString(deviceName) === false) return ws.terminate();
+      setDeviceStatusByString(deviceName, false);
+      ws.ping();
+    }, 30000);
+
+    ws.on('pong', () => {
+      setDeviceStatusByString(deviceName, true);
+      console.log(`Recieved pong from ${deviceName}`);
+    });
+    ws.on('ping', () => {
+      ws.ping();
+      console.log(`Recieved ping from ${deviceName}`);
+    });
+    ws.on('message', message => {
       console.log('received: %s', message);
     });
-
+    ws.on('error', err => {
+      console.log('Error occured', err);
+      clearInterval(pingInterval);
+    });
+    ws.on('close', () => clearInterval(pingInterval));
     ws.send('something');
+  });
+  wss.on('error', cb => {
+    console.log('Error occured', cb.message);
   });
 }
