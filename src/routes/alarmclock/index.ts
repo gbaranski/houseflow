@@ -1,18 +1,17 @@
 import express from 'express';
 import { AlarmRequestType } from '@gbaranski/types';
 import { fetchURL } from '../../helpers';
-import { getData, getTempArray } from './interval';
 import { ALARMCLOCK_URL } from '../../config';
 import { sendMessage } from '../../firebase';
 import { Headers } from 'node-fetch';
-import { setProcessing, getProcessing } from '../globals';
+import { devices } from '../globals';
 
-export const setProcessingAlarmclock = (state: boolean): void => {
-  setProcessing({
-    ...getProcessing(),
-    alarmclock: state,
-  });
-};
+export function setAlarmclockState(state: boolean): void {
+  devices.alarmclock.status = state;
+}
+export function getAlarmclockState(): boolean {
+  return devices.alarmclock.status;
+}
 
 const router = express.Router();
 
