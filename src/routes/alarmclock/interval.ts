@@ -37,5 +37,6 @@ const handleTempArray = () => {
       temp: devices.alarmclock.data.temperature,
       unixTime: new Date().getTime(),
     });
+    secondsPassed = 0;
   }
 };

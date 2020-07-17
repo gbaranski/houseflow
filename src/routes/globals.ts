@@ -13,6 +13,16 @@ export const devices: Devices = {
 
 export let wss: WebSocket.Server;
 
+export const getDeviceStatus = (): {
+  alarmclock: boolean;
+  watermixer: boolean;
+} => {
+  return {
+    alarmclock: devices.alarmclock.status,
+    watermixer: devices.watermixer.status,
+  };
+};
+
 const assignDeviceToStatus = (
   ws: WebSocket,
   req: IncomingMessage,

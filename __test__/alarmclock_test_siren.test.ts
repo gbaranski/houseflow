@@ -20,6 +20,6 @@ describe('test siren on alarmclock', () => {
         password: password,
       },
     });
-    expect(res.status).toEqual(200);
+    expect(res.status).toEqual(201);
   });
 });

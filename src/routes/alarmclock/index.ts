@@ -1,9 +1,4 @@
 import express from 'express';
-import { AlarmRequestType } from '@gbaranski/types';
-import { fetchURL } from '../../helpers';
-import { ALARMCLOCK_URL } from '../../config';
-import { sendMessage } from '../../firebase';
-import { Headers } from 'node-fetch';
 import { devices } from '../globals';
 
 export function setAlarmclockState(state: boolean): void {
@@ -31,32 +26,23 @@ router.post(
       return;
     }
     devices.alarmclock.ws.send('TEST_SIREN');
-    sendMessage(
-      req.header('username') || '',
-      `alarmclock${AlarmRequestType.TEST_ALARM}`,
-    );
+    res.sendStatus(201);
   },
 );
 
-router.post(
-  '/setTime',
-  async (req, res): Promise<void> => {
-    if (!devices.alarmclock.ws) {
-      res.sendStatus(503);
-      return;
-    }
-    const time = req.get('time');
-    if (!time) {
-      res.sendStatus(400);
-      return;
-    }
-    devices.alarmclock.ws.send(`TIME=${time}`);
-    sendMessage(
-      req.header('username') || '',
-      `alarmclock${AlarmRequestType.SET_TIME}`,
-    );
-  },
-);
+router.post('/setTime', (req, res): void => {
+  if (!devices.alarmclock.ws) {
+    res.sendStatus(503);
+    return;
+  }
+  const time = req.get('time');
+  if (!time) {
+    res.sendStatus(400);
+    return;
+  }
+  devices.alarmclock.ws.send(`TIME=${time}`);
+  res.sendStatus(201);
+});
 
 router.post(
   '/switchState',
@@ -71,11 +57,7 @@ router.post(
       return;
     }
     devices.alarmclock.ws.send(`STATE=${state}`);
-
-    sendMessage(
-      req.header('username') || '',
-      `alarmclock${AlarmRequestType.SWITCH_STATE}`,
-    );
+    res.sendStatus(201);
   },
 );
 

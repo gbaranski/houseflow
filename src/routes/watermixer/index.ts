@@ -19,15 +19,10 @@ router.post(
   '/startMixing',
   async (req, res): Promise<void> => {
     setProcessingWatermixer(true);
-    res
-      .status(await fetchURL(WATERMIXER_URL, WaterRequestType.START_MIXING))
-      .end();
-    setProcessingWatermixer(false);
-
-    sendMessage(
-      req.header('username') || '',
-      `watermixer${WaterRequestType.START_MIXING}`,
+    res.sendStatus(
+      await fetchURL(WATERMIXER_URL, WaterRequestType.START_MIXING),
     );
+    setProcessingWatermixer(false);
   },
 );
 

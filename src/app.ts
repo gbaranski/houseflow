@@ -29,7 +29,8 @@ app.use((req, res, next): void => {
   `,
   );
   console.log('\x1b[0m');
-  // isAuthenticated(req, res, next);
+  isAuthenticated(req, res, next);
+  next();
 });
 app.use(
   (
