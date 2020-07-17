@@ -16,17 +16,21 @@ export function getAlarmclockState(): boolean {
 const router = express.Router();
 
 router.get('/getData', (req, res: express.Response): void => {
-  res.json(JSON.stringify(getData()));
+  res.json(JSON.stringify(devices.alarmclock.data));
 });
 
 router.get('/getTempArray', (req, res: express.Response): void => {
-  res.json(JSON.stringify(getTempArray()));
+  res.json(JSON.stringify(devices.alarmclock.tempArray));
 });
 
 router.post(
   '/testSiren',
   async (req, res): Promise<void> => {
-    res.sendStatus(await fetchURL(ALARMCLOCK_URL, AlarmRequestType.TEST_ALARM));
+    if (!devices.alarmclock.ws) {
+      res.sendStatus(503);
+      return;
+    }
+    devices.alarmclock.ws.send('TEST_SIREN');
     sendMessage(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.TEST_ALARM}`,
@@ -37,14 +41,16 @@ router.post(
 router.post(
   '/setTime',
   async (req, res): Promise<void> => {
-    const headers = new Headers();
-    headers.append('time', req.header('time') || '');
-    res
-      .status(
-        await fetchURL(ALARMCLOCK_URL, AlarmRequestType.SET_TIME, headers),
-      )
-      .end();
-
+    if (!devices.alarmclock.ws) {
+      res.sendStatus(503);
+      return;
+    }
+    const time = req.get('time');
+    if (!time) {
+      res.sendStatus(400);
+      return;
+    }
+    devices.alarmclock.ws.send(`TIME=${time}`);
     sendMessage(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.SET_TIME}`,
@@ -55,18 +61,17 @@ router.post(
 router.post(
   '/switchState',
   async (req, res): Promise<void> => {
-    const headers = new Headers();
-    const state = req.header('state');
-    if (!state) {
-      res.status(400).end();
+    if (!devices.alarmclock.ws) {
+      res.sendStatus(503);
       return;
     }
-    headers.append('state', state);
-    res
-      .status(
-        await fetchURL(ALARMCLOCK_URL, AlarmRequestType.SWITCH_STATE, headers),
-      )
-      .end();
+    const state = req.header('state');
+    if (!state) {
+      res.sendStatus(400);
+      return;
+    }
+    devices.alarmclock.ws.send(`STATE=${state}`);
+
     sendMessage(
       req.header('username') || '',
       `alarmclock${AlarmRequestType.SWITCH_STATE}`,
