@@ -1,77 +1,63 @@
 import express from 'express';
-import { AlarmRequestType } from '@gbaranski/types';
-import { fetchURL } from '../../helpers';
-import { getData, getTempArray } from './interval';
-import { ALARMCLOCK_URL } from '../../config';
-import { sendMessage } from '../../firebase';
-import { Headers } from 'node-fetch';
-import { setProcessing, getProcessing } from '../globals';
+import { devices } from '../globals';
 
-export const setProcessingAlarmclock = (state: boolean): void => {
-  setProcessing({
-    ...getProcessing(),
-    alarmclock: state,
-  });
-};
+export function setAlarmclockState(state: boolean): void {
+  devices.alarmclock.status = state;
+}
+export function getAlarmclockState(): boolean {
+  return devices.alarmclock.status;
+}
 
 const router = express.Router();
 
 router.get('/getData', (req, res: express.Response): void => {
-  res.json(JSON.stringify(getData()));
+  res.json(JSON.stringify(devices.alarmclock.data));
 });
 
 router.get('/getTempArray', (req, res: express.Response): void => {
-  res.json(JSON.stringify(getTempArray()));
+  res.json(JSON.stringify(devices.alarmclock.tempArray));
 });
 
 router.post(
   '/testSiren',
   async (req, res): Promise<void> => {
-    res.sendStatus(await fetchURL(ALARMCLOCK_URL, AlarmRequestType.TEST_ALARM));
-    sendMessage(
-      req.header('username') || '',
-      `alarmclock${AlarmRequestType.TEST_ALARM}`,
-    );
+    if (!devices.alarmclock.ws) {
+      res.sendStatus(503);
+      return;
+    }
+    devices.alarmclock.ws.send('TEST_SIREN');
+    res.sendStatus(201);
   },
 );
 
-router.post(
-  '/setTime',
-  async (req, res): Promise<void> => {
-    const headers = new Headers();
-    headers.append('time', req.header('time') || '');
-    res
-      .status(
-        await fetchURL(ALARMCLOCK_URL, AlarmRequestType.SET_TIME, headers),
-      )
-      .end();
-
-    sendMessage(
-      req.header('username') || '',
-      `alarmclock${AlarmRequestType.SET_TIME}`,
-    );
-  },
-);
+router.post('/setTime', (req, res): void => {
+  if (!devices.alarmclock.ws) {
+    res.sendStatus(503);
+    return;
+  }
+  const time = req.get('time');
+  if (!time) {
+    res.sendStatus(400);
+    return;
+  }
+  devices.alarmclock.ws.send(`TIME=${time}`);
+  res.sendStatus(201);
+});
 
 router.post(
   '/switchState',
   async (req, res): Promise<void> => {
-    const headers = new Headers();
-    const state = req.header('state');
-    if (!state) {
-      res.status(400).end();
+    if (!devices.alarmclock.ws) {
+      res.sendStatus(503);
       return;
     }
-    headers.append('state', state);
-    res
-      .status(
-        await fetchURL(ALARMCLOCK_URL, AlarmRequestType.SWITCH_STATE, headers),
-      )
-      .end();
-    sendMessage(
-      req.header('username') || '',
-      `alarmclock${AlarmRequestType.SWITCH_STATE}`,
-    );
+    const state = req.header('state');
+    if (!state) {
+      res.sendStatus(400);
+      return;
+    }
+    devices.alarmclock.ws.send(`STATE=${state}`);
+    res.sendStatus(201);
   },
 );
 

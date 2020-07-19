@@ -1,33 +1,80 @@
 /* eslint-disable no-console */
-import { DeviceStatus } from '@gbaranski/types';
+import { devicesSample, Devices } from '@gbaranski/types';
+import WebSocket from 'ws';
+import { httpServer } from '../';
+import { verifyClient } from '../auth';
+import { IncomingMessage } from 'http';
+import { setupWebsocketHandlers } from '../helpers';
+import { setAlarmclockState, getAlarmclockState } from './alarmclock';
+import { setWatermixerState, getWatermixerState } from './watermixer';
 
-const deviceStatusPattern = {
-  alarmclock: false,
-  watermixer: false,
-  gate: false,
-  garage: false,
+export const devices: Devices = {
+  ...devicesSample,
 };
 
-let deviceStatus: DeviceStatus = {
-  ...deviceStatusPattern,
+export let wss: WebSocket.Server;
+
+export const getDeviceStatus = (): {
+  alarmclock: boolean;
+  watermixer: boolean;
+} => {
+  return {
+    alarmclock: devices.alarmclock.status,
+    watermixer: devices.watermixer.status,
+  };
 };
 
-let isProcessing: DeviceStatus = {
-  ...deviceStatusPattern,
+const assignDeviceToStatus = (
+  ws: WebSocket,
+  req: IncomingMessage,
+  deviceName: string,
+) => {
+  switch (deviceName) {
+    case 'ALARMCLOCK':
+      devices.alarmclock = {
+        ...devices.alarmclock,
+        ws,
+        req,
+      };
+      setupWebsocketHandlers(
+        ws,
+        setAlarmclockState,
+        getAlarmclockState,
+        'alarmclock',
+      );
+      break;
+    case 'WATERMIXER':
+      devices.watermixer = {
+        ...devices.watermixer,
+        ws,
+        req,
+      };
+      setupWebsocketHandlers(
+        ws,
+        setWatermixerState,
+        getWatermixerState,
+        'watermixer',
+      );
+      break;
+  }
 };
 
-export function setDeviceStatus(newStatus: DeviceStatus): void {
-  deviceStatus = newStatus;
-}
+export default function initializeWebsocket(): void {
+  wss = new WebSocket.Server({
+    server: httpServer,
+    clientTracking: true,
+    verifyClient,
+  });
 
-export function getDeviceStatus(): DeviceStatus {
-  return deviceStatus;
-}
-
-export function setProcessing(newIsProcessing: DeviceStatus): void {
-  isProcessing = newIsProcessing;
-}
-
-export function getProcessing(): DeviceStatus {
-  return isProcessing;
+  wss.on('connection', (ws, req: IncomingMessage) => {
+    const deviceName = req.headers.device;
+    if (!deviceName) {
+      console.error('Error during recognizing device');
+      ws.terminate();
+    }
+    assignDeviceToStatus(ws, req, deviceName as string);
+    console.log(
+      `Websocket Connection device: ${deviceName} from IP: ${req.socket.remoteAddress} at PORT: ${req.socket.remotePort}`,
+    );
+  });
 }
