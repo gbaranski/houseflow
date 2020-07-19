@@ -6,6 +6,7 @@ import { verifyClient } from '../auth';
 import { IncomingMessage } from 'http';
 import { setupWebsocketHandlers } from '../helpers';
 import { setAlarmclockState, getAlarmclockState } from './alarmclock';
+import { setWatermixerState, getWatermixerState } from './watermixer';
 
 export const devices: Devices = {
   ...devicesSample,
@@ -48,6 +49,12 @@ const assignDeviceToStatus = (
         ws,
         req,
       };
+      setupWebsocketHandlers(
+        ws,
+        setWatermixerState,
+        getWatermixerState,
+        'watermixer',
+      );
       break;
   }
 };
