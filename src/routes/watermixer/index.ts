@@ -1,33 +1,28 @@
 import express from 'express';
-import { WaterRequestType } from '@gbaranski/types';
-import { fetchURL } from '../../helpers';
-import { WATERMIXER_URL } from '../../config';
-import { sendMessage } from '../../firebase';
-import { setProcessing, getProcessing } from '../globals';
-import { getData } from './interval';
+import { devices } from '../globals';
 
 const router = express.Router();
 
-export const setProcessingWatermixer = (state: boolean): void => {
-  setProcessing({
-    ...getProcessing(),
-    watermixer: state,
-  });
-};
-
+export function setWatermixerState(state: boolean): void {
+  devices.watermixer.status = state;
+}
+export function getWatermixerState(): boolean {
+  return devices.watermixer.status;
+}
 router.post(
   '/startMixing',
   async (req, res): Promise<void> => {
-    setProcessingWatermixer(true);
-    res.sendStatus(
-      await fetchURL(WATERMIXER_URL, WaterRequestType.START_MIXING),
-    );
-    setProcessingWatermixer(false);
+    if (!devices.watermixer.ws) {
+      res.sendStatus(503);
+      return;
+    }
+    devices.watermixer.ws.send('START_MIXING');
+    res.sendStatus(201);
   },
 );
 
 router.get('/getData', (req, res): void => {
-  res.json(JSON.stringify(getData()));
+  res.json(JSON.stringify(devices.watermixer.data));
 });
 
 export default router;

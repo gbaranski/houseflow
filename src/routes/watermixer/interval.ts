@@ -1,38 +1,24 @@
-import fetch from 'node-fetch';
-import { WATERMIXER_URL } from '../../config';
-import { getProcessing, getDeviceStatus, setDeviceStatus } from '../globals';
-import { WatermixerData, WaterRequestType } from '@gbaranski/types';
-import { setProcessingWatermixer } from '.';
+import { WatermixerData } from '@gbaranski/types';
+import { devices } from '../globals';
 
-let data: WatermixerData;
-
-export async function watermixerInterval(): Promise<void> {
-  if (getProcessing().watermixer) {
-    console.log('Connection overloaded at watermixer');
+export function watermixerInterval(): void {
+  if (!devices.watermixer.ws) {
+    console.log('Waiting for watermixer to connect!');
     return;
   }
-  setProcessingWatermixer(true);
-  fetch(WATERMIXER_URL + WaterRequestType.GET_DATA)
-    .then((res): Promise<WatermixerData> => res.json())
-    .then((_data): void => {
-      data = _data;
-      setDeviceStatus({
-        ...getDeviceStatus(),
-        watermixer: true,
-      });
-    })
-    .catch((): void => {
-      console.log('Error when fetching watermixer!');
-      setDeviceStatus({
-        ...getDeviceStatus(),
-        watermixer: false,
-      });
-    })
-    .finally((): void => {
-      setProcessingWatermixer(false);
-    });
-}
-
-export function getData(): WatermixerData {
-  return data;
+  if (!devices.watermixer.status) {
+    console.log('Error during connection with watermixer');
+    return;
+  }
+  devices.watermixer.ws.send('GET_DATA');
+  devices.watermixer.ws.addEventListener(
+    'message',
+    (message: { data: string; type: string; target: WebSocket }) => {
+      console.dir(devices.watermixer.data);
+      devices.watermixer.data = JSON.parse(message.data) as WatermixerData;
+    },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    { once: true },
+  );
 }
