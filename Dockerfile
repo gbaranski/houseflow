@@ -1,4 +1,4 @@
-FROM node:12-alpine
+FROM node:12
 
 # Create app directory
 WORKDIR /server
@@ -12,6 +12,7 @@ RUN npm install
 
 # Bundle app source
 COPY . .
-RUN touch /server/src/firebaseConfig.json
+RUN touch ./src/firebaseConfig.json
 
+EXPOSE 8000
 CMD [ "npm", "run", "start" ]
