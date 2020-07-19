@@ -11,8 +11,5 @@ RUN npm install
 
 # Bundle app source
 COPY . .
-RUN touch /server/src/firebaseConfig.json
 
-FROM arm32v7/node:12-alpine
-COPY --from=build /server .
 CMD [ "npm", "run", "start" ]

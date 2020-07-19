@@ -2,11 +2,12 @@ version: '3.8'
 services:
   server:
     container_name: "controlhome-api"
+    build: .
     image: gbaranski19/control-home-api
     env_file: ./.env
     ports:
       - 8000:8000
     restart: 'unless-stopped'
     volumes:
-      - ${PWD}/src/firebaseConfig.json:/src/firebaseConfig.json
+      - ./src/firebaseConfig.json:/server/src/firebaseConfig.json
 
