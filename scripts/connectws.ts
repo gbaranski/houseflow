@@ -13,8 +13,8 @@ const rl = readline.createInterface({
   }
   const headers = new Headers();
   headers.append('device', 'ALARMCLOCK');
-  headers.append('token', process.env.ALARMCLOCK);
-  const res = fetch(`https://api.gbaranski.com/api/getToken`, {
+  headers.append('token', process.env.ALARMCLOCK || '');
+  const res = fetch(`https://api.gbaranski.com:443/api/getToken`, {
     headers,
   });
 
