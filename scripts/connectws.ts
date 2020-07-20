@@ -20,7 +20,7 @@ const rl = readline.createInterface({
 
   const resText = await (await res).text();
   console.log(resText);
-  const ws = new WebSocket(`ws://api.gbaranski.com:81`, {
+  const ws = new WebSocket(`ws://api.gbaranski.com:6436`, {
     headers: { token: resText },
   });
   ws.on('open', async () => {
