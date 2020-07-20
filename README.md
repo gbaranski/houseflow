@@ -2,19 +2,29 @@
 `docker pull gbaranski19/control-home-api:latest`
 `docker-compose up`
 
-All requests must include username and password headers
+***All requests must include username and password headers***
+
 Verify username and password
 ```
 POST /api/login
 ```
 
+Get token for websocket connections
+```
+GET /getToken
+- device: string
+- token: uniqueDeviceToken
+```
+
+
 Get device status
 ```
-GET /getDeviceStatus
+GET /api/getDeviceStatus
 ```
-Get requests history
+
+Get websocket clients
 ```
-GET /getHistory
+GET /getClients
 ```
 
 # Alarmclock
