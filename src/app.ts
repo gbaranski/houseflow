@@ -20,6 +20,16 @@ morgan.token('code', (req: express.Request, res: express.Response) => {
     return chalk.green.bold(code);
   }
 });
+
+morgan.token('country', (req: express.Request, _) => {
+  const country = getCountryStr(getIpStr(req));
+  if (country === 'unknown') {
+    return chalk.gray.bold(country);
+  } else {
+    return chalk.magentaBright.blue.bold(country);
+  }
+});
+
 app.use(
   morgan((tokens, req, res) => {
     return [
@@ -29,6 +39,10 @@ app.use(
       chalk.dim('-'),
       chalk.dim.bold(tokens['response-time'](req, res)),
       chalk.dim.bold('ms'),
+      chalk.dim('-'),
+      chalk.cyan.bold(tokens['remote-addr'](req, res)),
+      chalk.dim('-'),
+      chalk.gray.bold(tokens.country(req, res)),
     ].join(' ');
   }),
 );
