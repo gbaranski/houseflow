@@ -4,4 +4,12 @@ export const CORS_WHITELIST = [
 ];
 
 export const LOGIN_WHITELIST_URL = ['/', '/api/getToken'];
-export const NO_LOG_URL = ['/api/getToken', '/api/login', '/', '/favicon.ico'];
+export const NO_LOG_URL = [
+  '/api/getToken',
+  '/api/login',
+  '/',
+  '/favicon.ico',
+  '/api/getDeviceStatus',
+  '/watermixer/getData',
+  '/alarmclock/getData',
+];

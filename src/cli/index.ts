@@ -4,42 +4,34 @@ import { IncomingMessage } from 'http';
 
 const log = console.log;
 
-const serverName = 'controlhome-api';
-
 export function logRequest(req: express.Request, res: express.Response): void {
   res.addListener('close', () => {
     log(
       chalk.blueBright(
-        `${chalk.green(serverName)} | ${req.method} ${
-          req.path
-        } ${chalk.yellowBright(res.statusCode)}`,
+        `${req.method} ${req.path} ${chalk.yellowBright(res.statusCode)}`,
       ),
     );
   });
 }
 
 export function logPingPong(deviceName: string, isPing: boolean): void {
-  log(
-    chalk.cyanBright(
-      `${chalk.green(serverName)} | ${deviceName} ${isPing ? 'PING' : 'PONG'}`,
-    ),
-  );
+  log(chalk.cyanBright(`[WS] ${deviceName} ${isPing ? 'PING' : 'PONG'}`));
 }
 
 export function logMissing(what: string): void {
-  log(chalk.magenta(`${chalk.green(serverName)} | Missing ${what}`));
+  log(chalk.magenta(`Missing ${what}`));
 }
 
 export function logInvalid(what: string): void {
-  log(chalk.magenta(`${chalk.green(serverName)} | Invalid ${what}`));
+  log(chalk.magenta(`Invalid ${what}`));
 }
 
 export function logAdded(what: string): void {
-  log(chalk.magenta(`${chalk.green(serverName)} | Added ${what}`));
+  log(chalk.magenta(`Added ${what}`));
 }
 
 export function logError(what: string): void {
-  log(chalk.magenta(`${chalk.green(serverName)} | Error ${what}`));
+  log(chalk.magenta(`Error ${what}`));
 }
 
 export function logSocketConnection(
@@ -48,9 +40,7 @@ export function logSocketConnection(
 ): void {
   log(
     chalk.blueBright(
-      `${chalk.green(serverName)} | [WS] Connect ${deviceName} IP: ${
-        req.socket.remoteAddress
-      } PORT: ${req.socket.remotePort}`,
+      `[WS] Connect ${deviceName} IP: ${req.socket.remoteAddress} PORT: ${req.socket.remotePort}`,
     ),
   );
 }
