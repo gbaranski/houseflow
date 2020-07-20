@@ -3,10 +3,5 @@ export const CORS_WHITELIST = [
   'http://localhost:3000',
 ];
 
-export const LOGIN_WHITELIST_URL = [
-  '/connect',
-  '/',
-  '/api/getToken',
-];
-
-export const noLogUrl = ['/api/login' ];
+export const LOGIN_WHITELIST_URL = ['/', '/api/getToken'];
+export const noLogUrl = ['/api/login'];
