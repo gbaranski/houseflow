@@ -12,14 +12,15 @@ const rl = readline.createInterface({
     throw new Error('No process.env.GBARANSKI');
   }
   const headers = new Headers();
-  headers.append('username', 'gbaranski');
-  headers.append('password', process.env.GBARANSKI);
-  const res = fetch(`http://localhost:${process.env.PORT}/api/getToken`, {
+  headers.append('device', 'ALARMCLOCK');
+  headers.append('token', process.env.ALARMCLOCK);
+  const res = fetch(`https://api.gbaranski.com/api/getToken`, {
     headers,
   });
 
   const resText = await (await res).text();
-  const ws = new WebSocket(`ws://localhost:${process.env.PORT}/`, {
+  console.log(resText);
+  const ws = new WebSocket(`ws://api.gbaranski.com:81`, {
     headers: { token: resText },
   });
   ws.on('open', async () => {
