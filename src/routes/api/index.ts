@@ -18,7 +18,7 @@ router.get('/getToken', (req, res): void => {
   const device = req.get('device');
   const reqToken = req.get('token');
   if (!device || !reqToken) {
-    res.send(400);
+    res.sendStatus(400);
     return;
   }
   authenticateDevice(device, reqToken);

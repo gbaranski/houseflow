@@ -7,12 +7,10 @@ let secondsPassed = SECONDS_IN_HOUR;
 export function alarmclockInterval(): void {
   secondsPassed += 1;
   if (!devices.alarmclock.ws) {
-    console.log('Waiting for alarmclock to connect!');
     handleTempArray();
     return;
   }
   if (!devices.alarmclock.status) {
-    console.log('Error during connection with alarmclock');
     handleTempArray();
     return;
   }
@@ -20,7 +18,6 @@ export function alarmclockInterval(): void {
   devices.alarmclock.ws.addEventListener(
     'message',
     (message: { data: string; type: string; target: WebSocket }) => {
-      console.dir(devices.alarmclock.data);
       devices.alarmclock.data = JSON.parse(message.data) as AlarmclockData;
       handleTempArray();
     },

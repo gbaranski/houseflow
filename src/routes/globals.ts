@@ -7,6 +7,7 @@ import { IncomingMessage } from 'http';
 import { setupWebsocketHandlers } from '../helpers';
 import { setAlarmclockState, getAlarmclockState } from './alarmclock';
 import { setWatermixerState, getWatermixerState } from './watermixer';
+import { logSocketConnection } from '../cli';
 
 export const devices: Devices = {
   ...devicesSample,
@@ -73,8 +74,6 @@ export default function initializeWebsocket(): void {
       ws.terminate();
     }
     assignDeviceToStatus(ws, req, deviceName as string);
-    console.log(
-      `Websocket Connection device: ${deviceName} from IP: ${req.socket.remoteAddress} at PORT: ${req.socket.remotePort}`,
-    );
+    logSocketConnection(req, deviceName || '');
   });
 }

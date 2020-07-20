@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { username, password } from './globals';
-import { AlarmRequestType, AlarmclockData } from '@gbaranski/types';
+import { AlarmclockData } from '@gbaranski/types';
 
 describe('test set state on alarmclock', () => {
   it('attempting to set alarmclck state with invalid credentials', async () => {

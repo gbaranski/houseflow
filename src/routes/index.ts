@@ -4,19 +4,14 @@ import alarmclockRouter from './alarmclock';
 import watermixerRouter from './watermixer';
 import { saveRequestToDb } from '../firebase';
 import { getIpStr, getCountryStr } from '../helpers';
-import { noLogUrl } from '../config';
+import { NO_LOG_URL } from '../config';
 
 const router = express.Router();
 
-// create history on any POST request
+// create history on any request
 router.use(
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (req.method !== 'POST') {
-      next();
-      return;
-    }
-    if (!noLogUrl.includes(req.url)) {
-      console.log('Saving to firebase DB');
+    if (!NO_LOG_URL.includes(req.url)) {
       saveRequestToDb({
         user: String(req.get('username')),
         requestPath: req.url,

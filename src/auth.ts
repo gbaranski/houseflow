@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import http from 'http';
+import { logMissing, logInvalid } from './cli';
 
 function validateCredentials(
   username: string | undefined,
@@ -21,7 +22,11 @@ export function isAuthenticated(
 ): void {
   const username = req.header('username');
   const password = req.header('password');
-  validateCredentials(username, password);
+  try {
+    validateCredentials(username, password);
+  } catch (e) {
+    throw new Error('No authorization');
+  }
   next();
 }
 
@@ -54,21 +59,21 @@ export const verifyClient = (
   callback: VerifyClientCallback,
 ): void => {
   if (!process.env.JWT_KEY) throw new Error('Missing process.env.JWT_KEY');
-  console.log(info.req.headers.token || undefined);
+
   const token = info.req.headers.token || '';
   if (!token) {
-    console.log('client doesnt have token');
+    logMissing('JWT token');
     callback(false, 401, 'Unauthorized');
   } else {
     jwt.verify(token as string, process.env.JWT_KEY, (err, decoded) => {
       if (!decoded) {
-        console.log('Missing decoded username at JWT Token');
+        logMissing('decoded username at JWT Token');
         callback(false, 400, 'Missing decoded username');
         return;
       }
       if (err) {
         callback(false, 401, 'Unauthorized');
-        console.log('client has invalid token');
+        logInvalid('token');
       } else {
         info.req.headers.device = (decoded as { device: string }).device;
         callback(true);

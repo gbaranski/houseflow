@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
 import { RequestHistory } from '@gbaranski/types';
+import { logAdded } from './cli';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('./firebaseConfig.json');
@@ -13,7 +14,7 @@ const requestsCollection = db.collection('requests');
 
 export async function saveRequestToDb(history: RequestHistory): Promise<void> {
   const res = await requestsCollection.add(history);
-  console.log(`Added history to firestore with id: ${res.id}`);
+  logAdded(`request to Firestore ID: ${res.id}`);
 }
 
 export function sendMessage(username: string, requestTypeString: string): void {
@@ -32,10 +33,6 @@ export function sendMessage(username: string, requestTypeString: string): void {
   admin
     .messaging()
     .send(message)
-    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-    .then((response): void => {
-      console.log('Successfully sent message:', response);
-    })
     .catch((error): void => {
       console.log('Error sending message:', error);
     });
