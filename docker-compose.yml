@@ -2,7 +2,6 @@ version: '3.8'
 services:
   server:
     container_name: "controlhome-api"
-    build: .
     image: gbaranski19/control-home-api
     env_file: ./.env
     ports:

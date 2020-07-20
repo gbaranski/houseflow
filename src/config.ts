@@ -4,9 +4,9 @@ export const CORS_WHITELIST = [
 ];
 
 export const LOGIN_WHITELIST_URL = [
-  '/api/getToken',
-  '/api/getClients',
   '/connect',
+  '/',
+  '/api/getToken',
 ];
 
-export const noLogUrl = ['/api/login'];
+export const noLogUrl = ['/api/login' ];
