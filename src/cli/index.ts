@@ -1,14 +1,17 @@
 import chalk from 'chalk';
 import express from 'express';
 import { IncomingMessage } from 'http';
+import { getIpStr } from '../helpers';
 
 const log = console.log;
 
 export function logRequest(req: express.Request, res: express.Response): void {
-  res.addListener('close', () => {
+  res.once('finish', () => {
     log(
       chalk.blueBright(
-        `${req.method} ${req.path} ${chalk.yellowBright(res.statusCode)}`,
+        `${req.method} ${req.path} ${chalk.yellowBright(
+          res.statusCode,
+        )} ${getIpStr(req)} ${0}ms`,
       ),
     );
   });

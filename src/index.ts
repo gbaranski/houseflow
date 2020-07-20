@@ -15,6 +15,8 @@ export const httpServer = http.createServer(app);
 
 initializeWebsocket();
 
-httpServer.listen(process.env.PORT, () => {
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+httpServer.listen(process.env.PORT, '0.0.0.0', () => {
   console.log('\x1b[33m%s\x1b[0m', `Listening on port ${process.env.PORT}`);
 });

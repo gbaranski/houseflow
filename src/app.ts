@@ -2,17 +2,51 @@ import express from 'express';
 import cors from 'cors';
 import routes from './routes';
 import { isAuthenticated } from './auth';
-import { CORS_WHITELIST, LOGIN_WHITELIST_URL } from './config';
+import { CORS_WHITELIST, LOGIN_WHITELIST_URL, NO_LOG_URL } from './config';
 import { alarmclockInterval } from './routes/alarmclock/interval';
 import { watermixerInterval } from './routes/watermixer/interval';
-import { logRequest } from './cli';
+import { saveRequestToDb } from './firebase';
+import { getIpStr, getCountryStr } from './helpers';
+import morgan from 'morgan';
+import chalk from 'chalk';
 
 const app = express();
 app.use(cors({ origin: CORS_WHITELIST }));
+morgan.token('code', (req: express.Request, res: express.Response) => {
+  const code = res.statusCode;
+  if (code === 401 || code === 403) {
+    return chalk.red.bold(code);
+  } else {
+    return chalk.green.bold(code);
+  }
+});
+app.use(
+  morgan((tokens, req, res) => {
+    return [
+      chalk.cyan(tokens.method(req, res)),
+      chalk.cyan(tokens.url(req, res)),
+      tokens.code(req, res),
+      chalk.dim('-'),
+      chalk.dim.bold(tokens['response-time'](req, res)),
+      chalk.dim.bold('ms'),
+    ].join(' ');
+  }),
+);
 app.use(express.json()); // for parsing application/json
 
 app.use((req, res, next): void => {
-  logRequest(req, res);
+  // logRequest(req, res);
+  if (!NO_LOG_URL.includes(req.url)) {
+    const ip = getIpStr(req);
+    saveRequestToDb({
+      user: String(req.get('username')),
+      requestPath: req.path,
+      unixTime: new Date().getTime(),
+      ip,
+      userAgent: String(req.get('user-agent')),
+      country: getCountryStr(ip),
+    });
+  }
   if (LOGIN_WHITELIST_URL.includes(req.url)) {
     next();
     return;

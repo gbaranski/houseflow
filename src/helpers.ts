@@ -1,14 +1,16 @@
 /* eslint-disable no-console */
 import express from 'express';
 import WebSocket from 'ws';
+import geoip from 'geoip-lite';
 import { logPingPong, logError } from './cli';
 
 export function getIpStr(req: express.Request): string {
-  return String(req.get('cf-connecting-ip') || req.connection.remoteAddress);
+  return req.ip;
 }
 
-export function getCountryStr(req: express.Request): string {
-  return String(req.header('cf-ipcountry'));
+export function getCountryStr(ip: string): string {
+  const geo = geoip.lookup(ip);
+  return geo ? geo.country : 'unknown';
 }
 
 export function setupWebsocketHandlers(
