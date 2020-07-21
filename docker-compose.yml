@@ -5,7 +5,7 @@ services:
     image: gbaranski19/control-home-api
     env_file: ./.env
     ports:
-      - 8000:8000
+      - 6436:6436
     restart: 'unless-stopped'
     volumes:
       - ./src/firebaseConfig.json:/server/src/firebaseConfig.json
