@@ -31,7 +31,7 @@ morgan.token('country', (req: express.Request, _) => {
 });
 
 morgan.token('ip', (req: express.Request, _) => {
-  return chalk.gray.bold(getIpStr(req));
+  return chalk.cyan.bold(getIpStr(req));
 });
 
 app.use(
@@ -44,9 +44,9 @@ app.use(
       chalk.dim.bold(tokens['response-time'](req, res)),
       chalk.dim.bold('ms'),
       chalk.dim('-'),
-      chalk.cyan.bold(tokens['remote-addr'](req, res)),
-      chalk.dim('-'),
       tokens.ip(req, res),
+      chalk.dim('-'),
+      chalk.gray.bold(tokens.country(req, res)),
     ].join(' ');
   }),
 );
