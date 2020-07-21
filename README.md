@@ -33,10 +33,6 @@ Get data // To change to GET request
 POST /alarmclock/getData
 
 ```
-Get temperatures array
-```
-POST /alarmclock/getTempArray
-```
 Test alarmclock siren
 ```
 POST /alarmclock/testSiren

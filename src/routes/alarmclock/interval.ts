@@ -1,15 +1,15 @@
 import { AlarmclockData } from '@gbaranski/types';
 import { devices } from '../globals';
+import { addTemperatureToDb } from '../../firebase';
 
 const SECONDS_IN_HOUR = 3600;
 let secondsPassed = SECONDS_IN_HOUR;
 
 export function alarmclockInterval(): void {
-  secondsPassed += 1;
   if (!devices.alarmclock.ws) {
-    handleTempArray();
     return;
   }
+
   if (!devices.alarmclock.status) {
     handleTempArray();
     return;
@@ -28,11 +28,11 @@ export function alarmclockInterval(): void {
 }
 
 const handleTempArray = () => {
+  secondsPassed += 1;
   if (secondsPassed >= SECONDS_IN_HOUR) {
-    devices.alarmclock.tempArray.shift();
-    devices.alarmclock.tempArray.push({
-      temp: devices.alarmclock.data.temperature,
+    addTemperatureToDb({
       unixTime: new Date().getTime(),
+      temperature: devices.alarmclock.data.temperature,
     });
     secondsPassed = 0;
   }

@@ -12,5 +12,4 @@ export const NO_LOG_URL = [
   '/api/getDeviceStatus',
   '/watermixer/getData',
   '/alarmclock/getData',
-  '/alarmclock/getTempArray',
 ];

@@ -14,10 +14,6 @@ router.get('/getData', (req, res: express.Response): void => {
   res.json(JSON.stringify(devices.alarmclock.data));
 });
 
-router.get('/getTempArray', (req, res: express.Response): void => {
-  res.json(JSON.stringify(devices.alarmclock.tempArray));
-});
-
 router.post(
   '/testSiren',
   async (req, res): Promise<void> => {
