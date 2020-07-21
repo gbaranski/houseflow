@@ -31,7 +31,7 @@ const handleTempArray = () => {
     new Date().getMinutes() === 0 &&
     new Date().getMinutes() !== lastCheckedMinute
   ) {
-    lastCheckedMinute === new Date().getMinutes();
+    lastCheckedMinute = new Date().getMinutes();
     addTemperatureToDb({
       unixTime: new Date().getTime(),
       temperature: devices.alarmclock.data.temperature,
