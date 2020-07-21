@@ -2,9 +2,6 @@ import { AlarmclockData } from '@gbaranski/types';
 import { devices } from '../globals';
 import { addTemperatureToDb } from '../../firebase';
 
-const SECONDS_IN_HOUR = 3600;
-let secondsPassed = SECONDS_IN_HOUR;
-
 export function alarmclockInterval(): void {
   if (!devices.alarmclock.ws) {
     return;
@@ -28,12 +25,10 @@ export function alarmclockInterval(): void {
 }
 
 const handleTempArray = () => {
-  secondsPassed += 1;
-  if (secondsPassed >= SECONDS_IN_HOUR) {
+  if (new Date().getMinutes() === 0) {
     addTemperatureToDb({
       unixTime: new Date().getTime(),
       temperature: devices.alarmclock.data.temperature,
     });
-    secondsPassed = 0;
   }
 };
