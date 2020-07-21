@@ -5,7 +5,7 @@ import geoip from 'geoip-lite';
 import { logPingPong, logError } from './cli';
 
 export function getIpStr(req: express.Request): string {
-  return req.ip;
+  return req.get('X-Forwarded-For') || req.get('X-Real-IP ') || req.ip;
 }
 
 export function getCountryStr(ip: string): string {
