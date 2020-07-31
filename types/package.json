@@ -1,0 +1,27 @@
+{
+  "name": "@gbaranski/types",
+  "version": "1.4.3",
+  "description": "Types for controlhome app and website",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gbaranski/control-home-types.git"
+  },
+  "author": "gbaranski",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^3.9.5"
+  },
+  "devDependencies": {
+    "@types/ws": "^7.2.6",
+    "ws": "^7.3.1"
+  }
+}
