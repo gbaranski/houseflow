@@ -5,4 +5,5 @@ devices/alarmclock-esp32/src/sounds/jingleWin.h linguist-detectable=false
 *.java linguist-detectable=false
 *.bzl linguist-detectable=false
 app-ios/ios/Podfile linguist-detectable=false
+app-web/public/index.html linguist-generated
 
