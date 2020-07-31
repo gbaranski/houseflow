@@ -1,4 +1,2 @@
-*.h linguist-language=C++
-*.java linguist-detectable=false
-app-ios/ios/Podfile linguist-detectable=false
-*.m linguist-detectable=false
+*.ts linguist-detectable=true
+*.h linguist-detectable=false
