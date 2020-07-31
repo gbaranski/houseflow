@@ -1,4 +1,8 @@
 *.ts linguist-detectable=true
 *.h linguist-language=C++
 devices/alarmclock-esp32/src/sounds/jingleWin.h linguist-detectable=false
+*.m linguist-detectable=false
+*.java linguist-detectable=false
+*.bzl linguist-detectable=false
+app-ios/ios/Podfile linguist-detectable=false
 
