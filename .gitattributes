@@ -1,4 +1,4 @@
 *.ts linguist-detectable=true
-*.h linguist-languague=C++
+*.h linguist-language=C++
 devices/alarmclock-esp32/src/sounds/jingleWin.h linguist-detectable=false
 
