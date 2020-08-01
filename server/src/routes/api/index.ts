@@ -1,7 +1,8 @@
 import express from 'express';
-import { getDeviceStatus, wss } from '@/routes/globals';
+import { getDeviceStatus } from '@/routes/globals';
 import jwt from 'jsonwebtoken';
 import { authenticateDevice } from '@/auth';
+import { getWssClients } from '@/services/websocket';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.get('/getToken', (req, res): void => {
 });
 
 router.get('/getClients', (req, res): void => {
-  res.send(JSON.stringify(wss.clients));
+  res.send(JSON.stringify(getWssClients));
 });
 
 export default router;

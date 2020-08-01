@@ -5,7 +5,6 @@ import app from '@/app';
 import fs from 'fs';
 import '@/services/firebase';
 import '@/cli/index';
-import initializeWebsocket from '@/routes/globals';
 import chalk from 'chalk';
 
 if (!process.env.SSL_CERT_PATH || !process.env.SSL_KEY_PATH) {
@@ -26,8 +25,6 @@ const httpServer = https.createServer(
   },
   app,
 );
-
-initializeWebsocket(httpServer);
 
 // @ts-ignore
 httpServer.listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
