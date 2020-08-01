@@ -2,21 +2,14 @@ import { IncomingMessage } from 'http';
 import WebSocket from 'ws';
 import { logSocketConnection } from '@/cli';
 import chalk from 'chalk';
-import fs from 'fs';
 import { verifyClient } from '@/auth';
-import https from 'https';
+import http from 'http';
 import { devices } from '@/routes/globals';
 import { setupWebsocketHandlers } from '@/helpers';
 import { setAlarmclockState, getAlarmclockState } from '@/routes/alarmclock';
 import { setWatermixerState, getWatermixerState } from '@/routes/watermixer';
 
-if (!process.env.SSL_CERT_PATH || !process.env.SSL_KEY_PATH) {
-  throw new Error('Missing SSL config in dotenv');
-}
-const httpServer = https.createServer({
-  cert: fs.readFileSync(process.env.SSL_CERT_PATH),
-  key: fs.readFileSync(process.env.SSL_KEY_PATH),
-});
+const httpServer = http.createServer();
 
 export const wss: WebSocket.Server = new WebSocket.Server({
   server: httpServer,
@@ -34,11 +27,12 @@ wss.on('connection', (ws, req: IncomingMessage) => {
   logSocketConnection(req, deviceName || '');
 });
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-httpServer.listen(process.env.WSS_PORT, '0.0.0.0', () =>
+httpServer.listen(process.env.WS_PORT, '0.0.0.0', () =>
   console.log(
     chalk.yellow(
-      `Listening for websocket connection at port ${process.env.WSS_PORT}`,
+      `Listening for websocket connection at port ${process.env.WS_PORT}`,
     ),
   ),
 );
