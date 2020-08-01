@@ -47,3 +47,14 @@ export function logSocketConnection(
     ),
   );
 }
+
+export function logSocketAttempt(
+  req: IncomingMessage,
+  deviceName: string | string[],
+): void {
+  log(
+    chalk.blueBright(
+      `[WS] Attempt connect ${deviceName} IP: ${req.socket.remoteAddress} PORT: ${req.socket.remotePort}`,
+    ),
+  );
+}

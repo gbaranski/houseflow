@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import http from 'http';
-import { logMissing, logInvalid } from '@/cli';
+import { logMissing, logInvalid, logSocketAttempt } from '@/cli';
 
 function validateCredentials(
   username: string | undefined,
@@ -58,6 +58,7 @@ export const verifyClient = (
   info: VerifyClientInfo,
   callback: VerifyClientCallback,
 ): void => {
+  logSocketAttempt(info.req, info.req.headers['device'] || 'unknown');
   if (!process.env.JWT_KEY) throw new Error('Missing process.env.JWT_KEY');
 
   const token = info.req.headers.token || '';

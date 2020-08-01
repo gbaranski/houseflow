@@ -131,8 +131,6 @@ String getToken()
 
 void setupWebsocket()
 {
-    Serial.setDebugOutput(true);
-
     Serial.println();
     Serial.println();
     Serial.println();
@@ -149,7 +147,7 @@ void connectWebSocket()
     }
     webSocket.setExtraHeaders(("token: " + getToken()).c_str());
 
-    webSocket.beginSSL(websockets_server, websockets_port, "/");
+    webSocket.beginSSL(websockets_server, websockets_port);
     webSocket.onEvent(webSocketEvent);
     webSocket.enableHeartbeat(15000, 10000, 2);
 }
