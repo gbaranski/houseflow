@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { devicesSample, Devices } from '@gbaranski/types';
 import WebSocket from 'ws';
-import { httpServer } from '../';
+import https from 'https';
 import { verifyClient } from '../auth';
 import { IncomingMessage } from 'http';
 import { setupWebsocketHandlers } from '../helpers';
@@ -60,9 +60,9 @@ const assignDeviceToStatus = (
   }
 };
 
-export default function initializeWebsocket(): void {
+export default function initializeWebsocket(server: https.Server): void {
   wss = new WebSocket.Server({
-    server: httpServer,
+    server,
     clientTracking: true,
     verifyClient,
   });

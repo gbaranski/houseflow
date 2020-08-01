@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
-import http from 'http';
+import https from 'https';
 import app from './app';
+import fs from 'fs';
 import './firebase';
 import initializeWebsocket from './routes/globals';
 
@@ -11,9 +12,15 @@ if (!process.env.JWT_KEY) {
   throw new Error('Missing process.env.JWT_KEY');
 }
 
-export const httpServer = http.createServer(app);
+const httpServer = https.createServer(
+  {
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH),
+    key: fs.readFileSync(process.env.SSL_KEY_PATH),
+  },
+  app,
+);
 
-initializeWebsocket();
+initializeWebsocket(httpServer);
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
