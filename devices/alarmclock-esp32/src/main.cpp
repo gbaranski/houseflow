@@ -54,6 +54,7 @@ void setup()
         Serial.println("Waiting for wifi...");
         delay(100);
     }
+    setupOta();
     connectWebSocket();
     setupNtp();
     clearLcd();
@@ -61,7 +62,6 @@ void setup()
     delay(500);
     // wifiManager.setupServerHandling();
     setupSensors();
-    setupOta();
 }
 
 bool lastModeButtonState = false;

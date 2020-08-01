@@ -5,11 +5,6 @@
 #include "helpers.h"
 #endif
 
-#ifndef CONFIG_H
-#define CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef SECRET_H
 #define SECRET_H
 #include "secret.h"
