@@ -172,7 +172,7 @@ void connectWebSocket()
     }
     webSocket.setExtraHeaders(("token: " + getToken()).c_str());
 
-    webSocket.begin(websockets_server, websockets_port, "/");
+    webSocket.beginSSL(websockets_server, websockets_port, "/");
     webSocket.onEvent(webSocketEvent);
     webSocket.enableHeartbeat(15000, 10000, 2);
 }
