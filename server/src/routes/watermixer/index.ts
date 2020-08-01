@@ -1,5 +1,5 @@
 import express from 'express';
-import { devices } from '../globals';
+import { devices } from '@/routes/globals';
 
 const router = express.Router();
 

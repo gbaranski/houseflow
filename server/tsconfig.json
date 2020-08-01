@@ -1,25 +1,24 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "ES6",
+    "moduleResolution": "node",
     "sourceMap": true,
-    "lib": ["es6", "esnext"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "lib": ["es6"],
     "strict": true,
     "noImplicitAny": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noUnusedLocals": false,
     "noImplicitReturns": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+    }
   },
   "include": ["src/**/*"],
-  "paths": {
-    "@/*": ["./src/*"]
-  },
   "exclude": [
     "node_modules",
     "build",

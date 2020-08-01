@@ -5,7 +5,7 @@ import { isAuthenticated } from './auth';
 import { CORS_WHITELIST, LOGIN_WHITELIST_URL, NO_LOG_URL } from './config';
 import { alarmclockInterval } from './routes/alarmclock/interval';
 import { watermixerInterval } from './routes/watermixer/interval';
-import { saveRequestToDb } from './firebase';
+import { saveRequestToDb } from './services/firebase';
 import { getIpStr, getCountryStr } from './helpers';
 import morgan from 'morgan';
 import chalk from 'chalk';

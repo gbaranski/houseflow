@@ -16,14 +16,17 @@ const rl = readline.createInterface({
   headers.append('device', 'ALARMCLOCK');
   headers.append('token', process.env.ALARMCLOCK || '');
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  const res = fetch(`https://127.0.0.1:8000/api/getToken`, {
-    headers,
-  });
+  const res = fetch(
+    `https://127.0.0.1:${process.env.HTTPS_PORT}/api/getToken`,
+    {
+      headers,
+    },
+  );
 
   const resText = await (await res).text();
   console.log(resText);
 
-  const ws = new WebSocket(`wss://127.0.0.1:8000`, {
+  const ws = new WebSocket(`wss://127.0.0.1:${process.env.WSS_PORT}`, {
     headers: { token: resText },
   });
   ws.on('open', async () => {

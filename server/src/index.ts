@@ -1,9 +1,16 @@
 /* eslint-disable no-console */
+require('module-alias/register');
 import https from 'https';
-import app from './app';
+import app from '@/app';
 import fs from 'fs';
-import './firebase';
-import initializeWebsocket from './routes/globals';
+import '@/services/firebase';
+import '@/cli/index';
+import initializeWebsocket from '@/routes/globals';
+import chalk from 'chalk';
+
+if (!process.env.SSL_CERT_PATH || !process.env.SSL_KEY_PATH) {
+  throw new Error('Missing SSL config in dotenv');
+}
 
 if (!process.env.GBARANSKI) {
   throw new Error('missing env AUTH_KEY_GBARANSKI');
@@ -14,16 +21,19 @@ if (!process.env.JWT_KEY) {
 
 const httpServer = https.createServer(
   {
-    cert: fs.readFileSync(process.env.SSL_CERT_PATH),
-    key: fs.readFileSync(process.env.SSL_KEY_PATH),
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH as string),
+    key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
   },
   app,
 );
 
 initializeWebsocket(httpServer);
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-httpServer.listen(process.env.PORT, '0.0.0.0', () => {
-  console.log('\x1b[33m%s\x1b[0m', `Listening on port ${process.env.PORT}`);
+httpServer.listen(process.env.HTTPS_PORT, '0.0.0.0', () => {
+  console.log(
+    chalk.yellowBright(
+      `Listening for http requests on port ${process.env.HTTPS_PORT}`,
+    ),
+  );
 });

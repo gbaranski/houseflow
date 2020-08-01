@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import express from 'express';
 import { IncomingMessage } from 'http';
-import { getIpStr } from '../helpers';
+import { getIpStr } from '@/services/resolveip';
 
 const log = console.log;
 

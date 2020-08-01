@@ -1,6 +1,6 @@
 import { AlarmclockData } from '@gbaranski/types';
-import { devices } from '../globals';
-import { addTemperatureToDb } from '../../firebase';
+import { devices } from '@/routes/globals';
+import { addTemperatureToDb } from '@/services/firebase';
 
 let lastCheckedMinute = Number.MAX_SAFE_INTEGER; // number which is not possible to be a minute
 

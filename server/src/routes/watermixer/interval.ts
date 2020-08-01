@@ -1,5 +1,5 @@
 import { WatermixerData } from '@gbaranski/types';
-import { devices } from '../globals';
+import { devices } from '@/routes/globals';
 
 export function watermixerInterval(): void {
   if (!devices.watermixer.ws) {

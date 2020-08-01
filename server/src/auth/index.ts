@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import http from 'http';
-import { logMissing, logInvalid } from './cli';
+import { logMissing, logInvalid } from '@/cli';
 
 function validateCredentials(
   username: string | undefined,

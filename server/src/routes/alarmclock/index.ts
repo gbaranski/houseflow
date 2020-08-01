@@ -1,5 +1,5 @@
 import express from 'express';
-import { devices } from '../globals';
+import { devices } from '@/routes/globals';
 
 export function setAlarmclockState(state: boolean): void {
   devices.alarmclock.status = state;

@@ -1,17 +1,6 @@
 /* eslint-disable no-console */
-import express from 'express';
 import WebSocket from 'ws';
-import geoip from 'geoip-lite';
-import { logPingPong, logError } from './cli';
-
-export function getIpStr(req: express.Request): string {
-  return req.get('X-Forwarded-For') || req.get('X-Real-IP ') || req.ip;
-}
-
-export function getCountryStr(ip: string): string {
-  const geo = geoip.lookup(ip);
-  return geo ? geo.country : 'unknown';
-}
+import { logPingPong, logError } from '@/cli';
 
 export function setupWebsocketHandlers(
   ws: WebSocket,

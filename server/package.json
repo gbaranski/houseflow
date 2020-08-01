@@ -17,6 +17,9 @@
     "smart-home",
     "controlapp"
   ],
+  "_moduleAliases": {
+    "@": "./src"
+  },
   "author": "Grzegorz Baranski",
   "license": "ISC",
   "dependencies": {
