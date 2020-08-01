@@ -5,11 +5,6 @@
 #include "helpers.h"
 #endif
 
-#ifndef CONFIG_H
-#define CONFIG_H
-#include "config.h"
-#endif
-
 #ifndef IO_H
 #define IO_H
 #include "io.h"
