@@ -1,9 +1,9 @@
 import * as admin from 'firebase-admin';
 import { RequestHistory, TempHistory } from '@gbaranski/types';
-import { logAdded } from '../cli';
+import { logAdded } from '@/cli';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const serviceAccount = require('../config/firebaseConfig.json');
+const serviceAccount = require('@/config/firebaseConfig.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
