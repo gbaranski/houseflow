@@ -58,7 +58,7 @@ app.use(
       chalk.dim('-'),
       chalk.gray.bold(tokens.country(req, res)),
       chalk.dim('-'),
-      chalk.bold(tokens.devOrUsr),
+      chalk.bold(tokens.devOrUsr(req, res)),
     ].join(' ');
   }),
 );
