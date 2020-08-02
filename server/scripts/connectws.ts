@@ -1,7 +1,6 @@
 import WebSocket from 'ws';
 import readline from 'readline';
 import fetch, { Headers } from 'node-fetch';
-import { Agent } from 'http';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -15,18 +14,15 @@ const rl = readline.createInterface({
   const headers = new Headers();
   headers.append('device', 'ALARMCLOCK');
   headers.append('token', process.env.ALARMCLOCK || '');
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  const res = fetch(
-    `https://127.0.0.1:${process.env.HTTPS_PORT}/api/getToken`,
-    {
-      headers,
-    },
-  );
+  // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  const res = fetch(`https://api.gbaranski.com/api/getToken`, {
+    headers,
+  });
 
   const resText = await (await res).text();
   console.log(resText);
 
-  const ws = new WebSocket(`wss://127.0.0.1:${process.env.WSS_PORT}`, {
+  const ws = new WebSocket(`wss://ws.gbaranski.com:443/`, {
     headers: { token: resText },
   });
   ws.on('open', async () => {

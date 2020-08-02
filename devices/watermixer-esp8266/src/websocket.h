@@ -25,6 +25,7 @@
 #include <ESP8266WiFiMulti.h>
 #include <WebSocketsClient.h>
 #include <ESP8266HTTPClient.h>
+#include <Hash.h>
 
 HTTPClient http;
 ESP8266WiFiMulti WiFiMulti;
@@ -147,7 +148,7 @@ void connectWebSocket()
     }
     webSocket.setExtraHeaders(("token: " + getToken()).c_str());
 
-    webSocket.beginSSL(websockets_server, websockets_port);
+    webSocket.begin("ws.gbaranski.com", 80, "/");
     webSocket.onEvent(webSocketEvent);
     webSocket.enableHeartbeat(15000, 10000, 2);
 }
