@@ -17,6 +17,7 @@ export function alarmclockInterval(): void {
   devices.alarmclock.ws.addEventListener(
     'message',
     (message: { data: string; type: string; target: WebSocket }) => {
+      console.log(message.data);
       devices.alarmclock.data = JSON.parse(message.data) as AlarmclockData;
       handleTempArray();
     },
