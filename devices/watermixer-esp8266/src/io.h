@@ -6,7 +6,7 @@
 #endif
 
 bool isTimerOn;
-unsigned long previousMillis = 0;
+unsigned long previousTickMillis = 0;
 int remainingSeconds = 0;
 
 void setupGPIO()
@@ -30,9 +30,9 @@ void handleTimer()
     }
     if (isTimerOn)
     {
-        if (millis() - previousMillis >= 1000)
+        if (millis() - previousTickMillis >= 1000)
         {
-            previousMillis = millis();
+            previousTickMillis = millis();
             remainingSeconds--;
             Serial.println(remainingSeconds);
             if (remainingSeconds == 0)

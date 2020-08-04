@@ -21,6 +21,7 @@
 #endif
 
 // #include <WiFiClientSecureBearSSL.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <WebSocketsClient.h>
@@ -33,30 +34,64 @@ WebSocketsClient webSocket;
 
 void connectWebSocket();
 
+void sendDataOverWebsocket()
+{
+    const int capacity = JSON_OBJECT_SIZE(5);
+    StaticJsonDocument<capacity> JSON;
+    JSON["ok"] = true;
+    JSON["responseFor"] = "GET_DATA";
+    JSON["data"]["remainingSeconds"] = remainingSeconds;
+    JSON["data"]["isTimerOn"] = isTimerOn;
+    String stringJson;
+    serializeJson(JSON, stringJson);
+
+    webSocket.sendTXT(stringJson);
+}
+
 void handleMessage(uint8_t payload[], size_t length)
 {
-    String payloadString = formatPayloadToString(payload, length);
-    if (payloadString == "GET_DATA")
+    const int capacity = JSON_OBJECT_SIZE(2) + 3 * JSON_OBJECT_SIZE(1);
+    StaticJsonDocument<capacity> reqJSON;
+    deserializeJson(reqJSON, payload);
+    String reqType = reqJSON["type"];
+    if (reqType == "START_MIXING")
     {
-        String espData = R"({"remainingSeconds":)" + String(remainingSeconds) +
-                         R"(,"isTimerOn":)" + String(isTimerOn) +
-                         "}";
-        webSocket.sendTXT(espData);
-        Serial.println("[WSc] Received GET_DATA");
-    }
-    else if (payloadString == "START_MIXING")
-    {
+
+        const int capacity = JSON_OBJECT_SIZE(2);
+        StaticJsonDocument<capacity> JSON;
+        JSON["ok"] = true;
+        JSON["responseFor"] = "START_MIXING";
+        String stringJSON;
+        serializeJson(JSON, stringJSON);
+        webSocket.sendTXT(stringJSON);
+
         Serial.println("[WSc] Received START_MIXING");
         handleStartMixing();
     }
-    else if (payloadString == "RESTART")
+    else if (reqType == "REBOOT")
     {
+        const int capacity = JSON_OBJECT_SIZE(2);
+        StaticJsonDocument<capacity> JSON;
+        JSON["ok"] = true;
+        JSON["responseFor"] = "REBOOT";
+        String stringJSON;
+        serializeJson(JSON, stringJSON);
+        webSocket.sendTXT(stringJSON);
         Serial.println("[WSc] Rebooting");
         ESP.restart();
     }
     else
     {
-        Serial.println("[WSc] Unknown request");
+        const int capacity = JSON_OBJECT_SIZE(2);
+        StaticJsonDocument<capacity> JSON;
+        JSON["ok"] = false;
+        JSON["responseFor"] = "UNKNOWN";
+        String stringJSON;
+        serializeJson(JSON, stringJSON);
+        webSocket.sendTXT(stringJSON);
+
+        Serial.println("Reqtype: " + reqType);
+        Serial.println("[WSc] Unknown request: " + reqType);
     }
 }
 
@@ -71,7 +106,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
         break;
     case WStype_CONNECTED:
         Serial.printf("[WSc] Connected to url: %s\n", payload);
-        webSocket.sendTXT("Connected");
         break;
     case WStype_TEXT:
         handleMessage(payload, length);
@@ -148,9 +182,9 @@ void connectWebSocket()
     }
     webSocket.setExtraHeaders(("token: " + getToken()).c_str());
 
-    webSocket.begin("ws.gbaranski.com", 80, "/");
+    webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
-    webSocket.enableHeartbeat(15000, 10000, 2);
+    webSocket.enableHeartbeat(2000, 2000, 2);
 }
 
 boolean isWifiRunning()

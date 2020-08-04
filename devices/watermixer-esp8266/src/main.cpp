@@ -32,9 +32,16 @@ void setup()
   connectWebSocket();
 }
 
+unsigned long previousSendDataMillis = 0;
+
 void loop()
 {
   handleOTA();
   webSocketLoop();
   handleTimer();
+  if (millis() - previousSendDataMillis >= 500)
+  {
+    previousSendDataMillis = millis();
+    sendDataOverWebsocket();
+  }
 }
