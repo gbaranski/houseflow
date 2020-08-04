@@ -1,12 +1,3 @@
-export enum AlarmclockRequestTypes {
-  GET_DATA = 'GET_DATA',
-  START_MIXING = 'START_MIXING',
-  SET_TIME = 'SET_TIME',
-  SET_STATE = 'SET_STATE',
-  TEST_SIREN = 'TEST_SIREN',
-  REBOOT = 'REBOOT',
-  UNKNOWN = 'UNKNOWN',
-}
 import WebSocket from 'ws';
 import { DateTime } from './';
 
