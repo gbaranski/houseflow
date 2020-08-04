@@ -7,16 +7,14 @@ import { addTemperatureToDb } from '@/services/firebase';
 export default class AlarmclockDevice extends Device<AlarmclockData> {
   private lastCheckedMinute: number = Number.MAX_SAFE_INTEGER;
 
-  dataInterval = setInterval(() => {
-    this.intervalMiddleware();
-    this.interval();
-  }, 500);
-
   constructor(ws: WebSocket) {
     super(ws, alarmclockSample, 'ALARMCLOCK', uuidv4());
+    setInterval(() => {
+      this.interval();
+    }, 60000);
   }
 
-  private intervalMiddleware(): void {
+  private interval(): void {
     if (
       new Date().getMinutes() === 0 &&
       new Date().getMinutes() !== this.lastCheckedMinute

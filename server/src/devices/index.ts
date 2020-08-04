@@ -10,12 +10,8 @@ import { logSocketError } from '@/cli';
 export default abstract class Device<DeviceData extends AnyDeviceData> {
   private _status = false;
 
-  private _failedRequests = 0;
-
-  abstract dataInterval: NodeJS.Timeout;
-
   constructor(
-    private ws: WebSocket,
+    protected ws: WebSocket,
     private _deviceData: DeviceData,
     public readonly deviceName: string,
     public readonly deviceUid: string,
@@ -48,21 +44,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     return true;
   };
 
-  protected async interval(): Promise<void> {
-    const res = this.requestDevice(RequestTypes.GET_DATA);
-    if (!(await res)) {
-      console.log('Failed request');
-      this._failedRequests += 1;
-    }
-  }
-
-  private stopDataInterval(): void {
-    clearInterval(this.dataInterval);
-  }
-
   public terminateConnection(reason: string): void {
     this.ws.terminate();
-    this.stopDataInterval();
     logSocketError(this.deviceName, this.deviceUid, reason);
   }
 
@@ -80,9 +63,5 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   get deviceStatus(): boolean {
     return this._status;
-  }
-
-  get failedRequests(): number {
-    return this._failedRequests;
   }
 }

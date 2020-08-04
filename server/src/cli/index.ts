@@ -18,7 +18,13 @@ export function logRequest(req: express.Request, res: express.Response): void {
 }
 
 export function logPingPong(deviceName: string, isPing: boolean): void {
-  log(chalk.cyanBright(`[WS] ${deviceName} ${isPing ? 'PING' : 'PONG'}`));
+  log(
+    chalk.cyanBright(
+      `[WS] ${deviceName} ${
+        isPing ? 'PING' : 'PONG'
+      } ${new Date().getSeconds()}`,
+    ),
+  );
 }
 
 export function logMissing(what: string): void {

@@ -61,19 +61,11 @@ export function setupWebsocketHandlers(
 ): void {
   currentDevices.push(device);
 
-  const killBrokenConnection = setInterval(() => {
-    if (device.failedRequests > 3) {
-      device.terminateConnection('Too many failed requests');
-      currentDevices.filter((_device: AnyDeviceObject) => _device === device);
-      clearInterval(killBrokenConnection);
-    }
-  }, 1000);
-
   const pingInterval = setInterval(() => {
     if (!device.deviceStatus) return ws.terminate();
     device.deviceStatus = false;
     ws.ping();
-  }, 10000);
+  }, 2000);
 
   ws.on('message', device.handleMessage);
   ws.on('pong', () => {
@@ -81,7 +73,7 @@ export function setupWebsocketHandlers(
     logPingPong(device.deviceName, false);
   });
   ws.on('ping', () => {
-    ws.ping();
+    ws.pong();
     logPingPong(device.deviceName, true);
   });
   ws.on('error', err => {

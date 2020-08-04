@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { authenticateDevice } from '@/auth';
-import { getWssClients } from '@/services/websocket';
+import { getWssClients } from '@/services/websocket_devices';
 
 const router = express.Router();
 
