@@ -1,4 +1,10 @@
-import { AlarmclockData, WatermixerData } from './';
+import { AlarmclockData, WatermixerData, Alarmclock } from './';
+import { Watermixer } from './watermixer';
+
+export interface Devices {
+  alarmclock: Alarmclock;
+  watermixer: Watermixer;
+}
 
 export interface DateTime {
   hour: number;
