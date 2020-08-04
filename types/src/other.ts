@@ -14,9 +14,9 @@ export interface DateTime {
 
 export enum RequestTypes {
   GET_DATA,
-  SET_STATE,
-  SET_TIME,
   START_MIXING,
+  SET_TIME,
+  SET_STATE,
   REBOOT,
   UNKNOWN,
 }
@@ -34,11 +34,11 @@ export type State = boolean;
 
 export type AnyDeviceData = AlarmclockData | WatermixerData;
 
-export type RequestDevice = ((
-  type: RequestTypes.SET_TIME,
-  data: DateTime,
-) => any) &
-  ((type: RequestTypes.SET_STATE, data: boolean) => any);
+export type RequestDevice = ((type: RequestTypes.GET_DATA) => any) &
+  ((type: RequestTypes.START_MIXING) => any) &
+  ((type: RequestTypes.SET_TIME, data: DateTime) => any) &
+  ((type: RequestTypes.SET_STATE, data: boolean) => any) &
+  ((type: RequestTypes.REBOOT) => any);
 
 export interface ResponseDevice<
   T extends AlarmclockData | WatermixerData | undefined
