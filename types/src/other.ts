@@ -17,6 +17,7 @@ export enum RequestTypes {
   START_MIXING,
   SET_TIME,
   SET_STATE,
+  TEST_SIREN,
   REBOOT,
   UNKNOWN,
 }
