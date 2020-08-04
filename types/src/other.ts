@@ -12,6 +12,7 @@ export enum RequestTypes {
   SET_TIME,
   START_MIXING,
   REBOOT,
+  UNKNOWN,
 }
 
 export type State = boolean;
