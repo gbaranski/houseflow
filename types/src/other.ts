@@ -1,59 +1,58 @@
-import {
-  IAlarmclockData,
-  IWatermixerData,
-  IAlarmclock,
-  TRequestAlarmclock,
-  IWatermixer,
-  TRequestWatermixer,
-  AlarmclockRequestTypes,
-} from './';
+import { AlarmclockData, WatermixerData, Alarmclock } from './';
+import { Watermixer } from './watermixer';
 
-export interface IDevices {
-  alarmclock: IAlarmclock;
-  watermixer: IWatermixer;
+export interface Devices {
+  alarmclock: Alarmclock;
+  watermixer: Watermixer;
 }
 
-export interface IDateTime {
+export interface DateTime {
   hour: number;
   minute: number;
   second: number;
 }
 
+export enum RequestTypes {
+  GET_DATA = 'GET_DATA',
+  START_MIXING = 'START_MIXING',
+  SET_TIME = 'SET_TIME',
+  SET_STATE = 'SET_STATE',
+  TEST_SIREN = 'TEST_SIREN',
+  REBOOT = 'REBOOT',
+  UNKNOWN = 'UNKNOWN',
+}
 export enum DeviceType {
-  ALARMCLOCK = 'ALARMCLOCK',
-  WATERMIXER = 'WATERMIXER',
-  GATE = 'GATE',
-  GARAGE = 'GARAGE',
+  ALARMCLOCK,
+  WATERMIXER,
+  GATE,
+  GARAGE,
 }
 
-export type TDevicesTypes = keyof typeof DeviceType;
+export type DevicesTypes = keyof typeof DeviceType;
 
-export type TState = boolean;
+export type State = boolean;
 
-export type TAnyDeviceData = IAlarmclockData | IWatermixerData;
-export type TAnyDevice = IWatermixer | IAlarmclock;
+export type AnyDeviceData = AlarmclockData | WatermixerData;
 
-export type TRequestType<
-  Device extends IAlarmclock | IWatermixer
-> = Device extends IAlarmclock
-  ? AlarmclockRequestTypes
-  : Device extends IWatermixer
-  ? AlarmclockRequestTypes
-  : undefined;
+export type RequestDevice = ((type: RequestTypes.GET_DATA) => any) &
+  ((type: RequestTypes.START_MIXING) => any) &
+  ((type: RequestTypes.SET_TIME, data: DateTime) => any) &
+  ((type: RequestTypes.SET_STATE, data: boolean) => any) &
+  ((type: RequestTypes.REBOOT) => any);
 
-export type TRequestDevice<
-  Device extends IAlarmclock | IWatermixer
-> = Device extends IAlarmclock
-  ? TRequestAlarmclock
-  : Device extends IWatermixer
-  ? TRequestWatermixer
-  : undefined;
+export interface ResponseDevice<
+  T extends AlarmclockData | WatermixerData | undefined
+> {
+  ok: boolean;
+  responseFor: RequestTypes;
+  data: T;
+}
 
-export interface ITempHistory {
+export interface TempHistory {
   unixTime: number;
   temperature: number;
 }
-export interface IRequestHistory {
+export interface RequestHistory {
   user: string;
   requestPath: string;
   unixTime: number;
