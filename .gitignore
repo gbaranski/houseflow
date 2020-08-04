@@ -9,3 +9,5 @@ build
 
 # ESP
 secret.h
+
+.vscode
