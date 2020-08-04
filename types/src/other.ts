@@ -5,6 +5,7 @@ import {
   TRequestAlarmclock,
   IWatermixer,
   TRequestWatermixer,
+  AlarmclockRequestTypes,
 } from './';
 
 export interface IDevices {
@@ -31,6 +32,15 @@ export type TState = boolean;
 
 export type TAnyDeviceData = IAlarmclockData | IWatermixerData;
 export type TAnyDevice = IWatermixer | IAlarmclock;
+
+export type TRequestType<
+  Device extends IAlarmclock,
+  IWatermixer
+> = Device extends IAlarmclock
+  ? AlarmclockRequestTypes
+  : Device extends IWatermixer
+  ? AlarmclockRequestTypes
+  : undefined;
 
 export type TRequestDevice<
   Device extends IAlarmclock,
