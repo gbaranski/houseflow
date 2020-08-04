@@ -3,8 +3,6 @@ import cors from 'cors';
 import routes from './routes';
 import { isAuthenticated } from './auth';
 import { CORS_WHITELIST, LOGIN_WHITELIST_URL, NO_LOG_URL } from './config';
-import { alarmclockInterval } from './routes/alarmclock/interval';
-import { watermixerInterval } from './routes/watermixer/interval';
 import { saveRequestToDb } from './services/firebase';
 import { getIpStr, getCountryStr } from '@/services/resolveip';
 import morgan from 'morgan';
@@ -96,9 +94,5 @@ app.use(
 );
 
 app.use('/', routes);
-
-console.log('\x1b[36m%s\x1b[0m', 'Starting IoT data fetch interval');
-setInterval(alarmclockInterval, 500);
-setInterval(watermixerInterval, 500);
 
 export default app;

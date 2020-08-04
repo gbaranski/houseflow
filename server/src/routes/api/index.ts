@@ -1,5 +1,4 @@
 import express from 'express';
-import { getDeviceStatus } from '@/routes/globals';
 import jwt from 'jsonwebtoken';
 import { authenticateDevice } from '@/auth';
 import { getWssClients } from '@/services/websocket';
@@ -8,10 +7,6 @@ const router = express.Router();
 
 router.post('/login', (req, res): void => {
   res.sendStatus(200);
-});
-
-router.get('/getDeviceStatus', (req, res): void => {
-  res.json(JSON.stringify(getDeviceStatus()));
 });
 
 router.get('/getToken', (req, res): void => {

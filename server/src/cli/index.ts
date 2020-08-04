@@ -58,3 +58,26 @@ export function logSocketAttempt(
     ),
   );
 }
+
+export function logIntervalStop(
+  deviceName: string,
+  uid: string,
+  reason: string,
+): void {
+  log(
+    chalk.redBright(
+      `[WS] Stopped connection, caused by ${reason}. Name: ${deviceName} UID: ${uid}`,
+    ),
+  );
+}
+export function logSocketError(
+  deviceName: string,
+  uid: string,
+  message: string,
+): void {
+  log(
+    chalk.redBright(
+      `[WS] Error with websocket ${deviceName} UID: ${uid} | Error: ${message} `,
+    ),
+  );
+}
