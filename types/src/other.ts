@@ -22,6 +22,8 @@ export enum DeviceType {
   GARAGE,
 }
 
+export type DevicesTypes = keyof typeof DeviceType;
+
 export type State = boolean;
 
 export type RequestDevice = ((
