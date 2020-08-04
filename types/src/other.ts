@@ -32,6 +32,8 @@ export type DevicesTypes = keyof typeof DeviceType;
 
 export type State = boolean;
 
+export type AnyDeviceData = AlarmclockData | WatermixerData;
+
 export type RequestDevice = ((
   type: RequestTypes.SET_TIME,
   data: DateTime,
