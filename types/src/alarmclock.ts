@@ -11,22 +11,18 @@ export interface AlarmclockData {
   };
 }
 
-export const alarmclockSample: Alarmclock = {
-  status: false,
-  data: {
-    alarmTime: {
-      hour: 0,
-      minute: 0,
-      second: 0,
-    },
-    alarmState: false,
-    sensor: {
-      temperature: 0,
-      humidity: 0,
-      heatIndex: 0,
-    },
+export const alarmclockSample: AlarmclockData = {
+  alarmTime: {
+    hour: 0,
+    minute: 0,
+    second: 0,
   },
-  ws: undefined,
+  alarmState: false,
+  sensor: {
+    temperature: 0,
+    humidity: 0,
+    heatIndex: 0,
+  },
 };
 
 export interface Alarmclock {
