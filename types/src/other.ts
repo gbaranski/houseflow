@@ -22,7 +22,7 @@ export type RequestDevice = ((
   ((type: RequestTypes.SET_STATE, data: boolean) => any);
 
 export interface ResponseDevice<
-  T extends AlarmclockData | WatermixerData | 'OK'
+  T extends AlarmclockData | WatermixerData | undefined
 > {
   ok: boolean;
   responseFor: RequestTypes;
