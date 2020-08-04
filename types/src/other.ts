@@ -1,70 +1,30 @@
-import {AlarmclockData, alarmclockSampleData} from "./alarmclock";
-import {WatermixerData, watermixerSampleData} from "./watermixer";
-import WebSocket from 'ws';
-import { IncomingMessage } from 'http'
+import { AlarmclockData, WatermixerData } from './';
 
-export interface Devices {
-  alarmclock: {
-    status: boolean;
-    data: AlarmclockData;
-    ws: WebSocket | undefined;
-    req: IncomingMessage | undefined;
-
-  }
-  watermixer: {
-    status: boolean;
-    data: WatermixerData;
-    ws: WebSocket | undefined;
-    req: IncomingMessage | undefined;
-  }
+export interface DateTime {
+  hour: number;
+  minute: number;
+  second: number;
 }
 
-export interface DeviceStatus {
-  alarmclock: boolean;
-  watermixer: boolean;
-  gate: boolean;
-  garage: boolean;
+export enum RequestTypes {
+  GET_DATA,
+  SET_STATE,
+  SET_TIME,
+  START_MIXING,
 }
 
-export enum DeviceList {
-  Alarmclock = 'Alarmclock',
-  Watermixer = 'Watermixer',
-  Gate = 'Gate',
-  Garage = 'Garage',
-}
+export type State = boolean;
 
+export type RequestDevice = ((
+  type: RequestTypes.SET_TIME,
+  data: DateTime,
+) => any) &
+  ((type: RequestTypes.SET_STATE, data: boolean) => any);
 
-export const devicesSample: Devices = {
-  alarmclock: {
-    status: false,
-    data: alarmclockSampleData,
-    ws: undefined,
-    req: undefined,
-  },
-  watermixer: {
-    status: false,
-    data: watermixerSampleData,
-    ws: undefined,
-    req: undefined,
-  }
-}
-
-export enum LocalIpAddress {
-  Alarmclock = "192.168.1.110",
-  Watermixer = "192.168.1.120",
-}
-
-export enum AlarmRequestType {
-  GET_DATA = "/getESPData",
-  GET_TEMP_ARRAY = "/getTempArray",
-  GET_DEVICE_STATE = "/isDown",
-  SET_TIME = "/setAlarm",
-  SWITCH_STATE = "/setAlarmState",
-  TEST_ALARM = "/testAlarm",
-}
-export enum WaterRequestType {
-  GET_DATA = "/getESPData",
-  START_MIXING = "/startMixing",
+export interface ResponseDevice {
+  ok: boolean;
+  responseFor: RequestTypes;
+  data?: AlarmclockData | WatermixerData | 'OK';
 }
 
 export interface TempHistory {
@@ -79,8 +39,3 @@ export interface RequestHistory {
   userAgent: string;
   country: string;
 }
-
-export enum OtherRequestsType {
-  GET_DEVICES_STATUS = "/getDevicesStatus",
-}
-

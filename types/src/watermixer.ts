@@ -1,9 +1,12 @@
-export interface WatermixerData {
-  remainingSeconds: number;
-  isTimerOn: number; // 1 or 0
+import WebSocket from 'ws';
+
+export interface Watermixer {
+  status: boolean;
+  data: WatermixerData;
+  ws: WebSocket | undefined;
 }
 
-export const watermixerSampleData: WatermixerData = {
-  remainingSeconds: 200,
-  isTimerOn: 0,
+export interface WatermixerData {
+  remainingSeconds: number;
+  isTimerOn: boolean; // 1 or 0
 }

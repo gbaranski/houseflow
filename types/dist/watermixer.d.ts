@@ -1,6 +1,11 @@
+import WebSocket from 'ws';
+export interface Watermixer {
+    status: boolean;
+    data: WatermixerData;
+    ws: WebSocket | undefined;
+}
 export interface WatermixerData {
     remainingSeconds: number;
-    isTimerOn: number;
+    isTimerOn: boolean;
 }
-export declare const watermixerSampleData: WatermixerData;
 //# sourceMappingURL=watermixer.d.ts.map
