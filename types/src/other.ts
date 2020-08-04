@@ -34,8 +34,7 @@ export type TAnyDeviceData = IAlarmclockData | IWatermixerData;
 export type TAnyDevice = IWatermixer | IAlarmclock;
 
 export type TRequestType<
-  Device extends IAlarmclock,
-  IWatermixer
+  Device extends IAlarmclock | IWatermixer
 > = Device extends IAlarmclock
   ? AlarmclockRequestTypes
   : Device extends IWatermixer
@@ -43,8 +42,7 @@ export type TRequestType<
   : undefined;
 
 export type TRequestDevice<
-  Device extends IAlarmclock,
-  IWatermixer
+  Device extends IAlarmclock | IWatermixer
 > = Device extends IAlarmclock
   ? TRequestAlarmclock
   : Device extends IWatermixer
