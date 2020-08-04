@@ -15,6 +15,13 @@ export enum RequestTypes {
   UNKNOWN,
 }
 
+export enum DeviceType {
+  ALARMCLOCK,
+  WATERMIXER,
+  GATE,
+  GARAGE,
+}
+
 export type State = boolean;
 
 export type RequestDevice = ((
