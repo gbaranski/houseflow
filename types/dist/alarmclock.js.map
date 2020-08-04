@@ -1,1 +1,0 @@
-{"version":3,"file":"alarmclock.js","sourceRoot":"","sources":["../src/alarmclock.ts"],"names":[],"mappings":";;;AAaa,QAAA,oBAAoB,GAAmB;IAClD,SAAS,EAAE;QACT,IAAI,EAAE,CAAC;QACP,MAAM,EAAE,CAAC;QACT,MAAM,EAAE,CAAC;KACV;IACD,UAAU,EAAE,KAAK;IACjB,MAAM,EAAE;QACN,WAAW,EAAE,CAAC;QACd,QAAQ,EAAE,CAAC;QACX,SAAS,EAAE,CAAC;KACb;CACF,CAAC"}
