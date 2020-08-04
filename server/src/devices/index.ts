@@ -5,7 +5,7 @@ import {
   RequestTypes,
   DateTime,
 } from '@gbaranski/types';
-import { logIntervalStop, logSocketError } from '@/cli';
+import { logSocketError } from '@/cli';
 
 export default abstract class Device<DeviceData extends AnyDeviceData> {
   private _status = false;
@@ -22,6 +22,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
   ) {
     this._status = true;
   }
+
+  abstract handleMessage(message: WebSocket.Data): void;
 
   protected requestDevice: RequestDevice = async (
     type: RequestTypes,
@@ -52,7 +54,6 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
       console.log('Failed request');
       this._failedRequests += 1;
     }
-    console.log(this._deviceData);
   }
 
   private stopDataInterval(): void {

@@ -1,10 +1,10 @@
 import { IncomingMessage } from 'http';
 import WebSocket from 'ws';
-import { logSocketConnection, logSocketError } from '@/cli';
+import { logSocketConnection } from '@/cli';
 import chalk from 'chalk';
 import { verifyClient } from '@/auth';
 import http from 'http';
-import { DeviceType, DevicesTypes, AnyDeviceData } from '@gbaranski/types';
+import { DeviceType, DevicesTypes, ResponseDevice } from '@gbaranski/types';
 import { logPingPong, logError } from '@/cli';
 import WatermixerDevice from '@/devices/watermixer';
 import { currentDevices, AnyDeviceObject } from '@/devices/globals';
@@ -75,6 +75,7 @@ export function setupWebsocketHandlers(
     ws.ping();
   }, 10000);
 
+  ws.on('message', device.handleMessage);
   ws.on('pong', () => {
     device.deviceStatus = true;
     logPingPong(device.deviceName, false);
@@ -92,3 +93,14 @@ export function setupWebsocketHandlers(
     ws.terminate();
   });
 }
+
+export const validateSocketMessage = (message: WebSocket.Data): void => {
+  if (
+    message instanceof Buffer ||
+    message instanceof ArrayBuffer ||
+    message instanceof Array
+  )
+    throw new Error('Cannot handle Buffer type');
+  const parsedResponse = JSON.parse(message) as ResponseDevice<undefined>;
+  if (!parsedResponse.ok) throw new Error('Response is not okay');
+};
