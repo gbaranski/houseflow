@@ -1,8 +1,8 @@
 import WebSocket from 'ws';
-import { DateTime } from './';
+import { IDateTime } from './';
 
-export interface AlarmclockData {
-  alarmTime: DateTime;
+export interface IAlarmclockData {
+  alarmTime: IDateTime;
   alarmState: boolean;
   sensor: {
     temperature: number;
@@ -11,7 +11,7 @@ export interface AlarmclockData {
   };
 }
 
-export const alarmclockSample: AlarmclockData = {
+export const alarmclockSample: IAlarmclockData = {
   alarmTime: {
     hour: 0,
     minute: 0,
@@ -25,8 +25,23 @@ export const alarmclockSample: AlarmclockData = {
   },
 };
 
-export interface Alarmclock {
-  status: boolean;
-  data: AlarmclockData;
-  ws: WebSocket | undefined;
+export enum AlarmclockRequestTypes {
+  GET_DATA = 'GET_DATA',
+  START_MIXING = 'START_MIXING',
+  SET_TIME = 'SET_TIME',
+  SET_STATE = 'SET_STATE',
+  TEST_SIREN = 'TEST_SIREN',
+  REBOOT = 'REBOOT',
+  UNKNOWN = 'UNKNOWN',
+}
+export type TRequestAlarmclock = ((
+  type: AlarmclockRequestTypes.GET_DATA,
+) => any) &
+  ((type: AlarmclockRequestTypes.TEST_SIREN) => any) &
+  ((type: AlarmclockRequestTypes.SET_TIME, data: IDateTime) => any) &
+  ((type: AlarmclockRequestTypes.SET_STATE, data: boolean) => any) &
+  ((type: AlarmclockRequestTypes.REBOOT) => any);
+
+export interface IAlarmclock {
+  data: IAlarmclockData;
 }
