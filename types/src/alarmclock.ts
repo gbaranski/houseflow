@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { DateTime } from './';
+import { DateTime, RequestTypes } from './';
 
 export interface AlarmclockData {
   alarmTime: DateTime;
@@ -10,6 +10,11 @@ export interface AlarmclockData {
     heatIndex: number;
   };
 }
+
+export type RequestAlarmclock = ((type: RequestTypes.GET_DATA) => any) &
+  ((type: RequestTypes.SET_TIME, data: DateTime) => any) &
+  ((type: RequestTypes.SET_STATE, data: boolean) => any) &
+  ((type: RequestTypes.REBOOT) => any);
 
 export const alarmclockSample: AlarmclockData = {
   alarmTime: {

@@ -22,10 +22,10 @@ export enum RequestTypes {
   UNKNOWN = 'UNKNOWN',
 }
 export enum DeviceType {
-  ALARMCLOCK,
-  WATERMIXER,
-  GATE,
-  GARAGE,
+  ALARMCLOCK = 'ALARMCLOCK',
+  WATERMIXER = 'WATERMIXER',
+  GATE = 'GATE',
+  GARAGE = 'GARAGE',
 }
 
 export type DevicesTypes = keyof typeof DeviceType;
