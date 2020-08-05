@@ -2,6 +2,7 @@ import { DeviceType } from './other';
 import { RequestAlarmclock, RequestWatermixer } from '.';
 
 export interface CurrentUser {
+  email: string;
   fullAccess: string[];
   name: string;
   uid: string;
