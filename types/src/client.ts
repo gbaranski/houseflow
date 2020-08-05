@@ -3,7 +3,9 @@ import { DeviceType } from './other';
 import { RequestAlarmclock, RequestWatermixer } from '.';
 
 export interface FirebaseUser {
-  fullAccess: DocumentReference[];
+  devices: {
+    fullAccess: DocumentReference[];
+  };
   permission: number;
 }
 
