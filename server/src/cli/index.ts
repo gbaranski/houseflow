@@ -4,6 +4,7 @@ import { IncomingMessage } from 'http';
 import { getIpStr } from '@/services/resolveip';
 
 const log = console.log;
+type Target = 'client' | 'device';
 
 export function logRequest(req: express.Request, res: express.Response): void {
   res.once('finish', () => {
@@ -15,16 +16,6 @@ export function logRequest(req: express.Request, res: express.Response): void {
       ),
     );
   });
-}
-
-export function logPingPong(deviceName: string, isPing: boolean): void {
-  log(
-    chalk.cyanBright(
-      `[WS] ${deviceName} ${
-        isPing ? 'PING' : 'PONG'
-      } ${new Date().getSeconds()}`,
-    ),
-  );
 }
 
 export function logMissing(what: string): void {
@@ -43,13 +34,33 @@ export function logError(what: string): void {
   log(chalk.magenta(`Error ${what}`));
 }
 
+const getSocketPrefix = (target: Target) =>
+  target === 'client' ? '[WSClient]' : '[WSDevice]';
+
 export function logSocketConnection(
   req: IncomingMessage,
   deviceName: string | string[],
+  target: Target,
 ): void {
   log(
     chalk.blueBright(
-      `[WS] Connect ${deviceName} IP: ${req.socket.remoteAddress} PORT: ${req.socket.remotePort}`,
+      `${getSocketPrefix(target)} Connect ${deviceName} IP: ${
+        req.socket.remoteAddress
+      } PORT: ${req.socket.remotePort}`,
+    ),
+  );
+}
+
+export function logSocketPingPong(
+  deviceName: string,
+  text: 'PING' | 'PONG',
+  target: Target,
+): void {
+  log(
+    chalk.cyanBright(
+      `${getSocketPrefix(
+        target,
+      )} ${deviceName} ${text} ${new Date().getSeconds()}`,
     ),
   );
 }
@@ -57,10 +68,13 @@ export function logSocketConnection(
 export function logSocketAttempt(
   req: IncomingMessage,
   deviceName: string | string[],
+  target: Target,
 ): void {
   log(
     chalk.blueBright(
-      `[WS] Attempt connect ${deviceName} IP: ${req.socket.remoteAddress} PORT: ${req.socket.remotePort}`,
+      `${getSocketPrefix(target)} Attempt connect ${deviceName} IP: ${
+        req.socket.remoteAddress
+      } PORT: ${req.socket.remotePort}`,
     ),
   );
 }
@@ -69,10 +83,13 @@ export function logIntervalStop(
   deviceName: string,
   uid: string,
   reason: string,
+  target: Target,
 ): void {
   log(
     chalk.redBright(
-      `[WS] Stopped connection, caused by ${reason}. Name: ${deviceName} UID: ${uid}`,
+      `${getSocketPrefix(
+        target,
+      )} Stopped connection, caused by ${reason}. Name: ${deviceName} UID: ${uid}`,
     ),
   );
 }
@@ -80,10 +97,13 @@ export function logSocketError(
   deviceName: string,
   uid: string,
   message: string,
+  target: Target,
 ): void {
   log(
     chalk.redBright(
-      `[WS] Error with websocket ${deviceName} UID: ${uid} | Error: ${message} `,
+      `${getSocketPrefix(
+        target,
+      )} Error with websocket ${deviceName} UID: ${uid} | Error: ${message} `,
     ),
   );
 }

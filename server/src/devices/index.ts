@@ -6,8 +6,28 @@ import {
   DateTime,
 } from '@gbaranski/types';
 import { logSocketError } from '@/cli';
+import WatermixerDevice from './watermixer';
+import AlarmclockDevice from './alarmclock';
+
+export type AnyDeviceObject = WatermixerDevice | AlarmclockDevice;
 
 export default abstract class Device<DeviceData extends AnyDeviceData> {
+  private static _currentDevices: AnyDeviceObject[] = [];
+
+  public static get currentDevices(): AnyDeviceObject[] {
+    return this._currentDevices;
+  }
+
+  public static addNewDevice(device: AnyDeviceObject): void {
+    this._currentDevices.push(device);
+  }
+
+  public static removeDevice(device: AnyDeviceObject): void {
+    this._currentDevices = this._currentDevices.filter(
+      (_device: AnyDeviceObject) => _device !== device,
+    );
+  }
+
   private _status = false;
 
   constructor(
@@ -46,7 +66,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   public terminateConnection(reason: string): void {
     this.ws.terminate();
-    logSocketError(this.deviceName, this.deviceUid, reason);
+    logSocketError(this.deviceName, this.deviceUid, reason, 'device');
   }
 
   get deviceData(): DeviceData {
@@ -65,3 +85,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     return this._status;
   }
 }
+
+setInterval(() => {
+  console.log({ CurrentDevices: Device.currentDevices });
+}, 1000);

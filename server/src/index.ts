@@ -3,6 +3,8 @@ require('module-alias/register');
 import http from 'http';
 import app from '@/app';
 import '@/services/firebase';
+import '@/services/websocket_devices';
+import '@/services/websocket_clients';
 import '@/cli/index';
 import chalk from 'chalk';
 

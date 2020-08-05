@@ -3,9 +3,13 @@ export const CORS_WHITELIST = [
   'http://localhost:3000',
 ];
 
-export const LOGIN_WHITELIST_URL = ['/', '/api/getToken'];
-export const NO_LOG_URL = [
+export const LOGIN_WHITELIST_URL = [
+  '/',
   '/api/getToken',
+  '/api/getDeviceToken',
+];
+export const NO_LOG_URL = [
+  '/api/getDeviceToken',
   '/api/login',
   '/',
   '/favicon.ico',

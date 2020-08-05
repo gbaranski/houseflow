@@ -7,7 +7,7 @@ import {
   RequestTypes,
 } from '@gbaranski/types';
 import Device from '..';
-import { validateSocketMessage } from '@/services/websocket_devices';
+import { validateSocketMessage } from '@/helpers';
 
 export class WatermixerDevice extends Device<WatermixerData> {
   constructor(ws: WebSocket) {

@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 import { authenticateDevice } from '@/auth';
-import { getWssClients } from '@/services/websocket_devices';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.post('/login', (req, res): void => {
   res.sendStatus(200);
 });
 
-router.get('/getToken', (req, res): void => {
+router.get('/getDeviceToken', (req, res): void => {
   const device = req.get('device');
   const reqToken = req.get('token');
   if (!device || !reqToken) {
@@ -24,8 +24,13 @@ router.get('/getToken', (req, res): void => {
   res.send(token);
 });
 
-router.get('/getClients', (req, res): void => {
-  res.send(JSON.stringify(getWssClients));
+router.get('/getClientToken', (req, res): void => {
+  const clientUid = uuidv4();
+  const token = jwt.sign({ clientUid }, process.env.JWT_KEY as string, {
+    expiresIn: '5m',
+  });
+  res.type('html');
+  res.send(token);
 });
 
 export default router;

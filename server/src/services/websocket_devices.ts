@@ -2,19 +2,19 @@ import { IncomingMessage } from 'http';
 import WebSocket from 'ws';
 import { logSocketConnection } from '@/cli';
 import chalk from 'chalk';
-import { verifyClient } from '@/auth';
+import { verifyDevice } from '@/auth';
 import http from 'http';
-import { DeviceType, DevicesTypes, ResponseDevice } from '@gbaranski/types';
-import { logPingPong, logError } from '@/cli';
+import { DeviceType, DevicesTypes } from '@gbaranski/types';
+import { logSocketPingPong, logError } from '@/cli';
 import WatermixerDevice from '@/devices/watermixer';
-import { currentDevices, AnyDeviceObject } from '@/devices/globals';
+import Device, { AnyDeviceObject } from '@/devices';
 
 const httpServer = http.createServer();
 
 export const wss: WebSocket.Server = new WebSocket.Server({
   server: httpServer,
   clientTracking: true,
-  verifyClient,
+  verifyClient: verifyDevice,
 });
 
 wss.on('connection', (ws, req: IncomingMessage) => {
@@ -25,15 +25,15 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     return;
   }
   assignDevice(ws, DeviceType[deviceName]);
-  logSocketConnection(req, deviceName || '');
+  logSocketConnection(req, deviceName, 'device');
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-httpServer.listen(process.env.WS_PORT, '0.0.0.0', () =>
+httpServer.listen(process.env.WS_DEVICE_PORT, '0.0.0.0', () =>
   console.log(
     chalk.yellow(
-      `Listening for websocket connection at port ${process.env.WS_PORT}`,
+      `Listening for websocket_devices connection at port ${process.env.WS_DEVICE_PORT}`,
     ),
   ),
 );
@@ -59,10 +59,18 @@ export function setupWebsocketHandlers(
   ws: WebSocket,
   device: AnyDeviceObject,
 ): void {
-  currentDevices.push(device);
+  Device.addNewDevice(device);
+
+  const terminateConnection = (reason: string) => {
+    device.terminateConnection(reason);
+    Device.removeDevice(device);
+    clearInterval(pingInterval);
+  };
 
   const pingInterval = setInterval(() => {
-    if (!device.deviceStatus) return ws.terminate();
+    if (!device.deviceStatus) {
+      return terminateConnection('Ping not received');
+    }
     device.deviceStatus = false;
     ws.ping();
   }, 2000);
@@ -70,29 +78,16 @@ export function setupWebsocketHandlers(
   ws.on('message', device.handleMessage);
   ws.on('pong', () => {
     device.deviceStatus = true;
-    logPingPong(device.deviceName, false);
+    logSocketPingPong(device.deviceName, 'PONG', 'device');
   });
   ws.on('ping', () => {
     ws.pong();
-    logPingPong(device.deviceName, true);
+    logSocketPingPong(device.deviceName, 'PING', 'device');
   });
   ws.on('error', err => {
     logError(err.message);
   });
   ws.on('close', (code, reason) => {
-    logError(`CODE: ${code} \nREASON:${reason}`);
-    clearInterval(pingInterval);
-    ws.terminate();
+    terminateConnection(`Connection closed CODE: ${code} REASON: ${reason}`);
   });
 }
-
-export const validateSocketMessage = (message: WebSocket.Data): void => {
-  if (
-    message instanceof Buffer ||
-    message instanceof ArrayBuffer ||
-    message instanceof Array
-  )
-    throw new Error('Cannot handle Buffer type');
-  const parsedResponse = JSON.parse(message) as ResponseDevice<undefined>;
-  if (!parsedResponse.ok) throw new Error('Response is not okay');
-};

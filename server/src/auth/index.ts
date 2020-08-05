@@ -54,11 +54,44 @@ interface VerifyClientCallback {
   ): void;
 }
 
+export const verifyDevice = (
+  info: VerifyClientInfo,
+  callback: VerifyClientCallback,
+): void => {
+  logSocketAttempt(info.req, info.req.headers['device'] || 'unknown', 'device');
+  if (!process.env.JWT_KEY) throw new Error('Missing process.env.JWT_KEY');
+
+  const token = info.req.headers.token || '';
+  if (!token) {
+    logMissing('JWT token');
+    callback(false, 401, 'Unauthorized');
+  } else {
+    jwt.verify(token as string, process.env.JWT_KEY, (err, decoded) => {
+      if (!decoded) {
+        logMissing('decoded username at JWT Token');
+        callback(false, 400, 'Missing decoded username');
+        return;
+      }
+      if (err) {
+        callback(false, 401, 'Unauthorized');
+        logInvalid('token');
+      } else {
+        info.req.headers.device = (decoded as { device: string }).device;
+        callback(true);
+      }
+    });
+  }
+};
+
 export const verifyClient = (
   info: VerifyClientInfo,
   callback: VerifyClientCallback,
 ): void => {
-  logSocketAttempt(info.req, info.req.headers['device'] || 'unknown');
+  logSocketAttempt(
+    info.req,
+    info.req.headers['username'] || 'unknown',
+    'client',
+  );
   if (!process.env.JWT_KEY) throw new Error('Missing process.env.JWT_KEY');
 
   const token = info.req.headers.token || '';
