@@ -1,9 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticateDevice } from '@/auth';
 import { validateDevice } from '@/services/firebase';
-import chalk from 'chalk';
 
 const router = express.Router();
 
@@ -37,14 +35,5 @@ router.get(
     res.send(token);
   },
 );
-
-router.get('/getClientToken', (req, res): void => {
-  const clientUid = uuidv4();
-  const token = jwt.sign({ clientUid }, process.env.JWT_KEY as string, {
-    expiresIn: '5m',
-  });
-  res.type('html');
-  res.send(token);
-});
 
 export default router;
