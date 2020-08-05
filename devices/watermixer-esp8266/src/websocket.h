@@ -181,6 +181,7 @@ void connectWebSocket()
         delay(10);
     }
     webSocket.setExtraHeaders(("token: " + getToken()).c_str());
+    webSocket.setExtraHeaders(("device: WATERMIXER"));
 
     webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
