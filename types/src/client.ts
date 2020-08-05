@@ -2,7 +2,7 @@ import { DocumentReference } from '@firebase/firestore-types';
 import { DeviceType } from './other';
 import { RequestAlarmclock, RequestWatermixer } from '.';
 
-export interface CurrentUser {
+export interface FirebaseUser {
   fullAccess: DocumentReference[];
   permission: number;
 }
