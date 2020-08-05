@@ -4,7 +4,7 @@ import { logSocketConnection } from '@/cli';
 import chalk from 'chalk';
 import { verifyClient } from '@/auth';
 import http from 'http';
-import { logSocketPingPong, logError } from '@/cli';
+import { logError } from '@/cli';
 import WebSocketClient, { currentClients } from '@/client';
 
 const httpServer = http.createServer();
@@ -54,11 +54,9 @@ export function setupWebsocketHandlers(
   ws.on('message', client.handleMessage);
   ws.on('pong', () => {
     client.status = true;
-    logSocketPingPong(client.deviceName, 'PONG', 'client');
   });
   ws.on('ping', () => {
     ws.pong();
-    logSocketPingPong(client.deviceName, 'PING', 'client');
   });
   ws.on('error', err => {
     logError(err.message);

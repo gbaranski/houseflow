@@ -30,7 +30,7 @@ const prodSocketUrl = `wss://ws.gbaranski.com:443`;
   console.log(resText);
 
   const ws = new WebSocket(devSocketUrl, {
-    headers: { token: resText },
+    headers: { token: resText, username: username },
   });
   ws.on('open', async () => {
     console.log('Logged in');

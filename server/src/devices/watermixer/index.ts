@@ -20,7 +20,6 @@ export class WatermixerDevice extends Device<WatermixerData> {
       undefined
     >;
     if (parsedResponse.responseFor === RequestTypes.GET_DATA) {
-      console.log('Received data', new Date().getSeconds());
       this.deviceData = (parsedResponse.data as unknown) as WatermixerData;
     }
   }

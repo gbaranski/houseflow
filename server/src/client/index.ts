@@ -34,6 +34,7 @@ export default class WebSocketClient {
 
   handleMessage(message: WebSocket.Data): void {
     validateSocketMessage(message);
+    console.log(message);
   }
 
   get status(): boolean {

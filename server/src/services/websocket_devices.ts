@@ -78,11 +78,9 @@ export function setupWebsocketHandlers(
   ws.on('message', device.handleMessage);
   ws.on('pong', () => {
     device.deviceStatus = true;
-    logSocketPingPong(device.deviceName, 'PONG', 'device');
   });
   ws.on('ping', () => {
     ws.pong();
-    logSocketPingPong(device.deviceName, 'PING', 'device');
   });
   ws.on('error', err => {
     logError(err.message);

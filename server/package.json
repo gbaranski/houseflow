@@ -23,7 +23,7 @@
   "author": "Grzegorz Baranski",
   "license": "ISC",
   "dependencies": {
-    "@gbaranski/types": "^3.0.0",
+    "@gbaranski/types": "^3.0.1",
     "@sendgrid/mail": "^7.1.0",
     "chalk": "^4.1.0",
     "cookie-parser": "~1.4.4",

@@ -10,6 +10,7 @@ export const LOGIN_WHITELIST_URL = [
 ];
 export const NO_LOG_URL = [
   '/api/getDeviceToken',
+  '/api/getClientToken',
   '/api/login',
   '/',
   '/favicon.ico',

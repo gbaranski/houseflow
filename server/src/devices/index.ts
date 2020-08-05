@@ -85,7 +85,3 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     return this._status;
   }
 }
-
-setInterval(() => {
-  console.log({ CurrentDevices: Device.currentDevices });
-}, 1000);
