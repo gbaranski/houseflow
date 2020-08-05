@@ -16,13 +16,14 @@ function CreateButtons(props: any) {
   ));
 }
 
-function DeviceManager(props: {data: DeviceManagerButton[]}) {
+function DeviceManager(props: { data: DeviceManagerButton[] }) {
   return (
     <React.Fragment>
       <Title>Manage Device</Title>
       <ButtonGroup
         color="primary"
-        aria-label="outlined primary button group grouped">
+        aria-label="outlined primary button group grouped"
+      >
         <CreateButtons data={props.data} root grouped />
       </ButtonGroup>
     </React.Fragment>

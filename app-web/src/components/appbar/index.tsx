@@ -5,9 +5,9 @@ import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import MenuIcon from '@material-ui/icons/Menu';
-import {makeStyles} from '@material-ui/core';
-import {useLocation} from 'react-router-dom';
-import {capitalizeFirst} from '../../helpers';
+import { makeStyles } from '@material-ui/core';
+import { useLocation } from 'react-router-dom';
+import { capitalizeFirst } from '../../utils';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -39,12 +39,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Appbar(props: {open: boolean; handleDrawerOpen: any}) {
+export default function Appbar(props: {
+  open: boolean;
+  handleDrawerOpen: any;
+}) {
   const classes = useStyles();
   return (
     <AppBar
       position="absolute"
-      className={clsx(classes.appBar, props.open && classes.appBarShift)}>
+      className={clsx(classes.appBar, props.open && classes.appBarShift)}
+    >
       <Toolbar className={classes.toolbar}>
         <IconButton
           edge="start"
@@ -54,7 +58,8 @@ export default function Appbar(props: {open: boolean; handleDrawerOpen: any}) {
           className={clsx(
             classes.menuButton,
             props.open && classes.menuButtonHidden,
-          )}>
+          )}
+        >
           <MenuIcon />
         </IconButton>
         <Typography
@@ -62,7 +67,8 @@ export default function Appbar(props: {open: boolean; handleDrawerOpen: any}) {
           variant="h6"
           color="inherit"
           noWrap
-          className={classes.title}>
+          className={classes.title}
+        >
           {capitalizeFirst(useLocation().pathname.slice(1))}
         </Typography>
       </Toolbar>
