@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
-const String WATERMIXER_TOKEN = "TOKEN";
+const String WATERMIXER_SECRET = "SECRET";
+const String WATERMIXER_UID = "UID";
 
 // WIFI
 const char *ssid = "WIFI_SSID";
