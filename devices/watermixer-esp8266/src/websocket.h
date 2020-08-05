@@ -136,8 +136,9 @@ String getToken()
     // client->setFingerprint(fingerprint);
     // http.begin(*client, TOKEN_SERVER_URL);
     http.begin(TOKEN_SERVER_URL);
-    http.addHeader("device", "WATERMIXER");
-    http.addHeader("token", WATERMIXER_TOKEN);
+    http.addHeader("deviceType", "WATERMIXER");
+    http.addHeader("uid", WATERMIXER_UID);
+    http.addHeader("secret", WATERMIXER_SECRET);
     http.addHeader("accept", "text/plain");
     int httpCode = http.GET();
     if (httpCode == 200)
@@ -180,8 +181,7 @@ void connectWebSocket()
         handleOTA();
         delay(10);
     }
-    webSocket.setExtraHeaders(("token: " + getToken()).c_str());
-    webSocket.setExtraHeaders(("device: WATERMIXER"));
+    webSocket.setExtraHeaders(("token: " + getToken() + "\r\ndeviceType: WATERMIXER").c_str());
 
     webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
