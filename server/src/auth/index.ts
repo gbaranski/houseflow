@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import http from 'http';
 import { logMissing, logInvalid, logSocketAttempt } from '@/cli';
+import { validateDevice } from '@/services/firebase';
 
 function validateCredentials(
   username: string | undefined,
@@ -30,11 +31,16 @@ export function isAuthenticated(
   next();
 }
 
-export function authenticateDevice(device: string, token: string): void {
-  if (!token || !device) {
+export async function authenticateDevice(
+  device: string,
+  uid: string,
+  secret: string,
+): Promise<void> {
+  if (!uid || !device) {
+    console.log('Throwing error');
     throw new Error('No token or device name');
   }
-  if (token !== process.env[device.toUpperCase()]) {
+  if (!(await validateDevice(device, uid, secret))) {
     throw new Error('Invalid token or device name');
   }
 }
@@ -58,9 +64,12 @@ export const verifyDevice = (
   info: VerifyClientInfo,
   callback: VerifyClientCallback,
 ): void => {
-  logSocketAttempt(info.req, info.req.headers['device'] || 'unknown', 'device');
+  logSocketAttempt(
+    info.req,
+    info.req.headers['devicetype'] || 'unknown',
+    'device',
+  );
   if (!process.env.JWT_KEY) throw new Error('Missing process.env.JWT_KEY');
-
   const token = info.req.headers.token || '';
   if (!token) {
     logMissing('JWT token');

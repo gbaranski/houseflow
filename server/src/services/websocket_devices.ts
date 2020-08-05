@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { verifyDevice } from '@/auth';
 import http from 'http';
 import { DeviceType, DevicesTypes } from '@gbaranski/types';
-import { logSocketPingPong, logError } from '@/cli';
+import { logError } from '@/cli';
 import WatermixerDevice from '@/devices/watermixer';
 import Device, { AnyDeviceObject } from '@/devices';
 
@@ -18,7 +18,7 @@ export const wss: WebSocket.Server = new WebSocket.Server({
 });
 
 wss.on('connection', (ws, req: IncomingMessage) => {
-  const deviceName = req.headers['device'] as DevicesTypes;
+  const deviceName = req.headers['devicetype'] as DevicesTypes;
   if (!deviceName) {
     console.error('Error during recognizing device');
     ws.terminate();

@@ -12,6 +12,7 @@ admin.initializeApp({
 const db = admin.firestore();
 const requestsCollection = db.collection('requests');
 const temperatureCollection = db.collection('temp-history');
+const deviceCollection = db.collection('devices');
 
 export async function saveRequestToDb(history: RequestHistory): Promise<void> {
   const res = await requestsCollection.add(history);
@@ -21,6 +22,22 @@ export async function saveRequestToDb(history: RequestHistory): Promise<void> {
 export async function addTemperatureToDb(data: TempHistory): Promise<void> {
   const res = await temperatureCollection.add(data);
   logAdded(`temperature to Firestore ID: ${res.id}`);
+}
+
+export async function validateDevice(
+  deviceType: string,
+  uid: string,
+  secret: string,
+): Promise<boolean> {
+  const snapshot = await deviceCollection
+    .where('secret', '==', secret)
+    .where('uid', '==', uid)
+    .where('type', '==', deviceType)
+    .get();
+  if (snapshot.empty) {
+    return false;
+  }
+  return true;
 }
 
 export function sendMessage(username: string, requestTypeString: string): void {

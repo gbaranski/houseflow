@@ -89,6 +89,7 @@ app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _next: express.NextFunction,
   ): void => {
+    console.log('Not authorized');
     res.status(401).send(err.message);
   },
 );
