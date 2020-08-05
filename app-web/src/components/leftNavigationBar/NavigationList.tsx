@@ -9,10 +9,10 @@ import OpacityIcon from '@material-ui/icons/Opacity';
 import SettingsRemoteIcon from '@material-ui/icons/SettingsRemote';
 import InfoIcon from '@material-ui/icons/Info';
 import LiveHelpIcon from '@material-ui/icons/LiveHelp';
-import {NavLink} from 'react-router-dom';
-import {DeviceList} from '@gbaranski/types';
+import { NavLink } from 'react-router-dom';
+import { DeviceType } from '@gbaranski/types';
 
-const Icons = (props: {index: number}) => {
+const Icons = (props: { index: number }) => {
   switch (props.index) {
     default:
     case 0:
@@ -43,29 +43,30 @@ const primaryText = (index: number) => {
   if (index === 0) {
     return 'Dashboard';
   } else {
-    let returnText = [Object.keys(DeviceList)[index - 1]];
-    if (returnText[0] === DeviceList.Gate) {
-      returnText[0] = `${DeviceList.Gate} & ${DeviceList.Garage}`;
+    let returnText = [Object.keys(DeviceType)[index - 1]];
+    if (returnText[0] === DeviceType.GATE) {
+      returnText[0] = `${DeviceType.GATE} & ${DeviceType.GARAGE}`;
     }
     return returnText;
   }
 };
 
-const disabledItems = [DeviceList.Gate];
+const disabledItems = [DeviceType.GATE];
 
 const checkIfDisabledItem = (index: number) => {
-  return disabledItems.includes(Object.values(DeviceList)[index - 1]);
+  return disabledItems.includes(Object.values(DeviceType)[index - 1]);
 };
 
 const FancyLink = React.forwardRef(
-  (props: {index: number; className: string | undefined; navigate: any}) => {
+  (props: { index: number; className: string | undefined; navigate: any }) => {
     return (
       <ListItem
         button
         disabled={checkIfDisabledItem(props.index)}
         key={props.index}
         onClick={props.navigate}
-        selected={props.className !== undefined}>
+        selected={props.className !== undefined}
+      >
         <ListItemIcon>
           <Icons index={props.index} />
         </ListItemIcon>

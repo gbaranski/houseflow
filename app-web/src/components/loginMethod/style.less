@@ -1,0 +1,53 @@
+.main {
+  width: 368px;
+  margin: 0 auto;
+  text-align: center;
+  @media screen and (max-width: @screen-xs) {
+    width: 95%;
+  }
+
+  .providerButton {
+    display: inline-flex;
+    align-items: center;
+    width: 95%;
+    margin: 8px;
+    padding: 0;
+    font-weight: 500;
+    font-size: 14px;
+    font-family: Roboto, sans-serif;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24), 0 0 1px 0 rgba(0, 0, 0, 0.24);
+    cursor: pointer;
+  }
+
+  .icon {
+    margin-left: 16px;
+    color: rgba(0, 0, 0, 0.2);
+    font-size: 24px;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+      color: @primary-color;
+    }
+  }
+
+  .other {
+    margin-top: 24px;
+    line-height: 22px;
+    text-align: left;
+
+    .register {
+      float: right;
+    }
+  }
+
+  :global {
+    .antd-pro-login-submit {
+      width: 100%;
+      margin-top: 24px;
+    }
+  }
+}

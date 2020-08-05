@@ -1,13 +1,13 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Title from '../../components/title';
-import {RequestHistory} from '@gbaranski/types';
-import {parseDateToDateString} from '../../helpers';
-import {getRequestHistory} from '../../services/firebase';
+import { RequestHistory } from '@gbaranski/types';
+import { parseDateToDateString } from '../../utils';
+import { getRequestHistory } from '../../services/firebase';
 
 export default function Requests() {
   const [requestHistory, setRequestHistory] = React.useState<any>([{}]);

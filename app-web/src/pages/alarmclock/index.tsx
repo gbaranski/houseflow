@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import {makeStyles} from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
@@ -9,10 +9,10 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import TempChart from '../../components/tempChart';
 import Copyright from '../../components/copyright';
-import {mdiThermometer} from '@mdi/js';
-import {mdiWater} from '@mdi/js';
-import {mdiClock} from '@mdi/js';
-import {mdiAlarm} from '@mdi/js';
+import { mdiThermometer } from '@mdi/js';
+import { mdiWater } from '@mdi/js';
+import { mdiClock } from '@mdi/js';
+import { mdiAlarm } from '@mdi/js';
 import Icon from '@mdi/react';
 import DeviceManager from '../../components/deviceManager';
 import DeviceInfo from '../../components/deviceInfo';
@@ -29,8 +29,8 @@ import {
 import Button from '@material-ui/core/Button';
 import DateFnsUtils from '@date-io/date-fns';
 import Snackbar from '@material-ui/core/Snackbar';
-import {AlarmclockData} from '@gbaranski/types';
-import {useInterval} from '../../helpers';
+import { AlarmclockData } from '@gbaranski/types';
+import { useInterval } from '../../utils';
 import {
   getAlarmClockData,
   sendTimeRequest,
@@ -150,23 +150,25 @@ function Alarmclock() {
   const deviceInfo = [
     {
       title: 'Temperature',
-      description: data?.temperature + '°C / ' + data?.heatIndex + '°C' || '',
+      description:
+        data?.sensor.temperature + '°C / ' + data?.sensor.heatIndex + '°C' ||
+        '',
       icon: <Icon path={mdiThermometer} size={2} color="rgb(117,117,117)" />,
     },
     {
       title: 'Humidity',
-      description: data?.humidity + '%' || '',
+      description: data?.sensor.humidity + '%' || '',
       icon: <Icon path={mdiWater} size={2} color="rgb(117,117,117)" />,
     },
     {
       title: 'Remaining time',
-      description: data?.remainingTime || '',
+      description: data || '',
       icon: (
         <Icon
           path={mdiClock}
           size={1.5}
           color="rgb(117,117,117)"
-          style={{marginLeft: '8%'}}
+          style={{ marginLeft: '8%' }}
         />
       ),
     },
@@ -180,7 +182,7 @@ function Alarmclock() {
           path={mdiAlarm}
           size={1.5}
           color="rgb(117,117,117)"
-          style={{marginLeft: '8%'}}
+          style={{ marginLeft: '8%' }}
         />
       ),
     },
@@ -192,7 +194,8 @@ function Alarmclock() {
         <Dialog
           open={timeDialogOpen}
           onClose={() => setTimeDialogOpen(false)}
-          aria-labelledby="form-dialog-title">
+          aria-labelledby="form-dialog-title"
+        >
           <DialogTitle id="form-dialog-title">Set new Alarm Time</DialogTitle>
           <DialogContent>
             <DialogContentText>
@@ -236,14 +239,16 @@ function Alarmclock() {
               <Button
                 color="secondary"
                 size="small"
-                onClick={handleSnackbarClose}>
+                onClick={handleSnackbarClose}
+              >
                 UNDO
               </Button>
               <IconButton
                 size="small"
                 aria-label="close"
                 color="inherit"
-                onClick={handleSnackbarClose}>
+                onClick={handleSnackbarClose}
+              >
                 <CloseIcon fontSize="small" />
               </IconButton>
             </React.Fragment>

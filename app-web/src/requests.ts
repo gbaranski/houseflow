@@ -1,4 +1,4 @@
-import {AlarmclockData} from '@gbaranski/types';
+import { AlarmclockData } from '@gbaranski/types';
 
 const remoteUrl = 'https://api.gbaranski.com';
 
@@ -51,7 +51,7 @@ export async function sendTimeRequest(date: Date) {
   return res.ok;
 }
 
-export async function switchAlarmState(state: number) {
+export async function switchAlarmState(state: boolean) {
   const headers = getHeaders();
 
   headers.append('state', String(+!state));

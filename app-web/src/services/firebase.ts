@@ -4,7 +4,7 @@ import 'firebase/analytics';
 import 'firebase/auth';
 import 'firebase/app';
 
-import {RequestHistory, TempHistory} from '@gbaranski/types';
+import { RequestHistory, TempHistory, FirebaseUser } from '@gbaranski/types';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCpRLmvfBf-SpwkDUHKa_vrbEeIvSzHNOY',
@@ -17,33 +17,51 @@ const firebaseConfig = {
   measurementId: 'G-J8271YJZER',
 };
 
-export function initializeFirebase() {
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  firebase.analytics();
+const app = firebase.initializeApp(firebaseConfig);
+firebase.analytics();
+const db = firebase.firestore();
+const requestCollection = db.collection('requests');
+const tempHistoryCollection = db.collection('temp-history');
+const usersCollection = db.collection('users');
+
+export const firebaseAuth: firebase.auth.Auth = app.auth();
+
+export async function signInWithCredentials(email: string, password: string) {
+  try {
+    return firebase.auth().signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    throw e;
+  }
 }
 
 export async function getRequestHistory() {
-  const db = firebase.firestore();
-
-  const collection = db.collection('requests').get();
   const requestHistory: RequestHistory[] = [];
-  (await collection).forEach((doc) => {
+  (await requestCollection.get()).forEach((doc) => {
     const docData: RequestHistory = doc.data() as RequestHistory;
     requestHistory.push(docData);
   });
-  console.log(requestHistory);
   return requestHistory;
 }
 
 export async function getTempHistory() {
-  const db = firebase.firestore();
-  const collection = db.collection('temp-history').get();
   const tempHistory: TempHistory[] = [];
-  (await collection).forEach((doc) => {
+  (await tempHistoryCollection.get()).forEach((doc) => {
     const docData: TempHistory = doc.data() as TempHistory;
     tempHistory.push(docData);
   });
   console.log(tempHistory);
   return tempHistory;
+}
+
+export async function convertFirebaseUser(
+  userCredential: firebase.auth.UserCredential,
+): Promise<FirebaseUser> {
+  if (!userCredential.user) throw new Error('User is not defined');
+  const usersDoc = await usersCollection.doc(userCredential.user.uid).get();
+  if (!usersDoc.exists) throw new Error('User does not exist in database');
+  const usersData = usersDoc.data() as FirebaseUser;
+  const firebaseUser: FirebaseUser = {
+    ...usersData,
+  };
+  return firebaseUser;
 }

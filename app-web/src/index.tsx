@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import {
   BrowserRouter as Router,
@@ -8,11 +8,10 @@ import {
 } from 'react-router-dom';
 import routes from './routes';
 import LoginPage from './pages/login';
-import LoginLoading from './pages/loginLoading';
-import {login} from './requests';
-import {initializeFirebase} from './services/firebase';
+import './services/firebase';
 import LeftNavigationBar from './components/leftNavigationBar';
-import {makeStyles} from '@material-ui/core';
+import { makeStyles } from '@material-ui/core';
+import { UserProvider, UserContext } from './providers/userProvider';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -20,41 +19,24 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const getLoginPage = async (setLoggedIn: any, setAttemptedToLogin: any) => {
-  const res = login();
-  if (await res) {
-    setLoggedIn(true);
-  }
-  res.then(() => setAttemptedToLogin(true));
-};
-
 const App = () => {
   const classes = useStyles();
-  useEffect(() => {
-    initializeFirebase();
-  }, []);
-
-  const [isLoggedIn, setLoggedIn] = useState(false);
-  const [isAttemptedToLogin, setAttemptedToLogin] = useState(false);
+  const { firebaseUser } = React.useContext(UserContext);
   const [open, setOpen] = useState(true);
 
-  if (!isAttemptedToLogin) {
-    getLoginPage(setLoggedIn, setAttemptedToLogin);
-    return <LoginLoading />;
-  }
-  const SafeRoute = ({children, ...rest}: any) => {
+  const SafeRoute = ({ children, ...rest }: any) => {
     if (rest.protected) {
       return (
         <Route
           {...rest}
-          render={({location}) =>
-            isLoggedIn ? (
+          render={({ location }) =>
+            firebaseUser ? (
               children
             ) : (
               <Redirect
                 to={{
                   pathname: '/login',
-                  state: {from: location},
+                  state: { from: location },
                 }}
               />
             )
@@ -62,7 +44,7 @@ const App = () => {
         />
       );
     } else {
-      return <Route {...rest} render={({location}) => children} />;
+      return <Route {...rest} render={({ location }) => children} />;
     }
   };
 
@@ -74,7 +56,7 @@ const App = () => {
   };
   return (
     <div className={classes.root}>
-      {isLoggedIn && (
+      {firebaseUser && (
         <>
           <Redirect
             to={{
@@ -100,13 +82,11 @@ const App = () => {
           />
         ))}
         <Route path={'/login'} exact>
-          {!isLoggedIn && (
-            <LoginPage
-              setAttemptedToLogin={setAttemptedToLogin}
-              setLoggedIn={setLoggedIn}
-            />
-          )}
+          {!firebaseUser && <LoginPage />}
         </Route>
+        {/* <Route path={'/login/success'} exact>
+          <LoginSuccess />
+        </Route> */}
       </Switch>
     </div>
   );
@@ -114,7 +94,9 @@ const App = () => {
 
 ReactDOM.render(
   <Router>
-    <App />
+    <UserProvider>
+      <App />
+    </UserProvider>
   </Router>,
 
   document.getElementById('root'),

@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import {makeStyles} from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
@@ -8,19 +8,19 @@ import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Copyright from '../../components/copyright';
-import {mdiWater} from '@mdi/js';
-import {mdiClock} from '@mdi/js';
+import { mdiWater } from '@mdi/js';
+import { mdiClock } from '@mdi/js';
 import Icon from '@mdi/react';
 import DeviceManager from '../../components/deviceManager';
 import DeviceInfo from '../../components/deviceInfo';
 import CloseIcon from '@material-ui/icons/Close';
-import {MuiPickersUtilsProvider} from '@material-ui/pickers';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import Button from '@material-ui/core/Button';
 import DateFnsUtils from '@date-io/date-fns';
 import Snackbar from '@material-ui/core/Snackbar';
-import {WatermixerData} from '@gbaranski/types';
-import {useInterval} from '../../helpers';
-import {getWatermixerData, startMixing} from '../../requests';
+import { WatermixerData } from '@gbaranski/types';
+import { useInterval } from '../../utils';
+import { getWatermixerData, startMixing } from '../../requests';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -103,7 +103,7 @@ function Watermixer() {
           path={mdiClock}
           size={1.5}
           color="rgb(117,117,117)"
-          style={{marginLeft: '8%'}}
+          style={{ marginLeft: '8%' }}
         />
       ),
     },
@@ -125,14 +125,16 @@ function Watermixer() {
             <Button
               color="secondary"
               size="small"
-              onClick={handleSnackbarClose}>
+              onClick={handleSnackbarClose}
+            >
               UNDO
             </Button>
             <IconButton
               size="small"
               aria-label="close"
               color="inherit"
-              onClick={handleSnackbarClose}>
+              onClick={handleSnackbarClose}
+            >
               <CloseIcon fontSize="small" />
             </IconButton>
           </React.Fragment>
