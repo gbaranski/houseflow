@@ -3,7 +3,7 @@ import cors from 'cors';
 import routes from './routes';
 import { isAuthenticated } from './auth';
 import { CORS_WHITELIST, LOGIN_WHITELIST_URL, NO_LOG_URL } from './config';
-import { saveRequestToDb } from './services/firebase';
+import { saveRequestToDb } from '@/services/firebase';
 import { getIpStr, getCountryStr } from '@/services/resolveip';
 import morgan from 'morgan';
 import chalk from 'chalk';
