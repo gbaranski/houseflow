@@ -7,7 +7,8 @@
     "start:dev": "ts-node-dev -r dotenv/config .",
     "lint": "eslint . --ext .ts",
     "test": "jest --setupFiles dotenv/config",
-    "connectWs": "ts-node -r dotenv/config scripts/connectws.ts"
+    "connectWs": "ts-node -r dotenv/config scripts/connectws.ts",
+    "generate": "ts-node -r dotenv/config scripts/generate.ts"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "chalk": "^4.1.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
+    "crypto-js": "^4.0.0",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
     "errorhandler": "^1.5.1",
@@ -51,6 +53,7 @@
   "devDependencies": {
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.6",
+    "@types/crypto-js": "^3.1.47",
     "@types/debug": "^4.1.5",
     "@types/dotenv": "^6.1.1",
     "@types/errorhandler": "^1.5.0",
