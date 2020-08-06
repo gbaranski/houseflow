@@ -10,11 +10,11 @@ export const WebsocketContext = React.createContext<IWebsocketContext>({
   setWebsocket: undefined,
 });
 
-interface UserProviderProps {
+interface WebsocketProviderProps {
   children: React.ReactNode;
 }
 
-export const WebsocketProvider = ({ children }: UserProviderProps) => {
+export const WebsocketProvider = ({ children }: WebsocketProviderProps) => {
   const [websocket, setWebsocket] = React.useState<WebSocket | undefined>();
   return (
     <WebsocketContext.Provider
