@@ -15,6 +15,7 @@ import { makeStyles } from '@material-ui/core';
 import { UserProvider, UserContext } from './providers/userProvider';
 import { firebaseAuth, convertToFirebaseUser } from './services/firebase';
 import LoadingPage from './pages/loading';
+import { ToastContainer } from 'react-toastify';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -86,6 +87,7 @@ const App = () => {
   };
   return (
     <div className={classes.root}>
+      <ToastContainer />
       {firebaseUser && (
         <>
           <LeftNavigationBar
