@@ -77,11 +77,11 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     this._deviceData = data;
   }
 
-  set deviceStatus(status: boolean) {
+  set status(status: boolean) {
     this._status = status;
   }
 
-  get deviceStatus(): boolean {
+  get status(): boolean {
     return this._status;
   }
 }

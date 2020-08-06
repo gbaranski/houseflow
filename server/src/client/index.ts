@@ -1,13 +1,11 @@
 import WebSocket from 'ws';
-import { v4 as uuidv4 } from 'uuid';
 import { validateSocketMessage } from '@/helpers';
-
-export const currentClients: Array<WebSocketClient> = [];
+import { logSocketError } from '@/cli';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
 
-  public static get currentDevices(): WebSocketClient[] {
+  public static get currentClients(): WebSocketClient[] {
     return this._currentClients;
   }
 
@@ -23,11 +21,9 @@ export default class WebSocketClient {
 
   private _status = false;
 
-  public readonly deviceUid: string = uuidv4();
-
   constructor(
     private readonly ws: WebSocket,
-    public readonly deviceName: string,
+    public readonly clientUid: string,
   ) {
     this._status = true;
   }
@@ -35,6 +31,11 @@ export default class WebSocketClient {
   handleMessage(message: WebSocket.Data): void {
     validateSocketMessage(message);
     console.log(message);
+  }
+
+  public terminateConnection(reason: string): void {
+    this.ws.terminate();
+    logSocketError('Unknown', this.clientUid, reason, 'client');
   }
 
   get status(): boolean {
