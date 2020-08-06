@@ -1,13 +1,5 @@
-import { DocumentReference } from '@firebase/firestore-types';
 import { DeviceType } from './other';
 import { RequestAlarmclock, RequestWatermixer } from '.';
-
-export interface FirebaseUser {
-  devices: {
-    fullAccess: DocumentReference[];
-  };
-  permission: number;
-}
 
 export interface ClientRequest<T extends DeviceType> {
   device?: T;
