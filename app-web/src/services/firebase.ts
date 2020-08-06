@@ -28,7 +28,8 @@ export const firebaseAuth: firebase.auth.Auth = app.auth();
 
 export async function signInWithCredentials(email: string, password: string) {
   try {
-    return firebase.auth().signInWithEmailAndPassword(email, password);
+    await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    return firebaseAuth.signInWithEmailAndPassword(email, password);
   } catch (e) {
     throw e;
   }
@@ -53,11 +54,11 @@ export async function getTempHistory() {
   return tempHistory;
 }
 
-export async function convertFirebaseUser(
-  userCredential: firebase.auth.UserCredential,
+export async function convertToFirebaseUser(
+  user: firebase.User,
 ): Promise<FirebaseUser> {
-  if (!userCredential.user) throw new Error('User is not defined');
-  const usersDoc = await usersCollection.doc(userCredential.user.uid).get();
+  if (!user) throw new Error('User is not defined');
+  const usersDoc = await usersCollection.doc(user.uid).get();
   if (!usersDoc.exists) throw new Error('User does not exist in database');
   const usersData = usersDoc.data() as FirebaseUser;
   const firebaseUser: FirebaseUser = {

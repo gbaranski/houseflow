@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
   signInWithCredentials,
-  convertFirebaseUser,
+  convertToFirebaseUser,
 } from '../../services/firebase';
 import { CircularProgress } from '@material-ui/core';
 import { green } from '@material-ui/core/colors';
@@ -52,9 +52,10 @@ export default function LoginEmail() {
     setLoading(true);
     try {
       const credentials = await signInWithCredentials(email, password);
-      const firebaseUser = await convertFirebaseUser(credentials);
+      if (!credentials.user) throw new Error('User cannot be null');
+      const firebaseUser = await convertToFirebaseUser(credentials.user);
       if (!firebaseUser) throw new Error('Some error occured, cannot log in');
-      setFirebaseUser(await convertFirebaseUser(credentials));
+      setFirebaseUser(firebaseUser);
     } catch (e) {
       toast.error(e.message);
     }
