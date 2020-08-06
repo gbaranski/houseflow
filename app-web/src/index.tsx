@@ -5,6 +5,7 @@ import {
   Switch,
   Route,
   Redirect,
+  useHistory,
 } from 'react-router-dom';
 import routes from './routes';
 import LoginPage from './pages/login';
@@ -23,6 +24,7 @@ const useStyles = makeStyles(() => ({
 
 const App = () => {
   const classes = useStyles();
+  const history = useHistory();
   const [open, setOpen] = useState(true);
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
 
@@ -37,7 +39,13 @@ const App = () => {
         convertToFirebaseUser(firebaseAuth.currentUser).then((firebaseUser) => {
           setFirebaseUser(firebaseUser);
           setAuthStateLoaded(true);
+          console.log(history);
+          if (history.location.pathname === '/login') {
+            history.replace('/welcome');
+          }
         });
+      } else {
+        setAuthStateLoaded(true);
       }
     });
   }, []);
