@@ -25,7 +25,10 @@ import {
   WebsocketContext,
   WebsocketProvider,
 } from './providers/websocketProvider';
-import { DeviceDataProvider } from './providers/deviceDataProvider';
+import {
+  DeviceDataProvider,
+  DeviceDataContext,
+} from './providers/deviceDataProvider';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -40,10 +43,13 @@ const App = () => {
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
 
   const { websocket, setWebsocket } = useContext(WebsocketContext);
+  const { devices, setDevices } = useContext(DeviceDataContext);
 
   const { firebaseUser, setFirebaseUser } = React.useContext(UserContext);
   if (!setFirebaseUser)
     throw new Error('Expected setFirebaseUser to be true when not initalized');
+  if (!setDevices)
+    throw new Error('Expected setDevices to be true when not initialized');
 
   useEffect(() => {
     firebaseAuth.onAuthStateChanged(() => {
@@ -55,7 +61,14 @@ const App = () => {
 
           try {
             getIdToken()
-              .then((token) => beginWebSocketConnection(token, setWebsocket))
+              .then((token) =>
+                beginWebSocketConnection(
+                  token,
+                  setWebsocket,
+                  devices,
+                  setDevices,
+                ),
+              )
               .catch((e) => {
                 throw e;
               });
