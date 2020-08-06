@@ -18,6 +18,16 @@ export interface CurrentDevice {
   uid: string;
 }
 
+export interface DeviceStatus {
+  deviceUid: string;
+  status: boolean;
+}
+
+export interface DeviceDataClient {
+  deviceUid: string;
+  data: AlarmclockData | WatermixerData;
+}
+
 export enum RequestTypes {
   GET_DATA = 'GET_DATA',
   START_MIXING = 'START_MIXING',
