@@ -16,7 +16,7 @@ const LoadingPage = ({ title }: TLoadingPage) => {
       }}
     >
       <CircularProgress />
-      <Title>Loading</Title>
+      <Title>{title}</Title>
     </div>
   );
 };
