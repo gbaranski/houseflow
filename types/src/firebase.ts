@@ -10,6 +10,5 @@ export interface FirebaseUser {
 
 export interface FirebaseDevice {
   secret: string;
-  uid: string;
   type: DeviceType;
 }
