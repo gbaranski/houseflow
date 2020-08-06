@@ -8,6 +8,8 @@ import { DeviceType, DevicesTypes } from '@gbaranski/types';
 import { logError } from '@/cli';
 import WatermixerDevice from '@/devices/watermixer';
 import Device, { AnyDeviceObject } from '@/devices';
+import AlarmclockDevice from '@/devices/alarmclock';
+import { validateDevice } from './firebase';
 
 const httpServer = http.createServer();
 
@@ -19,12 +21,17 @@ export const wss: WebSocket.Server = new WebSocket.Server({
 
 wss.on('connection', (ws, req: IncomingMessage) => {
   const deviceName = req.headers['devicetype'] as DevicesTypes;
+  const uid = req.headers['uid'];
+  const secret = req.headers['secret'];
+  if (!uid || !secret || uid instanceof Array || secret instanceof Array)
+    throw new Error('Missing or invalid uid/secret');
+
   if (!deviceName) {
     console.error('Error during recognizing device');
     ws.terminate();
     return;
   }
-  assignDevice(ws, DeviceType[deviceName]);
+  assignDevice(ws, DeviceType[deviceName], uid, secret);
   logSocketConnection(req, deviceName, 'device');
 });
 
@@ -42,14 +49,20 @@ export const getWssClients = (): Set<WebSocket> => {
   return wss.clients;
 };
 
-const assignDevice = (ws: WebSocket, deviceType: DeviceType) => {
+const assignDevice = async (
+  ws: WebSocket,
+  deviceType: DeviceType,
+  uid: string,
+  secret: string,
+) => {
+  const currentDevice = await validateDevice(deviceType, uid, secret);
   switch (deviceType) {
     case DeviceType.WATERMIXER:
-      const watermixer = new WatermixerDevice(ws);
+      const watermixer = new WatermixerDevice(ws, currentDevice);
       setupWebsocketHandlers(ws, watermixer);
       break;
     case DeviceType.ALARMCLOCK:
-      const alarmclock = new WatermixerDevice(ws);
+      const alarmclock = new AlarmclockDevice(ws, currentDevice);
       setupWebsocketHandlers(ws, alarmclock);
       break;
   }

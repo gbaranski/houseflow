@@ -181,7 +181,12 @@ void connectWebSocket()
         handleOTA();
         delay(10);
     }
-    webSocket.setExtraHeaders(("token: " + getToken() + "\r\ndeviceType: WATERMIXER").c_str());
+    webSocket.setExtraHeaders((
+                                  "token: " + getToken() +
+                                  "\r\ndevicetype: WATERMIXER" +
+                                  "\r\nuid: " + WATERMIXER_UID +
+                                  "\r\nsecret: " + WATERMIXER_SECRET)
+                                  .c_str());
 
     webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
