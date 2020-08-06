@@ -9,11 +9,16 @@ import {
   WatermixerData,
   CurrentDevice,
 } from '@gbaranski/types';
-import Device from '@/devices';
+import Device, { AnyDeviceObject } from '@/devices';
 
 interface DeviceDataClient {
   deviceUid: string;
   data: AlarmclockData | WatermixerData;
+}
+
+interface DeviceStatus {
+  deviceUid: string;
+  status: boolean;
 }
 
 export default class WebSocketClient {
@@ -32,6 +37,11 @@ export default class WebSocketClient {
       (_client: WebSocketClient) => _client !== client,
     );
   }
+  private static isDeviceCurrentlyConnected(deviceUid: string): boolean {
+    return Device.currentDevices.some(
+      activeDevice => deviceUid === activeDevice.deviceUid,
+    );
+  }
 
   private _status = false;
 
@@ -44,11 +54,13 @@ export default class WebSocketClient {
     public readonly clientUid: string,
   ) {
     if (ws.OPEN) this._status = true;
-    this.setAccessDevices().then(() => {
-      setInterval(() => {
-        this.interval();
-      }, 1000);
-    });
+    this.setAccessDevices()
+      .then(() => {
+        setInterval(() => {
+          this.interval();
+        }, 1000);
+      })
+      .catch(e => console.error(e));
   }
 
   async setAccessDevices(): Promise<void> {
@@ -72,22 +84,35 @@ export default class WebSocketClient {
     });
   }
 
-  async interval(): Promise<void> {
-    console.log(this.fullAccessCurrentDevices);
+  getDevicesStatus(): DeviceStatus[] {
+    const deviceStatus: DeviceStatus[] = [];
+    this.fullAccessCurrentDevices.forEach(currentDevice => {
+      const _deviceStatus: DeviceStatus = {
+        deviceUid: currentDevice.uid,
+        status: WebSocketClient.isDeviceCurrentlyConnected(currentDevice.uid),
+      };
+      deviceStatus.push(_deviceStatus);
+    });
+    return deviceStatus;
+  }
 
-    const currentConnectedWithAccess = Device.currentDevices.filter(device =>
+  getCurrentConnectionWithAccess(): AnyDeviceObject[] {
+    return Device.currentDevices.filter(device =>
       this.fullAccessCurrentDevices.some(
         firebaseDevice => firebaseDevice.uid === device.deviceUid,
       ),
     );
-    currentConnectedWithAccess.forEach(deviceObject => {
+  }
+
+  async interval(): Promise<void> {
+    this.ws.send(JSON.stringify(this.getDevicesStatus()));
+    this.getCurrentConnectionWithAccess().forEach(deviceObject => {
       const deviceData: DeviceDataClient = {
         deviceUid: deviceObject.deviceUid,
         data: deviceObject.deviceData,
       };
       this.ws.send(JSON.stringify(deviceData));
     });
-    console.log({ currentConnectedWithAccess });
   }
 
   handleMessage(message: WebSocket.Data): void {
