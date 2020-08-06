@@ -3,7 +3,7 @@ import { DeviceType } from './other';
 
 export interface FirebaseUser {
   devices: {
-    fullAccess: DocumentReference[];
+    full_access: DocumentReference[];
   };
   permission: number;
 }
