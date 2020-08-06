@@ -80,11 +80,6 @@ const App = () => {
     <div className={classes.root}>
       {firebaseUser && (
         <>
-          <Redirect
-            to={{
-              pathname: '/',
-            }}
-          />
           <LeftNavigationBar
             open={open}
             handleDrawerClose={handleDrawerClose}
