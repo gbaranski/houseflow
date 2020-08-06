@@ -1,5 +1,4 @@
-import { DeviceType } from './other';
-import { RequestAlarmclock, RequestWatermixer } from '.';
+import { RequestAlarmclock, RequestWatermixer, DeviceType } from '.';
 
 export interface ClientRequest<T extends DeviceType> {
   device?: T;
