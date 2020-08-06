@@ -49,7 +49,7 @@ const App = () => {
         setAuthStateLoaded(true);
       }
     });
-  }, []);
+  }, [history, setFirebaseUser]);
 
   if (!authStateLoaded) {
     return <LoadingPage title="Retreiving user data" />;
@@ -87,7 +87,6 @@ const App = () => {
   };
   return (
     <div className={classes.root}>
-      <ToastContainer />
       {firebaseUser && (
         <>
           <LeftNavigationBar
@@ -122,6 +121,7 @@ const App = () => {
 ReactDOM.render(
   <Router>
     <UserProvider>
+      <ToastContainer />
       <App />
     </UserProvider>
   </Router>,

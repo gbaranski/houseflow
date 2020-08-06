@@ -2,6 +2,7 @@ import React from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { makeStyles } from '@material-ui/core';
 import LoginEmail from '../loginEmail';
+import LoginGoogle from '../loginGoogle';
 
 const useStyles = makeStyles((theme) => ({
   providerButton: {
@@ -23,6 +24,7 @@ export default function LoginMethod() {
 
   return (
     <div>
+      <LoginGoogle />
       <LoginEmail />
     </div>
   );

@@ -19,6 +19,7 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 firebase.analytics();
+
 const db = firebase.firestore();
 const requestCollection = db.collection('requests');
 const tempHistoryCollection = db.collection('temp-history');
@@ -26,10 +27,28 @@ const usersCollection = db.collection('users');
 
 export const firebaseAuth: firebase.auth.Auth = app.auth();
 
-export async function signInWithCredentials(email: string, password: string) {
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+export async function signInWithCredentials(
+  email: string,
+  password: string,
+): Promise<firebase.auth.UserCredential> {
   try {
+    // figure out if this has to be there
     await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     return firebaseAuth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    throw e;
+  }
+}
+
+export async function signToGoogleWithPopup(): Promise<
+  firebase.auth.UserCredential
+> {
+  try {
+    // figure out if this has to be there
+    await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    return firebaseAuth.signInWithPopup(googleProvider);
   } catch (e) {
     throw e;
   }
