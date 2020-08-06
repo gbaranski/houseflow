@@ -105,7 +105,6 @@ export default class WebSocketClient {
   }
 
   async interval(): Promise<void> {
-    this.ws.send(JSON.stringify(this.getDevicesStatus()));
     this.getCurrentConnectionWithAccess().forEach(deviceObject => {
       const deviceData: DeviceDataClient = {
         deviceUid: deviceObject.deviceUid,
