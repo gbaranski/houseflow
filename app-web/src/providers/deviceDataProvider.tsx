@@ -1,26 +1,41 @@
 import React from 'react';
-import { DeviceStatus, DeviceDataClient } from '@gbaranski/types';
+import {
+  DeviceType,
+  AlarmclockData,
+  WatermixerData,
+  State,
+} from '@gbaranski/types';
+import { AnyDeviceData } from '@gbaranski/types/dist/other';
+
+export interface ClientCurrentDevice<T extends DeviceType> {
+  type: T;
+  secret: string;
+  uid: string;
+  data: TDeviceData<T>;
+  status: State;
+}
+
+export type TDeviceDataArgs<T extends AnyDeviceData | undefined> = {
+  devicesData: T;
+  setDevicesData: ((data: T) => any) | undefined;
+};
+
+type TDeviceData<
+  T extends DeviceType | undefined
+> = T extends DeviceType.ALARMCLOCK
+  ? TDeviceDataArgs<AlarmclockData>
+  : T extends DeviceType.WATERMIXER
+  ? TDeviceDataArgs<WatermixerData>
+  : undefined;
 
 interface IDeviceDataContext {
-  deviceStatus: {
-    setDeviceStatus: ((deviceStatus: DeviceStatus[]) => any) | undefined;
-    deviceStatus: DeviceStatus[];
-  };
-  deviceData: {
-    deviceData: DeviceDataClient[];
-    setDeviceData: ((deviceData: DeviceDataClient[]) => any) | undefined;
-  };
+  devices: ClientCurrentDevice<DeviceType>[];
+  setDevices: ((devices: ClientCurrentDevice<DeviceType>[]) => any) | undefined;
 }
 
 export const DeviceDataContext = React.createContext<IDeviceDataContext>({
-  deviceStatus: {
-    setDeviceStatus: undefined,
-    deviceStatus: [],
-  },
-  deviceData: {
-    setDeviceData: undefined,
-    deviceData: [],
-  },
+  devices: [],
+  setDevices: undefined,
 });
 
 interface DeviceDataProviderProps {
@@ -28,19 +43,15 @@ interface DeviceDataProviderProps {
 }
 
 export const DeviceDataProvider = ({ children }: DeviceDataProviderProps) => {
-  const [deviceStatus, setDeviceStatus] = React.useState<DeviceStatus[]>([]);
-  const [deviceData, setDeviceData] = React.useState<DeviceDataClient[]>([]);
+  const [devices, setDevices] = React.useState<
+    ClientCurrentDevice<DeviceType>[]
+  >([]);
+
   return (
     <DeviceDataContext.Provider
       value={{
-        deviceStatus: {
-          deviceStatus,
-          setDeviceStatus,
-        },
-        deviceData: {
-          deviceData,
-          setDeviceData,
-        },
+        devices,
+        setDevices,
       }}
     >
       {children}

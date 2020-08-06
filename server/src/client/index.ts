@@ -5,11 +5,13 @@ import { convertToFirebaseUser, DocumentReference } from '@/services/firebase';
 import {
   FirebaseDevice,
   DeviceType,
-  AlarmclockData,
-  WatermixerData,
   DeviceStatus,
   CurrentDevice,
   DeviceDataClient,
+  ResponseClient,
+  WatermixerData,
+  AlarmclockData,
+  ClientRequests,
 } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
 
@@ -98,11 +100,26 @@ export default class WebSocketClient {
 
   async interval(): Promise<void> {
     this.getCurrentConnectionWithAccess().forEach(deviceObject => {
-      const deviceData: DeviceDataClient = {
-        deviceUid: deviceObject.deviceUid,
-        data: deviceObject.deviceData,
-      };
-      this.ws.send(JSON.stringify(deviceData));
+      if (deviceObject.deviceType === DeviceType.ALARMCLOCK) {
+        // fix this kaszana
+        const deviceData: ResponseClient<AlarmclockData> = {
+          ok: true,
+          deviceUid: deviceObject.deviceUid,
+          deviceType: DeviceType.ALARMCLOCK,
+          responseFor: ClientRequests.GET_DATA,
+          data: deviceObject.deviceData as AlarmclockData,
+        };
+        this.ws.send(JSON.stringify(deviceData));
+      } else if (deviceObject.deviceType === DeviceType.WATERMIXER) {
+        const deviceData: ResponseClient<WatermixerData> = {
+          ok: true,
+          deviceUid: deviceObject.deviceUid,
+          deviceType: DeviceType.WATERMIXER,
+          responseFor: ClientRequests.GET_DATA,
+          data: deviceObject.deviceData as WatermixerData,
+        };
+        this.ws.send(JSON.stringify(deviceData));
+      }
     });
   }
 
