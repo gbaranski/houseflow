@@ -12,6 +12,8 @@ import './services/firebase';
 import LeftNavigationBar from './components/leftNavigationBar';
 import { makeStyles } from '@material-ui/core';
 import { UserProvider, UserContext } from './providers/userProvider';
+import { firebaseAuth, convertToFirebaseUser } from './services/firebase';
+import LoadingPage from './pages/loading';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -21,8 +23,28 @@ const useStyles = makeStyles(() => ({
 
 const App = () => {
   const classes = useStyles();
-  const { firebaseUser } = React.useContext(UserContext);
   const [open, setOpen] = useState(true);
+  const [authStateLoaded, setAuthStateLoaded] = useState(false);
+
+  const { firebaseUser, setFirebaseUser } = React.useContext(UserContext);
+  if (!setFirebaseUser)
+    throw new Error('Expected setFirebaseUser to be true when not initalized');
+
+  useEffect(() => {
+    firebaseAuth.onAuthStateChanged(() => {
+      console.log('Auth state changed');
+      if (firebaseAuth.currentUser) {
+        convertToFirebaseUser(firebaseAuth.currentUser).then((firebaseUser) => {
+          setFirebaseUser(firebaseUser);
+          setAuthStateLoaded(true);
+        });
+      }
+    });
+  }, []);
+
+  if (!authStateLoaded) {
+    return <LoadingPage title="Retreiving user data" />;
+  }
 
   const SafeRoute = ({ children, ...rest }: any) => {
     if (rest.protected) {

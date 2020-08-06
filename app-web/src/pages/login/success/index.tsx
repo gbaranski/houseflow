@@ -1,8 +1,8 @@
 import React from 'react';
 import { Typography } from '@material-ui/core';
-import LoginLoading from '../../loginLoading';
+import LoadingPage from '../../loading';
 
 const LoginSuccess = () => {
-  return <LoginLoading />;
+  return <LoadingPage title="Experimental" />;
 };
 export default LoginSuccess;
