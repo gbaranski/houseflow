@@ -5,13 +5,14 @@ import {
   WatermixerData,
   ResponseDevice,
   RequestTypes,
+  CurrentDevice,
 } from '@gbaranski/types';
 import Device from '..';
 import { validateSocketMessage } from '@/helpers';
 
 export class WatermixerDevice extends Device<WatermixerData> {
-  constructor(ws: WebSocket) {
-    super(ws, watermixerSample, 'WATERMIXER', uuidv4());
+  constructor(ws: WebSocket, device: CurrentDevice) {
+    super(ws, watermixerSample, 'WATERMIXER', device.uid);
   }
 
   handleMessage(message: WebSocket.Data): void {
