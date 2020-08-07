@@ -1,6 +1,5 @@
-import { DateTime, State, AnyDeviceData } from '.';
-import { Device } from './device';
-import { FirebaseUser } from './firebase';
+import { DateTime, State, Device } from '.';
+import { DocumentReference } from '@firebase/firestore-types';
 
 export namespace Client {
   export type RequestType = 'TEST' & Device.RequestType;
@@ -16,17 +15,12 @@ export namespace Client {
 
   export interface Response {
     requestType: ResponseType;
-    data?: ActiveDevice[] | FirebaseDevice[];
+    data?: Device.ActiveDevice[] | Device.FirebaseDevice[];
   }
-
-  export interface FirebaseDevice {
-    type: Device.DeviceType;
-    uid: string;
-    secret: string;
-  }
-
-  export interface ActiveDevice extends FirebaseDevice {
-    data: AnyDeviceData;
-    status: State;
+  export interface FirebaseUser {
+    devices: {
+      full_access: DocumentReference[];
+    };
+    permission: number;
   }
 }
