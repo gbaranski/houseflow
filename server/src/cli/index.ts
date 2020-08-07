@@ -39,14 +39,15 @@ const getSocketPrefix = (target: Target) =>
 
 export function logSocketConnection(
   req: IncomingMessage,
-  deviceName: string | string[],
   target: Target,
+  deviceName?: string | string[],
 ): void {
   log(
     chalk.blueBright(
-      `${getSocketPrefix(target)} Connect ${deviceName} IP: ${
-        req.socket.remoteAddress
-      } PORT: ${req.socket.remotePort}`,
+      `${getSocketPrefix(target)} New connection ${deviceName ||
+        'someone'} IP: ${req.socket.remoteAddress} PORT: ${
+        req.socket.remotePort
+      }`,
     ),
   );
 }

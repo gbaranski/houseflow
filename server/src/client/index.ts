@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { logSocketError } from '@/cli';
+import { logSocketError, logError } from '@/cli';
 import { convertToFirebaseUser, DocumentReference } from '@/services/firebase';
 import {
   FirebaseDevice,
@@ -36,18 +36,18 @@ export default class WebSocketClient {
     );
   }
 
-  private _status = false;
+  private status = false;
 
   public userPermission: number | undefined;
 
   private fullAccessCurrentDevices: CurrentDevice[] = [];
 
   constructor(private websocket: WebSocket, public readonly clientUid: string) {
+    this.setWebsocketHandling();
     this.setAccessDevices()
       .then(() => {
-        setInterval(() => {
-          this.interval();
-        }, 1000);
+        console.log({ this: this });
+        setInterval(this.interval, 1000);
       })
       .catch(e => console.error(e));
   }
@@ -73,19 +73,18 @@ export default class WebSocketClient {
     });
   }
 
-  getDevicesStatus(): DeviceStatus[] {
-    const deviceStatus: DeviceStatus[] = [];
-    this.fullAccessCurrentDevices.forEach(currentDevice => {
-      const _deviceStatus: DeviceStatus = {
-        deviceUid: currentDevice.uid,
-        status: WebSocketClient.isDeviceCurrentlyConnected(currentDevice.uid),
-      };
-      deviceStatus.push(_deviceStatus);
+  private setWebsocketHandling() {
+    this.websocket.on('message', this.handleMessage);
+    this.websocket.on('error', err => {
+      logError(err.message);
     });
-    return deviceStatus;
+    this.websocket.on('close', (code, reason) => {
+      logError(`CODE: ${code} \nREASON:${reason}`);
+      this.terminateConnection('Connection closed');
+    });
   }
 
-  getCurrentConnectionWithAccess(): AnyDeviceObject[] {
+  private getCurrentConnectionWithAccess(): AnyDeviceObject[] {
     return Device.currentDevices.filter(device =>
       this.fullAccessCurrentDevices.some(
         firebaseDevice => firebaseDevice.uid === device.deviceUid,
@@ -93,7 +92,7 @@ export default class WebSocketClient {
     );
   }
 
-  async interval(): Promise<void> {
+  private async interval(): Promise<void> {
     this.getCurrentConnectionWithAccess().forEach(deviceObject => {
       if (deviceObject.deviceType === DeviceType.ALARMCLOCK) {
         // fix this kaszana
@@ -118,7 +117,8 @@ export default class WebSocketClient {
     });
   }
 
-  async handleMessage(message: WebSocket.Data): Promise<void> {
+  private async handleMessage(message: WebSocket.Data): Promise<void> {
+    console.log({ message });
     const request = JSON.parse(message as string) as RequestClient;
     console.log(this.websocket);
     if (request.type === ClientRequests.GET_DEVICES_STATUS) {
@@ -129,12 +129,18 @@ export default class WebSocketClient {
   public terminateConnection(reason: string): void {
     this.websocket.terminate();
     logSocketError('Unknown', this.clientUid, reason, 'client');
+    WebSocketClient.removeClient(this);
   }
 
-  get status(): boolean {
-    return this._status;
-  }
-  set status(status: boolean) {
-    this._status = status;
+  private getDevicesStatus(): DeviceStatus[] {
+    const deviceStatus: DeviceStatus[] = [];
+    this.fullAccessCurrentDevices.forEach(currentDevice => {
+      const _deviceStatus: DeviceStatus = {
+        deviceUid: currentDevice.uid,
+        status: WebSocketClient.isDeviceCurrentlyConnected(currentDevice.uid),
+      };
+      deviceStatus.push(_deviceStatus);
+    });
+    return deviceStatus;
   }
 }
