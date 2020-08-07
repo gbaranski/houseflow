@@ -1,17 +1,7 @@
 import WebSocket from 'ws';
 import { logSocketError, logError } from '@/cli';
 import { convertToFirebaseUser, DocumentReference } from '@/services/firebase';
-import {
-  FirebaseDevice,
-  DeviceType,
-  DeviceStatus,
-  CurrentDevice,
-  ResponseClient,
-  WatermixerData,
-  AlarmclockData,
-  ClientRequests,
-  RequestClient,
-} from '@gbaranski/types';
+import { Device as DeviceType, Client } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
 
 export default class WebSocketClient {
@@ -40,12 +30,13 @@ export default class WebSocketClient {
 
   public userPermission: number | undefined;
 
-  private fullAccessCurrentDevices: CurrentDevice[] = [];
+  private fullAcccessDevices: DeviceType.FirebaseDevice[] = [];
 
   constructor(private websocket: WebSocket, public readonly clientUid: string) {
     this.setWebsocketHandling();
     this.setAccessDevices()
       .then(() => {
+        this.sendDevices();
         setInterval(() => this.interval(), 1000);
       })
       .catch(e => console.error(e));
@@ -55,25 +46,29 @@ export default class WebSocketClient {
     const firebaseUser = await convertToFirebaseUser(this.clientUid);
     this.userPermission = firebaseUser.permission;
 
-    firebaseUser.devices.full_access.forEach(async (doc: DocumentReference) => {
-      const deviceSnapshot = await doc.get();
-      const deviceData = deviceSnapshot.data() as Partial<FirebaseDevice>;
+    this.fullAcccessDevices = await Promise.all(
+      firebaseUser.devices.full_access.map(
+        async (doc: DocumentReference): Promise<DeviceType.FirebaseDevice> => {
+          const deviceSnapshot = await doc.get();
+          const deviceData = deviceSnapshot.data() as Partial<
+            DeviceType.FirebaseDevice
+          >;
 
-      if (!deviceData.secret) throw Error('Secret does not exist!');
-      if (!deviceData.type) throw new Error('Type does not exist!');
+          if (!deviceData.secret) throw Error('Secret does not exist!');
+          if (!deviceData.type) throw new Error('Type does not exist!');
 
-      const currentDevice: CurrentDevice = {
-        type: DeviceType[deviceData.type],
-        secret: deviceData.secret,
-        uid: deviceSnapshot.id,
-      };
-
-      this.fullAccessCurrentDevices.push(currentDevice);
-    });
+          return {
+            type: deviceData.type,
+            secret: deviceData.secret,
+            uid: deviceSnapshot.id,
+          };
+        },
+      ),
+    );
   }
 
   private setWebsocketHandling() {
-    this.websocket.on('message', this.handleMessage);
+    this.websocket.on('message', message => this.handleMessage(message));
     this.websocket.on('error', err => {
       logError(err.message);
     });
@@ -85,44 +80,39 @@ export default class WebSocketClient {
 
   private getCurrentConnectionWithAccess(): AnyDeviceObject[] {
     return Device.currentDevices.filter(device =>
-      this.fullAccessCurrentDevices.some(
+      this.fullAcccessDevices.some(
         firebaseDevice => firebaseDevice.uid === device.deviceUid,
       ),
     );
   }
 
   private async interval(): Promise<void> {
-    this.getCurrentConnectionWithAccess().forEach(deviceObject => {
-      if (deviceObject.deviceType === DeviceType.ALARMCLOCK) {
-        // fix this kaszana
-        const deviceData: ResponseClient<AlarmclockData> = {
-          ok: true,
-          deviceUid: deviceObject.deviceUid,
-          deviceType: DeviceType.ALARMCLOCK,
-          responseFor: ClientRequests.GET_DATA,
-          data: deviceObject.deviceData as AlarmclockData,
-        };
-        this.websocket.send(JSON.stringify(deviceData));
-      } else if (deviceObject.deviceType === DeviceType.WATERMIXER) {
-        const deviceData: ResponseClient<WatermixerData> = {
-          ok: true,
-          deviceUid: deviceObject.deviceUid,
-          deviceType: DeviceType.WATERMIXER,
-          responseFor: ClientRequests.GET_DATA,
-          data: deviceObject.deviceData as WatermixerData,
-        };
-        this.websocket.send(JSON.stringify(deviceData));
-      }
-    });
+    const deviceData: DeviceType.ActiveDevice[] = this.getCurrentConnectionWithAccess().map(
+      (deviceObject): DeviceType.ActiveDevice => ({
+        type: deviceObject.deviceType,
+        uid: deviceObject.deviceUid,
+        secret: deviceObject.deviceSecret,
+        data: deviceObject.deviceData,
+        status: deviceObject.status,
+      }),
+    );
+    const clientResponse: Client.Response = {
+      requestType: 'DATA',
+      data: deviceData,
+    };
+    this.websocket.send(JSON.stringify(clientResponse));
+  }
+
+  private async sendDevices(): Promise<void> {
+    const clientRes: Client.Response = {
+      requestType: 'DEVICES',
+      data: this.fullAcccessDevices,
+    };
+    this.websocket.send(JSON.stringify(clientRes));
   }
 
   private async handleMessage(message: WebSocket.Data): Promise<void> {
     console.log({ message });
-    const request = JSON.parse(message as string) as RequestClient;
-    console.log(this.websocket);
-    if (request.type === ClientRequests.GET_DEVICES_STATUS) {
-      console.log(this.fullAccessCurrentDevices);
-    }
   }
 
   public terminateConnection(reason: string): void {
@@ -131,15 +121,15 @@ export default class WebSocketClient {
     WebSocketClient.removeClient(this);
   }
 
-  private getDevicesStatus(): DeviceStatus[] {
-    const deviceStatus: DeviceStatus[] = [];
-    this.fullAccessCurrentDevices.forEach(currentDevice => {
-      const _deviceStatus: DeviceStatus = {
-        deviceUid: currentDevice.uid,
-        status: WebSocketClient.isDeviceCurrentlyConnected(currentDevice.uid),
-      };
-      deviceStatus.push(_deviceStatus);
-    });
-    return deviceStatus;
-  }
+  // private getDevicesStatus(): DeviceStatus[] {
+  //   const deviceStatus: DeviceStatus[] = [];
+  //   this.fullAccessCurrentDevices.forEach(currentDevice => {
+  //     const _deviceStatus: DeviceStatus = {
+  //       deviceUid: currentDevice.uid,
+  //       status: WebSocketClient.isDeviceCurrentlyConnected(currentDevice.uid),
+  //     };
+  //     deviceStatus.push(_deviceStatus);
+  //   });
+  //   return deviceStatus;
+  // }
 }
