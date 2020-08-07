@@ -12,7 +12,11 @@ export interface RequestClient {
   deviceUid?: string;
   type: ClientRequests;
   deviceType?: DeviceType;
-  data?: DateTime | State | ClientCurrentDevice<DeviceType>[];
+  data?:
+    | DateTime
+    | State
+    | ClientCurrentDevice<DeviceType>[]
+    | CurrentDeviceData[];
 }
 
 export enum ClientRequests {
