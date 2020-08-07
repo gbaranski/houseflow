@@ -1,5 +1,4 @@
 import WebSocket from 'ws';
-import { validateSocketMessage } from '@/helpers';
 import { logSocketError } from '@/cli';
 import { convertToFirebaseUser, DocumentReference } from '@/services/firebase';
 import {
@@ -7,11 +6,11 @@ import {
   DeviceType,
   DeviceStatus,
   CurrentDevice,
-  DeviceDataClient,
   ResponseClient,
   WatermixerData,
   AlarmclockData,
   ClientRequests,
+  RequestClient,
 } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
 
@@ -43,11 +42,10 @@ export default class WebSocketClient {
 
   private fullAccessCurrentDevices: CurrentDevice[] = [];
 
-  constructor(
-    private readonly ws: WebSocket,
-    public readonly clientUid: string,
-  ) {
-    if (ws.OPEN) this._status = true;
+  private ws: WebSocket;
+
+  constructor(ws: WebSocket, public readonly clientUid: string) {
+    this.ws = ws;
     this.setAccessDevices()
       .then(() => {
         setInterval(() => {
@@ -123,9 +121,12 @@ export default class WebSocketClient {
     });
   }
 
-  handleMessage(message: WebSocket.Data): void {
-    validateSocketMessage(message);
-    console.log(message);
+  async handleMessage(message: WebSocket.Data): Promise<void> {
+    const request = JSON.parse(message as string) as RequestClient;
+    console.log(this.ws);
+    if (request.type === ClientRequests.GET_DEVICES_STATUS) {
+      console.log(this.fullAccessCurrentDevices);
+    }
   }
 
   public terminateConnection(reason: string): void {

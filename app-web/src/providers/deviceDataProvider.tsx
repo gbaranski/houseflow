@@ -4,29 +4,8 @@ import {
   AlarmclockData,
   WatermixerData,
   State,
+  ClientCurrentDevice,
 } from '@gbaranski/types';
-import { AnyDeviceData } from '@gbaranski/types/dist/other';
-
-export interface ClientCurrentDevice<T extends DeviceType> {
-  type: T;
-  secret: string;
-  uid: string;
-  data: TDeviceData<T>;
-  status: State;
-}
-
-export type TDeviceDataArgs<T extends AnyDeviceData | undefined> = {
-  devicesData: T;
-  setDevicesData: ((data: T) => any) | undefined;
-};
-
-type TDeviceData<
-  T extends DeviceType | undefined
-> = T extends DeviceType.ALARMCLOCK
-  ? TDeviceDataArgs<AlarmclockData>
-  : T extends DeviceType.WATERMIXER
-  ? TDeviceDataArgs<WatermixerData>
-  : undefined;
 
 interface IDeviceDataContext {
   devices: ClientCurrentDevice<DeviceType>[];
