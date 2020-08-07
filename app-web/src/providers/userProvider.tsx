@@ -1,9 +1,9 @@
 import React from 'react';
-import { FirebaseUser } from '@gbaranski/types';
+import { Client } from '@gbaranski/types';
 
 interface IUserContext {
-  firebaseUser: FirebaseUser | undefined;
-  setFirebaseUser: ((firebaseUser: FirebaseUser) => any) | undefined;
+  firebaseUser: Client.FirebaseUser | undefined;
+  setFirebaseUser: ((firebaseUser: Client.FirebaseUser) => any) | undefined;
 }
 
 export const UserContext = React.createContext<IUserContext>({
@@ -17,7 +17,7 @@ interface UserProviderProps {
 
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [firebaseUser, setFirebaseUser] = React.useState<
-    FirebaseUser | undefined
+    Client.FirebaseUser | undefined
   >();
   return (
     <UserContext.Provider
