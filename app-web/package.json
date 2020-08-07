@@ -5,7 +5,7 @@
   "dependencies": {
     "@date-io/date-fns": "^1.3.13",
     "@date-io/moment": "^2.6.0",
-    "@gbaranski/types": "^3.1.5",
+    "@gbaranski/types": "^3.1.8",
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
     "@material-ui/pickers": "^3.2.10",
@@ -16,6 +16,8 @@
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
     "@types/recharts": "^1.8.12",
+    "@typescript-eslint/eslint-plugin": "^3.8.0",
+    "@typescript-eslint/parser": "^3.8.0",
     "date-fns": "^2.14.0",
     "firebase": "^7.15.5",
     "module-alias": "^2.2.2",

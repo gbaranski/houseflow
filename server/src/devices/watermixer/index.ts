@@ -6,17 +6,18 @@ import {
   ResponseDevice,
   RequestTypes,
   CurrentDevice,
+  DeviceType,
 } from '@gbaranski/types';
 import Device from '..';
-import { validateSocketMessage } from '@/helpers';
+import { validateDeviceMessage } from '@/helpers';
 
 export class WatermixerDevice extends Device<WatermixerData> {
   constructor(ws: WebSocket, device: CurrentDevice) {
-    super(ws, watermixerSample, 'WATERMIXER', device.uid);
+    super(ws, watermixerSample, DeviceType.WATERMIXER, device.uid);
   }
 
   handleMessage(message: WebSocket.Data): void {
-    validateSocketMessage(message);
+    validateDeviceMessage(message);
     const parsedResponse = JSON.parse(message as string) as ResponseDevice<
       undefined
     >;
