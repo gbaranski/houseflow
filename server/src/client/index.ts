@@ -42,10 +42,7 @@ export default class WebSocketClient {
 
   private fullAccessCurrentDevices: CurrentDevice[] = [];
 
-  private ws: WebSocket;
-
-  constructor(ws: WebSocket, public readonly clientUid: string) {
-    this.ws = ws;
+  constructor(private websocket: WebSocket, public readonly clientUid: string) {
     this.setAccessDevices()
       .then(() => {
         setInterval(() => {
@@ -107,7 +104,7 @@ export default class WebSocketClient {
           responseFor: ClientRequests.GET_DATA,
           data: deviceObject.deviceData as AlarmclockData,
         };
-        this.ws.send(JSON.stringify(deviceData));
+        this.websocket.send(JSON.stringify(deviceData));
       } else if (deviceObject.deviceType === DeviceType.WATERMIXER) {
         const deviceData: ResponseClient<WatermixerData> = {
           ok: true,
@@ -116,21 +113,21 @@ export default class WebSocketClient {
           responseFor: ClientRequests.GET_DATA,
           data: deviceObject.deviceData as WatermixerData,
         };
-        this.ws.send(JSON.stringify(deviceData));
+        this.websocket.send(JSON.stringify(deviceData));
       }
     });
   }
 
   async handleMessage(message: WebSocket.Data): Promise<void> {
     const request = JSON.parse(message as string) as RequestClient;
-    console.log(this.ws);
+    console.log(this.websocket);
     if (request.type === ClientRequests.GET_DEVICES_STATUS) {
       console.log(this.fullAccessCurrentDevices);
     }
   }
 
   public terminateConnection(reason: string): void {
-    this.ws.terminate();
+    this.websocket.terminate();
     logSocketError('Unknown', this.clientUid, reason, 'client');
   }
 
