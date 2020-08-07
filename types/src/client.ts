@@ -2,7 +2,7 @@ import { DateTime, State, AnyDeviceData } from '.';
 import { Device } from './device';
 
 export namespace Client {
-  export type RequestType = 'TEST';
+  export type RequestType = 'TEST' & Device.RequestType;
 
   export interface Request {
     requestType: RequestType;
@@ -15,7 +15,7 @@ export namespace Client {
 
   export interface Response {
     requestType: ResponseType;
-    data?: ResponseType;
+    data?: ActiveDevice;
   }
 
   export interface FirebaseDevice {
