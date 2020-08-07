@@ -1,11 +1,5 @@
 import * as admin from 'firebase-admin';
-import {
-  RequestHistory,
-  TempHistory,
-  FirebaseUser,
-  FirebaseDevice,
-  CurrentDevice,
-} from '@gbaranski/types';
+import { RequestHistory, TempHistory, Device, Client } from '@gbaranski/types';
 import { logAdded } from '@/cli';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -37,13 +31,13 @@ export async function validateDevice(
   deviceType: string,
   uid: string,
   secret: string,
-): Promise<CurrentDevice> {
+): Promise<Device.FirebaseDevice> {
   const snapshot = await deviceCollection.doc(uid).get();
   if (!snapshot.exists) {
     throw new Error('Does not exist!');
   }
 
-  const snapshotData = snapshot.data() as FirebaseDevice;
+  const snapshotData = snapshot.data() as Device.FirebaseDevice;
   if (snapshotData.secret !== secret) {
     console.log({
       currentSecret: snapshotData.secret,
@@ -91,12 +85,12 @@ export function sendMessage(username: string, requestTypeString: string): void {
 
 export async function convertToFirebaseUser(
   uid: string,
-): Promise<FirebaseUser> {
+): Promise<Client.FirebaseUser> {
   if (!uid) throw new Error('User UID is not defined');
   const usersDoc = await usersCollection.doc(uid).get();
   if (!usersDoc.exists) throw new Error('User does not exist in database');
-  const usersData = usersDoc.data() as FirebaseUser;
-  const firebaseUser: FirebaseUser = {
+  const usersData = usersDoc.data() as Client.FirebaseUser;
+  const firebaseUser: Client.FirebaseUser = {
     ...usersData,
   };
   return firebaseUser;

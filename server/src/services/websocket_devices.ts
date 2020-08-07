@@ -9,7 +9,7 @@ import {
 import jwt from 'jsonwebtoken';
 import chalk from 'chalk';
 import http from 'http';
-import { DeviceType, DevicesTypes } from '@gbaranski/types';
+import { Device as DeviceType } from '@gbaranski/types';
 import { logError } from '@/cli';
 import WatermixerDevice from '@/devices/watermixer';
 import Device, { AnyDeviceObject } from '@/devices';
@@ -59,7 +59,7 @@ export const wss: WebSocket.Server = new WebSocket.Server({
 });
 
 wss.on('connection', (ws, req: IncomingMessage) => {
-  const deviceName = req.headers['devicetype'] as DevicesTypes;
+  const deviceName = req.headers['devicetype'] as DeviceType.DeviceType;
   const uid = req.headers['uid'];
   const secret = req.headers['secret'];
   if (!uid || !secret || uid instanceof Array || secret instanceof Array)
@@ -70,7 +70,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     ws.terminate();
     return;
   }
-  assignDevice(ws, DeviceType[deviceName], uid, secret);
+  assignDevice(ws, deviceName, uid, secret);
   logSocketConnection(req, 'device', deviceName);
 });
 
@@ -90,17 +90,17 @@ export const getWssClients = (): Set<WebSocket> => {
 
 const assignDevice = async (
   ws: WebSocket,
-  deviceType: DeviceType,
+  deviceType: DeviceType.DeviceType,
   uid: string,
   secret: string,
 ) => {
   const currentDevice = await validateDevice(deviceType, uid, secret);
   switch (deviceType) {
-    case DeviceType.WATERMIXER:
+    case 'WATERMIXER':
       const watermixer = new WatermixerDevice(ws, currentDevice);
       setupWebsocketHandlers(ws, watermixer);
       break;
-    case DeviceType.ALARMCLOCK:
+    case 'ALARMCLOCK':
       const alarmclock = new AlarmclockDevice(ws, currentDevice);
       setupWebsocketHandlers(ws, alarmclock);
       break;

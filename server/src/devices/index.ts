@@ -1,10 +1,8 @@
 import WebSocket from 'ws';
 import {
   AnyDeviceData,
-  RequestDevice,
-  RequestTypes,
   DateTime,
-  DeviceType,
+  Device as DeviceType,
 } from '@gbaranski/types';
 import { logSocketError } from '@/cli';
 import WatermixerDevice from './watermixer';
@@ -34,16 +32,17 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
   constructor(
     protected ws: WebSocket,
     private _deviceData: DeviceData,
-    public readonly deviceType: DeviceType,
+    public readonly deviceType: DeviceType.DeviceType,
     public readonly deviceUid: string,
+    public readonly deviceSecret: string,
   ) {
     this._status = true;
   }
 
   abstract handleMessage(message: WebSocket.Data): void;
 
-  protected requestDevice: RequestDevice = async (
-    type: RequestTypes,
+  protected requestDevice: DeviceType.RequestDevice = async (
+    type: DeviceType.RequestType,
     data?: DateTime | boolean,
   ): Promise<boolean> => {
     if (!this.ws) {
