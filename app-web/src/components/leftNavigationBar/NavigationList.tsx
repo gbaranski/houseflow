@@ -10,7 +10,7 @@ import SettingsRemoteIcon from '@material-ui/icons/SettingsRemote';
 import InfoIcon from '@material-ui/icons/Info';
 import LiveHelpIcon from '@material-ui/icons/LiveHelp';
 import { NavLink } from 'react-router-dom';
-import { DeviceType } from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
 
 const Icons = (props: { index: number }) => {
   switch (props.index) {
@@ -43,18 +43,14 @@ const primaryText = (index: number) => {
   if (index === 0) {
     return 'Dashboard';
   } else {
-    let returnText = [Object.keys(DeviceType)[index - 1]];
-    if (returnText[0] === DeviceType.GATE) {
-      returnText[0] = `${DeviceType.GATE} & ${DeviceType.GARAGE}`;
-    }
-    return returnText;
+    return 'FIX';
   }
 };
 
-const disabledItems = [DeviceType.GATE];
+// const disabledItems = [DeviceType.GATE];
 
 const checkIfDisabledItem = (index: number) => {
-  return disabledItems.includes(Object.values(DeviceType)[index - 1]);
+  return false;
 };
 
 const FancyLink = React.forwardRef(

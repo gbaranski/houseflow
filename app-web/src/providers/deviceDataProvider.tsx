@@ -1,15 +1,9 @@
 import React from 'react';
-import {
-  DeviceType,
-  AlarmclockData,
-  WatermixerData,
-  State,
-  ClientCurrentDevice,
-} from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
 
 interface IDeviceDataContext {
-  devices: ClientCurrentDevice<DeviceType>[];
-  setDevices: ((devices: ClientCurrentDevice<DeviceType>[]) => any) | undefined;
+  devices: Device.ActiveDevice[];
+  setDevices: ((devices: Device.ActiveDevice[]) => any) | undefined;
 }
 
 export const DeviceDataContext = React.createContext<IDeviceDataContext>({
@@ -22,9 +16,7 @@ interface DeviceDataProviderProps {
 }
 
 export const DeviceDataProvider = ({ children }: DeviceDataProviderProps) => {
-  const [devices, setDevices] = React.useState<
-    ClientCurrentDevice<DeviceType>[]
-  >([]);
+  const [devices, setDevices] = React.useState<Device.ActiveDevice[]>([]);
 
   return (
     <DeviceDataContext.Provider
