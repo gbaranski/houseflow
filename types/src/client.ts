@@ -15,7 +15,7 @@ export namespace Client {
 
   export interface Response {
     requestType: ResponseType;
-    data?: ActiveDevice;
+    data?: ActiveDevice[];
   }
 
   export interface FirebaseDevice {
