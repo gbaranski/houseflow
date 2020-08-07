@@ -71,7 +71,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     return;
   }
   assignDevice(ws, DeviceType[deviceName], uid, secret);
-  logSocketConnection(req, deviceName, 'device');
+  logSocketConnection(req, 'device', deviceName);
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
