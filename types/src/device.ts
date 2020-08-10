@@ -30,7 +30,7 @@ export namespace Device {
 
   export interface FirebaseDevice {
     type: DeviceType;
-    secret: string;
+    secret?: string;
     uid: string;
   }
   export interface ActiveDevice extends FirebaseDevice {
