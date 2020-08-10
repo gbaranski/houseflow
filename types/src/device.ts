@@ -33,8 +33,10 @@ export namespace Device {
     secret?: string;
     uid: string;
   }
-  export interface ActiveDevice extends FirebaseDevice {
-    data: AnyDeviceData;
+  export interface ActiveDevice<
+    DeviceData extends Alarmclock.Data | Watermixer.Data | AnyDeviceData
+  > extends FirebaseDevice {
+    data: DeviceData;
     status: State;
   }
 }
