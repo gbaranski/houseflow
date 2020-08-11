@@ -1,5 +1,5 @@
 import { DocumentReference } from '@firebase/firestore-types';
-import { Device } from './device';
+import { DeviceType } from './';
 
 export interface FirebaseUser {
   devices: {
@@ -10,5 +10,5 @@ export interface FirebaseUser {
 
 export interface FirebaseDevice {
   secret: string;
-  type: Device.DeviceType;
+  type: DeviceType;
 }

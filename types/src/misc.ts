@@ -3,7 +3,6 @@ export interface DateTime {
   minute: number;
   second: number;
 }
-export type State = boolean;
 
 export interface TempHistory {
   unixTime: number;
