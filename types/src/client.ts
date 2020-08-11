@@ -3,10 +3,8 @@ import { DocumentReference } from '@firebase/firestore-types';
 import { AnyDeviceData } from './device';
 
 export namespace Client {
-  export type RequestType = 'TEST' & Device.RequestType;
-
   export interface Request {
-    requestType: RequestType;
+    requestType: Device.RequestType;
     deviceUid?: string;
     deviceType?: string;
     data?: DateTime | State;
