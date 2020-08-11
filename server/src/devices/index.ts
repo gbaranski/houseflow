@@ -27,6 +27,15 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     );
   }
 
+  protected static updateDevice(
+    deviceUid: string,
+    deviceData: AnyDeviceData,
+  ): void {
+    this._currentDevices.map(_device =>
+      _device.deviceUid === deviceUid ? deviceData : _device.deviceData,
+    );
+  }
+
   private _status = false;
 
   constructor(
@@ -34,7 +43,6 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     private _deviceData: DeviceData,
     public readonly deviceType: DeviceType.DeviceType,
     public readonly deviceUid: string,
-    public readonly deviceSecret: string,
   ) {
     this._status = true;
   }

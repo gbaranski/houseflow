@@ -7,12 +7,12 @@ export default class AlarmclockDevice extends Device<Alarmclock.Data> {
   private lastCheckedMinute: number = Number.MAX_SAFE_INTEGER;
 
   constructor(ws: WebSocket, device: DeviceType.FirebaseDevice) {
-    super(ws, Alarmclock.SAMPLE, 'ALARMCLOCK', device.uid, device.secret);
+    super(ws, Alarmclock.SAMPLE, 'ALARMCLOCK', device.uid);
     setInterval(() => {
       this.interval();
     }, 60000);
   }
-  handleMessage(message: string): void {
+  handleMessage(message: WebSocket.Data): void {
     console.log(message);
   }
 

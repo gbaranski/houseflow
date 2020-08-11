@@ -50,7 +50,7 @@
     "ws": "^7.3.1"
   },
   "devDependencies": {
-    "@gbaranski/types": "^4.0.5",
+    "@gbaranski/types": "^4.0.8",
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.6",
     "@types/crypto-js": "^3.1.47",

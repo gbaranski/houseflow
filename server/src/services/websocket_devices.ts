@@ -127,7 +127,7 @@ export function setupWebsocketHandlers(
     ws.ping();
   }, 2000);
 
-  ws.on('message', device.handleMessage);
+  ws.on('message', message => device.handleMessage(message));
   ws.on('pong', () => {
     device.status = true;
   });
