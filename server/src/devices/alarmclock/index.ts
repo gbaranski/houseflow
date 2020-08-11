@@ -1,13 +1,19 @@
 import WebSocket from 'ws';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  alarmclockSample,
+  AlarmclockData,
+  CurrentDevice,
+  DeviceType,
+} from '@gbaranski/types';
 import Device from '..';
 import { addTemperatureToDb } from '@/services/firebase';
-import { Alarmclock, Device as DeviceType } from '@gbaranski/types';
 
-export default class AlarmclockDevice extends Device<Alarmclock.Data> {
+export default class AlarmclockDevice extends Device<AlarmclockData> {
   private lastCheckedMinute: number = Number.MAX_SAFE_INTEGER;
 
-  constructor(ws: WebSocket, device: DeviceType.FirebaseDevice) {
-    super(ws, Alarmclock.SAMPLE, 'ALARMCLOCK', device.uid, device.secret);
+  constructor(ws: WebSocket, currentDevice: CurrentDevice) {
+    super(ws, alarmclockSample, DeviceType.ALARMCLOCK, currentDevice.uid);
     setInterval(() => {
       this.interval();
     }, 60000);
