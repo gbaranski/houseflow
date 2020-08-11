@@ -39,13 +39,6 @@ export interface ClientCurrentDevice<T extends DeviceType> {
   status?: State;
 }
 
-export interface CurrentDeviceData {
-  type: DeviceType;
-  uid: string;
-  data: AnyDeviceData;
-  status: State;
-}
-
 export type TDeviceDataArgs<T extends AnyDeviceData | undefined> = {
   devicesData: T;
   setDevicesData: ((data: T) => any) | undefined;
