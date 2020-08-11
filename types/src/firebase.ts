@@ -1,5 +1,5 @@
 import { DocumentReference } from '@firebase/firestore-types';
-import { DeviceType } from './';
+import { DeviceType } from './other';
 
 export interface FirebaseUser {
   devices: {
