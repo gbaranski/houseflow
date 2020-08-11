@@ -21,6 +21,9 @@ import LoadingPage from '../loading';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { Container, Box } from '@material-ui/core';
 import { toast } from 'react-toastify';
+import { preWebsocketMessage } from '../../services/websocket';
+import { DeviceDataContext } from '../../providers/deviceDataProvider';
+import { useHistory } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -51,26 +54,34 @@ function parseSeconds(seconds: number) {
   return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
 }
 
-function Watermixer(props: { device: Device.ActiveDevice<AnyDeviceData> }) {
+function Watermixer(props: { uid: string }) {
   const classes = useStyles();
+  const history = useHistory();
   const { websocket } = React.useContext(WebsocketContext);
+  const { activeDevices } = React.useContext(DeviceDataContext);
+
   if (!websocket || !websocket.OPEN) {
     return <LoadingPage title="Websocket disconnected, reconnecting" />;
   }
+  const device = activeDevices.find((_device) => _device.uid === props.uid);
+  if (!device) {
+    history.replace('/welcome');
+    throw new Error('Could not found device');
+  }
 
-  const data = props.device.data as WatermixerType.Data;
+  const data = device.data as WatermixerType.Data;
 
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   const deviceInfo = [
     {
       title: 'Current state',
-      description: `Water should be ${data?.isTimerOn ? 'warm' : 'cold'}`,
+      description: `Water should be ${data.isTimerOn ? 'warm' : 'cold'}`,
       icon: <Icon path={mdiWater} size={2} color="rgb(117,117,117)" />,
     },
     {
       title: 'Remaining time',
-      description: data ? parseSeconds(data.remainingSeconds) : '0',
+      description: parseSeconds(data.remainingSeconds),
       icon: (
         <Icon
           path={mdiClock}
@@ -83,18 +94,14 @@ function Watermixer(props: { device: Device.ActiveDevice<AnyDeviceData> }) {
   ];
 
   const handleStartMixing = () => {
-    toast('Sending request! ✅', {
-      autoClose: 1000,
-      progressStyle: {
-        background: 'green',
-      },
-      bodyStyle: {
-        color: 'gray',
-      },
-    });
+    try {
+      preWebsocketMessage(websocket);
+    } catch (e) {
+      console.error(e);
+    }
     const request: Client.Request = {
       requestType: 'START_MIXING',
-      deviceUid: props.device.uid,
+      deviceUid: props.uid,
     };
     websocket.send(JSON.stringify(request));
   };

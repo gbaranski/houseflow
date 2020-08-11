@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { logSocketError, logError } from '@/cli';
 import { convertToFirebaseUser, DocumentReference } from '@/services/firebase';
-import { Device as DeviceType, Client } from '@gbaranski/types';
+import { Device as DeviceType, Client, AnyDeviceData } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
 
 export default class WebSocketClient {
@@ -84,8 +84,10 @@ export default class WebSocketClient {
   }
 
   private async interval(): Promise<void> {
-    const deviceData: DeviceType.ActiveDevice[] = this.getCurrentConnectionWithAccess().map(
-      (deviceObject): DeviceType.ActiveDevice => ({
+    const deviceData: DeviceType.ActiveDevice<
+      AnyDeviceData
+    >[] = this.getCurrentConnectionWithAccess().map(
+      (deviceObject): DeviceType.ActiveDevice<AnyDeviceData> => ({
         type: deviceObject.deviceType,
         uid: deviceObject.deviceUid,
         data: deviceObject.deviceData,
@@ -107,8 +109,30 @@ export default class WebSocketClient {
     this.websocket.send(JSON.stringify(clientRes));
   }
 
+  private static parseMessage(message: WebSocket.Data): Client.Request {
+    const parsedMsg = (message as unknown) as Client.Request;
+    if (!parsedMsg.deviceUid) throw new Error('Uid is missing');
+    if (!parsedMsg.requestType) throw new Error('Request type is missing');
+    return parsedMsg;
+  }
+
   private async handleMessage(message: WebSocket.Data): Promise<void> {
-    console.log({ message });
+    try {
+      if (
+        message instanceof Buffer ||
+        message instanceof Array ||
+        message instanceof ArrayBuffer
+      )
+        throw new Error('Wrong message type');
+      const parsedMsg = WebSocketClient.parseMessage(JSON.parse(message));
+      const deviceObject = this.getCurrentConnectionWithAccess().find(
+        _deviceObject => _deviceObject.deviceUid === parsedMsg.deviceUid,
+      );
+      if (!deviceObject) throw new Error('Could not find device');
+      deviceObject.requestDevice(parsedMsg.requestType);
+    } catch (e) {
+      console.error(e.message);
+    }
   }
 
   public terminateConnection(reason: string): void {

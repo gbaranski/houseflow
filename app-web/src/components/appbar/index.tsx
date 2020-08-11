@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import clsx from 'clsx';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -9,6 +9,7 @@ import { makeStyles } from '@material-ui/core';
 import { useLocation } from 'react-router-dom';
 import { capitalizeFirst } from '../../utils';
 import { Device, AnyDeviceData } from '@gbaranski/types';
+import { DeviceDataContext } from '../../providers/deviceDataProvider';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -40,10 +41,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const getCurrentName = (
-  path: string,
-  devices: Device.ActiveDevice<AnyDeviceData>[],
-) => {
+const getCurrentName = (path: string, devices: Device.FirebaseDevice[]) => {
   if (!path.startsWith('/device/')) return capitalizeFirst(path.slice(1));
   const deviceUid = path.replace('/device/', '');
   const activeDevice = devices.find((device) => device.uid === deviceUid);
@@ -55,9 +53,10 @@ const getCurrentName = (
 export default function Appbar(props: {
   open: boolean;
   handleDrawerOpen: any;
-  devices: Device.ActiveDevice<AnyDeviceData>[];
 }) {
   const classes = useStyles();
+
+  const { firebaseDevices } = useContext(DeviceDataContext);
   return (
     <AppBar
       position="absolute"
@@ -83,7 +82,7 @@ export default function Appbar(props: {
           noWrap
           className={classes.title}
         >
-          {getCurrentName(useLocation().pathname, props.devices)}
+          {getCurrentName(useLocation().pathname, firebaseDevices)}
         </Typography>
       </Toolbar>
     </AppBar>

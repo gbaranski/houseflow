@@ -9,9 +9,10 @@ import { Device, AnyDeviceData } from '@gbaranski/types';
 import ErrorIcon from '@material-ui/icons/Error';
 import routes from '../../config/routes';
 import { Divider } from '@material-ui/core';
+import { DeviceDataContext } from '../../providers/deviceDataProvider';
 
-const DeviceIcons = (props: { device: Device.ActiveDevice<AnyDeviceData> }) => {
-  switch (props.device.type) {
+const DeviceIcons = (props: { deviceType: Device.DeviceType }) => {
+  switch (props.deviceType) {
     case 'ALARMCLOCK':
       return <AlarmIcon />;
     case 'WATERMIXER':
@@ -44,53 +45,63 @@ const FancyLink = React.forwardRef(
 );
 const FancyDeviceLink = React.forwardRef(
   (props: {
-    device: Device.ActiveDevice<AnyDeviceData>;
+    activeDevices: Device.ActiveDevice<AnyDeviceData>[];
+    firebaseDevice: Device.FirebaseDevice;
     key: number;
     className: string | undefined;
     navigate: any;
   }) => (
     <ListItem
       button
-      disabled={props.device.status}
       key={props.key}
+      disabled={
+        !props.activeDevices.some(
+          (activeDevice) => activeDevice.uid === props.firebaseDevice.uid,
+        )
+      }
       onClick={props.navigate}
       selected={props.className !== undefined}
     >
       <ListItemIcon>
-        <DeviceIcons device={props.device} />
+        <DeviceIcons deviceType={props.firebaseDevice.type} />
       </ListItemIcon>
-      <ListItemText primary={props.device.type} />
+      <ListItemText primary={props.firebaseDevice.type} />
     </ListItem>
   ),
 );
 
-export const NavigationList = (
-  devices: Device.ActiveDevice<AnyDeviceData>[],
-) => (
-  <div>
-    {routes
-      .filter((route) => route.showOnNavbar === true)
-      .map((route, index) => (
+export const NavigationList = (props: {}) => {
+  const { firebaseDevices, activeDevices } = React.useContext(
+    DeviceDataContext,
+  );
+
+  return (
+    <div>
+      {routes
+        .filter((route) => route.showOnNavbar === true)
+        .map((route, index) => (
+          <NavLink
+            to={route.path}
+            activeClassName="selected"
+            key={index}
+            // @ts-ignore
+            name={route.name}
+            icon={route.navIcon || ErrorIcon}
+            component={FancyLink}
+          />
+        ))}
+      <Divider />
+      {firebaseDevices.map((device, index) => (
         <NavLink
-          to={route.path}
+          to={`/device/${device.uid}`}
           activeClassName="selected"
           key={index}
           // @ts-ignore
-          name={route.name}
-          icon={route.navIcon || ErrorIcon}
-          component={FancyLink}
+          firebaseDevice={device}
+          activeDevices={activeDevices}
+          component={FancyDeviceLink}
         />
       ))}
-    <Divider />
-    {devices.map((device, index) => (
-      <NavLink
-        to={`/device/${device.uid}`}
-        activeClassName="selected"
-        key={index}
-        // @ts-ignore
-        device={device}
-        component={FancyDeviceLink}
-      />
-    ))}
-  </div>
-);
+    </div>
+  );
+};
