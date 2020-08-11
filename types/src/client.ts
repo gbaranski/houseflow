@@ -4,7 +4,7 @@ import { DeviceType } from './device';
 export interface RequestClient {
   deviceUid?: string;
   type: ClientRequests;
-  deviceType?: DeviceType;
+  deviceType: DeviceType;
   data?: DateTime | State;
 }
 export enum ClientRequests {
