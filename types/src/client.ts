@@ -1,23 +1,12 @@
-import { AlarmclockData, DateTime, WatermixerData, State } from '.';
+import { RequestAlarmclock, RequestWatermixer, DeviceType } from '.';
 
-export interface RequestClient {
-  deviceUid?: string;
-  type: ClientRequests;
-  data?: DateTime | State;
-}
-export enum ClientRequests {
-  GET_DATA = 'GET_DATA',
-  GET_DEVICES = 'GET_DEVICES',
-  GET_DEVICES_STATUS = 'GET_DEVICES_STATUS',
-}
-
-export interface ResponseClient<
-  T extends WatermixerData | AlarmclockData | undefined
-> {
-  ok: boolean;
-  deviceUid: string;
-  responseFor: ClientRequests;
-  data: T;
+export interface ClientRequest<T extends DeviceType> {
+  device?: T;
+  request: T extends DeviceType.ALARMCLOCK
+    ? RequestAlarmclock
+    : T extends DeviceType.WATERMIXER
+    ? RequestWatermixer
+    : undefined;
 }
 
 // const Example: ClientRequest<DeviceType.ALARMCLOCK> = {
