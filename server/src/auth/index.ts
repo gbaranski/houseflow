@@ -1,5 +1,8 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import http from 'http';
+import { logMissing, logInvalid, logSocketAttempt } from '@/cli';
+import { validateDevice, decodeClientToken } from '@/services/firebase';
 
 function validateCredentials(
   username: string | undefined,
@@ -28,13 +31,29 @@ export function isAuthenticated(
   next();
 }
 
-export interface VerifyInfo {
+export async function authenticateDevice(
+  deviceType: string,
+  uid: string,
+  secret: string,
+): Promise<void> {
+  if (!uid || !deviceType) {
+    console.log('Throwing error');
+    throw new Error('No token or device name');
+  }
+  try {
+    await validateDevice(deviceType, uid, secret);
+  } catch (e) {
+    throw e;
+  }
+}
+
+interface VerifyClientInfo {
   origin: string;
   secure: boolean;
   req: http.IncomingMessage;
 }
 
-export interface VerifyCallback {
+interface VerifyClientCallback {
   (
     res: boolean,
     code?: number,
@@ -42,3 +61,55 @@ export interface VerifyCallback {
     headers?: http.OutgoingHttpHeaders,
   ): void;
 }
+
+export const verifyDevice = (
+  info: VerifyClientInfo,
+  callback: VerifyClientCallback,
+): void => {
+  logSocketAttempt(
+    info.req,
+    info.req.headers['devicetype'] || 'unknown',
+    'device',
+  );
+  if (!process.env.JWT_KEY) throw new Error('Missing process.env.JWT_KEY');
+  const token = info.req.headers.token || '';
+  if (!token) {
+    logMissing('JWT token');
+    callback(false, 401, 'Unauthorized');
+    return;
+  }
+
+  jwt.verify(token as string, process.env.JWT_KEY, (err, decoded) => {
+    if (!decoded) {
+      logMissing('decoded username at JWT Token');
+      callback(false, 400, 'Missing decoded username');
+      return;
+    }
+    if (err) {
+      callback(false, 401, 'Unauthorized');
+      logInvalid('token');
+    } else {
+      info.req.headers.device = (decoded as { device: string }).device;
+      callback(true);
+    }
+  });
+};
+
+export const verifyClient = (
+  info: VerifyClientInfo,
+  callback: VerifyClientCallback,
+): void => {
+  const rawToken = info.req.headers['sec-websocket-protocol'];
+  if (rawToken instanceof Array || !rawToken) {
+    callback(false, 400, 'Invalid token headers');
+    return;
+  }
+  try {
+    decodeClientToken(rawToken);
+  } catch (e) {
+    console.log(e);
+    callback(false, 401, 'Unauthorized');
+    return;
+  }
+  callback(true);
+};

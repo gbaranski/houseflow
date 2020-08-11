@@ -2,32 +2,13 @@ import { IncomingMessage } from 'http';
 import WebSocket from 'ws';
 import { logSocketConnection } from '@/cli';
 import chalk from 'chalk';
-import { VerifyInfo, VerifyCallback } from '@/auth';
+import { verifyClient } from '@/auth';
 import http from 'http';
 import { logError } from '@/cli';
 import WebSocketClient from '@/client';
 import { decodeClientToken } from './firebase';
 
 const httpServer = http.createServer();
-
-export const verifyClient = (
-  info: VerifyInfo,
-  callback: VerifyCallback,
-): void => {
-  const rawToken = info.req.headers['sec-websocket-protocol'];
-  if (rawToken instanceof Array || !rawToken) {
-    callback(false, 400, 'Invalid token headers');
-    return;
-  }
-  try {
-    decodeClientToken(rawToken);
-  } catch (e) {
-    console.log(e);
-    callback(false, 401, 'Unauthorized');
-    return;
-  }
-  callback(true);
-};
 
 export const wss: WebSocket.Server = new WebSocket.Server({
   server: httpServer,
@@ -36,6 +17,7 @@ export const wss: WebSocket.Server = new WebSocket.Server({
 });
 
 wss.on('connection', (ws, req: IncomingMessage) => {
+  console.log(req.headers);
   const rawToken = req.headers['sec-websocket-protocol'];
   if (!rawToken || rawToken instanceof Array) {
     console.error('Missing or invalid token');
