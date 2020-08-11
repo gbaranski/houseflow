@@ -49,28 +49,28 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   abstract handleMessage(message: WebSocket.Data): void;
 
-  protected requestDevice: DeviceType.RequestDevice = async (
+  public requestDevice(
     type: DeviceType.RequestType,
     data?: DateTime | boolean,
-  ): Promise<boolean> => {
+  ): boolean {
     if (!this.ws) {
-      return false;
+      throw new Error('Websocket is not defined');
     }
     if (!this.ws.OPEN) {
-      return false;
+      throw new Error('Websocket is not at OPEN state');
     }
     if (!this._status) {
-      return false;
+      throw new Error('Device status is false');
     }
-
     const requestData = {
       type,
       data,
     };
+    console.log(requestData);
     this.ws.send(JSON.stringify(requestData));
 
     return true;
-  };
+  }
 
   public terminateConnection(reason: string): void {
     this.ws.terminate();

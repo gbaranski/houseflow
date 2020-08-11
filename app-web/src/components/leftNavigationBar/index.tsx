@@ -42,18 +42,15 @@ interface props {
   open: boolean;
   handleDrawerOpen: () => any;
   handleDrawerClose: () => any;
-  devices: Device.ActiveDevice<AnyDeviceData>[];
+  activeDevices: Device.ActiveDevice<AnyDeviceData>[];
+  firebaseDevices: Device.FirebaseDevice[];
 }
 
 function LeftNavigationBar(props: props) {
   const classes = useStyles();
   return (
     <>
-      <Appbar
-        open={props.open}
-        handleDrawerOpen={props.handleDrawerOpen}
-        devices={props.devices}
-      />
+      <Appbar open={props.open} handleDrawerOpen={props.handleDrawerOpen} />
       <Drawer
         variant="permanent"
         classes={{
@@ -70,7 +67,9 @@ function LeftNavigationBar(props: props) {
           </IconButton>
         </div>
         <Divider />
-        <List>{NavigationList(props.devices)}</List>
+        <List>
+          <NavigationList />
+        </List>
       </Drawer>
     </>
   );

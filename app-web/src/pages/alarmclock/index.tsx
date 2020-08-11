@@ -44,7 +44,7 @@ function parseSeconds(seconds: number) {
   return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
 }
 
-function Alarmclock(props: { device: Device.ActiveDevice<AnyDeviceData> }) {
+function Alarmclock() {
   const classes = useStyles();
 
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);

@@ -2,15 +2,19 @@ import React from 'react';
 import { Device, AnyDeviceData } from '@gbaranski/types';
 
 interface IDeviceDataContext {
-  devices: Device.ActiveDevice<AnyDeviceData>[];
-  setDevices:
+  activeDevices: Device.ActiveDevice<AnyDeviceData>[];
+  setActiveDevices:
     | ((devices: Device.ActiveDevice<AnyDeviceData>[]) => any)
     | undefined;
+  firebaseDevices: Device.FirebaseDevice[];
+  setFirebaseDevices: ((devices: Device.FirebaseDevice[]) => any) | undefined;
 }
 
 export const DeviceDataContext = React.createContext<IDeviceDataContext>({
-  devices: [],
-  setDevices: undefined,
+  activeDevices: [],
+  setActiveDevices: undefined,
+  firebaseDevices: [],
+  setFirebaseDevices: undefined,
 });
 
 interface DeviceDataProviderProps {
@@ -18,15 +22,20 @@ interface DeviceDataProviderProps {
 }
 
 export const DeviceDataProvider = ({ children }: DeviceDataProviderProps) => {
-  const [devices, setDevices] = React.useState<
+  const [activeDevices, setActiveDevices] = React.useState<
     Device.ActiveDevice<AnyDeviceData>[]
+  >([]);
+  const [firebaseDevices, setFirebaseDevices] = React.useState<
+    Device.FirebaseDevice[]
   >([]);
 
   return (
     <DeviceDataContext.Provider
       value={{
-        devices,
-        setDevices,
+        activeDevices,
+        setActiveDevices,
+        firebaseDevices,
+        setFirebaseDevices,
       }}
     >
       {children}

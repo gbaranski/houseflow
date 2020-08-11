@@ -49,12 +49,12 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const ComponentByDevice = (device: Device.ActiveDevice<AnyDeviceData>) => {
+const ComponentByDevice = (device: Device.FirebaseDevice) => {
   switch (device.type) {
     case 'ALARMCLOCK':
-      return <Alarmclock device={device} />;
+      return <Alarmclock />;
     case 'WATERMIXER':
-      return <Watermixer device={device} />;
+      return <Watermixer uid={device.uid} />;
   }
 };
 
@@ -64,15 +64,21 @@ const App = () => {
   const [open, setOpen] = useState(true);
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
   const [websocketEstablished, setWebsocketEstablished] = useState(false);
+  const [firstDataArrived, setFirstDataArrived] = useState(false);
   const [devicesLoaded, setDevicesLoaded] = useState(false);
 
   const { websocket, setWebsocket } = useContext(WebsocketContext);
-  const { devices, setDevices } = useContext(DeviceDataContext);
+  const {
+    activeDevices,
+    setActiveDevices,
+    firebaseDevices,
+    setFirebaseDevices,
+  } = useContext(DeviceDataContext);
 
   const { firebaseUser, setFirebaseUser } = React.useContext(UserContext);
   if (!setFirebaseUser)
     throw new Error('Expected setFirebaseUser to be true when not initalized');
-  if (!setDevices)
+  if (!setActiveDevices || !setFirebaseDevices)
     throw new Error('Expected setDevices to be true when not initialized');
   if (!setWebsocket)
     throw new Error('Expected setDevices to be true when not initialized');
@@ -103,7 +109,7 @@ const App = () => {
     if (!firebaseUser) return;
     const establishWebsocket = async () => {
       const allowedDevices = await getAllowedDevices(firebaseUser);
-      setDevices(allowedDevices);
+      setFirebaseDevices(allowedDevices);
       setDevicesLoaded(true);
       console.log({ allowedDevices });
       const newWebsocket = await beginWebsocketConnection(await getIdToken());
@@ -113,7 +119,14 @@ const App = () => {
       newWebsocket.onopen = async () => {
         console.log('Connection open!');
         setWebsocket(newWebsocket);
-        setupWebsocketHandlers(newWebsocket, setDevices, () => {});
+        setupWebsocketHandlers(
+          newWebsocket,
+          activeDevices,
+          setActiveDevices,
+          firstDataArrived,
+          setFirstDataArrived,
+          () => {},
+        );
       };
     };
     establishWebsocket();
@@ -127,6 +140,10 @@ const App = () => {
   }
   if (!devicesLoaded) {
     return <LoadingPage title="Loading user devices" />;
+  }
+
+  if (!firstDataArrived) {
+    return <LoadingPage title="Awaiting for first data from server" />;
   }
 
   const SafeRoute = ({ children, ...rest }: any) => {
@@ -165,7 +182,8 @@ const App = () => {
         <>
           <LeftNavigationBar
             open={open}
-            devices={devices}
+            activeDevices={activeDevices}
+            firebaseDevices={firebaseDevices}
             handleDrawerClose={handleDrawerClose}
             handleDrawerOpen={handleDrawerOpen}
           />
@@ -182,7 +200,7 @@ const App = () => {
             children={<route.main />}
           />
         ))}
-        {devices.map((device, index) => (
+        {firebaseDevices.map((device, index) => (
           <SafeRoute
             key={index}
             path={`/device/${device.uid}`}
