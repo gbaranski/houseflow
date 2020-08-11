@@ -19,7 +19,7 @@ import {
 import { WebsocketContext } from '../../providers/websocketProvider';
 import LoadingPage from '../loading';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import { Container, Box } from '@material-ui/core';
+import { Container, Box, CssBaseline } from '@material-ui/core';
 import { toast } from 'react-toastify';
 import { preWebsocketMessage } from '../../services/websocket';
 import { DeviceDataContext } from '../../providers/deviceDataProvider';
@@ -108,6 +108,7 @@ function Watermixer(props: { uid: string }) {
 
   return (
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
+      <CssBaseline />
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
