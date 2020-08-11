@@ -1,36 +1,23 @@
 import { WSS_URL } from '../config';
-import { ResponseClient, CurrentDevice, DeviceType } from '@gbaranski/types';
-import { TSetWebsocket } from '../providers/websocketProvider';
-import { ClientCurrentDevice } from '../providers/deviceDataProvider';
 
 export const beginWebSocketConnection = (
   token: string,
-  setWebsocket: TSetWebsocket,
-  devices: ClientCurrentDevice<DeviceType>[],
-  setDevices: (devices: ClientCurrentDevice<DeviceType>[]) => any,
+  setWebsocket: ((websocket: WebSocket) => any) | undefined,
 ) => {
   if (!setWebsocket) throw new Error('Set websocket is not defined');
   const ws = new WebSocket(WSS_URL, token);
 
   setWebsocket(ws);
+  setupEventListeners(ws);
+};
+
+const setupEventListeners = (ws: WebSocket) => {
   ws.addEventListener('open', (event) => {
-    ws.addEventListener('message', (wsResponse) => {
-      handleMessage(wsResponse.data, devices, setDevices);
-    });
+    ws.addEventListener('message', (wsResponse) =>
+      console.log(JSON.parse(wsResponse.data)),
+    );
     ws.addEventListener('close', (event) => {
       console.log('Closed connection');
     });
   });
-};
-
-const handleMessage = (
-  message: string,
-  devices: ClientCurrentDevice<DeviceType>[],
-  setDevices: (devices: ClientCurrentDevice<DeviceType>[]) => any,
-) => {
-  const response = JSON.parse(message) as ResponseClient<undefined>;
-  if (!response.ok) throw new Error('Websocket response is not okay!');
-  if (response.responseFor == 'GET_DATA') {
-    console.log('Received new data from server!', response);
-  }
 };

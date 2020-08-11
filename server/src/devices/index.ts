@@ -4,8 +4,6 @@ import {
   RequestDevice,
   RequestTypes,
   DateTime,
-  DevicesTypes,
-  DeviceType,
 } from '@gbaranski/types';
 import { logSocketError } from '@/cli';
 import WatermixerDevice from './watermixer';
@@ -35,7 +33,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
   constructor(
     protected ws: WebSocket,
     private _deviceData: DeviceData,
-    public readonly deviceType: DeviceType,
+    public readonly deviceName: string,
     public readonly deviceUid: string,
   ) {
     this._status = true;

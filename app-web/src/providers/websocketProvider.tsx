@@ -1,10 +1,8 @@
 import React from 'react';
 
-export type TSetWebsocket = ((websocket: WebSocket) => any) | undefined;
-
 interface IWebsocketContext {
   websocket: WebSocket | undefined;
-  setWebsocket: TSetWebsocket;
+  setWebsocket: ((websocket: WebSocket) => any) | undefined;
 }
 
 export const WebsocketContext = React.createContext<IWebsocketContext>({
