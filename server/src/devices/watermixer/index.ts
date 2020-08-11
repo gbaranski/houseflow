@@ -15,6 +15,7 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
     ) as DeviceType.ResponseDevice<undefined>;
     if (parsedResponse.responseFor === 'GET_DATA') {
       this.deviceData = (parsedResponse.data as unknown) as Watermixer.Data;
+      Device.updateDevice(this.deviceUid, this.deviceData);
     }
   }
 }

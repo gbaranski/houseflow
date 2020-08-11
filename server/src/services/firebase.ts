@@ -15,6 +15,7 @@ const db = admin.firestore();
 const requestsCollection = db.collection('requests');
 const temperatureCollection = db.collection('temp-history');
 const deviceCollection = db.collection('devices');
+const devicePrivateCollection = db.collection('devices-private');
 const usersCollection = db.collection('users');
 
 export async function saveRequestToDb(history: RequestHistory): Promise<void> {
@@ -32,7 +33,7 @@ export async function validateDevice(
   uid: string,
   secret: string,
 ): Promise<Device.FirebaseDevice> {
-  const snapshot = await deviceCollection.doc(uid).get();
+  const snapshot = await devicePrivateCollection.doc(uid).get();
   if (!snapshot.exists) {
     throw new Error('Does not exist!');
   }

@@ -36,7 +36,6 @@ export default class WebSocketClient {
     this.setWebsocketHandling();
     this.setAccessDevices()
       .then(() => {
-        this.sendDevices();
         setInterval(() => this.interval(), 1000);
       })
       .catch(e => console.error(e));
@@ -54,12 +53,10 @@ export default class WebSocketClient {
             DeviceType.FirebaseDevice
           >;
 
-          if (!deviceData.secret) throw Error('Secret does not exist!');
           if (!deviceData.type) throw new Error('Type does not exist!');
 
           return {
             type: deviceData.type,
-            secret: deviceData.secret,
             uid: deviceSnapshot.id,
           };
         },
@@ -91,7 +88,6 @@ export default class WebSocketClient {
       (deviceObject): DeviceType.ActiveDevice => ({
         type: deviceObject.deviceType,
         uid: deviceObject.deviceUid,
-        secret: deviceObject.deviceSecret,
         data: deviceObject.deviceData,
         status: deviceObject.status,
       }),
