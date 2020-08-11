@@ -1,5 +1,5 @@
 import { Alarmclock, Watermixer } from '.';
-import { DateTime, State } from './misc';
+import { DateTime } from './misc';
 
 export type AnyDeviceData = Alarmclock.Data | Watermixer.Data;
 
@@ -32,9 +32,5 @@ export namespace Device {
     type: DeviceType;
     secret: string;
     uid: string;
-  }
-  export interface ActiveDevice extends FirebaseDevice {
-    data: AnyDeviceData;
-    status: State;
   }
 }
