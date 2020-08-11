@@ -32,18 +32,16 @@ export function isAuthenticated(
 }
 
 export async function authenticateDevice(
-  deviceType: string,
+  device: string,
   uid: string,
   secret: string,
 ): Promise<void> {
-  if (!uid || !deviceType) {
+  if (!uid || !device) {
     console.log('Throwing error');
     throw new Error('No token or device name');
   }
-  try {
-    await validateDevice(deviceType, uid, secret);
-  } catch (e) {
-    throw e;
+  if (!(await validateDevice(device, uid, secret))) {
+    throw new Error('Invalid token or device name');
   }
 }
 

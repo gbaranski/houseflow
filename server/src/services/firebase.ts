@@ -1,17 +1,9 @@
 import * as admin from 'firebase-admin';
-import {
-  RequestHistory,
-  TempHistory,
-  FirebaseUser,
-  FirebaseDevice,
-  CurrentDevice,
-} from '@gbaranski/types';
+import { RequestHistory, TempHistory } from '@gbaranski/types';
 import { logAdded } from '@/cli';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('@/config/firebaseConfig.json');
-
-export type DocumentReference = admin.firestore.DocumentReference;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -21,7 +13,6 @@ const db = admin.firestore();
 const requestsCollection = db.collection('requests');
 const temperatureCollection = db.collection('temp-history');
 const deviceCollection = db.collection('devices');
-const usersCollection = db.collection('users');
 
 export async function saveRequestToDb(history: RequestHistory): Promise<void> {
   const res = await requestsCollection.add(history);
@@ -37,24 +28,16 @@ export async function validateDevice(
   deviceType: string,
   uid: string,
   secret: string,
-): Promise<CurrentDevice> {
-  const snapshot = await deviceCollection.doc(uid).get();
-  if (!snapshot.exists) {
-    throw new Error('Does not exist!');
+): Promise<boolean> {
+  const snapshot = await deviceCollection
+    .where('secret', '==', secret)
+    .where('uid', '==', uid)
+    .where('type', '==', deviceType)
+    .get();
+  if (snapshot.empty) {
+    return false;
   }
-
-  const snapshotData = snapshot.data() as FirebaseDevice;
-  if (snapshotData.secret !== secret) {
-    console.log({
-      currentSecret: snapshotData.secret,
-      desiredSecret: secret,
-    });
-    throw new Error("Device doesn't match");
-  }
-  return {
-    ...snapshotData,
-    uid: snapshot.id,
-  };
+  return true;
 }
 
 export async function decodeClientToken(
@@ -87,17 +70,4 @@ export function sendMessage(username: string, requestTypeString: string): void {
     .catch((error): void => {
       console.log('Error sending message:', error);
     });
-}
-
-export async function convertToFirebaseUser(
-  uid: string,
-): Promise<FirebaseUser> {
-  if (!uid) throw new Error('User UID is not defined');
-  const usersDoc = await usersCollection.doc(uid).get();
-  if (!usersDoc.exists) throw new Error('User does not exist in database');
-  const usersData = usersDoc.data() as FirebaseUser;
-  const firebaseUser: FirebaseUser = {
-    ...usersData,
-  };
-  return firebaseUser;
 }

@@ -20,7 +20,10 @@ router.get(
       return;
     }
     try {
-      await validateDevice(deviceType, uid, secret);
+      const isValid = await validateDevice(deviceType, uid, secret);
+      if (!isValid) {
+        throw new Error('Unauthorized');
+      }
     } catch (e) {
       res.sendStatus(401);
       return;
