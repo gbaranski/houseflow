@@ -1,5 +1,5 @@
 export * from './alarmclock';
 export * from './watermixer';
-export * from './misc';
+export * from './other';
 export * from './client';
 export * from './firebase';
