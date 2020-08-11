@@ -5,8 +5,7 @@ import chalk from 'chalk';
 import { verifyClient } from '@/auth';
 import http from 'http';
 import { logError } from '@/cli';
-import WebSocketClient from '@/client';
-import { decodeClientToken } from './firebase';
+import WebSocketClient, { currentClients } from '@/client';
 
 const httpServer = http.createServer();
 
@@ -17,24 +16,16 @@ export const wss: WebSocket.Server = new WebSocket.Server({
 });
 
 wss.on('connection', (ws, req: IncomingMessage) => {
-  console.log(req.headers);
-  const rawToken = req.headers['sec-websocket-protocol'];
-  if (!rawToken || rawToken instanceof Array) {
-    console.error('Missing or invalid token');
+  const clientName = req.headers['username'];
+  if (!clientName || clientName instanceof Array) {
+    console.error('Error during recognizing client');
     ws.terminate();
     return;
   }
-  decodeClientToken(rawToken)
-    .then(client => {
-      logSocketConnection(req, client.uid, 'client');
+  logSocketConnection(req, clientName, 'client');
 
-      const wsClient = new WebSocketClient(ws, client.uid);
-      setupWebsocketHandlers(ws, wsClient);
-    })
-    .catch(e => {
-      console.error(e);
-      ws.terminate();
-    });
+  const wsClient = new WebSocketClient(ws, clientName);
+  setupWebsocketHandlers(ws, wsClient);
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -51,21 +42,15 @@ export function setupWebsocketHandlers(
   ws: WebSocket,
   client: WebSocketClient,
 ): void {
-  WebSocketClient.addNewClient(client);
-
-  const terminateConnection = (reason: string) => {
-    client.terminateConnection(reason);
-    WebSocketClient.removeClient(client);
-    clearInterval(pingInterval);
-  };
-
+  currentClients.push(client);
   const pingInterval = setInterval(() => {
     if (!client.status) {
-      return terminateConnection('Ping not received');
+      return ws.terminate();
     }
     client.status = false;
     ws.ping();
   }, 2000);
+
   ws.on('message', client.handleMessage);
   ws.on('pong', () => {
     client.status = true;

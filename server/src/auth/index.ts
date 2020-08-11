@@ -2,7 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import http from 'http';
 import { logMissing, logInvalid, logSocketAttempt } from '@/cli';
-import { validateDevice, decodeClientToken } from '@/services/firebase';
+import { validateDevice, verifyClientToken } from '@/services/firebase';
 
 function validateCredentials(
   username: string | undefined,
@@ -97,13 +97,13 @@ export const verifyClient = (
   info: VerifyClientInfo,
   callback: VerifyClientCallback,
 ): void => {
-  const rawToken = info.req.headers['sec-websocket-protocol'];
-  if (rawToken instanceof Array || !rawToken) {
+  const token = info.req.headers.token;
+  if (token instanceof Array || !token) {
     callback(false, 400, 'Invalid token headers');
     return;
   }
   try {
-    decodeClientToken(rawToken);
+    verifyClientToken(token);
   } catch (e) {
     console.log(e);
     callback(false, 401, 'Unauthorized');

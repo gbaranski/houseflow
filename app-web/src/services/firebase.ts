@@ -85,9 +85,3 @@ export async function convertToFirebaseUser(
   };
   return firebaseUser;
 }
-
-export async function getIdToken() {
-  if (!firebaseAuth.currentUser)
-    throw new Error('Cannot retreive ID token cause currentUser not defined');
-  return firebaseAuth.currentUser.getIdToken(true);
-}

@@ -68,16 +68,16 @@ export function setupWebsocketHandlers(
   };
 
   const pingInterval = setInterval(() => {
-    if (!device.status) {
+    if (!device.deviceStatus) {
       return terminateConnection('Ping not received');
     }
-    device.status = false;
+    device.deviceStatus = false;
     ws.ping();
   }, 2000);
 
   ws.on('message', device.handleMessage);
   ws.on('pong', () => {
-    device.status = true;
+    device.deviceStatus = true;
   });
   ws.on('ping', () => {
     ws.pong();

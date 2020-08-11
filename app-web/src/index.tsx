@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import {
   BrowserRouter as Router,
@@ -13,18 +13,9 @@ import './services/firebase';
 import LeftNavigationBar from './components/leftNavigationBar';
 import { makeStyles } from '@material-ui/core';
 import { UserProvider, UserContext } from './providers/userProvider';
-import {
-  firebaseAuth,
-  convertToFirebaseUser,
-  getIdToken,
-} from './services/firebase';
+import { firebaseAuth, convertToFirebaseUser } from './services/firebase';
 import LoadingPage from './pages/loading';
-import { ToastContainer, toast } from 'react-toastify';
-import { beginWebSocketConnection } from './services/websocket';
-import {
-  WebsocketContext,
-  WebsocketProvider,
-} from './providers/websocketProvider';
+import { ToastContainer } from 'react-toastify';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -38,8 +29,6 @@ const App = () => {
   const [open, setOpen] = useState(true);
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
 
-  const { websocket } = useContext(WebsocketContext);
-
   const { firebaseUser, setFirebaseUser } = React.useContext(UserContext);
   if (!setFirebaseUser)
     throw new Error('Expected setFirebaseUser to be true when not initalized');
@@ -51,16 +40,7 @@ const App = () => {
         convertToFirebaseUser(firebaseAuth.currentUser).then((firebaseUser) => {
           setFirebaseUser(firebaseUser);
           setAuthStateLoaded(true);
-
-          try {
-            getIdToken()
-              .then(beginWebSocketConnection)
-              .catch((e) => {
-                throw e;
-              });
-          } catch (e) {
-            toast.error(e.message);
-          }
+          console.log(history);
           if (history.location.pathname === '/login') {
             history.replace('/welcome');
           }
@@ -73,9 +53,6 @@ const App = () => {
 
   if (!authStateLoaded) {
     return <LoadingPage title="Retreiving user data" />;
-  }
-  if (!websocket) {
-    return <LoadingPage title="Establishing WebSocket connection" />;
   }
 
   const SafeRoute = ({ children, ...rest }: any) => {
@@ -144,10 +121,8 @@ const App = () => {
 ReactDOM.render(
   <Router>
     <UserProvider>
-      <WebsocketProvider>
-        <ToastContainer />
-        <App />
-      </WebsocketProvider>
+      <ToastContainer />
+      <App />
     </UserProvider>
   </Router>,
 

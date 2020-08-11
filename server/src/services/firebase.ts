@@ -40,15 +40,9 @@ export async function validateDevice(
   return true;
 }
 
-export async function decodeClientToken(
-  token: string,
-): Promise<admin.auth.DecodedIdToken> {
-  try {
-    const decodedClient = await admin.auth().verifyIdToken(token);
-    return decodedClient;
-  } catch (e) {
-    throw e;
-  }
+export async function verifyClientToken(token: string): Promise<string> {
+  const decodedIdToken = await admin.auth().verifyIdToken(token);
+  return decodedIdToken.uid;
 }
 
 export function sendMessage(username: string, requestTypeString: string): void {
