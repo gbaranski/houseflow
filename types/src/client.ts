@@ -1,10 +1,8 @@
 import { AlarmclockData, DateTime, WatermixerData, State } from '.';
-import { DeviceType } from './device';
 
 export interface RequestClient {
   deviceUid?: string;
   type: ClientRequests;
-  deviceType: DeviceType;
   data?: DateTime | State;
 }
 export enum ClientRequests {
@@ -18,7 +16,6 @@ export interface ResponseClient<
 > {
   ok: boolean;
   deviceUid: string;
-  deviceType: DeviceType;
   responseFor: ClientRequests;
   data: T;
 }
