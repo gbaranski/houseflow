@@ -1,10 +1,11 @@
 import React from 'react';
 import clsx from 'clsx';
 import Drawer from '@material-ui/core/Drawer';
-import {makeStyles, IconButton, Divider, List} from '@material-ui/core';
+import { makeStyles, IconButton, Divider, List } from '@material-ui/core';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import {MainListItems, secondaryListItems} from './NavigationList';
 import Appbar from '../appbar';
+import { Device, AnyDeviceData } from '@gbaranski/types';
+import { NavigationList } from './NavigationList';
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -39,15 +40,20 @@ const useStyles = makeStyles((theme) => ({
 
 interface props {
   open: boolean;
-  handleDrawerOpen: any;
-  handleDrawerClose: any;
+  handleDrawerOpen: () => any;
+  handleDrawerClose: () => any;
+  devices: Device.ActiveDevice<AnyDeviceData>[];
 }
 
 function LeftNavigationBar(props: props) {
   const classes = useStyles();
   return (
     <>
-      <Appbar open={props.open} handleDrawerOpen={props.handleDrawerOpen} />
+      <Appbar
+        open={props.open}
+        handleDrawerOpen={props.handleDrawerOpen}
+        devices={props.devices}
+      />
       <Drawer
         variant="permanent"
         classes={{
@@ -56,16 +62,15 @@ function LeftNavigationBar(props: props) {
             !props.open && classes.drawerPaperClose,
           ),
         }}
-        open={props.open}>
+        open={props.open}
+      >
         <div className={classes.toolbarIcon}>
           <IconButton onClick={props.handleDrawerClose}>
             <ChevronLeftIcon />
           </IconButton>
         </div>
         <Divider />
-        <List>{MainListItems()}</List>
-        <Divider />
-        <List>{secondaryListItems}</List>
+        <List>{NavigationList(props.devices)}</List>
       </Drawer>
     </>
   );

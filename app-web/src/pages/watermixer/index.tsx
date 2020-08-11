@@ -1,10 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Box from '@material-ui/core/Box';
-import IconButton from '@material-ui/core/IconButton';
-import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Copyright from '../../components/copyright';
@@ -13,14 +9,18 @@ import { mdiClock } from '@mdi/js';
 import Icon from '@mdi/react';
 import DeviceManager from '../../components/deviceManager';
 import DeviceInfo from '../../components/deviceInfo';
-import CloseIcon from '@material-ui/icons/Close';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import Button from '@material-ui/core/Button';
 import DateFnsUtils from '@date-io/date-fns';
-import Snackbar from '@material-ui/core/Snackbar';
-import { Watermixer as WatermixerType } from '@gbaranski/types';
-import { useInterval } from '../../utils';
-import { getWatermixerData, startMixing } from '../../requests';
+import {
+  Watermixer as WatermixerType,
+  Device,
+  AnyDeviceData,
+  Client,
+} from '@gbaranski/types';
+import { WebsocketContext } from '../../providers/websocketProvider';
+import LoadingPage from '../loading';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import { Container, Box } from '@material-ui/core';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -51,41 +51,14 @@ function parseSeconds(seconds: number) {
   return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
 }
 
-function Watermixer() {
+function Watermixer(props: { device: Device.ActiveDevice<AnyDeviceData> }) {
   const classes = useStyles();
+  const { websocket } = React.useContext(WebsocketContext);
+  if (!websocket || !websocket.OPEN) {
+    return <LoadingPage title="Websocket disconnected, reconnecting" />;
+  }
 
-  const dataFromCache = localStorage.getItem('lastWatermixerData');
-  const parsedDataFromCache: WatermixerType.Data | undefined = dataFromCache
-    ? JSON.parse(dataFromCache)
-    : undefined;
-
-  const [data, setData] = React.useState<WatermixerType.Data | undefined>(
-    parsedDataFromCache || undefined,
-  );
-  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
-  const [snackbarMessage, setSnackbarMessage] = React.useState('');
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
-
-  const handleStartMixing = async () => {
-    const res = await startMixing();
-    if (res) {
-      setSnackbarMessage('Success mixing water!');
-    } else {
-      setSnackbarMessage('Success mixing water!');
-    }
-    setSnackbarOpen(true);
-    setTimeout(() => {
-      setSnackbarOpen(false);
-    }, 1000);
-  };
-
-  useInterval(async () => {
-    const newData = await getWatermixerData();
-    setData(newData);
-    localStorage.setItem('lastWatermixerData', JSON.stringify(newData));
-  }, 500);
+  const data = props.device.data as WatermixerType.Data;
 
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
@@ -109,39 +82,25 @@ function Watermixer() {
     },
   ];
 
+  const handleStartMixing = () => {
+    toast('Sending request! ✅', {
+      autoClose: 1000,
+      progressStyle: {
+        background: 'green',
+      },
+      bodyStyle: {
+        color: 'gray',
+      },
+    });
+    const request: Client.Request = {
+      requestType: 'START_MIXING',
+      deviceUid: props.device.uid,
+    };
+    websocket.send(JSON.stringify(request));
+  };
+
   return (
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
-      <Snackbar
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        message={snackbarMessage}
-        action={
-          <React.Fragment>
-            <Button
-              color="secondary"
-              size="small"
-              onClick={handleSnackbarClose}
-            >
-              UNDO
-            </Button>
-            <IconButton
-              size="small"
-              aria-label="close"
-              color="inherit"
-              onClick={handleSnackbarClose}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </React.Fragment>
-        }
-      />
-
-      <CssBaseline />
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>

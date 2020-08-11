@@ -8,6 +8,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import { makeStyles } from '@material-ui/core';
 import { useLocation } from 'react-router-dom';
 import { capitalizeFirst } from '../../utils';
+import { Device, AnyDeviceData } from '@gbaranski/types';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -39,9 +40,22 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const getCurrentName = (
+  path: string,
+  devices: Device.ActiveDevice<AnyDeviceData>[],
+) => {
+  if (!path.startsWith('/device/')) return capitalizeFirst(path.slice(1));
+  const deviceUid = path.replace('/device/', '');
+  const activeDevice = devices.find((device) => device.uid === deviceUid);
+  if (!activeDevice) throw new Error('Couldnt find device');
+
+  return capitalizeFirst(activeDevice.type.toLowerCase());
+};
+
 export default function Appbar(props: {
   open: boolean;
   handleDrawerOpen: any;
+  devices: Device.ActiveDevice<AnyDeviceData>[];
 }) {
   const classes = useStyles();
   return (
@@ -69,7 +83,7 @@ export default function Appbar(props: {
           noWrap
           className={classes.title}
         >
-          {capitalizeFirst(useLocation().pathname.slice(1))}
+          {getCurrentName(useLocation().pathname, props.devices)}
         </Typography>
       </Toolbar>
     </AppBar>

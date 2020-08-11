@@ -2,104 +2,95 @@ import React from 'react';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import DashboardIcon from '@material-ui/icons/Dashboard';
 import AlarmIcon from '@material-ui/icons/Alarm';
 import OpacityIcon from '@material-ui/icons/Opacity';
-import SettingsRemoteIcon from '@material-ui/icons/SettingsRemote';
-import InfoIcon from '@material-ui/icons/Info';
-import LiveHelpIcon from '@material-ui/icons/LiveHelp';
 import { NavLink } from 'react-router-dom';
-import { Device } from '@gbaranski/types';
+import { Device, AnyDeviceData } from '@gbaranski/types';
+import ErrorIcon from '@material-ui/icons/Error';
+import routes from '../../config/routes';
+import { Divider } from '@material-ui/core';
 
-const Icons = (props: { index: number }) => {
-  switch (props.index) {
-    default:
-    case 0:
-      return <DashboardIcon />;
-    case 1:
+const DeviceIcons = (props: { device: Device.ActiveDevice<AnyDeviceData> }) => {
+  switch (props.device.type) {
+    case 'ALARMCLOCK':
       return <AlarmIcon />;
-    case 2:
+    case 'WATERMIXER':
       return <OpacityIcon />;
-    case 3:
-      return <SettingsRemoteIcon />;
-  }
-};
-
-const getLink = (index: number) => {
-  switch (index) {
     default:
-    case 0:
-      return '/dashboard';
-    case 1:
-      return '/alarmclock';
-    case 2:
-      return '/watermixer';
-    case 3:
-      return '/gate';
+      return <ErrorIcon />;
   }
-};
-const primaryText = (index: number) => {
-  if (index === 0) {
-    return 'Dashboard';
-  } else {
-    return 'FIX';
-  }
-};
-
-// const disabledItems = [DeviceType.GATE];
-
-const checkIfDisabledItem = (index: number) => {
-  return false;
 };
 
 const FancyLink = React.forwardRef(
-  (props: { index: number; className: string | undefined; navigate: any }) => {
-    return (
-      <ListItem
-        button
-        disabled={checkIfDisabledItem(props.index)}
-        key={props.index}
-        onClick={props.navigate}
-        selected={props.className !== undefined}
-      >
-        <ListItemIcon>
-          <Icons index={props.index} />
-        </ListItemIcon>
-        <ListItemText primary={primaryText(props.index)} />
-      </ListItem>
-    );
-  },
+  (props: {
+    key: number;
+    className: string | undefined;
+    navigate: any;
+    name: string;
+    icon: () => JSX.Element;
+  }) => (
+    <ListItem
+      button
+      key={props.key}
+      onClick={props.navigate}
+      selected={props.className !== undefined}
+    >
+      <ListItemIcon>
+        <props.icon />
+      </ListItemIcon>
+      <ListItemText primary={props.name} />
+    </ListItem>
+  ),
+);
+const FancyDeviceLink = React.forwardRef(
+  (props: {
+    device: Device.ActiveDevice<AnyDeviceData>;
+    key: number;
+    className: string | undefined;
+    navigate: any;
+  }) => (
+    <ListItem
+      button
+      disabled={props.device.status}
+      key={props.key}
+      onClick={props.navigate}
+      selected={props.className !== undefined}
+    >
+      <ListItemIcon>
+        <DeviceIcons device={props.device} />
+      </ListItemIcon>
+      <ListItemText primary={props.device.type} />
+    </ListItem>
+  ),
 );
 
-export const MainListItems = () => {
-  return [0, 1, 2, 3].map((_element, index) => {
-    return (
-      <NavLink
-        to={() => getLink(index)}
-        activeClassName="selected"
-        // @ts-ignore
-        index={index}
-        component={FancyLink}
-      />
-    );
-  });
-};
-
-export const secondaryListItems = (
+export const NavigationList = (
+  devices: Device.ActiveDevice<AnyDeviceData>[],
+) => (
   <div>
-    <ListSubheader inset>More</ListSubheader>
-    <ListItem button key={1}>
-      <ListItemIcon>
-        <InfoIcon />
-      </ListItemIcon>
-      <ListItemText primary="About website" />
-    </ListItem>
-    <ListItem button disabled key={2}>
-      <ListItemIcon>
-        <LiveHelpIcon />
-      </ListItemIcon>
-      <ListItemText primary="Support" />
-    </ListItem>
+    {routes
+      .filter((route) => route.showOnNavbar === true)
+      .map((route, index) => (
+        <NavLink
+          to={route.path}
+          activeClassName="selected"
+          key={index}
+          // @ts-ignore
+          name={route.name}
+          icon={route.navIcon || ErrorIcon}
+          component={FancyLink}
+        />
+      ))}
+    <Divider />
+    {devices.map((device, index) => (
+      <NavLink
+        to={`/device/${device.uid}`}
+        activeClassName="selected"
+        key={index}
+        // @ts-ignore
+        device={device}
+        component={FancyDeviceLink}
+      />
+    ))}
   </div>
 );

@@ -7,7 +7,7 @@ import {
   Redirect,
   useHistory,
 } from 'react-router-dom';
-import routes from './routes';
+import routes from './config/routes';
 import LoginPage from './pages/login';
 import './services/firebase';
 import LeftNavigationBar from './components/leftNavigationBar';
@@ -34,12 +34,29 @@ import {
   DeviceDataContext,
 } from './providers/deviceDataProvider';
 import { getDeviceStatus } from './requests';
+import {
+  Device,
+  AnyDeviceData,
+  Alarmclock as AlarmclockType,
+  Watermixer as WatermixerType,
+} from '@gbaranski/types';
+import Alarmclock from './pages/alarmclock';
+import Watermixer from './pages/watermixer';
 
 const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
   },
 }));
+
+const ComponentByDevice = (device: Device.ActiveDevice<AnyDeviceData>) => {
+  switch (device.type) {
+    case 'ALARMCLOCK':
+      return <Alarmclock device={device} />;
+    case 'WATERMIXER':
+      return <Watermixer device={device} />;
+  }
+};
 
 const App = () => {
   const classes = useStyles();
@@ -85,9 +102,11 @@ const App = () => {
     if (websocket) return;
     if (!firebaseUser) return;
     const establishWebsocket = async () => {
-      const allowedDevices = getAllowedDevices(firebaseUser);
+      const allowedDevices = await getAllowedDevices(firebaseUser);
+      setDevices(allowedDevices);
+      setDevicesLoaded(true);
+      console.log({ allowedDevices });
       const newWebsocket = await beginWebsocketConnection(await getIdToken());
-
       newWebsocket.onerror = (error) => console.error(error);
       newWebsocket.onclose = (event) =>
         console.log(`Closed connection | Reason: ${event.reason}`);
@@ -146,6 +165,7 @@ const App = () => {
         <>
           <LeftNavigationBar
             open={open}
+            devices={devices}
             handleDrawerClose={handleDrawerClose}
             handleDrawerOpen={handleDrawerOpen}
           />
@@ -160,6 +180,16 @@ const App = () => {
             protected={route.protected}
             name={route.name}
             children={<route.main />}
+          />
+        ))}
+        {devices.map((device, index) => (
+          <SafeRoute
+            key={index}
+            path={`/device/${device.uid}`}
+            exact
+            protected
+            name={device.type}
+            children={ComponentByDevice(device)}
           />
         ))}
         <Route path={'/login'} exact>

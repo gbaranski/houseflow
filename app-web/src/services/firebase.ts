@@ -113,7 +113,7 @@ export function getSampleData(deviceType: Device.DeviceType): AnyDeviceData {
 
 export async function getAllowedDevices(
   firebaseUser: Client.FirebaseUser,
-): Promise<Device.FirebaseDevice[]> {
+): Promise<Device.ActiveDevice<AnyDeviceData>[]> {
   const currentDevices = firebaseUser.devices.full_access.map(async (doc) => {
     const docSnapshot = await doc.get();
     const docData = docSnapshot.data();
@@ -122,9 +122,8 @@ export async function getAllowedDevices(
     const parsedDocData = docData as Device.FirebaseDevice;
     if (!parsedDocData.type)
       throw new Error('Type od allowed device not defined');
-    const currentDevice: Device.ActiveDevice = {
+    const currentDevice: Device.ActiveDevice<AnyDeviceData> = {
       uid: parsedDocData.uid,
-      secret: parsedDocData.secret,
       status: false,
       type: parsedDocData.type,
       data: getSampleData(parsedDocData.type),
