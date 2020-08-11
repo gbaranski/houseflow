@@ -7,11 +7,19 @@ import {
   DeviceType,
   AlarmclockData,
   WatermixerData,
-  DeviceStatus,
   CurrentDevice,
-  DeviceDataClient,
 } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
+
+interface DeviceDataClient {
+  deviceUid: string;
+  data: AlarmclockData | WatermixerData;
+}
+
+interface DeviceStatus {
+  deviceUid: string;
+  status: boolean;
+}
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
