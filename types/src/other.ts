@@ -12,12 +12,6 @@ export interface DateTime {
   second: number;
 }
 
-export interface CurrentDevice {
-  type: DeviceType;
-  secret: string;
-  uid: string;
-}
-
 export enum RequestTypes {
   GET_DATA = 'GET_DATA',
   START_MIXING = 'START_MIXING',
