@@ -7,11 +7,11 @@ import 'firebase/app';
 import {
   RequestHistory,
   TempHistory,
-  Client,
-  Device,
-  Alarmclock,
-  Watermixer,
-  AnyDeviceData,
+  FirebaseUser,
+  CurrentDevice,
+  DeviceType,
+  DevicesTypes,
+  ClientCurrentDevice,
 } from '@gbaranski/types';
 
 const firebaseConfig = {
@@ -83,12 +83,12 @@ export async function getTempHistory() {
 
 export async function convertToFirebaseUser(
   user: firebase.User,
-): Promise<Client.FirebaseUser> {
+): Promise<FirebaseUser> {
   if (!user) throw new Error('User is not defined');
   const usersDoc = await usersCollection.doc(user.uid).get();
   if (!usersDoc.exists) throw new Error('User does not exist in database');
-  const usersData = usersDoc.data() as Client.FirebaseUser;
-  const firebaseUser: Client.FirebaseUser = {
+  const usersData = usersDoc.data() as FirebaseUser;
+  const firebaseUser: FirebaseUser = {
     ...usersData,
   };
   return firebaseUser;
@@ -100,34 +100,21 @@ export async function getIdToken(): Promise<string> {
   return firebaseAuth.currentUser.getIdToken(true);
 }
 
-export function getSampleData(deviceType: Device.DeviceType): AnyDeviceData {
-  switch (deviceType) {
-    case 'ALARMCLOCK':
-      return Alarmclock.SAMPLE;
-    case 'WATERMIXER':
-      return Watermixer.SAMPLE;
-    default:
-      return Watermixer.SAMPLE;
-  }
-}
-
 export async function getAllowedDevices(
-  firebaseUser: Client.FirebaseUser,
-): Promise<Device.FirebaseDevice[]> {
+  firebaseUser: FirebaseUser,
+): Promise<ClientCurrentDevice<DeviceType>[]> {
   const currentDevices = firebaseUser.devices.full_access.map(async (doc) => {
     const docSnapshot = await doc.get();
     const docData = docSnapshot.data();
     if (!docData) throw new Error('Document data is not defined');
 
-    const parsedDocData = docData as Device.FirebaseDevice;
-    if (!parsedDocData.type)
-      throw new Error('Type od allowed device not defined');
-    const currentDevice: Device.ActiveDevice = {
-      uid: parsedDocData.uid,
-      secret: parsedDocData.secret,
+    const deviceType: DeviceType =
+      DeviceType[docData.type as keyof typeof DeviceType];
+    const currentDevice: ClientCurrentDevice<typeof deviceType> = {
+      uid: docSnapshot.id,
+      secret: docData.secret,
       status: false,
-      type: parsedDocData.type,
-      data: getSampleData(parsedDocData.type),
+      type: DeviceType[deviceType],
     };
     return currentDevice;
   });

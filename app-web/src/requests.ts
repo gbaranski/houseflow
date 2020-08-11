@@ -1,4 +1,4 @@
-import { Alarmclock } from '@gbaranski/types';
+import { AlarmclockData } from '@gbaranski/types';
 
 const remoteUrl = 'https://api.gbaranski.com';
 
@@ -28,7 +28,7 @@ export async function getDeviceStatus() {
 
   return await JSON.parse(json);
 }
-export async function getAlarmClockData(): Promise<Alarmclock.Data> {
+export async function getAlarmClockData(): Promise<AlarmclockData> {
   const alarmClockDataUrl = `${remoteUrl}/alarmclock/getData`;
   const res = await fetch(alarmClockDataUrl, {
     method: 'GET',

@@ -24,6 +24,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import {
   beginWebsocketConnection,
   setupWebsocketHandlers,
+  getDevicesStatus,
 } from './services/websocket';
 import {
   WebsocketContext,
@@ -95,6 +96,9 @@ const App = () => {
         console.log('Connection open!');
         setWebsocket(newWebsocket);
         setupWebsocketHandlers(newWebsocket, setDevices, () => {});
+        getDevicesStatus(newWebsocket, await allowedDevices, () =>
+          setDevicesLoaded(true),
+        );
       };
     };
     establishWebsocket();

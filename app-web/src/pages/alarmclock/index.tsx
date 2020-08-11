@@ -29,7 +29,7 @@ import {
 import Button from '@material-ui/core/Button';
 import DateFnsUtils from '@date-io/date-fns';
 import Snackbar from '@material-ui/core/Snackbar';
-import { Alarmclock as AlarmclockType } from '@gbaranski/types';
+import { AlarmclockData } from '@gbaranski/types';
 import { useInterval } from '../../utils';
 import {
   getAlarmClockData,
@@ -70,11 +70,11 @@ function Alarmclock() {
   const classes = useStyles();
 
   const dataFromCache = localStorage.getItem('lastAlarmclockData');
-  const parsedDataFromCache: AlarmclockType.Data | undefined = dataFromCache
+  const parsedDataFromCache: AlarmclockData | undefined = dataFromCache
     ? JSON.parse(dataFromCache)
     : undefined;
 
-  const [data, setData] = React.useState<AlarmclockType.Data | undefined>(
+  const [data, setData] = React.useState<AlarmclockData | undefined>(
     parsedDataFromCache || undefined,
   );
   const [timeDialogOpen, setTimeDialogOpen] = React.useState(false);

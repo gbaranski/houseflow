@@ -18,7 +18,7 @@ import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import Button from '@material-ui/core/Button';
 import DateFnsUtils from '@date-io/date-fns';
 import Snackbar from '@material-ui/core/Snackbar';
-import { Watermixer as WatermixerType } from '@gbaranski/types';
+import { WatermixerData } from '@gbaranski/types';
 import { useInterval } from '../../utils';
 import { getWatermixerData, startMixing } from '../../requests';
 
@@ -55,11 +55,11 @@ function Watermixer() {
   const classes = useStyles();
 
   const dataFromCache = localStorage.getItem('lastWatermixerData');
-  const parsedDataFromCache: WatermixerType.Data | undefined = dataFromCache
+  const parsedDataFromCache: WatermixerData | undefined = dataFromCache
     ? JSON.parse(dataFromCache)
     : undefined;
 
-  const [data, setData] = React.useState<WatermixerType.Data | undefined>(
+  const [data, setData] = React.useState<WatermixerData | undefined>(
     parsedDataFromCache || undefined,
   );
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
