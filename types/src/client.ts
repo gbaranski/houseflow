@@ -1,5 +1,5 @@
 import { AlarmclockData, DateTime, WatermixerData, State } from '.';
-import { DeviceType, CurrentDevice } from './device';
+import { DeviceType } from './device';
 
 export interface RequestClient {
   deviceUid?: string;
@@ -14,11 +14,11 @@ export enum ClientRequests {
 }
 
 export interface ResponseClient<
-  T extends WatermixerData | AlarmclockData | CurrentDevice[] | undefined
+  T extends WatermixerData | AlarmclockData | undefined
 > {
   ok: boolean;
-  deviceUid?: string;
-  deviceType?: DeviceType;
+  deviceUid: string;
+  deviceType: DeviceType;
   responseFor: ClientRequests;
   data: T;
 }
