@@ -46,7 +46,8 @@ export default class WebSocketClient {
     this.setWebsocketHandling();
     this.setAccessDevices()
       .then(() => {
-        setInterval(() => this.interval(), 1000);
+        console.log({ this: this });
+        setInterval(this.interval, 1000);
       })
       .catch(e => console.error(e));
   }
