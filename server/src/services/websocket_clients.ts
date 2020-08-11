@@ -4,6 +4,7 @@ import { logSocketConnection } from '@/cli';
 import chalk from 'chalk';
 import { VerifyInfo, VerifyCallback } from '@/auth';
 import http from 'http';
+import { logError } from '@/cli';
 import WebSocketClient from '@/client';
 import { decodeClientToken } from './firebase';
 
@@ -41,13 +42,12 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     ws.terminate();
     return;
   }
-
-  console.log('New connec');
-  logSocketConnection(req, 'client');
   decodeClientToken(rawToken)
     .then(client => {
-      new WebSocketClient(ws, client.uid);
-      // WebSocketClient.addNewClient(wsClient);
+      logSocketConnection(req, client.uid, 'client');
+
+      const wsClient = new WebSocketClient(ws, client.uid);
+      setupWebsocketHandlers(ws, wsClient);
     })
     .catch(e => {
       console.error(e);
@@ -64,3 +64,33 @@ httpServer.listen(process.env.WS_CLIENT_PORT, '0.0.0.0', () =>
     ),
   ),
 );
+
+export function setupWebsocketHandlers(
+  ws: WebSocket,
+  client: WebSocketClient,
+): void {
+  WebSocketClient.addNewClient(client);
+
+  const terminateConnection = (reason: string) => {
+    client.terminateConnection(reason);
+    WebSocketClient.removeClient(client);
+  };
+
+  ws.on('message', client.handleMessage);
+  ws.on('pong', () => {
+    console.log('Received pong');
+    client.status = true;
+  });
+  ws.on('ping', () => {
+    console.log('Received ping');
+    ws.pong();
+  });
+  ws.on('error', err => {
+    logError(err.message);
+  });
+  ws.on('close', (code, reason) => {
+    logError(`CODE: ${code} \nREASON:${reason}`);
+    terminateConnection('Connection closed');
+    ws.terminate();
+  });
+}
