@@ -1,5 +1,5 @@
 import { WSS_URL } from '../config';
-import { Device, Client } from '@gbaranski/types';
+import { Device, Client, AnyDeviceData } from '@gbaranski/types';
 
 export const beginWebsocketConnection = async (
   token: string,
@@ -10,7 +10,7 @@ export const beginWebsocketConnection = async (
 
 export const setupWebsocketHandlers = async (
   ws: WebSocket,
-  setDevices: (devices: Device.ActiveDevice[]) => any,
+  setDevices: (devices: Device.ActiveDevice<AnyDeviceData>[]) => any,
   onConnectionClose: () => any,
 ) => {
   ws.addEventListener('message', (wsResponse) => {
@@ -20,7 +20,7 @@ export const setupWebsocketHandlers = async (
 
 const handleMessage = (
   message: string,
-  setDevices: (devices: Device.ActiveDevice[]) => any,
+  setDevices: (devices: Device.ActiveDevice<AnyDeviceData>[]) => any,
 ) => {
   const response = JSON.parse(message) as Client.Response;
   if (!response) throw new Error('Websocket response is not okay!');
