@@ -4,15 +4,7 @@ import 'firebase/analytics';
 import 'firebase/auth';
 import 'firebase/app';
 
-import {
-  RequestHistory,
-  TempHistory,
-  FirebaseUser,
-  CurrentDevice,
-  DeviceType,
-  DevicesTypes,
-  ClientCurrentDevice,
-} from '@gbaranski/types';
+import { RequestHistory, TempHistory, FirebaseUser } from '@gbaranski/types';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCpRLmvfBf-SpwkDUHKa_vrbEeIvSzHNOY',
@@ -94,32 +86,8 @@ export async function convertToFirebaseUser(
   return firebaseUser;
 }
 
-export async function getIdToken(): Promise<string> {
+export async function getIdToken() {
   if (!firebaseAuth.currentUser)
     throw new Error('Cannot retreive ID token cause currentUser not defined');
   return firebaseAuth.currentUser.getIdToken(true);
-}
-
-export async function getAllowedDevices(
-  firebaseUser: FirebaseUser,
-): Promise<ClientCurrentDevice<DeviceType>[]> {
-  const currentDevices = firebaseUser.devices.full_access.map(async (doc) => {
-    const docSnapshot = await doc.get();
-    const docData = docSnapshot.data();
-    if (!docData) throw new Error('Document data is not defined');
-
-    const deviceType: DeviceType =
-      DeviceType[docData.type as keyof typeof DeviceType];
-    const currentDevice: ClientCurrentDevice<typeof deviceType> = {
-      uid: docSnapshot.id,
-      secret: docData.secret,
-      status: false,
-      type: DeviceType[deviceType],
-    };
-    return currentDevice;
-  });
-
-  const resolvedDevices = await Promise.all(currentDevices);
-
-  return resolvedDevices;
 }

@@ -17,15 +17,10 @@ import {
   firebaseAuth,
   convertToFirebaseUser,
   getIdToken,
-  getAllowedDevices,
 } from './services/firebase';
 import LoadingPage from './pages/loading';
 import { ToastContainer, toast } from 'react-toastify';
-import {
-  beginWebsocketConnection,
-  setupWebsocketHandlers,
-  getDevicesStatus,
-} from './services/websocket';
+import { beginWebSocketConnection } from './services/websocket';
 import {
   WebsocketContext,
   WebsocketProvider,
@@ -34,7 +29,6 @@ import {
   DeviceDataProvider,
   DeviceDataContext,
 } from './providers/deviceDataProvider';
-import { getDeviceStatus } from './requests';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -47,8 +41,6 @@ const App = () => {
   const history = useHistory();
   const [open, setOpen] = useState(true);
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
-  const [websocketEstablished, setWebsocketEstablished] = useState(false);
-  const [devicesLoaded, setDevicesLoaded] = useState(false);
 
   const { websocket, setWebsocket } = useContext(WebsocketContext);
   const { devices, setDevices } = useContext(DeviceDataContext);
@@ -58,60 +50,46 @@ const App = () => {
     throw new Error('Expected setFirebaseUser to be true when not initalized');
   if (!setDevices)
     throw new Error('Expected setDevices to be true when not initialized');
-  if (!setWebsocket)
-    throw new Error('Expected setDevices to be true when not initialized');
 
   useEffect(() => {
-    firebaseAuth.onAuthStateChanged(async () => {
+    firebaseAuth.onAuthStateChanged(() => {
       console.log('Auth state changed');
       if (firebaseAuth.currentUser) {
-        if (!firebaseUser) {
-          const firebaseUser = await convertToFirebaseUser(
-            firebaseAuth.currentUser,
-          );
+        convertToFirebaseUser(firebaseAuth.currentUser).then((firebaseUser) => {
           setFirebaseUser(firebaseUser);
           setAuthStateLoaded(true);
-        }
 
-        if (history.location.pathname === '/login') {
-          history.replace('/welcome');
-        }
+          try {
+            getIdToken()
+              .then((token) =>
+                beginWebSocketConnection(
+                  token,
+                  setWebsocket,
+                  devices,
+                  setDevices,
+                ),
+              )
+              .catch((e) => {
+                throw e;
+              });
+          } catch (e) {
+            toast.error(e.message);
+          }
+          if (history.location.pathname === '/login') {
+            history.replace('/welcome');
+          }
+        });
       } else {
         setAuthStateLoaded(true);
       }
     });
-  }, []);
-
-  useEffect(() => {
-    if (websocket) return;
-    if (!firebaseUser) return;
-    const establishWebsocket = async () => {
-      const allowedDevices = getAllowedDevices(firebaseUser);
-      const newWebsocket = await beginWebsocketConnection(await getIdToken());
-
-      newWebsocket.onerror = (error) => console.error(error);
-      newWebsocket.onclose = (event) =>
-        console.log(`Closed connection | Reason: ${event.reason}`);
-      newWebsocket.onopen = async () => {
-        console.log('Connection open!');
-        setWebsocket(newWebsocket);
-        setupWebsocketHandlers(newWebsocket, setDevices, () => {});
-        getDevicesStatus(newWebsocket, await allowedDevices, () =>
-          setDevicesLoaded(true),
-        );
-      };
-    };
-    establishWebsocket();
-  }, [firebaseUser]);
+  }, [history, setFirebaseUser]);
 
   if (!authStateLoaded) {
     return <LoadingPage title="Retreiving user data" />;
   }
   if (!websocket || !websocket.OPEN) {
     return <LoadingPage title="Establishing WebSocket connection" />;
-  }
-  if (!devicesLoaded) {
-    return <LoadingPage title="Loading user devices" />;
   }
 
   const SafeRoute = ({ children, ...rest }: any) => {

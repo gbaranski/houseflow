@@ -4,6 +4,7 @@ import {
   RequestDevice,
   RequestTypes,
   DateTime,
+  DevicesTypes,
   DeviceType,
 } from '@gbaranski/types';
 import { logSocketError } from '@/cli';
@@ -67,7 +68,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   public terminateConnection(reason: string): void {
     this.ws.terminate();
-    logSocketError(this.deviceType, this.deviceUid, reason, 'device');
+    logSocketError(this.deviceName, this.deviceUid, reason, 'device');
   }
 
   get deviceData(): DeviceData {

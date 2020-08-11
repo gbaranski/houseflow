@@ -74,15 +74,21 @@ export function setupWebsocketHandlers(
   const terminateConnection = (reason: string) => {
     client.terminateConnection(reason);
     WebSocketClient.removeClient(client);
+    clearInterval(pingInterval);
   };
 
+  const pingInterval = setInterval(() => {
+    if (!client.status) {
+      return terminateConnection('Ping not received');
+    }
+    client.status = false;
+    ws.ping();
+  }, 2000);
   ws.on('message', client.handleMessage);
   ws.on('pong', () => {
-    console.log('Received pong');
     client.status = true;
   });
   ws.on('ping', () => {
-    console.log('Received ping');
     ws.pong();
   });
   ws.on('error', err => {
@@ -90,7 +96,7 @@ export function setupWebsocketHandlers(
   });
   ws.on('close', (code, reason) => {
     logError(`CODE: ${code} \nREASON:${reason}`);
-    terminateConnection('Connection closed');
+    clearInterval(pingInterval);
     ws.terminate();
   });
 }
