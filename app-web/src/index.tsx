@@ -25,7 +25,6 @@ import {
   WebsocketContext,
   WebsocketProvider,
 } from './providers/websocketProvider';
-import { DeviceDataProvider } from './providers/deviceDataProvider';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -39,7 +38,7 @@ const App = () => {
   const [open, setOpen] = useState(true);
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
 
-  const { websocket, setWebsocket } = useContext(WebsocketContext);
+  const { websocket } = useContext(WebsocketContext);
 
   const { firebaseUser, setFirebaseUser } = React.useContext(UserContext);
   if (!setFirebaseUser)
@@ -55,7 +54,7 @@ const App = () => {
 
           try {
             getIdToken()
-              .then((token) => beginWebSocketConnection(token, setWebsocket))
+              .then(beginWebSocketConnection)
               .catch((e) => {
                 throw e;
               });
@@ -75,7 +74,7 @@ const App = () => {
   if (!authStateLoaded) {
     return <LoadingPage title="Retreiving user data" />;
   }
-  if (!websocket || !websocket.OPEN) {
+  if (!websocket) {
     return <LoadingPage title="Establishing WebSocket connection" />;
   }
 
@@ -146,10 +145,8 @@ ReactDOM.render(
   <Router>
     <UserProvider>
       <WebsocketProvider>
-        <DeviceDataProvider>
-          <ToastContainer />
-          <App />
-        </DeviceDataProvider>
+        <ToastContainer />
+        <App />
       </WebsocketProvider>
     </UserProvider>
   </Router>,
