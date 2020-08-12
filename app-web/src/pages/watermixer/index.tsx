@@ -10,20 +10,15 @@ import Icon from '@mdi/react';
 import DeviceManager from '../../components/deviceManager';
 import DeviceInfo from '../../components/deviceInfo';
 import DateFnsUtils from '@date-io/date-fns';
-import {
-  Watermixer as WatermixerType,
-  Device,
-  AnyDeviceData,
-  Client,
-} from '@gbaranski/types';
+import { Watermixer as WatermixerType, Client } from '@gbaranski/types';
 import { WebsocketContext } from '../../providers/websocketProvider';
 import LoadingPage from '../loading';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { Container, Box, CssBaseline } from '@material-ui/core';
-import { toast } from 'react-toastify';
 import { preWebsocketMessage } from '../../services/websocket';
 import { DeviceDataContext } from '../../providers/deviceDataProvider';
 import { useHistory } from 'react-router-dom';
+import { parseSeconds } from '../../utils';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -49,10 +44,6 @@ const useStyles = makeStyles((theme) => ({
     height: 240,
   },
 }));
-
-function parseSeconds(seconds: number) {
-  return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
-}
 
 function Watermixer(props: { uid: string }) {
   const classes = useStyles();

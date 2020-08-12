@@ -9,11 +9,6 @@ import Paper from '@material-ui/core/Paper';
 import Copyright from '../../components/copyright';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
-import {
-  Alarmclock as AlarmclockType,
-  Device,
-  AnyDeviceData,
-} from '@gbaranski/types';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -39,10 +34,6 @@ const useStyles = makeStyles((theme) => ({
     height: 240,
   },
 }));
-
-function parseSeconds(seconds: number) {
-  return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
-}
 
 function Alarmclock() {
   const classes = useStyles();

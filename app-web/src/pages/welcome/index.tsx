@@ -6,8 +6,6 @@ import Box from '@material-ui/core/Box';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Copyright from '../../components/copyright';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
 import { Paper, Typography } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({

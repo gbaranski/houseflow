@@ -8,7 +8,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import { makeStyles } from '@material-ui/core';
 import { useLocation } from 'react-router-dom';
 import { capitalizeFirst } from '../../utils';
-import { Device, AnyDeviceData } from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
 import { DeviceDataContext } from '../../providers/deviceDataProvider';
 
 const useStyles = makeStyles((theme) => ({

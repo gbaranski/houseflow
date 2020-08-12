@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
-import Divider from '@material-ui/core/Divider';
-import Title from '../../components/title';
-import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemAvatar from '@material-ui/core/ListItemAvatar';
-import ListItemText from '@material-ui/core/ListItemText';
-import { getDeviceStatus } from '../../requests';
+import React from 'react';
+// import Divider from '@material-ui/core/Divider';
+// import Title from '../../components/title';
+// import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
+// import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+// import List from '@material-ui/core/List';
+// import ListItem from '@material-ui/core/ListItem';
+// import ListItemAvatar from '@material-ui/core/ListItemAvatar';
+// import ListItemText from '@material-ui/core/ListItemText';
+// import { getDeviceStatus } from '../../requests';
 
 export default function Status() {
   return <>To fix</>;

@@ -42,3 +42,7 @@ export function parseDateToDateString(date: Date) {
 export function capitalizeFirst(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+export function parseSeconds(seconds: number) {
+  return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
+}

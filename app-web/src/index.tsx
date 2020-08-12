@@ -20,7 +20,7 @@ import {
   getAllowedDevices,
 } from './services/firebase';
 import LoadingPage from './pages/loading';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import {
   beginWebsocketConnection,
   setupWebsocketHandlers,
@@ -33,13 +33,7 @@ import {
   DeviceDataProvider,
   DeviceDataContext,
 } from './providers/deviceDataProvider';
-import { getDeviceStatus } from './requests';
-import {
-  Device,
-  AnyDeviceData,
-  Alarmclock as AlarmclockType,
-  Watermixer as WatermixerType,
-} from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
 import Alarmclock from './pages/alarmclock';
 import Watermixer from './pages/watermixer';
 
@@ -63,7 +57,6 @@ const App = () => {
   const history = useHistory();
   const [open, setOpen] = useState(true);
   const [authStateLoaded, setAuthStateLoaded] = useState(false);
-  const [websocketEstablished, setWebsocketEstablished] = useState(false);
   const [firstDataArrived, setFirstDataArrived] = useState(false);
   const [devicesLoaded, setDevicesLoaded] = useState(false);
 
