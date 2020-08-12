@@ -12,12 +12,6 @@ declare module '*.bmp';
 declare module '*.tiff';
 declare module 'omit.js';
 
-declare module 'bizcharts-plugin-slider';
-declare module 'mockjs';
-declare module '@antv/data-set';
-
-declare module 'react-fittext';
-
 // google analytics interface
 interface GAFieldsObject {
   eventCategory: string;

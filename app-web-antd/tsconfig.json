@@ -7,7 +7,6 @@
     "sourceMap": true,
     "baseUrl": ".",
     "jsx": "react",
-    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
