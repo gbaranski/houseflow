@@ -6,9 +6,13 @@ Home automation platform for IoT devices like ESP8266 and ESP32, most of it is b
 * [Node.JS Server](#nodejs-server)
 * Web App
 * Mobile App
-* Embedded Devices
+* Embedded devices
 * Firestore database
 * Firebase FCM
 
-# Node.JS Server 
-
+## Node.JS Server 
+## Web App
+## Mobile App
+## Embedded devices
+## Firestore database
+## Firebase FCM
