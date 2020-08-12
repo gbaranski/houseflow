@@ -2,25 +2,34 @@ import React from 'react';
 import { BasicLayoutProps, Settings as LayoutSettings } from '@ant-design/pro-layout';
 import { notification } from 'antd';
 import { history, RequestConfig } from 'umi';
+import { Client } from '@gbaranski/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
-import { queryCurrent } from './services/user';
+import { convertToFirebaseUser, getCurrentUser } from '@/services/firebase';
 import defaultSettings from '../config/defaultSettings';
 
 export async function getInitialState(): Promise<{
-  currentUser?: API.CurrentUser;
+  firebaseUser?: Client.FirebaseUser;
+  currentUser?: firebase.User;
   settings?: LayoutSettings;
 }> {
-  // 如果是登录页面，不执行
+  console.log('getInitalState', history.location.pathname);
   if (history.location.pathname !== '/user/login') {
     try {
-      const currentUser = await queryCurrent();
+      const currentUser = await getCurrentUser();
+      if (!currentUser) throw new Error('Redirect to login page');
+
+      const firebaseUser = await convertToFirebaseUser(currentUser);
+      if (!firebaseUser) throw new Error('No user in database'); // handle it later
+
       return {
+        firebaseUser,
         currentUser,
         settings: defaultSettings,
       };
     } catch (error) {
+      console.log(error);
       history.push('/user/login');
     }
   }
@@ -32,18 +41,18 @@ export async function getInitialState(): Promise<{
 export const layout = ({
   initialState,
 }: {
-  initialState: { settings?: LayoutSettings; currentUser?: API.CurrentUser };
+  initialState: { settings?: LayoutSettings };
 }): BasicLayoutProps => {
   return {
     rightContentRender: () => <RightContent />,
     disableContentMargin: false,
     footerRender: () => <Footer />,
-    onPageChange: () => {
-      // 如果没有登录，重定向到 login
-      if (!initialState?.currentUser?.userid && history.location.pathname !== '/user/login') {
-        history.push('/user/login');
-      }
-    },
+    // onPageChange: () => {
+    //   // 如果没有登录，重定向到 login
+    //   if (!initialState?.currentUser?.userid && history.location.pathname !== '/user/login') {
+    //     history.push('/user/login');
+    //   }
+    // },
     menuHeaderRender: undefined,
     ...initialState?.settings,
   };
