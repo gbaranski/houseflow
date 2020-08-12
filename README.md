@@ -1,4 +1,11 @@
 # Control-Home
+![code-coverage](https://img.shields.io/badge/coverage-0%25-red)
+![status](https://img.shields.io/badge/status-WIP-yellow)
+[![build-status](https://img.shields.io/docker/cloud/build/gbaranski19/control-home-api)](https://hub.docker.com/r/gbaranski19/control-home-api)
+[![build-size](https://img.shields.io/docker/image-size/gbaranski19/control-home-api?sort=date)](https://hub.docker.com/r/gbaranski19/control-home-api)
+[![build-automated](https://img.shields.io/docker/automated/gbaranski19/control-home-api)](https://hub.docker.com/r/gbaranski19/control-home-api)
+![github-stars](https://img.shields.io/github/stars/gbaranski/Control-Home?style=social)
+
 
 Home automation platform for IoT devices like ESP8266 and ESP32, most of it is built on Typescript and C++
 
