@@ -9,6 +9,12 @@
 
 Home automation platform for IoT devices like ESP8266 and ESP32, most of it is built on Typescript and C++
 
+## Documentation
+The documentation is divided into several sections:
+
+1. [Components of project](#components-of-project)
+2. [Communication and data transmission](#communication-and-data-transmission)
+
 ## Components of project
 * [Node.JS Server](#nodejs-server)
 * [Web App](#web-app)
@@ -28,7 +34,7 @@ Web app made using [React](https://github.com/facebook/react) front-end framewor
 
 
 ### Mobile App
-Mobile app made using [React-Native(https://github.com/facebook/react-native) which is framework for mobile apps which allows to write in Typescript. It needs full refactoring, but thinking about switching to flutter.
+Mobile app made using [React-Native](https://github.com/facebook/react-native) which is framework for mobile apps which allows to write in Typescript. It needs full refactoring, but thinking about switching to flutter.
 
 <img src="https://github.com/gbaranski/Control-Home/blob/add-documentation/docs/mobile_app.jpg" width="150">
 
@@ -50,5 +56,31 @@ Project is using [Firestore database](https://firebase.google.com/docs/firestore
 
 ### Project types
 Types for Typescript, helps a lot with planning, and having cohesion between project components.
+
+## Communication and data transmission
+Most of the communication and data transmission is done by WebSocket. Previously it was fully on HTTP, but with HTTP there is one problem, I needed two-way communication to properly receive data from devices, and send to them.
+
+|From|To|Type|
+|---|---|---|
+|Web/Mobile Client|Server|```Client.Request```|
+|Server|Web/Mobile Client|```Client.Response```|
+|Embedded|Server|`Device.RequestDevice`|
+|Server|Embedded|`Device.ResponseDevice`|
+
+#### Security
+
+* [Embedded devices](#embedded-devices-security)
+* [Web/Mobile Client](#webmobile-client)
+
+
+##### Embedded devices security
+Devices for the first step make POST HTTP Request to `/api/getToken` with secret key and token, to the server, that returns them signed JWT Token, with this token he sends upgrade HTTP request to server with headers that contains this JWT Token, then server veryfies that and if okay let him go.
+
+##### Web/Mobile Client
+Web/Mobile clients are authenticated a little bit different, clients can log in via Google/Email and if they do, they can get authenticated by generating JWT token from Firebase and then sending it with websocket handshake.
+
+#### Websocket Diagram
+Here will be diagram soon
+
 
 
