@@ -1,7 +1,9 @@
 // src/access.ts
-export default function access(initialState: { currentUser?: API.CurrentUser | undefined }) {
-  const { currentUser } = initialState || {};
+import { Client } from '@gbaranski/types';
+
+export default function access(initialState: { firebaseUser?: Client.FirebaseUser }) {
+  const { firebaseUser } = initialState || {};
   return {
-    canAdmin: currentUser && currentUser.access === 'admin',
+    canAdmin: firebaseUser && firebaseUser.permission > 1,
   };
 }

@@ -7,6 +7,7 @@ import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
 import { convertToFirebaseUser, getCurrentUser } from '@/services/firebase';
+import Device from '@/pages/device';
 import defaultSettings from '../config/defaultSettings';
 
 export async function getInitialState(): Promise<{
@@ -36,6 +37,14 @@ export async function getInitialState(): Promise<{
   return {
     settings: defaultSettings,
   };
+}
+export function patchRoutes({ routes }) {
+  routes.unshift({
+    path: '/foo',
+    exact: false,
+    name: 'foo',
+    component: Device,
+  });
 }
 
 export const layout = ({
