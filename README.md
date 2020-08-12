@@ -36,6 +36,12 @@ Embedded devices, microcontrollers i used were ESP8266 and ESP32, those are modu
 <img src="https://github.com/gbaranski/Control-Home/blob/add-documentation/docs/alarmclock.jpg" width="150">
 
 ### Firestore database
+Project is using [Firestore database](https://firebase.google.com/docs/firestore) for storing devices, users and etc
+
 ### Firebase FCM
+[Firebase cloud messaging](https://firebase.google.com/docs/cloud-messaging), currently used only for [mobile app](#mobile-app), but in future I expect to use it also for [Web App](#web-app)
+
 ### Project types
+Types for Typescript, helps a lot with planning, and having cohesion between project components.
+
 
