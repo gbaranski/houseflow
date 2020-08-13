@@ -44,3 +44,7 @@ export function capitalizeFirst(string: string) {
 export function parseSeconds(seconds: number) {
   return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
 }
+
+export function parseWaterBoolean(state: boolean): string {
+  return state ? 'Mixing!' : 'Idle';
+}
