@@ -1,8 +1,7 @@
-import firebase from 'firebase/app';
+import firebase, { User } from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/analytics';
 import 'firebase/auth';
-import 'firebase/app';
 
 import {
   RequestHistory,
@@ -41,25 +40,14 @@ export async function signInWithCredentials(
   email: string,
   password: string,
 ): Promise<firebase.auth.UserCredential> {
-  try {
-    // figure out if this has to be there
-    await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    return firebaseAuth.signInWithEmailAndPassword(email, password);
-  } catch (e) {
-    throw e;
-  }
+  // figure out if this has to be there
+  await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  return firebaseAuth.signInWithEmailAndPassword(email, password);
 }
 
-export async function signToGoogleWithPopup(): Promise<
-  firebase.auth.UserCredential
-> {
-  try {
-    // figure out if this has to be there
-    await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    return firebaseAuth.signInWithPopup(googleProvider);
-  } catch (e) {
-    throw e;
-  }
+export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredential> {
+  await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  return firebaseAuth.signInWithPopup(googleProvider);
 }
 
 export async function getRequestHistory() {
@@ -81,9 +69,7 @@ export async function getTempHistory() {
   return tempHistory;
 }
 
-export async function convertToFirebaseUser(
-  user: firebase.User,
-): Promise<Client.FirebaseUser> {
+export async function convertToFirebaseUser(user: firebase.User): Promise<Client.FirebaseUser> {
   if (!user) throw new Error('User is not defined');
   const usersDoc = await usersCollection.doc(user.uid).get();
   if (!usersDoc.exists) throw new Error('User does not exist in database');
@@ -120,8 +106,7 @@ export async function getAllowedDevices(
     if (!docData) throw new Error('Document data is not defined');
 
     const parsedDocData = docData as Device.FirebaseDevice;
-    if (!parsedDocData.type)
-      throw new Error('Type od allowed device not defined');
+    if (!parsedDocData.type) throw new Error('Type od allowed device not defined');
     const currentDevice: Device.FirebaseDevice = {
       uid: parsedDocData.uid,
       type: parsedDocData.type,
@@ -132,4 +117,19 @@ export async function getAllowedDevices(
   const resolvedDevices = await Promise.all(currentDevices);
 
   return resolvedDevices;
+}
+
+let userLoaded: boolean = false;
+
+export function getCurrentUser(): Promise<User | undefined> {
+  return new Promise<User | undefined>((resolve, reject) => {
+    if (userLoaded) {
+      resolve(firebaseAuth.currentUser || undefined);
+    }
+    const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+      userLoaded = true;
+      unsubscribe();
+      resolve(user ?? undefined);
+    }, reject);
+  });
 }
