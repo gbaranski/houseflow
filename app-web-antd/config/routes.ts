@@ -13,11 +13,11 @@ export const routes: IRoute[] = [
     ],
   },
   {
-    path: '/device',
-    name: 'Device',
-    icon: 'smile',
+    path: '/devices',
+    name: 'Devices',
+    icon: 'Wifi',
     exact: false,
-    component: './device/',
+    component: './devices/',
   },
   {
     path: '/welcome',
@@ -54,11 +54,3 @@ export const routes: IRoute[] = [
     component: './404',
   },
 ];
-
-export function patchRoutes() {
-  routes.unshift({
-    path: '/foo',
-    exact: true,
-    icon: 'smile',
-  });
-}
