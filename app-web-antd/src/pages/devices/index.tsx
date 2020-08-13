@@ -21,7 +21,6 @@ export default (): React.ReactNode => {
         <Row>
           <DeviceList activeDevices={activeDevices} firebaseDevices={firebaseDevices} />
         </Row>
-        {/* <WatermixerCard/> */}
       </Card>
     </PageContainer>
   );
