@@ -15,7 +15,7 @@ export default (props: { name: string }) => {
         </Link>,
       ]}
     >
-      <Empty />
+      <Empty description="Device is offline" />
     </Card>
   );
 };
