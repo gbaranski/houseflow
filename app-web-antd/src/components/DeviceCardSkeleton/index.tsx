@@ -8,6 +8,7 @@ export default (props: { name: string }) => {
     <Card
       title={props.name}
       style={{ width: 300 }}
+      bodyStyle={{ minHeight: 180 }}
       actions={[
         <Link to="#">
           <EnterOutlined key="Enter" />
