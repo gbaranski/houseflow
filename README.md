@@ -28,7 +28,7 @@ The documentation is divided into several sections:
 Node.JS Server, whole code is in Typescript, main purpose of this server is handling websocket connections incoming from [embedded devices](#embedded-devices) and [Web App](#web-app) and also [Mobile App](#mobile-app). 
 
 ### Web App
-Web app made using [React](https://github.com/facebook/react) front-end framework, whole code is in Typescript. Currently this is the most developed part of project alongisde Node.JS Server. At the moment im using [Material-UI](https://github.com/mui-org/material-ui), but planning to switch to [antd](https://github.com/ant-design/ant-design)
+Web app made using [React](https://github.com/facebook/react) front-end framework, whole code is in Typescript. Currently this is the most developed part of project alongisde Node.JS Server. App has moved from [Material-UI](https://github.com/mui-org/material-ui), to [antd](https://github.com/ant-design/ant-design)
 
 <img src="https://github.com/gbaranski/Control-Home/blob/add-documentation/docs/web_app.png" width="450">
 
