@@ -3,7 +3,7 @@ import { Card, Statistic, Row, Col } from 'antd';
 import { EnterOutlined, CoffeeOutlined } from '@ant-design/icons';
 import { useModel } from 'umi';
 import { Device, Watermixer } from '@gbaranski/types';
-import { parseSeconds } from '@/utils/utils';
+import { parseSeconds, parseWaterBoolean } from '@/utils/utils';
 
 interface WatermixerCardProps {
   device: Device.ActiveDevice<Watermixer.Data>;
@@ -21,12 +21,12 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
         <CoffeeOutlined key="Mix" onClick={() => mixWater(device.uid)} />,
       ]}
     >
-      <Row>
-        <Col span={12}>
-          <Statistic title="Mixing state" value={String(device.data.isTimerOn)} />
+      <Row justify="space-around">
+        <Col span={10} style={{ textAlign: 'left' }}>
+          <Statistic title="Mixing state" value={parseWaterBoolean(device.data.isTimerOn)} />
         </Col>
-        <Col span={12}>
-          <Statistic title="Remaining seconds" value={parseSeconds(device.data.remainingSeconds)} />
+        <Col span={10} style={{ textAlign: 'right' }}>
+          <Statistic title="Time left" value={parseSeconds(device.data.remainingSeconds)} />
         </Col>
       </Row>
     </Card>
