@@ -16,7 +16,7 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices, activeDevices 
         if (!activeDevice)
           return (
             <Col>
-              <DeviceCardSkeleton key={Math.random()} name={device.type} />
+              <DeviceCardSkeleton key={device.uid} name={device.type} />
             </Col>
           );
         switch (activeDevice.type) {
@@ -30,7 +30,7 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices, activeDevices 
               </Col>
             );
           default:
-            return <DeviceCardSkeleton key={Math.random()} name="Error" />;
+            return <DeviceCardSkeleton key={device.uid} name="Error" />;
         }
       })}
     </>
