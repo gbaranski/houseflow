@@ -1,8 +1,8 @@
 name: Deploy to Google App Engine
 
 on:
-  workflow_run:
   release:
+  workflow_dispatch:
 
 
 jobs:
