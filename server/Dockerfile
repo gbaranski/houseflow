@@ -1,6 +1,7 @@
 FROM node:12
 
-# Create app directory
+RUN TOUCH .env
+
 WORKDIR /app
 
 # Install app dependencies
@@ -12,8 +13,6 @@ RUN npm install
 
 # Bundle app source
 COPY . .
-
-RUN TOUCH .env
 
 EXPOSE 8000
 EXPOSE 8001
