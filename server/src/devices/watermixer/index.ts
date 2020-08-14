@@ -5,7 +5,7 @@ import { validateDeviceMessage } from '@/helpers';
 
 export class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(ws: WebSocket, device: DeviceType.FirebaseDevice) {
-    super(ws, Watermixer.SAMPLE, 'WATERMIXER', device.uid, device.secret);
+    super(ws, Watermixer.SAMPLE, 'WATERMIXER', device.uid);
   }
 
   handleMessage(message: WebSocket.Data): void {

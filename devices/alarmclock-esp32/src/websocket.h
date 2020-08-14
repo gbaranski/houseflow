@@ -10,6 +10,11 @@
 #include "secret.h"
 #endif
 
+#ifndef OTA_H
+#define OTA_H
+#include "OTA.h"
+#endif
+
 #ifndef EXTLCD_H
 #define EXTLCD_H
 #include "extLcd.h"
@@ -24,7 +29,7 @@
 #define ALARM_H
 #include "alarm.h"
 #endif
-
+#include <ArduinoJson.h>
 #include <HTTPClient.h>
 HTTPClient http;
 
@@ -40,41 +45,52 @@ WebSocketsClient webSocket;
 void connectWebSocket();
 boolean alarmDuringTest = 0;
 
+void sendDataOverWebsocket()
+{
+    const int capacity = JSON_OBJECT_SIZE(12);
+    StaticJsonDocument<capacity> JSON;
+    JSON["ok"] = true;
+    JSON["responseFor"] = "GET_DATA";
+    JSON["data"]["alarmTime"]["hour"] = parseTimeToHour(getAlarmTime());
+    JSON["data"]["alarmTime"]["minute"] = parseTimeToMinute(getAlarmTime());
+    JSON["data"]["alarmTime"]["second"] = 0;
+    JSON["data"]["alarmState"] = getAlarmStateBoolean();
+    JSON["data"]["sensor"]["temperature"] = getDhtTemperature();
+    JSON["data"]["sensor"]["humidity"] = getDhtHumidity();
+    JSON["data"]["sensor"]["heatIndex"] = getHeatIndex();
+
+    String stringJson;
+    serializeJson(JSON, stringJson);
+
+    webSocket.sendTXT(stringJson);
+}
+
 void handleMessage(uint8_t payload[], size_t length)
 {
-    String payloadString = formatPayloadToString(payload, length);
-    if (payloadString == "GET_DATA")
+    const int capacity = JSON_OBJECT_SIZE(2) + 3 * JSON_OBJECT_SIZE(1) + 3 * JSON_OBJECT_SIZE(1);
+    StaticJsonDocument<capacity> reqJSON;
+    deserializeJson(reqJSON, payload);
+    String reqType = reqJSON["type"];
+    if (reqType == "SET_TIME")
     {
-        String espOutput =
-            R"({"currentTime":")" + getCurrentTime() +
-            R"(","alarmTime":")" + getAlarmTime() +
-            R"(","remainingTime":")" + getFormattedRemainingTime() +
-            R"(","alarmState":)" + getAlarmStateBoolean() +
-            R"(,"temperature":)" + getDhtTemperature() +
-            R"(,"humidity":)" + getDhtHumidity() +
-            R"(,"heatIndex":)" + getHeatIndex() +
-            "}";
-        webSocket.sendTXT(espOutput);
-        Serial.println("[WSc] Received GET_DATA");
+        String hour = reqJSON["data"]["hour"];
+        String minute = reqJSON["data"]["hour"];
+
+        saveAlarmTime(hour + ":" + minute);
+        Serial.println("[WSc] Received SET_TIME");
     }
-    else if (payloadString.substring(0, payloadString.length() - 5) == "SET_TIME=")
+    else if (reqType == "SET_STATE")
     {
-        String time = payloadString.substring(payloadString.length(), payloadString.length() - 5);
-        Serial.println("[WSc] Received time: " + time);
-        saveAlarmTime(time);
+        bool newState = reqJSON["data"]["state"];
+        Serial.println("[WSc] Received state: " + newState);
+        setAlarmState(newState);
     }
-    else if (payloadString.substring(0, payloadString.length() - 1) == "SET_STATE=")
-    {
-        String state = payloadString.substring(payloadString.length(), payloadString.length() - 1);
-        Serial.println("[WSc] Received state: " + state);
-        setAlarmState(state);
-    }
-    else if (payloadString == "TEST_SIREN")
+    else if (reqType == "TEST_SIREN")
     {
         alarmDuringTest = 1;
-        Serial.println("[WSc] Testing alarm");
+        Serial.println("[WSc] Testing siren");
     }
-    else if (payloadString == "RESTART")
+    else if (reqType == "RESTART")
     {
         Serial.println("[WSc] Rebooting");
         ESP.restart();
@@ -96,7 +112,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
         break;
     case WStype_CONNECTED:
         Serial.printf("[WSc] Connected to url: %s\n", payload);
-        webSocket.sendTXT("Connected");
         break;
     case WStype_TEXT:
         handleMessage(payload, length);
@@ -123,9 +138,13 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 
 String getToken()
 {
+    // std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
+    // client->setFingerprint(fingerprint);
+    // http.begin(*client, TOKEN_SERVER_URL);
     http.begin(TOKEN_SERVER_URL);
-    http.addHeader("device", "ALARMCLOCK");
-    http.addHeader("token", ALARMCLOCK_TOKEN);
+    http.addHeader("deviceType", "WATERMIXER");
+    http.addHeader("uid", ALARMCLOCK_UID);
+    http.addHeader("secret", ALARMCLOCK_SECRET);
     http.addHeader("accept", "text/plain");
     int httpCode = http.GET();
     if (httpCode == 200)
@@ -165,16 +184,21 @@ void setupWebsocket()
 }
 void connectWebSocket()
 {
-    for (uint8_t t = 2; t > 0; t--)
+    for (uint8_t t = 200; t > 0; t--)
     {
         Serial.printf("[WS] WAIT FOR CONNECT %d...\n", t);
-        delay(1000);
+        delay(10);
     }
-    webSocket.setExtraHeaders(("token: " + getToken()).c_str());
+    webSocket.setExtraHeaders((
+        "token: " + getToken() +
+        "\r\ndevicetype: ALARMCLOCK" +
+        "\r\nuid: " + ALARMCLOCK_UID +
+        "\r\nsecret: " + ALARMCLOCK_SECRET)
+        .c_str());
 
-    webSocket.beginSSL(websockets_server, websockets_port, "/");
+    webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
-    webSocket.enableHeartbeat(15000, 10000, 2);
+    webSocket.enableHeartbeat(2000, 2000, 2);
 }
 
 boolean isWifiRunning()
