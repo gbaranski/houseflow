@@ -1,5 +1,6 @@
 {
-  "name": "controlapp-backend",
+  "name": "control-home-server",
+  "description": "Control Home server on Node.JS",
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {

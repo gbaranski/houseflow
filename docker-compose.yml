@@ -2,7 +2,8 @@ version: '3.8'
 services:
   server:
     tty: true
-    container_name: "controlhome-server"
+    container_name: "server"
+    image: server
     build:
       context: ./server
       dockerfile: Dockerfile
