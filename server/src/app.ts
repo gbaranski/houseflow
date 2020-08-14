@@ -1,9 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import routes from './routes';
-import { isAuthenticated } from './auth';
-import { CORS_WHITELIST, LOGIN_WHITELIST_URL, NO_LOG_URL } from './config';
-import { saveRequestToDb } from '@/services/firebase';
+import { CORS_WHITELIST } from './config';
 import { getIpStr, getCountryStr } from '@/services/resolveip';
 import morgan from 'morgan';
 import chalk from 'chalk';
@@ -61,38 +59,6 @@ app.use(
   }),
 );
 app.use(express.json()); // for parsing application/json
-
-app.use((req, res, next): void => {
-  // logRequest(req, res);
-  if (!NO_LOG_URL.includes(req.url)) {
-    const ip = getIpStr(req);
-    saveRequestToDb({
-      user: String(req.get('username')),
-      requestPath: req.path,
-      unixTime: new Date().getTime(),
-      ip,
-      userAgent: String(req.get('user-agent')),
-      country: getCountryStr(ip),
-    });
-  }
-  if (LOGIN_WHITELIST_URL.includes(req.url)) {
-    next();
-    return;
-  }
-  isAuthenticated(req, res, next);
-});
-app.use(
-  (
-    err: { message: string },
-    req: express.Request,
-    res: express.Response,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _next: express.NextFunction,
-  ): void => {
-    console.log('Not authorized');
-    res.status(401).send(err.message);
-  },
-);
 
 app.use('/', routes);
 

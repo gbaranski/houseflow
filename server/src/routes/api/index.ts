@@ -1,13 +1,8 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
 import { validateDevice } from '@/services/firebase';
 
 const router = express.Router();
-
-router.post('/login', (req, res): void => {
-  res.sendStatus(200);
-});
 
 router.get(
   '/getDeviceToken',
