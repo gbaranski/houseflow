@@ -6,10 +6,6 @@ on:
     tags:
       - v*
 
-env:
-  # TODO: Change variable to your image's name.
-  IMAGE_NAME: image
-
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
