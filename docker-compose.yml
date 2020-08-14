@@ -1,14 +1,17 @@
 version: '3.8'
 services:
   server:
-    container_name: "controlhome-api"
-    image: gbaranski19/control-home-api
-    env_file: ./.env
+    tty: true
+    container_name: "controlhome-server"
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file: ./server/.env
     ports:
       - 8000:8000
       - 8001:8001
       - 8002:8002
     restart: 'unless-stopped'
     volumes:
-      - ./src/firebaseConfig.json:/server/src/firebaseConfig.json
+      - ./server/src/config/firebaseConfig.json:/app/src/firebaseConfig.json
 
