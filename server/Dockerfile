@@ -1,7 +1,5 @@
 FROM node:12
 
-RUN TOUCH .env
-
 WORKDIR /app
 
 # Install app dependencies
