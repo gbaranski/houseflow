@@ -1,16 +1,19 @@
 import React from 'react';
-import { Card, Statistic, Row, Col, Tooltip } from 'antd';
+import { Card, Statistic, Row, Col, Tooltip, Popconfirm } from 'antd';
 import { ClockCircleOutlined, PoweroffOutlined, WarningOutlined } from '@ant-design/icons';
 import { Device, Alarmclock } from '@gbaranski/types';
 import { parseDateTime } from '@/utils/utils';
 import Icon from '@mdi/react';
 import { mdiThermometer, mdiWaterPercent } from '@mdi/js';
+import { useModel } from 'umi';
 
 interface AlarmclockCardProps {
   device: Device.ActiveDevice<Alarmclock.Data>;
 }
 
 const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
+  const { testSiren } = useModel('alarmclock');
+
   return (
     <Card
       title="Alarmclock"
@@ -20,9 +23,16 @@ const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
         <Tooltip title="Set time">
           <ClockCircleOutlined key="setTime" />
         </Tooltip>,
-        <Tooltip title="Test alarm">
-          <WarningOutlined key="testAlarm" />
-        </Tooltip>,
+        <Popconfirm
+          title="Are you sure you want to test siren? It might be so loud"
+          onConfirm={() => testSiren(device.uid)}
+          okText="Yes"
+          cancelText="No"
+        >
+          <Tooltip title="Test alarm">
+            <WarningOutlined key="testAlarm" />
+          </Tooltip>
+        </Popconfirm>,
         <Tooltip title="Switch state">
           <PoweroffOutlined key="switchState" />
         </Tooltip>,
