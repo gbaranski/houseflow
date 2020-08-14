@@ -13,6 +13,8 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+RUN TOUCH .env
+
 EXPOSE 8000
 EXPOSE 8001
 EXPOSE 8003
