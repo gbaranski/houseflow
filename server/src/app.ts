@@ -17,7 +17,7 @@ morgan.token('code', (req: express.Request, res: express.Response) => {
   }
 });
 
-morgan.token('country', (req: express.Request, _) => {
+morgan.token('country', (req: express.Request) => {
   const country = getCountryStr(getIpStr(req));
   if (country === 'unknown') {
     return chalk.gray.bold(country);
@@ -26,7 +26,7 @@ morgan.token('country', (req: express.Request, _) => {
   }
 });
 
-morgan.token('devOrUsr', (req: express.Request, _) => {
+morgan.token('devOrUsr', (req: express.Request) => {
   const username = req.header('username');
   const device = req.header('device');
   if (username || device) {
@@ -36,7 +36,7 @@ morgan.token('devOrUsr', (req: express.Request, _) => {
   }
 });
 
-morgan.token('ip', (req: express.Request, _) => {
+morgan.token('ip', (req: express.Request) => {
   return chalk.cyan.bold(getIpStr(req));
 });
 

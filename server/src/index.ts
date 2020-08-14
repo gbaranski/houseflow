@@ -8,9 +8,6 @@ import '@/services/websocket_clients';
 import '@/cli/index';
 import chalk from 'chalk';
 
-if (!process.env.GBARANSKI) {
-  throw new Error('missing env AUTH_KEY_GBARANSKI');
-}
 if (!process.env.JWT_KEY) {
   throw new Error('Missing process.env.JWT_KEY');
 }
