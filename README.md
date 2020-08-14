@@ -1,9 +1,9 @@
 # Control-Home
 ![code-coverage](https://img.shields.io/badge/coverage-0%25-red)
-![status](https://img.shields.io/badge/status-WIP-yellow)
-[![build-status](https://img.shields.io/docker/cloud/build/gbaranski19/control-home-api)](https://hub.docker.com/r/gbaranski19/control-home-api)
-[![build-size](https://img.shields.io/docker/image-size/gbaranski19/control-home-api?sort=date)](https://hub.docker.com/r/gbaranski19/control-home-api)
-[![build-automated](https://img.shields.io/docker/automated/gbaranski19/control-home-api)](https://hub.docker.com/r/gbaranski19/control-home-api)
+![status](https://img.shields.io/badge/status-OK-GREEN)
+[![build-status](https://img.shields.io/github/workflow/status/gbaranski/Control-Home/Docker)](https://github.com/gbaranski/Control-Home/actions)
+[![website-status](https://img.shields.io/website?down_color=red&down_message=down&up_color=gree&up_message=up&url=https%3A%2F%2Fcontrol.gbaranski.com)](https://control.gbaranski.com)
+[![server-status](https://img.shields.io/website?down_color=red&down_message=down&label=server&up_color=gree&up_message=up&url=https%3A%2F%2Fapi.gbaranski.com)](https://api.gbaranski.com)
 ![github-stars](https://img.shields.io/github/stars/gbaranski/Control-Home?style=social)
 
 
