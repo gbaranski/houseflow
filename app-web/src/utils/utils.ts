@@ -51,5 +51,5 @@ export function parseWaterBoolean(state: boolean): string {
 }
 
 export function parseDateTime(alarmTime: DateTime): string {
-  return `${alarmTime.hour}:${alarmTime.minute}`;
+  return `${String(alarmTime.hour).padStart(2, '0')}:${String(alarmTime.minute).padStart(2, '0')}`;
 }

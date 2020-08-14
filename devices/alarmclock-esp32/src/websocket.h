@@ -51,8 +51,8 @@ void sendDataOverWebsocket()
     StaticJsonDocument<capacity> JSON;
     JSON["ok"] = true;
     JSON["responseFor"] = "GET_DATA";
-    JSON["data"]["alarmTime"]["hour"] = parseTimeToHour(getAlarmTime());
-    JSON["data"]["alarmTime"]["minute"] = parseTimeToMinute(getAlarmTime());
+    JSON["data"]["alarmTime"]["hour"] = parseTimeToHour(getAlarmTime()).toInt();
+    JSON["data"]["alarmTime"]["minute"] = parseTimeToMinute(getAlarmTime()).toInt();
     JSON["data"]["alarmTime"]["second"] = 0;
     JSON["data"]["alarmState"] = getAlarmStateBoolean();
     JSON["data"]["sensor"]["temperature"] = getDhtTemperature();
@@ -74,9 +74,9 @@ void handleMessage(uint8_t payload[], size_t length)
     if (reqType == "SET_TIME")
     {
         String hour = reqJSON["data"]["hour"];
-        String minute = reqJSON["data"]["hour"];
+        String minute = reqJSON["data"]["minute"];
 
-        saveAlarmTime(hour + ":" + minute);
+        saveAlarmTime(formatDoubleDigit(hour) + ":" + formatDoubleDigit(minute));
         Serial.println("[WSc] Received SET_TIME");
     }
     else if (reqType == "SET_STATE")
@@ -190,11 +190,11 @@ void connectWebSocket()
         delay(10);
     }
     webSocket.setExtraHeaders((
-        "token: " + getToken() +
-        "\r\ndevicetype: ALARMCLOCK" +
-        "\r\nuid: " + ALARMCLOCK_UID +
-        "\r\nsecret: " + ALARMCLOCK_SECRET)
-        .c_str());
+                                  "token: " + getToken() +
+                                  "\r\ndevicetype: ALARMCLOCK" +
+                                  "\r\nuid: " + ALARMCLOCK_UID +
+                                  "\r\nsecret: " + ALARMCLOCK_SECRET)
+                                  .c_str());
 
     webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
