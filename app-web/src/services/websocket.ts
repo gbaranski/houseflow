@@ -1,5 +1,7 @@
-const WSS_URL = 'ws://localhost:8001';
+const WSS_URL =
+  process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://ws.gbaranski.com/8001';
 
+console.log({ processenv: process.env.NODE_ENV });
 let websocket: WebSocket | undefined;
 
 export const connectWebsocket = (token: string) => {
