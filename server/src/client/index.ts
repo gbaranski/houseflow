@@ -130,7 +130,7 @@ export default class WebSocketClient {
         _deviceObject => _deviceObject.deviceUid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
-      deviceObject.requestDevice(parsedMsg.requestType);
+      deviceObject.requestDevice(parsedMsg.requestType, parsedMsg.data);
     } catch (e) {
       console.error(e.message);
     }
