@@ -25,7 +25,11 @@ XT_DAC_Audio_Class DacAudio(25, 0);
 #include "websocket.h"
 #endif
 
+#ifndef OTA_H
+#define OTA_H
 #include "OTA.h"
+#endif
+
 
 unsigned long previousMillis = 0; // will store last time LED was updated
 const int modePushButton = 14;
@@ -59,7 +63,6 @@ void setup()
     setupNtp();
     clearLcd();
     // printTextLcd("IP: " + wifiManager.getLocalIp(), 1);
-    delay(500);
     // wifiManager.setupServerHandling();
     setupSensors();
 }
@@ -69,10 +72,18 @@ bool lastAdditionalButtonState = false;
 bool isAlarmOff = false;
 unsigned long millisToStop;
 
+unsigned long previousSendDataMillis = 0;
+
 void loop()
 {
     webSocketLoop();
     handleOta();
+
+    if (millis() - previousSendDataMillis >= 500)
+    {
+        previousSendDataMillis = millis();
+        sendDataOverWebsocket();
+    }
 
     if (isAlarmDuringTest())
     {

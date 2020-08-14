@@ -98,7 +98,7 @@ String getAlarmState()
         return "OFF";
     }
 }
-int getAlarmStateBoolean()
+bool getAlarmStateBoolean()
 {
     return alarmState;
 }
