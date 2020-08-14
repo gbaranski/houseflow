@@ -2,14 +2,8 @@ name: Docker
 
 on:
   workflow_dispatch:
-  push:
-    # Publish `master` as Docker `latest` image.
-    branches:
-      - master
-
-#     Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
+  tags:
+    - v*
 
 env:
   # TODO: Change variable to your image's name.
