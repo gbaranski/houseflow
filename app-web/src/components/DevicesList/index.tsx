@@ -1,8 +1,9 @@
 import React from 'react';
 import WatermixerCard from '@/components/Watermixer/card';
 import DeviceCardSkeleton from '@/components/DeviceCardSkeleton';
-import { Device, Watermixer, AnyDeviceData } from '@gbaranski/types';
+import { Device, Watermixer, AnyDeviceData, Alarmclock } from '@gbaranski/types';
 import { Col } from 'antd';
+import AlarmclockCard from '../Alarmclock/card';
 
 interface DeviceListProps {
   activeDevices: Device.ActiveDevice<AnyDeviceData>[];
@@ -26,6 +27,15 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices, activeDevices 
                 <WatermixerCard
                   key={activeDevice.uid}
                   device={activeDevice as Device.ActiveDevice<Watermixer.Data>}
+                />
+              </Col>
+            );
+          case 'ALARMCLOCK':
+            return (
+              <Col>
+                <AlarmclockCard
+                  key={activeDevice.uid}
+                  device={activeDevice as Device.ActiveDevice<Alarmclock.Data>}
                 />
               </Col>
             );

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Statistic, Row, Col } from 'antd';
-import { EnterOutlined, CoffeeOutlined } from '@ant-design/icons';
+import { Card, Statistic, Row, Col, Tooltip } from 'antd';
+import { CoffeeOutlined } from '@ant-design/icons';
 import { useModel } from 'umi';
 import { Device, Watermixer } from '@gbaranski/types';
 import { parseSeconds, parseWaterBoolean } from '@/utils/utils';
@@ -17,8 +17,9 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
       style={{ width: 300 }}
       bodyStyle={{ minHeight: 180 }}
       actions={[
-        <EnterOutlined key="Enter" />,
-        <CoffeeOutlined key="Mix" onClick={() => mixWater(device.uid)} />,
+        <Tooltip title="Start mixing">
+          <CoffeeOutlined key="Mix" onClick={() => mixWater(device.uid)} />
+        </Tooltip>,
       ]}
     >
       <Row justify="space-around">
