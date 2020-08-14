@@ -13,7 +13,7 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           version: '290.0.1'
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          service_account_key: ${{ secrets.GAE_KEY }}
           export_default_credentials: true
       - id: Deploy
         uses: GoogleCloudPlatform/github-actions/appengine-deploy@master
