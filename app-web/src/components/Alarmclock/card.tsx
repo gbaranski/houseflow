@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, Statistic, Row, Col, Tooltip, Popconfirm, Modal, TimePicker } from 'antd';
 import { ClockCircleOutlined, PoweroffOutlined, WarningOutlined } from '@ant-design/icons';
 import { Device, Alarmclock, AnyDeviceData, DateTime, Client } from '@gbaranski/types';
-import { parseDateTime } from '@/utils/utils';
+import { parseDateTime, getOnFinishTime } from '@/utils/utils';
 import Icon from '@mdi/react';
 import { mdiThermometer, mdiWaterPercent } from '@mdi/js';
 import { useModel } from 'umi';
@@ -84,10 +84,8 @@ const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
         onCancel={() => setTimeModalVisible(false)}
         confirmLoading={modalLoading}
       >
+        <p>Set new alarm time, modal will be automaticlly closed.</p>
         <TimePicker format="HH:mm" value={newAlarmTime} onChange={(e) => setNewAlarmTime(e)} />
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-        <p>Some contents...</p>
       </Modal>
       <Row>
         <Col span={12}>
@@ -129,7 +127,11 @@ const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
           <Statistic title="Alarm time" value={parseDateTime(device.data.alarmTime)} />
         </Col>
         <Col span={12}>
-          <Statistic title="Remaining time" value="10:49" />
+          <Statistic.Countdown
+            title="Remaining time"
+            // @ts-ignore
+            value={getOnFinishTime(device.data.alarmTime)}
+          />
         </Col>
       </Row>
     </Card>
