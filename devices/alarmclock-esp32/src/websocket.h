@@ -81,7 +81,7 @@ void handleMessage(uint8_t payload[], size_t length)
     }
     else if (reqType == "SET_STATE")
     {
-        bool newState = reqJSON["data"]["state"];
+        bool newState = reqJSON["data"];
         Serial.println("[WSc] Received state: " + newState);
         setAlarmState(newState);
     }

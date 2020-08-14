@@ -1,5 +1,5 @@
 import { parse } from 'querystring';
-import { DateTime } from '@gbaranski/types';
+import { DateTime, State } from '@gbaranski/types';
 import { Moment } from 'moment';
 import moment from 'moment';
 
@@ -54,6 +54,10 @@ export function parseToTotalSeconds(dateTime: DateTime): number {
 
 export function parseWaterBoolean(state: boolean): string {
   return state ? 'Mixing!' : 'Idle';
+}
+
+export function parseAlarmclockBoolean(state: State): string {
+  return state ? '/ON' : '/OFF';
 }
 
 export function parseDateTime(alarmTime: DateTime): string {

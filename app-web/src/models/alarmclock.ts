@@ -1,4 +1,4 @@
-import { Client, DateTime } from '@gbaranski/types';
+import { Client, DateTime, State } from '@gbaranski/types';
 import { getWebsocket } from '@/services/websocket';
 import { useState } from 'react';
 import moment, { Moment } from 'moment';
@@ -8,10 +8,18 @@ export default () => {
   const [newAlarmTime, setNewAlarmTime] = useState<Moment | null>(moment(new Date(), 'HH:mm'));
 
   const testSiren = (uid: string) => {
-    console.log('Mixing water');
     const req: Client.Request = {
       deviceUid: uid,
       requestType: 'TEST_SIREN',
+    };
+    getWebsocket()?.send(JSON.stringify(req));
+  };
+
+  const setState = (uid: string, newState: State) => {
+    const req: Client.Request = {
+      deviceUid: uid,
+      requestType: 'SET_STATE',
+      data: newState,
     };
     getWebsocket()?.send(JSON.stringify(req));
   };
@@ -35,5 +43,6 @@ export default () => {
     setNewAlarmTime,
     testSiren,
     sendNewAlarmTime,
+    setState,
   };
 };
