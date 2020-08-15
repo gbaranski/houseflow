@@ -29,13 +29,11 @@ export const routes: IRoute[] = [
     name: 'admin',
     icon: 'crown',
     access: 'canAdmin',
-    component: './Admin',
     routes: [
       {
-        path: '/admin/sub-page',
-        name: 'sub-page',
-        icon: 'smile',
-        component: './Welcome',
+        name: 'Manager',
+        path: '/admin/manager',
+        component: './admin/manager',
       },
     ],
   },
