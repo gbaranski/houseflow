@@ -1,5 +1,5 @@
 const WSS_URL =
-  process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://ws.gbaranski.com/8001';
+  process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://wsc.gbaranski.com:443';
 
 console.log({ processenv: process.env.NODE_ENV });
 let websocket: WebSocket | undefined;
