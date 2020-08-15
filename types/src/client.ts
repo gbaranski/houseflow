@@ -23,5 +23,6 @@ export namespace Client {
       full_access: DocumentReference[];
     };
     permission: number;
+    uid: string;
   }
 }
