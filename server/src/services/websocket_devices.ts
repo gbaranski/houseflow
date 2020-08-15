@@ -17,7 +17,12 @@ import AlarmclockDevice from '@/devices/alarmclock';
 import { validateDevice } from './firebase';
 import { VerifyInfo, VerifyCallback } from '@/auth';
 
-const httpServer = http.createServer();
+const requestListener: http.RequestListener = (req, res) => {
+  res.writeHead(200);
+  res.end('Hello from device zone');
+};
+
+const httpServer = http.createServer(requestListener);
 
 export const verifyDevice = (
   info: VerifyInfo,

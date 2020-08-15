@@ -7,7 +7,12 @@ import http from 'http';
 import WebSocketClient from '@/client';
 import { decodeClientToken } from './firebase';
 
-const httpServer = http.createServer();
+const requestListener: http.RequestListener = (req, res) => {
+  res.writeHead(200);
+  res.end('Hello from client zone');
+};
+
+const httpServer = http.createServer(requestListener);
 
 export const verifyClient = (
   info: VerifyInfo,
