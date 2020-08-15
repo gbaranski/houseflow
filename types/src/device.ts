@@ -37,6 +37,5 @@ export namespace Device {
     DeviceData extends Alarmclock.Data | Watermixer.Data | AnyDeviceData
   > extends FirebaseDevice {
     data: DeviceData;
-    status: State;
   }
 }
