@@ -8,6 +8,7 @@ import {
   CurrentConnections,
 } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
+import { GET_CONNECTIONS_MIN_PERM } from '@/config/permissions';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
@@ -120,7 +121,8 @@ export default class WebSocketClient {
 
   private static parseMessage(message: WebSocket.Data): Client.Request {
     const parsedMsg = (message as unknown) as Client.Request;
-    if (!parsedMsg.deviceUid) throw new Error('Uid is missing');
+    if (!parsedMsg.deviceUid && parsedMsg.requestType !== 'CONNECTIONS')
+      throw new Error('Uid is missing');
     if (!parsedMsg.requestType) throw new Error('Request type is missing');
     return parsedMsg;
   }
@@ -134,15 +136,26 @@ export default class WebSocketClient {
       )
         throw new Error('Wrong message type');
       const parsedMsg = WebSocketClient.parseMessage(JSON.parse(message));
+
+      if (parsedMsg.requestType === 'CONNECTIONS') {
+        console.log('Someone requesting connections!');
+        if (this.firebaseUser.permission < GET_CONNECTIONS_MIN_PERM) {
+          console.log('No permissions');
+          return;
+        }
+        const res: Client.Response = {
+          requestType: 'CONNECTIONS',
+          data: this.getAllWebsocketConnections(),
+        };
+        this.websocket.send(JSON.stringify(res));
+        return;
+      }
+
       const deviceObject = this.getCurrentConnectionWithAccess().find(
         _deviceObject =>
           _deviceObject.firebaseDevice.uid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
-      if (parsedMsg.requestType === 'CONNECTIONS') {
-        this.websocket.send(JSON.stringify(this.getAllWebsocketConnections()));
-        return;
-      }
       deviceObject.requestDevice(parsedMsg.requestType, parsedMsg.data);
     } catch (e) {
       console.error(e.message);

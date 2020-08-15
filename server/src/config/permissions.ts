@@ -1,0 +1,1 @@
+export const GET_CONNECTIONS_MIN_PERM = 10;
