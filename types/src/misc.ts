@@ -25,5 +25,5 @@ export interface RequestHistory {
 
 export interface CurrentConnections {
   devices: Device.FirebaseDevice[];
-  client: Client.FirebaseUser[];
+  clients: Client.FirebaseUser[];
 }
