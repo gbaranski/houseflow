@@ -1,6 +1,7 @@
 import { DateTime, State, Device } from '.';
 import { DocumentReference } from '@firebase/firestore-types';
 import { AnyDeviceData } from './device';
+import { CurrentConnections } from './misc';
 
 export namespace Client {
   export type RequestType = 'CONNECTIONS';
@@ -16,7 +17,10 @@ export namespace Client {
 
   export interface Response {
     requestType: ResponseType;
-    data?: Device.ActiveDevice<AnyDeviceData>[] | Device.FirebaseDevice[];
+    data?:
+      | Device.ActiveDevice<AnyDeviceData>[]
+      | Device.FirebaseDevice[]
+      | CurrentConnections;
   }
   export interface FirebaseUser {
     devices: {
