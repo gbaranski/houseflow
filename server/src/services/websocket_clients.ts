@@ -47,7 +47,6 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     return;
   }
 
-  console.log('New connec');
   logSocketConnection(req, 'client');
   decodeClientToken(rawToken)
     .then(client => {

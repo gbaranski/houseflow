@@ -20,13 +20,6 @@ export default class WebSocketClient {
       (_client: WebSocketClient) => _client !== client,
     );
   }
-  private static isDeviceCurrentlyConnected(deviceUid: string): boolean {
-    return Device.currentDevices.some(
-      activeDevice => deviceUid === activeDevice.deviceUid,
-    );
-  }
-
-  private status = false;
 
   public userPermission: number | undefined;
 
@@ -102,14 +95,6 @@ export default class WebSocketClient {
     this.websocket.send(JSON.stringify(clientResponse));
   }
 
-  private async sendDevices(): Promise<void> {
-    const clientRes: Client.Response = {
-      requestType: 'DEVICES',
-      data: this.fullAcccessDevices,
-    };
-    this.websocket.send(JSON.stringify(clientRes));
-  }
-
   private static parseMessage(message: WebSocket.Data): Client.Request {
     const parsedMsg = (message as unknown) as Client.Request;
     if (!parsedMsg.deviceUid) throw new Error('Uid is missing');
@@ -141,16 +126,4 @@ export default class WebSocketClient {
     logSocketError('Unknown', this.clientUid, reason, 'client');
     WebSocketClient.removeClient(this);
   }
-
-  // private getDevicesStatus(): DeviceStatus[] {
-  //   const deviceStatus: DeviceStatus[] = [];
-  //   this.fullAccessCurrentDevices.forEach(currentDevice => {
-  //     const _deviceStatus: DeviceStatus = {
-  //       deviceUid: currentDevice.uid,
-  //       status: WebSocketClient.isDeviceCurrentlyConnected(currentDevice.uid),
-  //     };
-  //     deviceStatus.push(_deviceStatus);
-  //   });
-  //   return deviceStatus;
-  // }
 }
