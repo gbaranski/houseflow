@@ -1,4 +1,4 @@
-import { Device } from './device';
+import { Device, AnyDeviceData } from './device';
 import { Client } from './client';
 
 export interface DateTime {
@@ -24,6 +24,12 @@ export interface RequestHistory {
 }
 
 export interface CurrentConnections {
-  devices: Device.FirebaseDevice[];
-  clients: Client.FirebaseUser[];
+  devices: {
+    offline: Device.FirebaseDevice[];
+    online: Device.ActiveDevice<AnyDeviceData>[];
+  };
+  clients: {
+    offline: Client.FirebaseUser[];
+    online: Client.ActiveUser[];
+  };
 }
