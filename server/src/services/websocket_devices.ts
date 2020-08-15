@@ -9,13 +9,14 @@ import {
 import jwt from 'jsonwebtoken';
 import chalk from 'chalk';
 import http from 'http';
-import { Device as DeviceType } from '@gbaranski/types';
+import { Device as DeviceType, Watermixer, Alarmclock } from '@gbaranski/types';
 import { logError } from '@/cli';
 import WatermixerDevice from '@/devices/watermixer';
 import Device, { AnyDeviceObject } from '@/devices';
 import AlarmclockDevice from '@/devices/alarmclock';
-import { validateDevice } from './firebase';
+import { convertToFirebaseDevice } from './firebase';
 import { VerifyInfo, VerifyCallback } from '@/auth';
+import { getIpStr } from './resolveip';
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);
@@ -63,7 +64,7 @@ export const wss: WebSocket.Server = new WebSocket.Server({
   verifyClient: verifyDevice,
 });
 
-wss.on('connection', (ws, req: IncomingMessage) => {
+wss.on('connection', async (ws, req: IncomingMessage) => {
   const deviceName = req.headers['devicetype'] as DeviceType.DeviceType;
   const uid = req.headers['uid'];
   const secret = req.headers['secret'];
@@ -75,7 +76,9 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     ws.terminate();
     return;
   }
-  assignDevice(ws, deviceName, uid, secret);
+
+  const firebaseDevice = await convertToFirebaseDevice(uid);
+  assignDevice(ws, req, firebaseDevice);
   logSocketConnection(req, 'device', deviceName);
 });
 
@@ -95,19 +98,32 @@ export const getWssClients = (): Set<WebSocket> => {
 
 const assignDevice = async (
   ws: WebSocket,
-  deviceType: DeviceType.DeviceType,
-  uid: string,
-  secret: string,
+  req: IncomingMessage,
+  firebaseDevice: DeviceType.FirebaseDevice,
 ) => {
-  const currentDevice = await validateDevice(deviceType, uid, secret);
-  switch (deviceType) {
+  const ip = getIpStr(req);
+  switch (firebaseDevice.type) {
     case 'WATERMIXER':
-      const watermixer = new WatermixerDevice(ws, currentDevice);
+      const watermixer = new WatermixerDevice(ws, firebaseDevice, {
+        ...firebaseDevice,
+        data: Watermixer.SAMPLE,
+        ip,
+      });
       setupWebsocketHandlers(ws, watermixer);
       break;
     case 'ALARMCLOCK':
-      const alarmclock = new AlarmclockDevice(ws, currentDevice);
+      const alarmclock = new AlarmclockDevice(ws, firebaseDevice, {
+        ...firebaseDevice,
+        data: Alarmclock.SAMPLE,
+        ip,
+      });
       setupWebsocketHandlers(ws, alarmclock);
+      break;
+    default:
+      console.log(
+        `Error recognizing device with type ${firebaseDevice.type}!, terminating`,
+      );
+      ws.terminate();
       break;
   }
 };

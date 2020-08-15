@@ -5,7 +5,9 @@ import chalk from 'chalk';
 import { VerifyInfo, VerifyCallback } from '@/auth';
 import http from 'http';
 import WebSocketClient from '@/client';
-import { decodeClientToken } from './firebase';
+import { decodeClientToken, convertToFirebaseUser } from './firebase';
+import { Client } from '@gbaranski/types';
+import { getIpStr } from './resolveip';
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);
@@ -39,7 +41,7 @@ export const wss: WebSocket.Server = new WebSocket.Server({
   verifyClient,
 });
 
-wss.on('connection', (ws, req: IncomingMessage) => {
+wss.on('connection', async (ws, req: IncomingMessage) => {
   const rawToken = req.headers['sec-websocket-protocol'];
   if (!rawToken || rawToken instanceof Array) {
     console.error('Missing or invalid token');
@@ -48,15 +50,20 @@ wss.on('connection', (ws, req: IncomingMessage) => {
   }
 
   logSocketConnection(req, 'client');
-  decodeClientToken(rawToken)
-    .then(client => {
-      new WebSocketClient(ws, client.uid);
-      // WebSocketClient.addNewClient(wsClient);
-    })
-    .catch(e => {
-      console.error(e);
-      ws.terminate();
-    });
+  try {
+    const decodedClientId = decodeClientToken(rawToken);
+    const firebaseUser = await convertToFirebaseUser(
+      (await decodedClientId).uid,
+    );
+    const activeUser: Client.ActiveUser = {
+      ...firebaseUser,
+      ip: getIpStr(req),
+    };
+    new WebSocketClient(ws, firebaseUser, activeUser);
+  } catch (e) {
+    console.error(e);
+    ws.terminate();
+  }
 });
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

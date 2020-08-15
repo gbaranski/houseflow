@@ -1,7 +1,12 @@
 import WebSocket from 'ws';
 import { logSocketError, logError } from '@/cli';
-import { convertToFirebaseUser, DocumentReference } from '@/services/firebase';
-import { Device as DeviceType, Client, AnyDeviceData } from '@gbaranski/types';
+import { DocumentReference } from '@/services/firebase';
+import {
+  Device as DeviceType,
+  Client,
+  AnyDeviceData,
+  CurrentConnections,
+} from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
 
 export default class WebSocketClient {
@@ -21,14 +26,17 @@ export default class WebSocketClient {
     );
   }
 
-  public userPermission: number | undefined;
-
   private fullAcccessDevices: DeviceType.FirebaseDevice[] = [];
 
-  constructor(private websocket: WebSocket, public readonly clientUid: string) {
+  constructor(
+    private websocket: WebSocket,
+    public readonly firebaseUser: Client.FirebaseUser,
+    public readonly activeUser: Client.ActiveUser,
+  ) {
     this.setWebsocketHandling();
     this.setAccessDevices()
       .then(() => {
+        WebSocketClient.addNewClient(this);
         this.interval();
         setInterval(() => this.interval(), 1000);
       })
@@ -36,11 +44,8 @@ export default class WebSocketClient {
   }
 
   async setAccessDevices(): Promise<void> {
-    const firebaseUser = await convertToFirebaseUser(this.clientUid);
-    this.userPermission = firebaseUser.permission;
-
     this.fullAcccessDevices = await Promise.all(
-      firebaseUser.devices.full_access.map(
+      this.firebaseUser.devices.full_access.map(
         async (doc: DocumentReference): Promise<DeviceType.FirebaseDevice> => {
           const deviceSnapshot = await doc.get();
           const deviceData = deviceSnapshot.data() as Partial<
@@ -72,21 +77,39 @@ export default class WebSocketClient {
   private getCurrentConnectionWithAccess(): AnyDeviceObject[] {
     return Device.currentDevices.filter(device =>
       this.fullAcccessDevices.some(
-        firebaseDevice => firebaseDevice.uid === device.deviceUid,
+        firebaseDevice => firebaseDevice.uid === device.firebaseDevice.uid,
       ),
     );
+  }
+
+  private getAllWebsocketConnections(): CurrentConnections {
+    const activeClients: Client.ActiveUser[] = WebSocketClient._currentClients.map(
+      client => client.activeUser,
+    );
+
+    const activeDevices: DeviceType.ActiveDevice<
+      AnyDeviceData
+    >[] = Device.currentDevices.map(
+      (device): DeviceType.ActiveDevice<AnyDeviceData> => device.activeDevice,
+    );
+    return {
+      clients: {
+        online: activeClients,
+        offline: [],
+      },
+      devices: {
+        online: activeDevices,
+        offline: [],
+      },
+    };
   }
 
   private async interval(): Promise<void> {
     const deviceData: DeviceType.ActiveDevice<
       AnyDeviceData
     >[] = this.getCurrentConnectionWithAccess().map(
-      (deviceObject): DeviceType.ActiveDevice<AnyDeviceData> => ({
-        type: deviceObject.deviceType,
-        uid: deviceObject.deviceUid,
-        data: deviceObject.deviceData,
-        status: deviceObject.status,
-      }),
+      (deviceObject): DeviceType.ActiveDevice<AnyDeviceData> =>
+        deviceObject.activeDevice,
     );
     const clientResponse: Client.Response = {
       requestType: 'DATA',
@@ -112,9 +135,14 @@ export default class WebSocketClient {
         throw new Error('Wrong message type');
       const parsedMsg = WebSocketClient.parseMessage(JSON.parse(message));
       const deviceObject = this.getCurrentConnectionWithAccess().find(
-        _deviceObject => _deviceObject.deviceUid === parsedMsg.deviceUid,
+        _deviceObject =>
+          _deviceObject.firebaseDevice.uid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
+      if (parsedMsg.requestType === 'CONNECTIONS') {
+        this.websocket.send(JSON.stringify(this.getAllWebsocketConnections()));
+        return;
+      }
       deviceObject.requestDevice(parsedMsg.requestType, parsedMsg.data);
     } catch (e) {
       console.error(e.message);
@@ -123,7 +151,7 @@ export default class WebSocketClient {
 
   public terminateConnection(reason: string): void {
     this.websocket.terminate();
-    logSocketError('Unknown', this.clientUid, reason, 'client');
+    logSocketError('Unknown', this.firebaseUser.uid, reason, 'client');
     WebSocketClient.removeClient(this);
   }
 }
