@@ -14,6 +14,7 @@ export namespace Client {
   }
 
   export type ResponseType = 'DATA' | 'CONNECTIONS';
+  export type UserRole = 'admin' | 'moderator' | 'user';
 
   export interface Response {
     requestType: ResponseType;
@@ -26,7 +27,7 @@ export namespace Client {
     devices: {
       full_access: DocumentReference[];
     };
-    permission: number;
+    role: UserRole;
     uid: string;
   }
   export interface ActiveUser extends FirebaseUser {
