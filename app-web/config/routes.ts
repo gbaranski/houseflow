@@ -13,17 +13,16 @@ export const routes: IRoute[] = [
     ],
   },
   {
-    path: '/devices',
-    name: 'Devices',
-    icon: 'Wifi',
-    exact: false,
-    component: './devices/',
-  },
-  {
     path: '/welcome',
     name: 'welcome',
     icon: 'smile',
     component: './Welcome',
+  },
+  {
+    path: '/devices',
+    name: 'Devices',
+    icon: 'Wifi',
+    component: './devices/',
   },
   {
     path: '/admin',
