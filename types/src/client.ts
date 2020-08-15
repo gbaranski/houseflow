@@ -25,4 +25,7 @@ export namespace Client {
     permission: number;
     uid: string;
   }
+  export interface ActiveUser extends FirebaseUser {
+    ip: string;
+  }
 }
