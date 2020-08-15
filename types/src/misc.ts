@@ -1,3 +1,6 @@
+import { Device } from './device';
+import { Client } from './client';
+
 export interface DateTime {
   hour: number;
   minute: number;
@@ -18,4 +21,9 @@ export interface RequestHistory {
   ip: string;
   userAgent: string;
   country: string;
+}
+
+export interface CurrentConnections {
+  devices: Device.FirebaseDevice[];
+  client: Client.FirebaseUser[];
 }

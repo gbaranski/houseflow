@@ -3,14 +3,16 @@ import { DocumentReference } from '@firebase/firestore-types';
 import { AnyDeviceData } from './device';
 
 export namespace Client {
+  export type RequestType = 'CONNECTIONS';
+
   export interface Request {
-    requestType: Device.RequestType;
+    requestType: Device.RequestType | RequestType;
     deviceUid?: string;
     deviceType?: string;
     data?: DateTime | State;
   }
 
-  export type ResponseType = 'DATA' | 'DEVICES' | 'DEVICES_STATUS';
+  export type ResponseType = 'DATA' | 'CONNECTIONS';
 
   export interface Response {
     requestType: ResponseType;
