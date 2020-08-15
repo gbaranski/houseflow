@@ -11,3 +11,4 @@ build
 secret.h
 
 .vscode
+.firebase
