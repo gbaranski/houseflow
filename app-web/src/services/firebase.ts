@@ -29,6 +29,8 @@ firebase.analytics();
 
 const db = firebase.firestore();
 const requestCollection = db.collection('requests');
+const devicesCollection = db.collection('devices');
+const devicesPrivateCollection = db.collection('devices-private');
 const tempHistoryCollection = db.collection('temp-history');
 const usersCollection = db.collection('users');
 
@@ -131,5 +133,18 @@ export function getCurrentUser(): Promise<User | undefined> {
       unsubscribe();
       resolve(user ?? undefined);
     }, reject);
+  });
+}
+
+export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
+  if (!firebaseDevice.secret) throw new Error('Secret is mising!');
+
+  await devicesCollection.doc(firebaseDevice.uid).set({
+    uid: firebaseDevice.uid,
+    type: firebaseDevice.type,
+  });
+
+  await devicesPrivateCollection.doc(firebaseDevice.uid).set({
+    secret: firebaseDevice.secret,
   });
 }

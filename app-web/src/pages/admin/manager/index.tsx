@@ -1,12 +1,13 @@
 import React from 'react';
+import NewDevice from '@/components/NewDevice';
 import { PageContainer } from '@ant-design/pro-layout';
-import { Card, Button } from 'antd';
+import { Card } from 'antd';
 
-export default (): React.ReactNode => {
+export default () => {
   return (
     <PageContainer>
       <Card>
-        <Button>Manager</Button>
+        <NewDevice />
       </Card>
     </PageContainer>
   );
