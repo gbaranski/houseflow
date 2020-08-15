@@ -15,7 +15,7 @@ router.get(
       return;
     }
     try {
-      await validateDevice(deviceType, uid, secret);
+      await validateDevice(uid, secret);
     } catch (e) {
       console.log(e.message);
       res.sendStatus(401);

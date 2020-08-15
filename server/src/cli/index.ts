@@ -45,9 +45,7 @@ export function logSocketConnection(
   log(
     chalk.blueBright(
       `${getSocketPrefix(target)} New connection ${deviceName ||
-        'someone'} IP: ${req.socket.remoteAddress} PORT: ${
-        req.socket.remotePort
-      }`,
+        'someone'} IP: ${getIpStr(req)} PORT: ${req.socket.remotePort}`,
     ),
   );
 }

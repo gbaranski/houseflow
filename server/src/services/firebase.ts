@@ -12,19 +12,17 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const devicePrivateCollection = db.collection('devices-private');
+const deviceCollection = db.collection('devices');
 const usersCollection = db.collection('users');
 
 export async function validateDevice(
-  deviceType: string,
   uid: string,
   secret: string,
-): Promise<Device.FirebaseDevice> {
+): Promise<{ secret: string }> {
   const snapshot = await devicePrivateCollection.doc(uid).get();
-  if (!snapshot.exists) {
-    throw new Error('Does not exist!');
-  }
+  if (!snapshot.exists) throw new Error('Does not exist!');
 
-  const snapshotData = snapshot.data() as Device.FirebaseDevice;
+  const snapshotData = snapshot.data() as { secret: string };
   if (snapshotData.secret !== secret) {
     console.log({
       currentSecret: snapshotData.secret,
@@ -32,10 +30,17 @@ export async function validateDevice(
     });
     throw new Error("Device doesn't match");
   }
-  return {
-    ...snapshotData,
-    uid: snapshot.id,
-  };
+  return snapshotData;
+}
+
+export async function convertToFirebaseDevice(
+  uid: string,
+): Promise<Device.FirebaseDevice> {
+  const snapshot = await deviceCollection.doc(uid).get();
+  if (!snapshot.exists) throw new Error('Does not exist');
+
+  const snapshotData = snapshot.data() as Device.FirebaseDevice;
+  return snapshotData;
 }
 
 export async function decodeClientToken(
@@ -77,8 +82,5 @@ export async function convertToFirebaseUser(
   const usersDoc = await usersCollection.doc(uid).get();
   if (!usersDoc.exists) throw new Error('User does not exist in database');
   const usersData = usersDoc.data() as Client.FirebaseUser;
-  const firebaseUser: Client.FirebaseUser = {
-    ...usersData,
-  };
-  return firebaseUser;
+  return usersData;
 }

@@ -32,7 +32,9 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     deviceData: AnyDeviceData,
   ): void {
     this._currentDevices.map(_device =>
-      _device.deviceUid === deviceUid ? deviceData : _device.deviceData,
+      _device.firebaseDevice.uid === deviceUid
+        ? deviceData
+        : _device.deviceData,
     );
   }
 
@@ -40,9 +42,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   constructor(
     protected ws: WebSocket,
-    private _deviceData: DeviceData,
-    public readonly deviceType: DeviceType.DeviceType,
-    public readonly deviceUid: string,
+    public readonly firebaseDevice: DeviceType.FirebaseDevice,
+    public readonly activeDevice: DeviceType.ActiveDevice<AnyDeviceData>,
   ) {
     this._status = true;
   }
@@ -74,15 +75,20 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   public terminateConnection(reason: string): void {
     this.ws.terminate();
-    logSocketError(this.deviceType, this.deviceUid, reason, 'device');
+    logSocketError(
+      this.firebaseDevice.type,
+      this.firebaseDevice.uid,
+      reason,
+      'device',
+    );
   }
 
   get deviceData(): DeviceData {
-    return this._deviceData;
+    return this.activeDevice.data as DeviceData;
   }
 
   set deviceData(data: DeviceData) {
-    this._deviceData = data;
+    (this.activeDevice.data as DeviceData) = data;
   }
 
   set status(status: boolean) {
