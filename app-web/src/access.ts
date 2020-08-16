@@ -4,6 +4,6 @@ import { Client } from '@gbaranski/types';
 export default function access(initialState: { firebaseUser?: Client.FirebaseUser }) {
   const { firebaseUser } = initialState || {};
   return {
-    canAdmin: firebaseUser && firebaseUser.permission > 1,
+    canAdmin: firebaseUser && firebaseUser.role === 'admin',
   };
 }
