@@ -34,7 +34,10 @@ export namespace Device {
     uid: string;
   }
   export interface ActiveDevice<
-    DeviceData extends Alarmclock.Data | Watermixer.Data | AnyDeviceData
+    DeviceData extends
+      | Alarmclock.Data
+      | Watermixer.Data
+      | AnyDeviceData = AnyDeviceData
   > extends FirebaseDevice {
     data: DeviceData;
     ip: string;
