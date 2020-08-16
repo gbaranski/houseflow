@@ -8,7 +8,6 @@ import {
   CurrentConnections,
 } from '@gbaranski/types';
 import Device, { AnyDeviceObject } from '@/devices';
-import { GET_CONNECTIONS_MIN_PERM } from '@/config/permissions';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
@@ -139,7 +138,7 @@ export default class WebSocketClient {
 
       if (parsedMsg.requestType === 'CONNECTIONS') {
         console.log('Someone requesting connections!');
-        if (this.firebaseUser.permission < GET_CONNECTIONS_MIN_PERM) {
+        if (this.firebaseUser.role === 'admin') {
           console.log('No permissions');
           return;
         }

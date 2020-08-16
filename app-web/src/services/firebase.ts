@@ -12,6 +12,7 @@ import {
   Watermixer,
   AnyDeviceData,
 } from '@gbaranski/types';
+import { message } from 'antd';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCpRLmvfBf-SpwkDUHKa_vrbEeIvSzHNOY',
@@ -147,4 +148,32 @@ export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promi
   await devicesPrivateCollection.doc(firebaseDevice.uid).set({
     secret: firebaseDevice.secret,
   });
+}
+
+export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
+  const devices: Device.FirebaseDevice[] = [];
+  const querySnapshot = devicesCollection.get();
+  (await querySnapshot).forEach((doc) => {
+    const data = doc.data();
+    if (!data.uid || !data.type)
+      throw new Error('Something went wrong with retreiving all devices');
+    const firebaseDevice: Device.FirebaseDevice = {
+      uid: data.uid as string,
+      type: data.type as Device.DeviceType,
+    };
+    devices.push(firebaseDevice);
+  });
+  await Promise.all(devices);
+  return devices;
+}
+
+export async function deleteDevice(device: Device.FirebaseDevice) {
+  try {
+    await devicesCollection.doc(device.uid).delete();
+    await devicesPrivateCollection.doc(device.uid).delete();
+    message.info(`Success deleting device with UID: ${device.uid}`);
+  } catch (e) {
+    message.error(`Failed removing device with ID ${device.uid}`);
+    console.log(e);
+  }
 }
