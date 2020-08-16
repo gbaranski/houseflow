@@ -1,14 +1,14 @@
 import mongoose, { model } from 'mongoose';
 
-const DeviceSchema = new mongoose.Schema({
+const WatermixerSchema = new mongoose.Schema({
   uid: {
     type: String,
     required: true,
     unique: true,
   },
   data: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
+    remainingTime: mongoose.Schema.Types.Number,
+    isTimerOn: mongoose.Schema.Types.Boolean,
   },
   ip: {
     type: String,
@@ -20,4 +20,4 @@ const DeviceSchema = new mongoose.Schema({
   },
 });
 
-export default model('Device', DeviceSchema);
+export default model('Watermixer', WatermixerSchema);

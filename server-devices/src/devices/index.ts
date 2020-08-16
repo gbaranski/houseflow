@@ -6,48 +6,36 @@ import {
 } from '@gbaranski/types';
 import WatermixerDevice from './watermixer';
 import AlarmclockDevice from './alarmclock';
+import mongoose from 'mongoose';
 
 export type AnyDeviceObject = WatermixerDevice | AlarmclockDevice;
 
 export default abstract class Device<DeviceData extends AnyDeviceData> {
-  private static _currentDevices: AnyDeviceObject[] = [];
-
-  public static get currentDevices(): AnyDeviceObject[] {
-    return this._currentDevices;
-  }
-
-  public static addNewDevice(device: AnyDeviceObject): void {
-    this._currentDevices.push(device);
-  }
-
-  public static removeDevice(device: AnyDeviceObject): void {
-    this._currentDevices = this._currentDevices.filter(
-      (_device: AnyDeviceObject) => _device !== device,
-    );
-  }
-
-  protected static updateDevice(
-    deviceUid: string,
-    deviceData: AnyDeviceData,
-  ): void {
-    this._currentDevices.map((_device) =>
-      _device.firebaseDevice.uid === deviceUid
-        ? deviceData
-        : _device.deviceData,
-    );
-  }
-
   private _status = false;
+
+  public abstract handleMessage(message: WebSocket.Data): void;
+
+  protected initInDb(device: DeviceType.ActiveDevice): void {
+    const newDevice = new this.databaseModel(device);
+    newDevice.save();
+  }
+  protected async removeFromDb(device: DeviceType.ActiveDevice): Promise<void> {
+    await this.databaseModel.deleteOne({ uid: device.uid });
+  }
+
+  protected async updateDevice(device: DeviceType.ActiveDevice): Promise<void> {
+    await this.databaseModel.updateOne({ uid: device.uid }, device);
+  }
 
   constructor(
     protected ws: WebSocket,
     public readonly firebaseDevice: DeviceType.FirebaseDevice,
-    public readonly activeDevice: DeviceType.ActiveDevice,
+    protected activeDevice: DeviceType.ActiveDevice,
+    protected databaseModel: mongoose.Model<mongoose.Document>,
   ) {
+    this.initInDb(this.activeDevice);
     this._status = true;
   }
-
-  abstract handleMessage(message: WebSocket.Data): void;
 
   public requestDevice(
     type: DeviceType.RequestType,
@@ -77,14 +65,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     console.log(
       `Websocket error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
     );
-  }
-
-  get deviceData(): DeviceData {
-    return this.activeDevice.data as DeviceData;
-  }
-
-  set deviceData(data: DeviceData) {
-    (this.activeDevice.data as DeviceData) = data;
+    this.removeFromDb(this.activeDevice);
   }
 
   set status(status: boolean) {

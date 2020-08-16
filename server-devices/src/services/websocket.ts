@@ -94,11 +94,8 @@ export function setupWebsocketHandlers(
   ws: WebSocket,
   device: AnyDeviceObject,
 ): void {
-  Device.addNewDevice(device);
-
   const terminateConnection = (reason: string) => {
     device.terminateConnection(reason);
-    Device.removeDevice(device);
     clearInterval(pingInterval);
   };
 
@@ -118,8 +115,9 @@ export function setupWebsocketHandlers(
     ws.pong();
   });
   ws.on('error', (err) => {
-    console.log(`Connection error UID: ${device.firebaseDevice.uid}`);
+    console.log();
     console.log(err.message);
+    terminateConnection(`Connection error UID: ${device.firebaseDevice.uid}`);
   });
   ws.on('close', (code, reason) => {
     terminateConnection(`Connection closed CODE: ${code} REASON: ${reason}`);

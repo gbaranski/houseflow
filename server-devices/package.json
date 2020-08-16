@@ -6,6 +6,7 @@
   "scripts": {
     "start": "ts-node -r dotenv/config -r tsconfig-paths/register .",
     "start:dev": "ts-node-dev -r dotenv/config -r tsconfig-paths/register .",
+    "connect": "ts-node -r dotenv/config scripts/connect.ts",
     "test": "jest --setupFiles dotenv/config"
   },
   "keywords": [
@@ -16,7 +17,9 @@
   "license": "ISC",
   "devDependencies": {
     "@gbaranski/types": "^4.0.20",
+    "@types/node-fetch": "^2.5.7",
     "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.0",
     "ts-node": "^8.10.2",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^3.9.7"
