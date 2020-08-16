@@ -1,0 +1,20 @@
+{
+  "name": "server-clients",
+  "version": "1.0.0",
+  "description": "Server for Websocket Clients",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node -r dotenv/config .",
+    "start:dev": "ts-node-dev -r dotenv/config .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "websocket",
+    "iot"
+  ],
+  "author": "gbaranski",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node": "^8.10.2"
+  }
+}
