@@ -1,17 +1,22 @@
 import { useState } from 'react';
-import { Device, AnyDeviceData, Client } from '@gbaranski/types';
+import { Device, AnyDeviceData, Client, CurrentConnections } from '@gbaranski/types';
 import { setupOnOpenListeners } from '@/services/websocket';
-import { getAllowedDevices } from '@/services/firebase';
+import { getAllowedDevices, getAllDevices } from '@/services/firebase';
 
 export default () => {
   const [activeDevices, setActiveDevices] = useState<Device.ActiveDevice<AnyDeviceData>[]>([]);
   const [firebaseDevices, setFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
+  const [allConnections, setAllConnections] = useState<CurrentConnections>();
+  const [allDevices, setAllDevices] = useState<Device.FirebaseDevice[]>([]);
 
   const onMessage = (message: MessageEvent) => {
     const response = JSON.parse(message.data) as Client.Response;
     if (response.requestType === 'DATA') {
       console.log('Received new data', response.data);
       setActiveDevices(response.data as Device.ActiveDevice<AnyDeviceData>[]);
+    } else if (response.requestType === 'CONNECTIONS') {
+      console.log('Received connections', response.data);
+      setAllConnections(response.data as CurrentConnections);
     }
   };
 
@@ -19,9 +24,16 @@ export default () => {
     setupOnOpenListeners(onMessage);
   };
 
-  const getAndSetFirebaseDevices = (firebaseUser: Client.FirebaseUser | undefined) => {
+  const getAndSetFirebaseDevices = async (firebaseUser: Client.FirebaseUser | undefined) => {
     if (!firebaseUser) throw new Error('Firebase user is not defined');
-    getAllowedDevices(firebaseUser).then((allowedDevices) => setFirebaseDevices(allowedDevices));
+    if (firebaseDevices.length > 1) return;
+    const allowedDevices = await getAllowedDevices(firebaseUser);
+    setFirebaseDevices(allowedDevices);
+  };
+
+  const getAndSetAllDevices = async () => {
+    console.log('Attempting to get and set all devices');
+    return setAllDevices(await getAllDevices());
   };
 
   return {
@@ -31,5 +43,9 @@ export default () => {
     setFirebaseDevices,
     setupListeners,
     getAndSetFirebaseDevices,
+    allConnections,
+    allDevices,
+    setAllDevices,
+    getAndSetAllDevices,
   };
 };
