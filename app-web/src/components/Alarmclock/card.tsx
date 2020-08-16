@@ -38,7 +38,7 @@ const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
     const msgCallback = (message: MessageEvent) => {
       const response = JSON.parse(message.data) as Client.Response;
       if (!response.data || response.requestType !== 'DATA') return;
-      const parsedMsg = response.data as Device.ActiveDevice<AnyDeviceData>[];
+      const parsedMsg = response.data as Device.ActiveDevice[];
       const targetDevice = parsedMsg.find((_device) => _device.uid === device.uid);
       if (!targetDevice) throw new Error('Could not find target device');
       const alarmData = (targetDevice.data as Alarmclock.Data).alarmTime;

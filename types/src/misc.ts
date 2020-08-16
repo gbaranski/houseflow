@@ -24,6 +24,6 @@ export interface RequestHistory {
 }
 
 export interface CurrentConnections {
-  devices: Device.ActiveDevice<AnyDeviceData>[];
+  devices: Device.ActiveDevice[];
   clients: Client.ActiveUser[];
 }

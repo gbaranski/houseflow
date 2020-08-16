@@ -7,6 +7,7 @@ import { getIpStr } from '@/services/misc';
 import WatermixerDevice from '@/devices/watermixer';
 import AlarmclockDevice from '@/devices/alarmclock';
 import Device, { AnyDeviceObject } from '@/devices';
+import { convertToFirebaseDevice } from '@/services/firebase';
 
 export const verifyDevice = (
   info: VerifyInfo,
@@ -124,3 +125,21 @@ export function setupWebsocketHandlers(
     terminateConnection(`Connection closed CODE: ${code} REASON: ${reason}`);
   });
 }
+
+export const onConnection = async (ws: WebSocket, req: IncomingMessage) => {
+  try {
+    const { uid, deviceName } = validateConnection(req);
+
+    const firebaseDevice = await convertToFirebaseDevice(uid);
+
+    assignDevice(ws, req, firebaseDevice);
+    console.log(
+      `New connection ${deviceName} IP:${getIpStr(req)} UID:${
+        req.headers['uid']
+      }`,
+    );
+  } catch (e) {
+    console.error(`Error on connection! ${e.message}`);
+    return;
+  }
+};

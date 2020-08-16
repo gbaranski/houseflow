@@ -11,7 +11,7 @@ export default class AlarmclockDevice extends Device<Alarmclock.Data> {
   constructor(
     ws: WebSocket,
     firebaseDevice: DeviceType.FirebaseDevice,
-    activeDevice: DeviceType.ActiveDevice<AnyDeviceData>,
+    activeDevice: DeviceType.ActiveDevice,
   ) {
     super(ws, firebaseDevice, activeDevice);
   }

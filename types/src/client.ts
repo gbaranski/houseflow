@@ -18,10 +18,7 @@ export namespace Client {
 
   export interface Response {
     requestType: ResponseType;
-    data?:
-      | Device.ActiveDevice<AnyDeviceData>[]
-      | Device.FirebaseDevice[]
-      | CurrentConnections;
+    data?: Device.ActiveDevice[] | Device.FirebaseDevice[] | CurrentConnections;
   }
   export interface FirebaseUser {
     devices: {

@@ -4,7 +4,7 @@ import { setupOnOpenListeners } from '@/services/websocket';
 import { getAllowedDevices, getAllDevices } from '@/services/firebase';
 
 export default () => {
-  const [activeDevices, setActiveDevices] = useState<Device.ActiveDevice<AnyDeviceData>[]>([]);
+  const [activeDevices, setActiveDevices] = useState<Device.ActiveDevice[]>([]);
   const [firebaseDevices, setFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
   const [allConnections, setAllConnections] = useState<CurrentConnections>();
   const [allFirebaseDevices, setAllFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
@@ -13,7 +13,7 @@ export default () => {
     const response = JSON.parse(message.data) as Client.Response;
     if (response.requestType === 'DATA') {
       console.log('Received new data', response.data);
-      setActiveDevices(response.data as Device.ActiveDevice<AnyDeviceData>[]);
+      setActiveDevices(response.data as Device.ActiveDevice[]);
     } else if (response.requestType === 'CONNECTIONS') {
       console.log('Received connections', response.data);
       setAllConnections(response.data as CurrentConnections);

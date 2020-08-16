@@ -6,7 +6,7 @@ import { sendCurrentConnectionsRequest } from '@/services/websocket';
 import { Device, AnyDeviceData, Client } from '@gbaranski/types';
 
 const DeviceTable = (props: {
-  online: Device.ActiveDevice<AnyDeviceData>[];
+  online: Device.ActiveDevice[];
   offline: Device.FirebaseDevice[];
 }) => {
   const columns = [

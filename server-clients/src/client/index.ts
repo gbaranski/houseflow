@@ -1,13 +1,12 @@
 import WebSocket from 'ws';
-import { logSocketError, logError } from '@/cli';
 import { DocumentReference } from '@/services/firebase';
 import {
-  Device as DeviceType,
   Client,
   AnyDeviceData,
   CurrentConnections,
+  Device,
 } from '@gbaranski/types';
-import Device, { AnyDeviceObject } from '@/devices';
+import { getAllActiveDevices } from '@/database';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
@@ -26,7 +25,7 @@ export default class WebSocketClient {
     );
   }
 
-  private fullAcccessDevices: DeviceType.FirebaseDevice[] = [];
+  private fullAcccessDevices: Device.FirebaseDevice[] = [];
 
   constructor(
     private websocket: WebSocket,
@@ -40,16 +39,16 @@ export default class WebSocketClient {
         this.interval();
         setInterval(() => this.interval(), 1000);
       })
-      .catch(e => console.error(e));
+      .catch((e) => console.error(e));
   }
 
   async setAccessDevices(): Promise<void> {
     this.fullAcccessDevices = await Promise.all(
       this.firebaseUser.devices.full_access.map(
-        async (doc: DocumentReference): Promise<DeviceType.FirebaseDevice> => {
+        async (doc: DocumentReference): Promise<Device.FirebaseDevice> => {
           const deviceSnapshot = await doc.get();
           const deviceData = deviceSnapshot.data() as Partial<
-            DeviceType.FirebaseDevice
+            Device.FirebaseDevice
           >;
 
           if (!deviceData.type) throw new Error('Type does not exist!');
@@ -64,49 +63,45 @@ export default class WebSocketClient {
   }
 
   private setWebsocketHandling() {
-    this.websocket.on('message', message => this.handleMessage(message));
-    this.websocket.on('error', err => {
-      logError(err.message);
+    this.websocket.on('message', (message) => this.handleMessage(message));
+    this.websocket.on('error', (err) => {
+      console.log(
+        `Websocket error ${err.message} UID: ${this.firebaseUser.uid}`,
+      );
     });
     this.websocket.on('close', (code, reason) => {
-      logError(`CODE: ${code} \nREASON:${reason}`);
+      console.log(`Websocket closed ${reason} UID: ${this.firebaseUser.uid}`);
       this.terminateConnection('Connection closed');
     });
   }
 
-  private getCurrentConnectionWithAccess(): AnyDeviceObject[] {
-    return Device.currentDevices.filter(device =>
-      this.fullAcccessDevices.some(
-        firebaseDevice => firebaseDevice.uid === device.firebaseDevice.uid,
+  private async getCurrentConnectionWithAccess(): Promise<
+    Device.ActiveDevice[]
+  > {
+    return Promise.all(
+      (await getAllActiveDevices()).filter((device) =>
+        this.fullAcccessDevices.some(
+          (firebaseDevice) => firebaseDevice.uid === device.uid,
+        ),
       ),
     );
   }
 
-  private getAllWebsocketConnections(): CurrentConnections {
+  private async getAllWebsocketConnections(): Promise<CurrentConnections> {
     const activeClients: Client.ActiveUser[] = WebSocketClient._currentClients.map(
-      client => client.activeUser,
+      (client) => client.activeUser,
     );
 
-    const activeDevices: DeviceType.ActiveDevice<
-      AnyDeviceData
-    >[] = Device.currentDevices.map(
-      (device): DeviceType.ActiveDevice => device.activeDevice,
-    );
     return {
       clients: activeClients,
-      devices: activeDevices,
+      devices: await getAllActiveDevices(),
     };
   }
 
   private async interval(): Promise<void> {
-    const deviceData: DeviceType.ActiveDevice<
-      AnyDeviceData
-    >[] = this.getCurrentConnectionWithAccess().map(
-      (deviceObject): DeviceType.ActiveDevice => deviceObject.activeDevice,
-    );
     const clientResponse: Client.Response = {
       requestType: 'DATA',
-      data: deviceData,
+      data: await this.getCurrentConnectionWithAccess(),
     };
     this.websocket.send(JSON.stringify(clientResponse));
   }
@@ -137,18 +132,17 @@ export default class WebSocketClient {
         }
         const res: Client.Response = {
           requestType: 'CONNECTIONS',
-          data: this.getAllWebsocketConnections(),
+          data: await this.getAllWebsocketConnections(),
         };
         this.websocket.send(JSON.stringify(res));
         return;
       }
 
-      const deviceObject = this.getCurrentConnectionWithAccess().find(
-        _deviceObject =>
-          _deviceObject.firebaseDevice.uid === parsedMsg.deviceUid,
+      const deviceObject = (await this.getCurrentConnectionWithAccess()).find(
+        (_deviceObject) => _deviceObject.uid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
-      deviceObject.requestDevice(parsedMsg.requestType, parsedMsg.data);
+      //   deviceObject.requestDevice(parsedMsg.requestType, parsedMsg.data);
     } catch (e) {
       console.error(e.message);
     }
@@ -156,7 +150,7 @@ export default class WebSocketClient {
 
   public terminateConnection(reason: string): void {
     this.websocket.terminate();
-    logSocketError('Unknown', this.firebaseUser.uid, reason, 'client');
+    console.log(`Connection error ${reason} UID: ${this.firebaseUser.uid}`);
     WebSocketClient.removeClient(this);
   }
 }

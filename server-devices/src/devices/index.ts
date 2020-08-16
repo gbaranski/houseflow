@@ -42,7 +42,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
   constructor(
     protected ws: WebSocket,
     public readonly firebaseDevice: DeviceType.FirebaseDevice,
-    public readonly activeDevice: DeviceType.ActiveDevice<AnyDeviceData>,
+    public readonly activeDevice: DeviceType.ActiveDevice,
   ) {
     this._status = true;
   }
