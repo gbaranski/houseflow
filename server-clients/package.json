@@ -4,8 +4,8 @@
   "description": "Server for Websocket Clients",
   "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node -r dotenv/config .",
-    "start:dev": "ts-node-dev -r dotenv/config .",
+    "start": "ts-node -r dotenv/config -r tsconfig-paths/register .",
+    "start:dev": "ts-node-dev -r dotenv/config -r tsconfig-paths/register .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -15,6 +15,23 @@
   "author": "gbaranski",
   "license": "ISC",
   "devDependencies": {
-    "ts-node": "^8.10.2"
+    "@gbaranski/types": "^4.0.20",
+    "dotenv": "^8.2.0",
+    "ts-node": "^8.10.2",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "@types/geoip-lite": "^1.1.31",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/mongoose": "^5.7.36",
+    "@types/ws": "^7.2.6",
+    "eslint": "^7.7.0",
+    "firebase-admin": "^9.1.0",
+    "geoip-lite": "^1.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.10.0",
+    "ts-node-dev": "^1.0.0-pre.57",
+    "ws": "^7.3.1"
   }
 }

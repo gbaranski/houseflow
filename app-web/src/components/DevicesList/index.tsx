@@ -6,7 +6,7 @@ import { Col } from 'antd';
 import AlarmclockCard from '../Alarmclock/card';
 
 interface DeviceListProps {
-  activeDevices: Device.ActiveDevice<AnyDeviceData>[];
+  activeDevices: Device.ActiveDevice[];
   firebaseDevices: Device.FirebaseDevice[];
 }
 const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices, activeDevices }) => {

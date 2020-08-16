@@ -11,7 +11,7 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(
     ws: WebSocket,
     firebaseDevice: DeviceType.FirebaseDevice,
-    activeDevice: DeviceType.ActiveDevice<AnyDeviceData>,
+    activeDevice: DeviceType.ActiveDevice,
   ) {
     super(ws, firebaseDevice, activeDevice);
   }

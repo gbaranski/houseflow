@@ -1,14 +1,16 @@
-import { IncomingMessage } from 'http';
 import WebSocket from 'ws';
 import chalk from 'chalk';
 import http from 'http';
-import { convertToFirebaseDevice } from '@/services/firebase';
-import { getIpStr } from '@/services/misc';
-import {
-  verifyDevice,
-  validateConnection,
-  assignDevice,
-} from '@/services/websocket';
+import { verifyDevice, onConnection } from '@/services/websocket';
+import mongoose from 'mongoose';
+
+if (!process.env.MONGODB_URI)
+  throw new Error('MONGODB_URI is not defined in .env');
+
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);
@@ -23,23 +25,7 @@ export const wss: WebSocket.Server = new WebSocket.Server({
   verifyClient: verifyDevice,
 });
 
-wss.on('connection', async (ws, req: IncomingMessage) => {
-  try {
-    const { uid, deviceName } = validateConnection(req);
-
-    const firebaseDevice = await convertToFirebaseDevice(uid);
-
-    assignDevice(ws, req, firebaseDevice);
-    console.log(
-      `New connection ${deviceName} IP:${getIpStr(req)} UID:${
-        req.headers['uid']
-      }`,
-    );
-  } catch (e) {
-    console.error(`Error on connection! ${e.message}`);
-    return;
-  }
-});
+wss.on('connection', onConnection);
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
