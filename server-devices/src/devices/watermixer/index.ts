@@ -6,6 +6,7 @@ import {
   AnyDeviceData,
 } from '@gbaranski/types';
 import { validateDeviceMessage } from '@/services/misc';
+import WatermixerModel from './model';
 
 export class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(
@@ -13,17 +14,21 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
     firebaseDevice: DeviceType.FirebaseDevice,
     activeDevice: DeviceType.ActiveDevice,
   ) {
-    super(ws, firebaseDevice, activeDevice);
+    super(ws, firebaseDevice, activeDevice, WatermixerModel);
   }
 
-  handleMessage(message: WebSocket.Data): void {
+  public handleMessage(message: WebSocket.Data): void {
     validateDeviceMessage(message);
     const parsedResponse = JSON.parse(
       message as string,
     ) as DeviceType.ResponseDevice<undefined>;
     if (parsedResponse.responseFor === 'GET_DATA') {
-      this.deviceData = (parsedResponse.data as unknown) as Watermixer.Data;
-      Device.updateDevice(this.firebaseDevice.uid, this.deviceData);
+      const activeDevice = {
+        ...this.activeDevice,
+        data: (parsedResponse.data as unknown) as AnyDeviceData,
+      };
+      this.updateDevice(activeDevice);
+      this.activeDevice = activeDevice;
     }
   }
 }
