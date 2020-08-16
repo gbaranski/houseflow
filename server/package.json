@@ -43,7 +43,7 @@
     "@babel/core": "^7.11.1",
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-typescript": "^7.10.4",
-    "@gbaranski/types": "^4.0.18",
+    "@gbaranski/types": "^4.0.19",
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.6",
     "@types/crypto-js": "^3.1.47",

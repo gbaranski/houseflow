@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Modal, Form, Input, message } from 'antd';
 import { Device } from '@gbaranski/types';
 import { addNewDevice } from '@/services/firebase';
+import { useModel } from 'umi';
 
 interface AddDeviceFormProps {
   visible: boolean;
@@ -9,6 +10,7 @@ interface AddDeviceFormProps {
 }
 
 const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ visible, setVisible }) => {
+  const { getAndSetAllDevices } = useModel('deviceData');
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -19,6 +21,7 @@ const AddDeviceForm: React.FC<AddDeviceFormProps> = ({ visible, setVisible }) =>
       setLoading(false);
       setVisible(false);
       message.info('Success!');
+      getAndSetAllDevices();
     } catch (e) {
       message.error(e.message);
       console.log(e);
