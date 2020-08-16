@@ -35,6 +35,11 @@ export const routes: IRoute[] = [
         path: '/admin/manager',
         component: './admin/manager',
       },
+      {
+        name: 'Statistics',
+        path: '/admin/statistics',
+        component: './admin/statistics',
+      },
     ],
   },
   {

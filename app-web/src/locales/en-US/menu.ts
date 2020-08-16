@@ -4,6 +4,7 @@ export default {
   'menu.home': 'Home',
   'menu.admin': 'Admin',
   'menu.Devices': 'Devices',
+  'menu.admin.Statistics': 'Statistics',
   'menu.admin.Manager': 'Manager',
   'menu.admin.sub-page': 'Sub-Page',
   'menu.login': 'Login',

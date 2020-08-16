@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Table, Popconfirm } from 'antd';
-import { getAllDevices, deleteDevice } from '@/services/firebase';
+import { deleteDevice } from '@/services/firebase';
 import { Device } from '@gbaranski/types';
+import { useModel } from 'umi';
 
 const columns = [
   {
@@ -31,24 +32,22 @@ const columns = [
 ];
 
 export default () => {
-  const [dataSource, setDataSource] = useState<any[]>([]);
-
-  const getAndSetDataSource = () => {
-    getAllDevices().then((firebaseDevice) => {
-      setDataSource(
-        firebaseDevice.map((device, index) => {
-          return {
-            key: index,
-            type: device.type,
-            uid: device.uid,
-          };
-        }),
-      );
-    });
-  };
+  const { allDevices, getAndSetAllDevices } = useModel('deviceData');
 
   useEffect(() => {
-    getAndSetDataSource();
-  });
-  return <Table columns={columns} dataSource={dataSource} />;
+    if (allDevices.length > 1) return;
+    getAndSetAllDevices();
+  }, []);
+  return (
+    <Table
+      columns={columns}
+      dataSource={allDevices.map((device, index) => {
+        return {
+          key: index,
+          type: device.type,
+          uid: device.uid,
+        };
+      })}
+    />
+  );
 };

@@ -138,7 +138,7 @@ export default class WebSocketClient {
 
       if (parsedMsg.requestType === 'CONNECTIONS') {
         console.log('Someone requesting connections!');
-        if (this.firebaseUser.role === 'admin') {
+        if (this.firebaseUser.role !== 'admin') {
           console.log('No permissions');
           return;
         }
