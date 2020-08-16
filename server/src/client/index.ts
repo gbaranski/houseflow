@@ -93,14 +93,8 @@ export default class WebSocketClient {
       (device): DeviceType.ActiveDevice<AnyDeviceData> => device.activeDevice,
     );
     return {
-      clients: {
-        online: activeClients,
-        offline: [],
-      },
-      devices: {
-        online: activeDevices,
-        offline: [],
-      },
+      clients: activeClients,
+      devices: activeDevices,
     };
   }
 

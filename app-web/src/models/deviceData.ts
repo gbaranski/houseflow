@@ -7,7 +7,7 @@ export default () => {
   const [activeDevices, setActiveDevices] = useState<Device.ActiveDevice<AnyDeviceData>[]>([]);
   const [firebaseDevices, setFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
   const [allConnections, setAllConnections] = useState<CurrentConnections>();
-  const [allDevices, setAllDevices] = useState<Device.FirebaseDevice[]>([]);
+  const [allFirebaseDevices, setAllFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
 
   const onMessage = (message: MessageEvent) => {
     const response = JSON.parse(message.data) as Client.Response;
@@ -33,7 +33,7 @@ export default () => {
 
   const getAndSetAllDevices = async () => {
     console.log('Attempting to get and set all devices');
-    return setAllDevices(await getAllDevices());
+    return setAllFirebaseDevices(await getAllDevices());
   };
 
   return {
@@ -44,8 +44,8 @@ export default () => {
     setupListeners,
     getAndSetFirebaseDevices,
     allConnections,
-    allDevices,
-    setAllDevices,
+    allFirebaseDevices,
+    setAllFirebaseDevices,
     getAndSetAllDevices,
   };
 };

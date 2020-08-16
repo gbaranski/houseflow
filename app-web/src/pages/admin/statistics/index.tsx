@@ -57,8 +57,9 @@ const ClientTable = (props: { clients: Client.ActiveUser[] }) => {
       key: 'ip',
     },
   ];
-  const data = props.clients.map((client) => {
+  const data = props.clients.map((client, index) => {
     return {
+      key: index,
       ...client,
     };
   });
@@ -67,11 +68,11 @@ const ClientTable = (props: { clients: Client.ActiveUser[] }) => {
 
 export default () => {
   const {
+    allConnections,
+    allFirebaseDevices,
+    getAndSetAllDevices,
     setupListeners,
     getAndSetFirebaseDevices,
-    allConnections,
-    allDevices,
-    getAndSetAllDevices,
   } = useModel('deviceData');
   const { initialState } = useModel('@@initialState');
   const { firebaseUser } = initialState || {};
@@ -79,15 +80,15 @@ export default () => {
 
   useEffect(() => {
     getAndSetFirebaseDevices(firebaseUser).then(() => sendCurrentConnectionsRequest());
-    if (allDevices.length > 1) return;
+    if (allFirebaseDevices.length > 1) return;
     getAndSetAllDevices();
   }, []);
 
   return (
     <PageContainer>
       <Card>
-        <DeviceTable online={allConnections?.devices.online || []} offline={allDevices} />
-        <ClientTable clients={allConnections?.clients.online || []} />
+        <DeviceTable online={allConnections?.devices || []} offline={allFirebaseDevices} />
+        <ClientTable clients={allConnections?.clients || []} />
       </Card>
     </PageContainer>
   );
