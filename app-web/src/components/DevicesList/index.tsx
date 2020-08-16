@@ -16,14 +16,14 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices, activeDevices 
         const activeDevice = activeDevices.find((_device) => _device.uid === device.uid);
         if (!activeDevice)
           return (
-            <Col>
+            <Col key={device.uid}>
               <DeviceCardSkeleton key={device.uid} name={device.type} />
             </Col>
           );
         switch (activeDevice.type) {
           case 'WATERMIXER':
             return (
-              <Col>
+              <Col key={device.uid}>
                 <WatermixerCard
                   key={activeDevice.uid}
                   device={activeDevice as Device.ActiveDevice<Watermixer.Data>}
@@ -32,7 +32,7 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices, activeDevices 
             );
           case 'ALARMCLOCK':
             return (
-              <Col>
+              <Col key={device.uid}>
                 <AlarmclockCard
                   key={activeDevice.uid}
                   device={activeDevice as Device.ActiveDevice<Alarmclock.Data>}
