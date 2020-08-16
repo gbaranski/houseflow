@@ -24,12 +24,6 @@ export interface RequestHistory {
 }
 
 export interface CurrentConnections {
-  devices: {
-    offline: Device.FirebaseDevice[];
-    online: Device.ActiveDevice<AnyDeviceData>[];
-  };
-  clients: {
-    offline: Client.FirebaseUser[];
-    online: Client.ActiveUser[];
-  };
+  devices: Device.ActiveDevice<AnyDeviceData>[];
+  clients: Client.ActiveUser[];
 }
