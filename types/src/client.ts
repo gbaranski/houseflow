@@ -10,7 +10,7 @@ export namespace Client {
     requestType: Device.RequestType | RequestType;
     deviceUid?: string;
     deviceType?: string;
-    data?: DateTime | State;
+    data?: DateTime | { state: State };
   }
 
   export type ResponseType = 'DATA' | 'CONNECTIONS';
