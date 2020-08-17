@@ -6,7 +6,6 @@ import {
   AnyDeviceData,
 } from '@gbaranski/types';
 import { validateDeviceMessage } from '@/services/misc';
-import alarmclockModel from './model';
 
 export default class AlarmclockDevice extends Device<Alarmclock.Data> {
   constructor(
@@ -14,7 +13,7 @@ export default class AlarmclockDevice extends Device<Alarmclock.Data> {
     firebaseDevice: DeviceType.FirebaseDevice,
     activeDevice: DeviceType.ActiveDevice,
   ) {
-    super(ws, firebaseDevice, activeDevice, alarmclockModel);
+    super(ws, firebaseDevice, activeDevice);
   }
 
   public handleMessage(message: WebSocket.Data): void {

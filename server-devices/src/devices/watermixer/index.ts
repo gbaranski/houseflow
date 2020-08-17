@@ -6,7 +6,6 @@ import {
   AnyDeviceData,
 } from '@gbaranski/types';
 import { validateDeviceMessage } from '@/services/misc';
-import WatermixerModel from './model';
 
 export class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(
@@ -14,7 +13,7 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
     firebaseDevice: DeviceType.FirebaseDevice,
     activeDevice: DeviceType.ActiveDevice,
   ) {
-    super(ws, firebaseDevice, activeDevice, WatermixerModel);
+    super(ws, firebaseDevice, activeDevice);
   }
 
   public handleMessage(message: WebSocket.Data): void {
