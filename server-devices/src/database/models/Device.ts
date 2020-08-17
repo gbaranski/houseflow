@@ -1,12 +1,13 @@
 import mongoose, { model } from 'mongoose';
 
-const AlarmclockSchema = new mongoose.Schema({
+const DeviceScheme = new mongoose.Schema({
   uid: {
     type: String,
     required: true,
     unique: true,
   },
   data: {
+    // ALARMCLOCK
     alarmTime: {
       hour: mongoose.SchemaTypes.Number,
       minute: mongoose.SchemaTypes.Number,
@@ -18,6 +19,9 @@ const AlarmclockSchema = new mongoose.Schema({
       humidity: mongoose.SchemaTypes.Number,
       heatIndex: mongoose.SchemaTypes.Number,
     },
+    // WATERMIXER
+    remainingTime: mongoose.SchemaTypes.Number,
+    isTimerOn: mongoose.SchemaTypes.Boolean,
   },
   ip: {
     type: String,
@@ -29,4 +33,4 @@ const AlarmclockSchema = new mongoose.Schema({
   },
 });
 
-export default model('Alarmclock', AlarmclockSchema);
+export default model('Device', DeviceScheme);
