@@ -1,4 +1,4 @@
 export const DEVICE = 'Device';
 
-import DeviceModel from './deviceSchema';
+import DeviceModel from './Device';
 export { DeviceModel };
