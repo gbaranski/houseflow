@@ -6,7 +6,7 @@ import {
   CurrentConnections,
   Device,
 } from '@gbaranski/types';
-import { getAllActiveDevices } from '@/database';
+import { addRequest, getAllActiveDevices } from '@/database';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
@@ -142,7 +142,7 @@ export default class WebSocketClient {
         (_deviceObject) => _deviceObject.uid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
-      //   deviceObject.requestDevice(parsedMsg.requestType, parsedMsg.data);
+      addRequest(parsedMsg);
     } catch (e) {
       console.error(e.message);
     }

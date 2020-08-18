@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import Device from '..';
+import Device from '../';
 import {
   Alarmclock,
   Device as DeviceType,

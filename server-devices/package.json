@@ -16,7 +16,7 @@
   "author": "gbaranski",
   "license": "ISC",
   "devDependencies": {
-    "@gbaranski/types": "^4.0.20",
+    "@gbaranski/types": "^4.0.21",
     "@types/node-fetch": "^2.5.7",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0",

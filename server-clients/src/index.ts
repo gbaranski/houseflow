@@ -29,10 +29,10 @@ wss.on('connection', onConnection);
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-httpServer.listen(process.env.WS_CLIENT_PORT, '0.0.0.0', () =>
+httpServer.listen(process.env.PORT, '0.0.0.0', () =>
   console.log(
     chalk.yellow(
-      `Listening for websocket_clients connection at port ${process.env.WS_CLIENT_PORT}`,
+      `Listening for websocket_clients connection at port ${process.env.PORT}`,
     ),
   ),
 );
