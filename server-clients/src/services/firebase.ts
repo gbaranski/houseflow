@@ -2,7 +2,7 @@ import * as admin from 'firebase-admin';
 import { Device, Client } from '@gbaranski/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const serviceAccount = require('@/config/firebaseConfig.json');
+const serviceAccount = require('../../firebaseConfig.json');
 
 export type DocumentReference = admin.firestore.DocumentReference;
 

@@ -7,23 +7,7 @@ const DeviceScheme = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  data: {
-    // ALARMCLOCK
-    alarmTime: {
-      hour: mongoose.SchemaTypes.Number,
-      minute: mongoose.SchemaTypes.Number,
-      second: mongoose.SchemaTypes.Number,
-    },
-    alarmState: mongoose.SchemaTypes.Boolean,
-    sensor: {
-      temperature: mongoose.SchemaTypes.Number,
-      humidity: mongoose.SchemaTypes.Number,
-      heatIndex: mongoose.SchemaTypes.Number,
-    },
-    // WATERMIXER
-    remainingTime: mongoose.SchemaTypes.Number,
-    isTimerOn: mongoose.SchemaTypes.Boolean,
-  },
+  data: String,
   ip: {
     type: String,
     required: true,

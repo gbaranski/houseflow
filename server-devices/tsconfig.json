@@ -16,12 +16,9 @@
     "baseUrl": "./src/",
     "rootDir": "src",
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["./*"]
     }
   },
   "include": ["src/**/*", "__tests__/**/*"],
-  "exclude": [
-    "node_modules",
-    "acceptance-tests",
-  ]
+  "exclude": ["node_modules", "acceptance-tests"]
 }
