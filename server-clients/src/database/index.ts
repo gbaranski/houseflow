@@ -5,7 +5,7 @@ import { RequestModel, DeviceModel } from './models';
 const parseRequest = (request: Client.Request) => {
   return {
     ...request,
-    data: request.data ? JSON.stringify(request.data) : undefined,
+    data: JSON.stringify(request.data),
   };
 };
 
@@ -22,6 +22,8 @@ const parseData = (oldData: Device.ActiveDevice[]) => {
 };
 
 export const addRequest = (request: Client.Request) => {
+  const parsedRequest = parseRequest(request);
+  console.log(parsedRequest, request);
   RequestModel.create(parseRequest(request));
 };
 
@@ -30,6 +32,5 @@ export const getAllActiveDevices = async (): Promise<Device.ActiveDevice[]> => {
   const parsedDbData = parseData(
     (databaseData as unknown) as Device.ActiveDevice[],
   );
-  console.log({ parsedDbData });
   return parsedDbData;
 };

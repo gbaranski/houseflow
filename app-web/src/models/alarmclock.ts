@@ -19,7 +19,7 @@ export default () => {
     const req: Client.Request = {
       deviceUid: uid,
       requestType: 'SET_STATE',
-      data: newState,
+      data: { state: newState },
     };
     getWebsocket()?.send(JSON.stringify(req));
   };

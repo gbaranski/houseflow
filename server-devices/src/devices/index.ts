@@ -7,7 +7,7 @@ import {
 import WatermixerDevice from './watermixer';
 import AlarmclockDevice from './alarmclock';
 import mongoose from 'mongoose';
-import { DeviceModel } from '@/database/models';
+import { DeviceModel, RequestModel } from '@/database/models';
 
 export type AnyDeviceObject = WatermixerDevice | AlarmclockDevice;
 
@@ -25,22 +25,25 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
 
   protected async initInDb(device: DeviceType.ActiveDevice): Promise<void> {
     await (
-      await this.databaseModel.create(Device.stringifyDeviceData(device))
+      await this.deviceModel.create(Device.stringifyDeviceData(device))
     ).save();
+    mongoose.connection.on('change', (change) => console.log(change));
+    // this.requestModel.watch().on('change', (change) => console.log(change));
   }
 
   protected async removeFromDb(device: DeviceType.ActiveDevice): Promise<void> {
-    await this.databaseModel.deleteOne({ uid: device.uid });
+    await this.deviceModel.deleteOne({ uid: device.uid });
   }
 
   protected async updateDevice(device: DeviceType.ActiveDevice): Promise<void> {
-    await this.databaseModel.updateOne(
+    await this.deviceModel.updateOne(
       { uid: device.uid },
       Device.stringifyDeviceData(device),
     );
   }
 
-  protected databaseModel: mongoose.Model<mongoose.Document> = DeviceModel;
+  protected deviceModel: mongoose.Model<mongoose.Document> = DeviceModel;
+  protected requestModel: mongoose.Model<mongoose.Document> = RequestModel;
 
   constructor(
     protected ws: WebSocket,
