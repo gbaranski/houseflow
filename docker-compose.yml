@@ -1,17 +1,15 @@
 version: '3.8'
 services:
-  server:
+  server-api:
     tty: true
-    container_name: "server"
-    image: server
+    container_name: 'server-api'
+    env_file:
+      - .env
     build:
-      context: ./server
+      context: ./server-api
       dockerfile: Dockerfile
     ports:
-      - 8000:8000
-      - 8001:8001
-      - 8002:8002
+      - $PORT_SERVER_API:8000
     restart: 'unless-stopped'
     volumes:
-      - ./server/src/config/firebaseConfig.json:/app/src/firebaseConfig.json
-
+      - ./server-api/src/config/firebaseConfig.json:/app/src/firebaseConfig.json
