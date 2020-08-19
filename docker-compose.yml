@@ -79,7 +79,7 @@ services:
       - 443:443
     restart: 'unless-stopped'
     volumes:
-      - $PWD/nginx/certs/cert.pem:/etc/nginx/cert.pem
-      - $PWD/nginx/certs/key.pem:/etc/ssl/private/key.pem
+      - $PWD/nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
+      - $PWD/nginx/certs/key.pem:/etc/ssl/nginx/key.pem
 networks:
   backend:
