@@ -6,6 +6,7 @@ import {
   AnyDeviceData,
 } from '@gbaranski/types';
 import { validateDeviceMessage } from '@/services/misc';
+import { publishDeviceData } from '@/services/redis';
 
 export default class AlarmclockDevice extends Device<Alarmclock.Data> {
   constructor(
@@ -23,11 +24,11 @@ export default class AlarmclockDevice extends Device<Alarmclock.Data> {
     ) as DeviceType.ResponseDevice<undefined>;
     if (parsedResponse.responseFor === 'GET_DATA') {
       console.log('Received new data');
-      const activeDevice = {
+      const activeDevice: DeviceType.ActiveDevice = {
         ...this.activeDevice,
         data: (parsedResponse.data as unknown) as AnyDeviceData,
       };
-      this.updateDevice(activeDevice);
+      publishDeviceData(activeDevice);
       this.activeDevice = activeDevice;
     }
   }

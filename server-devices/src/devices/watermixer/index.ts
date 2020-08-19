@@ -26,7 +26,6 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
         ...this.activeDevice,
         data: (parsedResponse.data as unknown) as AnyDeviceData,
       };
-      this.updateDevice(activeDevice);
       this.activeDevice = activeDevice;
     }
   }
