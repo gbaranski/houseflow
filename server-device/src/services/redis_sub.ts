@@ -4,6 +4,7 @@ import { SubChannel } from '@/types';
 import Device from '@/devices';
 
 export const redisSubscriber = redis.createClient('redis://redis:6379');
+redisSubscriber.on('connect', () => console.log('Initialized redis subsciber'));
 redisSubscriber.subscribe('request');
 
 redisSubscriber.on('message', (channel, message) => {
