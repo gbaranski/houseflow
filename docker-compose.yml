@@ -24,10 +24,6 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
-    networks:
-      net:
-        aliases:
-          - server-api
 
   server-device:
     tty: true
@@ -45,10 +41,6 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
-    networks:
-      net:
-        aliases:
-          - server-device
 
   server-client:
     tty: true
@@ -66,10 +58,7 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
-    networks:
-      net:
-        aliases:
-          - server-client
+
   nginx:
     tty: true
     container_name: 'nginx'
