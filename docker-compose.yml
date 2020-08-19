@@ -8,6 +8,8 @@ services:
       - 6379:6379
     environment:
       - REDIS_REPLICATION_MODE=master
+    networks:
+      - backend
 
   server-api:
     tty: true
@@ -24,6 +26,8 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
+    networks:
+      - backend
 
   server-device:
     tty: true
@@ -41,6 +45,8 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
+    networks:
+      - backend
 
   server-client:
     tty: true
@@ -58,6 +64,8 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
+    networks:
+      - backend
 
   nginx:
     tty: true
@@ -74,3 +82,8 @@ services:
     volumes:
       - ./nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
       - ./nginx/certs/key.pem:/etc/ssl/nginx/key.pem
+    networks:
+      - backend
+
+networks:
+  backend:
