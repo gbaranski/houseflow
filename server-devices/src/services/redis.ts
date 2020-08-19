@@ -4,6 +4,10 @@ import { Device } from '@gbaranski/types';
 export const redisPublisher = redis.createClient();
 console.log('Initialized redis publisher');
 
-export const publishDeviceData = (deviceData: Device.ActiveDevice) => {
-  redisPublisher.publish('device_data', JSON.stringify(deviceData));
+export const publishDeviceData = (device: Device.ActiveDevice) => {
+  redisPublisher.publish('device_data', JSON.stringify(device));
+};
+
+export const publishDeviceDisconnect = (device: Device.ActiveDevice) => {
+  redisPublisher.publish('device_disconnect', JSON.stringify(device));
 };
