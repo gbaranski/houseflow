@@ -6,7 +6,8 @@ import {
   CurrentConnections,
   Device,
 } from '@gbaranski/types';
-import { activeDevices } from '@/services/redis';
+import { activeDevices } from '@/services/redis_sub';
+import { publishRequest } from '@/services/redis_pub';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
@@ -142,7 +143,7 @@ export default class WebSocketClient {
         (_deviceObject) => _deviceObject.uid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
-      // addRequest(parsedMsg);
+      publishRequest(parsedMsg);
     } catch (e) {
       console.error(e.message);
     }

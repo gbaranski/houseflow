@@ -1,6 +1,6 @@
 import redis from 'redis';
 import { Device } from '@gbaranski/types';
-import { Channel } from '@/types';
+import { SubChannel } from '@/types';
 
 export let activeDevices: Device.ActiveDevice[] = [];
 
@@ -29,7 +29,7 @@ const handleDeviceDisconnect = (message: string) => {
   );
 };
 
-const channels: Channel[] = [
+const channels: SubChannel[] = [
   {
     name: 'device_data',
     handle: handleNewDeviceData,

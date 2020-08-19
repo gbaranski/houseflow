@@ -6,7 +6,7 @@ import WebSocket from 'ws';
 import { getIpStr } from '@/services/misc';
 import WatermixerDevice from '@/devices/watermixer';
 import AlarmclockDevice from '@/devices/alarmclock';
-import Device, { AnyDeviceObject } from '@/devices';
+import { AnyDeviceObject } from '@/devices';
 import { convertToFirebaseDevice } from '@/services/firebase';
 
 export const verifyDevice = (

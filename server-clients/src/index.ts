@@ -3,7 +3,8 @@ import chalk from 'chalk';
 import { verifyClient, onConnection } from '@/services/websocket';
 import http from 'http';
 import mongoose from 'mongoose';
-import '@/services/redis';
+import '@/services/redis_sub';
+import '@/services/redis_pub';
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);
