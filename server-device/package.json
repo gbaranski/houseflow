@@ -19,26 +19,23 @@
     "@gbaranski/types": "^4.0.21",
     "@types/node-fetch": "^2.5.7",
     "dotenv": "^8.2.0",
+    "@types/geoip-lite": "^1.1.31",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/redis": "^2.8.25",
+    "@types/ws": "^7.2.6",
     "node-fetch": "^2.6.0",
     "ts-node": "^8.10.2",
     "tsconfig-paths": "^3.9.0",
+    "ts-node-dev": "^1.0.0-pre.57",
+    "eslint": "^7.7.0",
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@types/geoip-lite": "^1.1.31",
-    "@types/jsonwebtoken": "^8.5.0",
-    "@types/mongodb": "^3.5.26",
-    "@types/mongoose": "^5.7.36",
-    "@types/redis": "^2.8.25",
-    "@types/ws": "^7.2.6",
-    "eslint": "^7.7.0",
+    "chalk": "^4.1.0",
     "firebase-admin": "^9.1.0",
     "geoip-lite": "^1.4.2",
     "jsonwebtoken": "^8.5.1",
-    "mongodb": "^3.6.0",
-    "mongoose": "^5.10.0",
     "redis": "^3.0.2",
-    "ts-node-dev": "^1.0.0-pre.57",
     "ws": "^7.3.1"
   }
 }

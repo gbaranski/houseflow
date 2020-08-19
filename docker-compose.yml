@@ -13,3 +13,29 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./server-api/src/firebaseConfig.json:/app/src/firebaseConfig.json
+  server-client:
+    tty: true
+    container_name: 'server-client'
+    env_file:
+      - .env
+    build:
+      context: ./server-client
+      dockerfile: Dockerfile
+    ports:
+      - $PORT_CLIENT:$PORT_CLIENT
+    restart: 'unless-stopped'
+    volumes:
+      - ./server-client/src/firebaseConfig.json:/app/src/firebaseConfig.json
+  server-client:
+    tty: true
+    container_name: 'server-device'
+    env_file:
+      - .env
+    build:
+      context: ./server-device
+      dockerfile: Dockerfile
+    ports:
+      - $PORT_DEVICE:$PORT_DEVICE
+    restart: 'unless-stopped'
+    volumes:
+      - ./server-device/src/firebaseConfig.json:/app/src/firebaseConfig.json
