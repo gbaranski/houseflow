@@ -19,13 +19,13 @@ services:
     env_file:
       - .env
     build:
-      context: $PWD/server-api
+      context: ./server-api
       dockerfile: Dockerfile
     ports:
       - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
-      - $PWD/server-api/src/firebaseConfig.json:/app/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/src/firebaseConfig.json
     networks:
       - backend
 
@@ -38,13 +38,13 @@ services:
     env_file:
       - .env
     build:
-      context: $PWD/server-device
+      context: ./server-device
       dockerfile: Dockerfile
     ports:
       - $PORT_DEVICE:$PORT_DEVICE
     restart: 'unless-stopped'
     volumes:
-      - $PWD/server-device/src/firebaseConfig.json:/app/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/src/firebaseConfig.json
     networks:
       - backend
 
@@ -57,20 +57,20 @@ services:
     env_file:
       - .env
     build:
-      context: $PWD/server-client
+      context: ./server-client
       dockerfile: Dockerfile
     ports:
       - $PORT_CLIENT:$PORT_CLIENT
     restart: 'unless-stopped'
     volumes:
-      - $PWD/server-client/src/firebaseConfig.json:/app/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/src/firebaseConfig.json
     networks:
       - backend
   nginx:
     tty: true
     container_name: 'nginx'
     build:
-      context: $PWD/nginx
+      context: ./nginx
       dockerfile: Dockerfile
     env_file:
       - .env
@@ -79,7 +79,7 @@ services:
       - 443:443
     restart: 'unless-stopped'
     volumes:
-      - $PWD/nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
-      - $PWD/nginx/certs/key.pem:/etc/ssl/nginx/key.pem
+      - ./nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
+      - ./nginx/certs/key.pem:/etc/ssl/nginx/key.pem
 networks:
   backend:

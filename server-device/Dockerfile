@@ -1,7 +1,7 @@
 FROM node:12-alpine
 
 
-WORKDIR /server-device
+WORKDIR /server
 
 # Install app dependencies
 COPY package*.json ./
