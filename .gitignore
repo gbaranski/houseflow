@@ -12,3 +12,6 @@ secret.h
 
 .vscode
 .firebase
+
+cert.pem
+key.pem

@@ -66,7 +66,20 @@ services:
       - $PWD/server-client/src/firebaseConfig.json:/app/src/firebaseConfig.json
     networks:
       - backend
-
+  nginx:
+    tty: true
+    container_name: 'nginx'
+    build:
+      context: $PWD/nginx
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+    restart: 'unless-stopped'
+    volumes:
+      - $PWD/nginx/certs/cert.pem:/etc/nginx/cert.pem
+      - $PWD/nginx/certs/key.pem:/etc/ssl/private/key.pem
 networks:
   backend:
-    driver: 'bridge'
