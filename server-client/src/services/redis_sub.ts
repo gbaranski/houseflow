@@ -19,7 +19,6 @@ const handleNewDeviceData = (message: string) => {
   activeDevices = activeDevices
     .filter((device) => activeDevice.uid !== device.uid)
     .concat(activeDevice);
-  console.log({ activeDevices });
 };
 
 const handleDeviceDisconnect = (message: string) => {

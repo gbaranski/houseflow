@@ -23,7 +23,6 @@ export default class AlarmclockDevice extends Device<Alarmclock.Data> {
       message as string,
     ) as DeviceType.ResponseDevice<undefined>;
     if (parsedResponse.responseFor === 'GET_DATA') {
-      console.log('Received new data');
       const activeDevice: DeviceType.ActiveDevice = {
         ...this.activeDevice,
         data: (parsedResponse.data as unknown) as AnyDeviceData,
