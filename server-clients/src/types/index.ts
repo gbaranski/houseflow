@@ -15,8 +15,8 @@ export interface VerifyCallback {
   ): void;
 }
 
-type ChannelNames = 'device_data' | 'device_disconnect';
-export interface Channel {
-  name: ChannelNames;
+type SubChannelNames = 'device_data' | 'device_disconnect';
+export interface SubChannel {
+  name: SubChannelNames;
   handle: (message: string) => void;
 }

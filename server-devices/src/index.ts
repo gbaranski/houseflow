@@ -2,7 +2,8 @@ import WebSocket from 'ws';
 import chalk from 'chalk';
 import http from 'http';
 import { verifyDevice, onConnection } from '@/services/websocket';
-import '@/services/redis';
+import '@/services/redis_pub';
+import '@/services/redis_sub';
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);

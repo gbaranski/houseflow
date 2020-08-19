@@ -14,3 +14,9 @@ export interface VerifyCallback {
     headers?: http.OutgoingHttpHeaders,
   ): void;
 }
+
+type SubChannelNames = 'request';
+export interface SubChannel {
+  name: SubChannelNames;
+  handle: (message: string) => void;
+}

@@ -6,7 +6,7 @@ import {
   AnyDeviceData,
 } from '@gbaranski/types';
 import { validateDeviceMessage } from '@/services/misc';
-import { publishDeviceData } from '@/services/redis';
+import { publishDeviceData } from '@/services/redis_pub';
 
 export class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(

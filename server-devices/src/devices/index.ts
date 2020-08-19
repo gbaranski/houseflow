@@ -3,14 +3,17 @@ import {
   AnyDeviceData,
   DateTime,
   Device as DeviceType,
+  Client,
 } from '@gbaranski/types';
 import WatermixerDevice from './watermixer';
 import AlarmclockDevice from './alarmclock';
-import { publishDeviceDisconnect } from '@/services/redis';
+import { publishDeviceDisconnect } from '@/services/redis_pub';
 
 export type AnyDeviceObject = WatermixerDevice | AlarmclockDevice;
 
 export default abstract class Device<DeviceData extends AnyDeviceData> {
+  public static currentDeviceObjects: AnyDeviceObject[] = [];
+
   private _status = false;
 
   public abstract handleMessage(message: WebSocket.Data): void;
@@ -20,13 +23,11 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     public readonly firebaseDevice: DeviceType.FirebaseDevice,
     protected activeDevice: DeviceType.ActiveDevice,
   ) {
+    Device.currentDeviceObjects.push(this);
     this._status = true;
   }
 
-  public requestDevice(
-    type: DeviceType.RequestType,
-    data?: DateTime | boolean,
-  ): boolean {
+  public requestDevice(request: Client.Request): boolean {
     if (!this.ws) {
       throw new Error('Websocket is not defined');
     }
@@ -37,8 +38,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
       throw new Error('Device status is false');
     }
     const requestData = {
-      type,
-      data,
+      type: request.requestType,
+      data: request.data,
     };
     console.log(requestData);
     this.ws.send(JSON.stringify(requestData));
