@@ -27,7 +27,9 @@ services:
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
     networks:
-      - backend
+      net:
+        aliases:
+          - server-api
 
   server-device:
     tty: true
@@ -46,7 +48,9 @@ services:
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
     networks:
-      - backend
+      net:
+        aliases:
+          - server-device
 
   server-client:
     tty: true
@@ -65,7 +69,9 @@ services:
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
     networks:
-      - backend
+      net:
+        aliases:
+          - server-client
   nginx:
     tty: true
     container_name: 'nginx'
@@ -81,5 +87,3 @@ services:
     volumes:
       - ./nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
       - ./nginx/certs/key.pem:/etc/ssl/nginx/key.pem
-networks:
-  backend:
