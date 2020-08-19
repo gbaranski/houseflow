@@ -6,6 +6,7 @@ import {
   AnyDeviceData,
 } from '@gbaranski/types';
 import { validateDeviceMessage } from '@/services/misc';
+import { publishDeviceData } from '@/services/redis';
 
 export class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(
@@ -26,6 +27,7 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
         ...this.activeDevice,
         data: (parsedResponse.data as unknown) as AnyDeviceData,
       };
+      publishDeviceData(activeDevice);
       this.activeDevice = activeDevice;
     }
   }

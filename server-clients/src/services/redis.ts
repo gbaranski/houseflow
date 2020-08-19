@@ -17,5 +17,4 @@ const handleMessage = (channel: string, message: string) => {
   activeDevices = activeDevices
     .filter((device) => activeDevice.uid !== device.uid)
     .concat(activeDevice);
-  console.log({ activeDevice, activeDevices });
 };
