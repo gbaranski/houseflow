@@ -4,7 +4,7 @@ import { SubChannel } from '@/types';
 
 export let activeDevices: Device.ActiveDevice[] = [];
 
-export const redisSubscriber = redis.createClient();
+export const redisSubscriber = redis.createClient('redis://redis:6379');
 redisSubscriber.subscribe('device_data');
 redisSubscriber.subscribe('device_disconnect');
 redisSubscriber.on('message', (channel, message) => {

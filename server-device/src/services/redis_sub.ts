@@ -3,7 +3,7 @@ import { Device as DeviceType, Client } from '@gbaranski/types';
 import { SubChannel } from '@/types';
 import Device from '@/devices';
 
-export const redisSubscriber = redis.createClient();
+export const redisSubscriber = redis.createClient('redis://redis:6379');
 redisSubscriber.subscribe('request');
 
 redisSubscriber.on('message', (channel, message) => {
