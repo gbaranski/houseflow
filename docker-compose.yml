@@ -9,7 +9,7 @@ services:
       context: ./server-api
       dockerfile: Dockerfile
     ports:
-      - $PORT_SERVER_API:8000
+      - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
-      - ./server-api/src/config/firebaseConfig.json:/app/src/firebaseConfig.json
+      - ./server-api/src/firebaseConfig.json:/app/src/firebaseConfig.json
