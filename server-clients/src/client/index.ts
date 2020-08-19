@@ -6,7 +6,7 @@ import {
   CurrentConnections,
   Device,
 } from '@gbaranski/types';
-import { addRequest, getAllActiveDevices } from '@/database';
+import { activeDevices } from '@/services/redis';
 
 export default class WebSocketClient {
   private static _currentClients: WebSocketClient[] = [];
@@ -79,7 +79,7 @@ export default class WebSocketClient {
     Device.ActiveDevice[]
   > {
     return Promise.all(
-      (await getAllActiveDevices()).filter((device) =>
+      activeDevices.filter((device) =>
         this.fullAcccessDevices.some(
           (firebaseDevice) => firebaseDevice.uid === device.uid,
         ),
@@ -94,7 +94,7 @@ export default class WebSocketClient {
 
     return {
       clients: activeClients,
-      devices: await getAllActiveDevices(),
+      devices: activeDevices,
     };
   }
 
@@ -142,7 +142,7 @@ export default class WebSocketClient {
         (_deviceObject) => _deviceObject.uid === parsedMsg.deviceUid,
       );
       if (!deviceObject) throw new Error('Could not find device');
-      addRequest(parsedMsg);
+      // addRequest(parsedMsg);
     } catch (e) {
       console.error(e.message);
     }

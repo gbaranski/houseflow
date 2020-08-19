@@ -3,14 +3,7 @@ import chalk from 'chalk';
 import { verifyClient, onConnection } from '@/services/websocket';
 import http from 'http';
 import mongoose from 'mongoose';
-
-if (!process.env.MONGODB_URI)
-  throw new Error('MONGODB_URI is not defined in .env');
-
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+import '@/services/redis';
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);
