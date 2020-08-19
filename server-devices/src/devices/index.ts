@@ -6,6 +6,7 @@ import {
 } from '@gbaranski/types';
 import WatermixerDevice from './watermixer';
 import AlarmclockDevice from './alarmclock';
+import { publishDeviceDisconnect } from '@/services/redis';
 
 export type AnyDeviceObject = WatermixerDevice | AlarmclockDevice;
 
@@ -50,6 +51,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     console.log(
       `Websocket error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
     );
+    this._status = false;
+    publishDeviceDisconnect(this.activeDevice);
   }
 
   set status(status: boolean) {
