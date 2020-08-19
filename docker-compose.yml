@@ -6,9 +6,6 @@ services:
     command: ['redis-server', '--bind', 'redis', '--port', '6379']
     ports:
       - 6379:6379
-    volumes:
-      - $PWD/redis/redis-data:/var/lib/redis
-      - $PWD/redis/redis.conf:/usr/local/etc/redis/redis.conf
     environment:
       - REDIS_REPLICATION_MODE=master
     networks:
