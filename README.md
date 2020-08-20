@@ -16,7 +16,7 @@ The documentation is divided into several sections:
 2. [Communication and data transmission](#communication-and-data-transmission)
 
 ## Components of project
-* [Node.JS Server](#nodejs-server)
+* [Backend infrastructure](#backend-infrastructure)
 * [Web App](#web-app)
 * [Mobile App](#mobile-app)
 * [Embedded devices](#embedded-devices)
@@ -24,7 +24,14 @@ The documentation is divided into several sections:
 * [Firebase FCM](#firestore-database)
 * [Project types](#project-types)
 
-### Node.JS Server
+### Backend infrastructure
+Server and infrastructure recently had a huge refactor. Now the backend is build in microservice style, previosly monolithic. I keep working on scalability and CI/CD. The backend splits into following microservices:
+ 1. API Server, atm used only for giving tokens to IoT devices. Built using expressJS, Node.JS, Typescript.
+ 2. Websocket server at client side, handles communication with web and mobile(soon) communication. Built using [ws](https://www.npmjs.com/package/ws) library, Node.JS and typescript.
+ 3. Websocket server at device side, communicates with IoT devices. Built using same as service above.
+ 4. Redis, for connecting device and client microservices together, implemented with Pub-Sub pattern.
+ 5. Docker holding all those things up.
+
 Node.JS Server, whole code is in Typescript, main purpose of this server is handling websocket connections incoming from [embedded devices](#embedded-devices) and [Web App](#web-app) and also [Mobile App](#mobile-app). 
 
 ### Web App
