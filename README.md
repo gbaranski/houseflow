@@ -30,13 +30,13 @@ Node.JS Server, whole code is in Typescript, main purpose of this server is hand
 ### Web App
 Web app made using [React](https://github.com/facebook/react) front-end framework, whole code is in Typescript. Currently this is the most developed part of project alongisde Node.JS Server. App has moved from [Material-UI](https://github.com/mui-org/material-ui), to [antd](https://github.com/ant-design/ant-design)
 
-<img src="https://github.com/gbaranski/Control-Home/blob/add-documentation/docs/web_app.png" width="450">
+<img src="https://github.com/gbaranski/Control-Home/blob/master/docs/web_app.png" width="450">
 
 
 ### Mobile App
 Mobile app made using [React-Native](https://github.com/facebook/react-native) which is framework for mobile apps which allows to write in Typescript. It needs full refactoring, but thinking about switching to flutter.
 
-<img src="https://github.com/gbaranski/Control-Home/blob/add-documentation/docs/mobile_app.jpg" width="150">
+<img src="https://github.com/gbaranski/Control-Home/blob/master/docs/mobile_app.jpg" width="150">
 
 ### Embedded devices
 Embedded devices, microcontrollers i used were ESP8266 and ESP32, those are modules with WiFi, and they are quite powerfull. I was using Arduino framework, and C++ languague, thought about C and ESP-IDF but it would take me months. 
@@ -46,7 +46,7 @@ Embedded devices, microcontrollers i used were ESP8266 and ESP32, those are modu
 |Watermixer|ESP8266|Switches a relay which activates mixing hot and cold water|
 
 #### Alarmclock
-<img src="https://github.com/gbaranski/Control-Home/blob/add-documentation/docs/alarmclock.jpg" width="150">
+<img src="https://github.com/gbaranski/Control-Home/blob/master/docs/alarmclock.jpg" width="150">
 
 ### Firestore database
 Project is using [Firestore database](https://firebase.google.com/docs/firestore) for storing devices, users and etc
