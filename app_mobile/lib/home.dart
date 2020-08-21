@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pages/dashboard.dart';
 
 class PlaceholderWidget extends StatelessWidget {
   final Color color;
@@ -15,8 +16,8 @@ class PlaceholderWidget extends StatelessWidget {
 
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
-  final List<Widget> _children = [
-    PlaceholderWidget(Colors.deepOrange),
+  final List<Widget> _pages = [
+    Dashboard(),
     PlaceholderWidget(Colors.green)
   ];
 
@@ -26,22 +27,20 @@ class _HomeState extends State<Home> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Control Home'),
       ),
-      body: _children[_currentIndex],
+      body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: onTabTapped,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            title: Text('Home'),
+            title: Text('Dashboard'),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
