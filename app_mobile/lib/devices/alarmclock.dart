@@ -5,6 +5,7 @@ class _AlarmclockState extends State<Alarmclock> {
   Widget build(BuildContext context) {
     return Card(
       child: Container(
+        margin: const EdgeInsets.only(top: 10),
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
             Column(children: [
