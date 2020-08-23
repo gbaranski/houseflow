@@ -1,3 +1,4 @@
+import 'package:app_mobile/components/deviceCard/title.dart';
 import 'package:flutter/material.dart';
 
 class _WatermixerState extends State<Watermixer> {
@@ -12,13 +13,8 @@ class _WatermixerState extends State<Watermixer> {
       child: Container(
         margin: const EdgeInsets.only(top: 10),
         child: Column(children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 5),
-            child: Text(
-              "Watermixer",
-              style:
-                  TextStyle(fontSize: 24, color: Colors.black.withOpacity(0.6)),
-            ),
+          CardTitle(
+            cardName: "Watermixer",
           ),
           Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
             Column(children: [
