@@ -16,10 +16,7 @@ class PlaceholderWidget extends StatelessWidget {
 
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
-  final List<Widget> _pages = [
-    Dashboard(),
-    PlaceholderWidget(Colors.green)
-  ];
+  final List<Widget> _pages = [Dashboard(), PlaceholderWidget(Colors.green)];
 
   void onTabTapped(int index) {
     setState(() {
@@ -35,11 +32,15 @@ class _HomeState extends State<Home> {
       ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        elevation: 10,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.black45,
+        type: BottomNavigationBarType.shifting,
         currentIndex: _currentIndex,
         onTap: onTabTapped,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.dashboard),
             title: Text('Dashboard'),
           ),
           BottomNavigationBarItem(
