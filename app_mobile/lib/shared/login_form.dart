@@ -27,7 +27,8 @@ class _LoginFormState extends State<LoginForm> {
       children: [
         SizedBox(height: 20.0),
         TextFormField(
-          decoration: textInputDecoration.copyWith(hintText: "Email"),
+          style: textInputTextStyle,
+          decoration: textInputDecoration.copyWith(labelText: "Email"),
           validator: (val) => val.isEmpty ? "Enter an email" : null,
           onChanged: (value) {
             setState(() {
@@ -35,37 +36,43 @@ class _LoginFormState extends State<LoginForm> {
             });
           },
         ),
-        SizedBox(height: 10.0),
+        SizedBox(height: 20.0),
         TextFormField(
-          decoration: textInputDecoration.copyWith(hintText: "Password"),
-          obscureText: true,
-          validator: (val) =>
-              val.length < 6 ? "Enter password 6+ chars long" : null,
+          style: textInputTextStyle,
+          decoration: textInputDecoration.copyWith(labelText: "Password"),
           onChanged: (value) {
             setState(() {
               password = value;
             });
           },
+          validator: (val) =>
+              val.length < 6 ? "Enter password 8+ chars long" : null,
+          obscureText: true,
         ),
-        SizedBox(height: 10.0),
-        RaisedButton(
-          color: Colors.pink[400],
-          child: Text(
-            widget.submitMessage,
-            style: TextStyle(color: Colors.white),
-          ),
-          onPressed: () async {
-            if (widget.formKey.currentState.validate()) {
-              try {
-                await widget.onSubmit(email, password);
-              } catch (e) {
-                final snackBar = SnackBar(
-                  content: Text(e.toString()),
-                );
-                Scaffold.of(context).showSnackBar(snackBar);
+        SizedBox(height: 25),
+        ButtonTheme(
+          height: 60,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.elliptical(30, 30))),
+          child: RaisedButton(
+            color: Colors.blueAccent[200],
+            child: Text(
+              widget.submitMessage,
+              style: TextStyle(color: Colors.white, fontSize: 22),
+            ),
+            onPressed: () async {
+              if (widget.formKey.currentState.validate()) {
+                try {
+                  await widget.onSubmit(email, password);
+                } catch (e) {
+                  final snackBar = SnackBar(
+                    content: Text(e.toString()),
+                  );
+                  Scaffold.of(context).showSnackBar(snackBar);
+                }
               }
-            }
-          },
+            },
+          ),
         ),
       ],
     ));
