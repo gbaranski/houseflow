@@ -31,6 +31,7 @@ dependencies:
   firebase_messaging: "7.0.0"
   google_fonts: "1.1.0"
   flutter_spinkit: "^4.1.2+1"
+  flutter_svg: "0.18.1"
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -46,31 +47,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
-  fonts:
-    - family: OpenSans
-      fonts:
-        - asset: assets/fonts/OpenSans-Light.ttf
-          weight: 300
-        - asset: assets/fonts/OpenSans-LightItalic.ttf
-          weight: 300
-          style: italic
-        - asset: assets/fonts/OpenSans-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/OpenSans-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/OpenSans-SemiBold.ttf
-          weight: 600
-          style: italic
-        - asset: assets/fonts/OpenSans-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/OpenSans-BoldItalic.ttf
-          weight: 700
-          style: italic
-        - asset: assets/fonts/OpenSans-ExtraBold.ttf
-          weight: 800
-        - asset: assets/fonts/OpenSans-ExtraBoldItalic.ttf
-          weight: 800
-          style: italic
+  assets:
+    - assets/images/logo.svg
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
