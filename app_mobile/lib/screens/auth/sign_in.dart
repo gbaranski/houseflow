@@ -4,6 +4,7 @@ import 'package:app_mobile/shared/constants.dart';
 import 'package:app_mobile/shared/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class SignIn extends StatefulWidget {
   @override
@@ -45,18 +46,6 @@ class _SignInState extends State<SignIn> {
                       height: 200,
                     ),
                     SizedBox(height: 30),
-//                      RaisedButton(
-//                        child: Text("Sign in anonymously"),
-//                        onPressed: () async {
-//                          dynamic result = await _authService.signInAnon();
-//                          if (result == null) {
-//                            print('Error signing in');
-//                          } else {
-//                            print('Signed in');
-//                            print(result.uid);
-//                          }
-//                        },
-//                      ),
                     Form(
                         key: _formKey,
                         child: Column(children: <Widget>[
@@ -114,9 +103,54 @@ class _SignInState extends State<SignIn> {
                         )
                       ],
                     ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "OR",
+                          style: TextStyle(
+                              color: LayoutBlueColor1,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800),
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 25,
+                              backgroundColor: LayoutBlueColor1,
+                              child: IconButton(
+                                icon: Icon(
+                                  MdiIcons.google,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
+                              ),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.black45,
+                              child: IconButton(
+                                icon: Icon(
+                                  MdiIcons.incognito,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
 
                     SizedBox(
-                      height: 50,
+                      height: 20,
                     ),
                   ]),
             ),
