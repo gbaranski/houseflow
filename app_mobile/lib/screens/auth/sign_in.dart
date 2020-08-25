@@ -1,5 +1,6 @@
 import 'package:app_mobile/screens/auth/register.dart';
 import 'package:app_mobile/services/auth.dart';
+import 'package:app_mobile/shared/constants.dart';
 import 'package:app_mobile/shared/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -78,7 +79,7 @@ class _SignInState extends State<SignIn> {
                                 Text(
                                   "Reset",
                                   style: TextStyle(
-                                    color: Colors.blueAccent[200],
+                                    color: LayoutBlueColor1,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -103,7 +104,7 @@ class _SignInState extends State<SignIn> {
                                 Text(
                                   "SIGN UP",
                                   style: TextStyle(
-                                    color: Colors.blueAccent[200],
+                                    color: LayoutBlueColor1,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),

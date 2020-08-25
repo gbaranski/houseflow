@@ -24,3 +24,7 @@ const textInputDecoration = InputDecoration(
 const textInputTextStyle = TextStyle(
   fontSize: 14,
 );
+
+const Color LayoutBlueColor1 = Colors.blueAccent;
+
+const Color NavigationUnselectedItemColor = Colors.blueGrey;

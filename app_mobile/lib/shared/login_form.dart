@@ -107,7 +107,7 @@ class _LoginFormState extends State<LoginForm> {
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.elliptical(30, 30))),
           child: RaisedButton(
-            color: Colors.blueAccent[200],
+            color: LayoutBlueColor1,
             child: Text(
               widget.submitMessage,
               style: TextStyle(color: Colors.white, fontSize: 22),

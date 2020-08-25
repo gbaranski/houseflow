@@ -1,26 +1,64 @@
+import 'package:app_mobile/screens/dashboard/dashboard.dart';
+import 'package:app_mobile/screens/my_profile/my_profile.dart';
+import 'package:app_mobile/screens/settings/settings.dart';
 import 'package:app_mobile/services/auth.dart';
+import 'package:app_mobile/shared/constants.dart';
 import 'package:flutter/material.dart';
 
-class Home extends StatelessWidget {
-  final AuthService _authService = AuthService();
+class Home extends StatefulWidget {
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  static final List<Widget> _navPages = <Widget>[
+    Dashboard(),
+    MyProfile(),
+    Settings(),
+  ];
+
+  static const List<BottomNavigationBarItem> _navItems = [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.dashboard),
+      title: Text("Dashboard"),
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      title: Text("Settings"),
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.settings),
+      title: Text("Settings"),
+    ),
+  ];
+
+  int _currentIndex = 0;
+
+  void onNavItemTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  BottomNavigationBar navigation(BuildContext context) {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.shifting,
+      items: _navItems,
+      currentIndex: _currentIndex,
+      selectedItemColor: LayoutBlueColor1,
+      unselectedItemColor: NavigationUnselectedItemColor,
+      onTap: onNavItemTap,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.brown[50],
-      appBar: AppBar(
-        title: Text("Control Home"),
-        backgroundColor: Colors.brown[400],
-        elevation: 0.0,
-        actions: <Widget>[
-          FlatButton.icon(
-              onPressed: () async {
-                await _authService.signOut();
-              },
-              icon: Icon(Icons.person),
-              label: Text("Log out"))
-        ],
-      ),
-    );
+        appBar: AppBar(
+          backgroundColor: LayoutBlueColor1,
+          title: Text("Control Home"),
+        ),
+        bottomNavigationBar: navigation(context),
+        body: _navPages.elementAt(_currentIndex));
   }
 }
