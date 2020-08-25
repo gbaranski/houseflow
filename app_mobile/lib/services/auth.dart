@@ -96,4 +96,8 @@ class AuthService extends ChangeNotifier {
       return null;
     }
   }
+
+  Future<String> getIdToken() {
+    return currentUser.getIdToken(true);
+  }
 }
