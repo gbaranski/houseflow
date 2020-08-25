@@ -3,10 +3,6 @@ import 'package:app_mobile/shared/login_form.dart';
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {
-  final Function toggleView;
-
-  Register({this.toggleView});
-
   @override
   _RegisterState createState() => _RegisterState();
 }
@@ -18,39 +14,34 @@ class _RegisterState extends State<Register> {
   String email = '';
   String password = '';
 
+  // TODO Move it to constants
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.brown[100],
         appBar: AppBar(
-          backgroundColor: Colors.brown[400],
-          elevation: 0.0,
-          title: Text("Sign in to Control Home"),
-          actions: [
-            FlatButton.icon(
-                onPressed: () {
-                  widget.toggleView();
-                },
-                icon: Icon(Icons.person),
-                label: Text('Sign in'))
-          ],
+          title: Text("Register"),
         ),
-        body: Builder(builder: (BuildContext context) {
-          return Container(
-            padding: EdgeInsets.symmetric(
-              vertical: 20,
-              horizontal: 50,
+        body: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
             ),
-            child: Column(children: [
-              Form(
-                  key: _formKey,
-                  child: LoginForm(
-                    onSubmit: _authService.registerWithEmailAndPassword,
-                    submitMessage: 'Register',
-                    formKey: _formKey,
-                  ))
-            ]),
-          );
-        }));
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 10),
+                  Form(
+                      key: _formKey,
+                      child: Column(children: <Widget>[
+                        LoginForm(
+                          onSubmit: _authService.registerWithEmailAndPassword,
+                          submitMessage: 'REGISTER',
+                          formKey: _formKey,
+                        ),
+                      ])),
+                  SizedBox(
+                    height: 50,
+                  ),
+                ])));
   }
 }
