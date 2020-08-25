@@ -6,8 +6,9 @@ import 'package:flutter/cupertino.dart';
 class AuthService extends ChangeNotifier {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseUser firebaseUser;
 
-  bool isInitialized = false;
+  AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
 
   Future<FirebaseUser> _convertToFirebaseUser(auth.User user) async {
     if (user == null) return null;
@@ -26,8 +27,13 @@ class AuthService extends ChangeNotifier {
 
   // auth change user stream
   Stream<auth.User> get user {
-    _auth.authStateChanges().listen((event) {
-      isInitialized = true;
+    _auth.authStateChanges().listen((event) async {
+      if (event == null) {
+        authStatus = AuthStatus.NOT_LOGGED_IN;
+      } else {
+        firebaseUser = await _convertToFirebaseUser(event);
+        authStatus = AuthStatus.LOGGED_IN;
+      }
       print("Initialized");
       notifyListeners();
     });

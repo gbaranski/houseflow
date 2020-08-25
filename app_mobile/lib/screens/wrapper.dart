@@ -1,3 +1,4 @@
+import 'package:app_mobile/models/user.dart';
 import 'package:app_mobile/screens/auth/auth_screen.dart';
 import 'package:app_mobile/screens/home/home.dart';
 import 'package:app_mobile/screens/splash_screen/splash_screen.dart';
@@ -13,8 +14,8 @@ class Wrapper extends StatelessWidget {
 
     return Consumer<AuthService>(
       builder: (context, model, child) {
-        print(model.isInitialized);
-        if (!model.isInitialized) {
+        print(model.authStatus);
+        if (model.authStatus == AuthStatus.NOT_DETERMINED) {
           return SplashScreen();
         }
         if (user == null) {
