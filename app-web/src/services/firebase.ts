@@ -103,7 +103,7 @@ export function getSampleData(deviceType: Device.DeviceType): AnyDeviceData {
 export async function getAllowedDevices(
   firebaseUser: Client.FirebaseUser,
 ): Promise<Device.FirebaseDevice[]> {
-  const currentDevices = firebaseUser.devices.full_access.map(async (doc) => {
+  const currentDevices = firebaseUser.devices.map(async (doc) => {
     const docSnapshot = await doc.get();
     const docData = docSnapshot.data();
     if (!docData) throw new Error('Document data is not defined');

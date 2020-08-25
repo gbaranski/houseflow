@@ -16,18 +16,18 @@
   "author": "gbaranski",
   "license": "ISC",
   "devDependencies": {
-    "@gbaranski/types": "^4.0.21",
-    "@types/node-fetch": "^2.5.7",
-    "dotenv": "^8.2.0",
+    "@gbaranski/types": "^4.0.22",
     "@types/geoip-lite": "^1.1.31",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/node-fetch": "^2.5.7",
     "@types/redis": "^2.8.25",
     "@types/ws": "^7.2.6",
+    "dotenv": "^8.2.0",
+    "eslint": "^7.7.0",
     "node-fetch": "^2.6.0",
     "ts-node": "^8.10.2",
-    "tsconfig-paths": "^3.9.0",
     "ts-node-dev": "^1.0.0-pre.57",
-    "eslint": "^7.7.0",
+    "tsconfig-paths": "^3.9.0",
     "typescript": "^3.9.7"
   },
   "dependencies": {

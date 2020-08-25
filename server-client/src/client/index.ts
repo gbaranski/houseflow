@@ -45,7 +45,7 @@ export default class WebSocketClient {
 
   async setAccessDevices(): Promise<void> {
     this.fullAcccessDevices = await Promise.all(
-      this.firebaseUser.devices.full_access.map(
+      this.firebaseUser.devices.map(
         async (doc: DocumentReference): Promise<Device.FirebaseDevice> => {
           const deviceSnapshot = await doc.get();
           const deviceData = deviceSnapshot.data() as Partial<
