@@ -2,8 +2,11 @@ import 'package:app_mobile/screens/dashboard/dashboard.dart';
 import 'package:app_mobile/screens/my_profile/my_profile.dart';
 import 'package:app_mobile/screens/settings/settings.dart';
 import 'package:app_mobile/services/auth.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:app_mobile/shared/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -33,6 +36,7 @@ class _HomeState extends State<Home> {
   ];
 
   int _currentIndex = 0;
+  WebSocketChannel _webSocketChannel;
 
   void onNavItemTap(int index) {
     setState(() {
