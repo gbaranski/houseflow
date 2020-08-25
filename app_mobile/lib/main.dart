@@ -24,8 +24,11 @@ class App extends StatelessWidget {
               return Text("Error");
             }
             if (snapshot.connectionState == ConnectionState.done) {
+              final AuthService authService = AuthService();
               return StreamProvider<User>.value(
-                  value: AuthService().user, child: Wrapper());
+                  value: authService.user,
+                  child: ChangeNotifierProvider<AuthService>.value(
+                      value: authService, child: Wrapper()));
             }
 
             return CircularProgressIndicator();
