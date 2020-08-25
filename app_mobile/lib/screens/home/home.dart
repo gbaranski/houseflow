@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.person),
-      title: Text("Settings"),
+      title: Text("My profile"),
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.settings),
