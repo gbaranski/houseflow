@@ -1,5 +1,5 @@
+import 'package:app_mobile/screens/auth/register.dart';
 import 'package:app_mobile/services/auth.dart';
-import 'package:app_mobile/shared/loading.dart';
 import 'package:app_mobile/shared/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -15,12 +15,6 @@ class _SignInState extends State<SignIn> {
 
   String email = '';
   String password = '';
-
-  // TODO Move it to constants
-  List<Color> _gradientColors = [
-    Colors.blueGrey,
-    Colors.blue.shade800,
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -97,16 +91,24 @@ class _SignInState extends State<SignIn> {
                         ),
                         Column(
                           children: [
-                            Row(children: [
-                              Text("New user? "),
-                              Text(
-                                "SIGN UP",
-                                style: TextStyle(
-                                  color: Colors.blueAccent[200],
-                                  fontWeight: FontWeight.w700,
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => Register()));
+                              },
+                              child: Row(children: [
+                                Text("New user? "),
+                                Text(
+                                  "SIGN UP",
+                                  style: TextStyle(
+                                    color: Colors.blueAccent[200],
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                            ])
+                              ]),
+                            )
                           ],
                         )
                       ],
