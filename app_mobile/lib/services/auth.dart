@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_mobile/models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService extends ChangeNotifier {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
@@ -51,6 +52,25 @@ class AuthService extends ChangeNotifier {
       print(e.toString());
       return null;
     }
+  }
+
+  Future<auth.UserCredential> signInWithGoogle() async {
+    // Trigger the authentication flow
+    final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
+
+    // Obtain the auth details from the request
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    // Create a new credential
+    final auth.GoogleAuthCredential credential =
+        auth.GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    // Once signed in, return the UserCredential
+    return await auth.FirebaseAuth.instance.signInWithCredential(credential);
   }
 
   Future signInWithEmailAndPassword(String email, String password) async {

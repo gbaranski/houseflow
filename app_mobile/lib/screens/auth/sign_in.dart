@@ -127,7 +127,17 @@ class _SignInState extends State<SignIn> {
                                   MdiIcons.google,
                                   color: Colors.white,
                                 ),
-                                onPressed: () {},
+                                onPressed: () async {
+                                  try {
+                                    await _authService.signInWithGoogle();
+                                  } catch (e) {
+                                    print(e.toString());
+                                    final snackBar = SnackBar(
+                                      content: Text(e.toString()),
+                                    );
+                                    Scaffold.of(context).showSnackBar(snackBar);
+                                  }
+                                },
                               ),
                             ),
                             SizedBox(
@@ -141,7 +151,7 @@ class _SignInState extends State<SignIn> {
                                   MdiIcons.incognito,
                                   color: Colors.white,
                                 ),
-                                onPressed: () {},
+                                onPressed: null,
                               ),
                             )
                           ],
