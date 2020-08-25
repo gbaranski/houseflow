@@ -36,6 +36,8 @@ class _RegisterState extends State<Register> {
                         LoginForm(
                           onSubmit: _authService.registerWithEmailAndPassword,
                           submitMessage: 'REGISTER',
+                          successMessage: "Success!",
+                          onSuccess: () => Navigator.pop(context),
                           formKey: _formKey,
                         ),
                       ])),

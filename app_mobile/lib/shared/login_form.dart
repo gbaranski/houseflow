@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 
 class LoginForm extends StatefulWidget {
   final Function onSubmit;
+  final Function onSuccess;
   final formKey;
-  final submitMessage;
+  final String submitMessage;
+  final String successMessage;
 
   const LoginForm(
       {@required this.onSubmit,
       @required this.formKey,
-      @required this.submitMessage});
+      @required this.submitMessage,
+      this.successMessage,
+      this.onSuccess});
 
   @override
   _LoginFormState createState() => _LoginFormState();
@@ -64,6 +68,13 @@ class _LoginFormState extends State<LoginForm> {
               if (widget.formKey.currentState.validate()) {
                 try {
                   await widget.onSubmit(email, password);
+                  if (widget.successMessage != null) {
+                    final snackBar = SnackBar(
+                      content: Text(widget.successMessage),
+                    );
+                    Scaffold.of(context).showSnackBar(snackBar);
+                  }
+                  widget.onSuccess();
                 } catch (e) {
                   final snackBar = SnackBar(
                     content: Text(e.toString()),
