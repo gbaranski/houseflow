@@ -15,16 +15,16 @@
   "author": "gbaranski",
   "license": "ISC",
   "devDependencies": {
-    "@gbaranski/types": "^4.0.21",
+    "@gbaranski/types": "^4.0.22",
     "@types/geoip-lite": "^1.1.31",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/redis": "^2.8.25",
     "@types/ws": "^7.2.6",
     "dotenv": "^8.2.0",
     "ts-node": "^8.10.2",
+    "ts-node-dev": "^1.0.0-pre.57",
     "tsconfig-paths": "^3.9.0",
-    "typescript": "^3.9.7",
-    "ts-node-dev": "^1.0.0-pre.57"
+    "typescript": "^3.9.7"
   },
   "dependencies": {
     "eslint": "^7.7.0",
