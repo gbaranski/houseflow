@@ -20,8 +20,45 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
+  FocusNode emailFocusNode;
+  FocusNode passwordFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    emailFocusNode = FocusNode();
+    passwordFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    emailFocusNode.dispose();
+    passwordFocusNode.dispose();
+    super.dispose();
+  }
+
   String email = '';
   String password = '';
+
+  void submitForm() async {
+    if (widget.formKey.currentState.validate()) {
+      try {
+        await widget.onSubmit(email, password);
+        if (widget.successMessage != null) {
+          final snackBar = SnackBar(
+            content: Text(widget.successMessage),
+          );
+          Scaffold.of(context).showSnackBar(snackBar);
+        }
+        widget.onSuccess();
+      } catch (e) {
+        final snackBar = SnackBar(
+          content: Text(e.toString()),
+        );
+        Scaffold.of(context).showSnackBar(snackBar);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +68,13 @@ class _LoginFormState extends State<LoginForm> {
       children: [
         SizedBox(height: 20.0),
         TextFormField(
+          focusNode: emailFocusNode,
           style: textInputTextStyle,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (term) {
+            emailFocusNode.unfocus();
+            passwordFocusNode.requestFocus();
+          },
           decoration: textInputDecoration.copyWith(labelText: "Email"),
           validator: (val) => val.isEmpty ? "Enter an email" : null,
           onChanged: (value) {
@@ -42,6 +85,11 @@ class _LoginFormState extends State<LoginForm> {
         ),
         SizedBox(height: 20.0),
         TextFormField(
+          focusNode: passwordFocusNode,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (term) {
+            submitForm();
+          },
           style: textInputTextStyle,
           decoration: textInputDecoration.copyWith(labelText: "Password"),
           onChanged: (value) {
@@ -64,25 +112,7 @@ class _LoginFormState extends State<LoginForm> {
               widget.submitMessage,
               style: TextStyle(color: Colors.white, fontSize: 22),
             ),
-            onPressed: () async {
-              if (widget.formKey.currentState.validate()) {
-                try {
-                  await widget.onSubmit(email, password);
-                  if (widget.successMessage != null) {
-                    final snackBar = SnackBar(
-                      content: Text(widget.successMessage),
-                    );
-                    Scaffold.of(context).showSnackBar(snackBar);
-                  }
-                  widget.onSuccess();
-                } catch (e) {
-                  final snackBar = SnackBar(
-                    content: Text(e.toString()),
-                  );
-                  Scaffold.of(context).showSnackBar(snackBar);
-                }
-              }
-            },
+            onPressed: submitForm,
           ),
         ),
       ],
