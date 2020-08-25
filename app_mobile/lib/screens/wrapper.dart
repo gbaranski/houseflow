@@ -1,5 +1,5 @@
 import 'package:app_mobile/models/user.dart';
-import 'package:app_mobile/screens/auth/auth_screen.dart';
+import 'package:app_mobile/screens/auth/sign_in.dart';
 import 'package:app_mobile/screens/home/home.dart';
 import 'package:app_mobile/screens/splash_screen/splash_screen.dart';
 import 'package:app_mobile/services/auth.dart';
@@ -19,7 +19,7 @@ class Wrapper extends StatelessWidget {
           return SplashScreen();
         }
         if (user == null) {
-          return AuthScreen();
+          return SignIn();
         } else {
           print(user);
           return Home();
