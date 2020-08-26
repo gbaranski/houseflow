@@ -28,17 +28,24 @@ class DeviceService extends ChangeNotifier {
     }).toList();
   }
 
+  WebSocketChannel _initWebsocket(String token) {
+    return IOWebSocketChannel.connect('ws://192.168.1.10:8001',
+        headers: {"sec-websocket-protocol": token});
+  }
+
+  void _onData(dynamic data) {
+    print("Data: $data");
+  }
+
+  void _onError(dynamic data) {
+    print("Error $data}");
+  }
+
   Future<List<FirebaseDevice>> init(
       FirebaseUser firebaseUser, auth.User currentUser) async {
     final token = await currentUser.getIdToken(true);
-
-    _webSocketChannel = IOWebSocketChannel.connect('ws://192.168.1.10:8001',
-        headers: {"sec-websocket-protocol": token});
+    _webSocketChannel = _initWebsocket(token);
+    _webSocketChannel.stream.listen(_onData, onError: _onError);
     return await getFirebaseDevices(firebaseUser);
-  }
-
-  Stream<dynamic> get webSocketChannel {
-    _webSocketChannel.sink.add("someRandomMessage");
-    return _webSocketChannel.stream;
   }
 }
