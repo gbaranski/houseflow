@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:core';
 import 'package:app_mobile/models/device.dart';
+import 'package:app_mobile/models/misc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
@@ -34,7 +36,28 @@ class DeviceService extends ChangeNotifier {
   }
 
   void _onData(dynamic data) {
-    print("Data: $data");
+    try {
+      Map responseMap = jsonDecode(data);
+      var response = ServerResponse.fromJson(responseMap);
+
+      switch (response.requestType) {
+        case 'DATA':
+          {
+            print(response.data);
+            final parsedActiveDeviceList = response.data.cast<ActiveDevice>();
+            print(parsedActiveDeviceList);
+            print("Received response for data");
+          }
+          break;
+        default:
+          {
+            print("Unhandled response type");
+          }
+          break;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   void _onError(dynamic data) {
