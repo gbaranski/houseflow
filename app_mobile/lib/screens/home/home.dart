@@ -36,7 +36,6 @@ class _HomeState extends State<Home> {
   ];
 
   int _currentIndex = 0;
-  WebSocketChannel _webSocketChannel;
 
   void onNavItemTap(int index) {
     setState(() {
