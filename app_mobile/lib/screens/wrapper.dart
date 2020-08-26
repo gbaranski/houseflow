@@ -28,18 +28,19 @@ class Wrapper extends StatelessWidget {
             create: (context) => DeviceService(),
             child: Consumer<DeviceService>(
               builder: (context, deviceModel, child) {
-                final firebaseDevices =
-                    deviceModel.getFirebaseDevices(authModel.firebaseUser);
+                final init = deviceModel.init(
+                    authModel.firebaseUser, authModel.currentUser);
 
                 return FutureBuilder<List<FirebaseDevice>>(
-                    future: firebaseDevices,
+                    future: init,
                     builder: (BuildContext context,
                         AsyncSnapshot<List<FirebaseDevice>> snapshot) {
                       if (snapshot.hasData) {
                         print("Snapshot data received");
+                        deviceModel.firebaseDevices = snapshot.data;
+                        print(deviceModel.firebaseDevices);
                         return Home();
                       }
-
                       return SplashScreen();
                     });
               },
