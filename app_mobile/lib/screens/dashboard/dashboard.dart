@@ -7,13 +7,7 @@ class Dashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<DeviceService>(
       builder: (context, deviceModel, child) {
-        return Container(
-            child: Column(children: [
-          StreamBuilder<dynamic>(
-              stream: deviceModel.webSocketChannel,
-              builder: (context, snapshot) {
-                return Text(snapshot.hasData ? snapshot.data : 'No data');
-              }),
+        return Column(children: [
           Expanded(
             child: ListView.builder(
                 itemCount: deviceModel.firebaseDevices.length,
@@ -24,7 +18,7 @@ class Dashboard extends StatelessWidget {
                   return Text("${device.type} Active: $exists");
                 }),
           ),
-        ]));
+        ]);
       },
     );
   }
