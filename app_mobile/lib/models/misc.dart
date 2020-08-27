@@ -1,10 +1,22 @@
+import 'package:app_mobile/models/device.dart';
+
 class ServerResponse {
   final String requestType;
-  final List data;
+  final List<ActiveDevice> data;
 
-  ServerResponse(this.requestType, this.data);
+  ServerResponse({this.requestType, this.data});
 
-  ServerResponse.fromJson(Map<String, dynamic> json)
-      : requestType = json['requestType'],
-        data = json['data'];
+  factory ServerResponse.fromJson(Map<String, dynamic> json) {
+    final activeDevices = json['data'].map((devicesJson) {
+      return new ActiveDevice(
+        data: devicesJson['data'],
+        ip: devicesJson['ip'],
+        type: devicesJson['type'],
+        uid: devicesJson['uid'],
+      );
+    });
+    return ServerResponse(
+        data: activeDevices.toList().cast<ActiveDevice>(),
+        requestType: json['requestType']);
+  }
 }

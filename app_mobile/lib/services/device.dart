@@ -38,15 +38,13 @@ class DeviceService extends ChangeNotifier {
   void _onData(dynamic data) {
     try {
       Map responseMap = jsonDecode(data);
-      var response = ServerResponse.fromJson(responseMap);
+      final response = ServerResponse.fromJson(responseMap);
 
       switch (response.requestType) {
         case 'DATA':
           {
-            print(response.data);
-            final parsedActiveDeviceList = response.data.cast<ActiveDevice>();
-            print(parsedActiveDeviceList);
-            print("Received response for data");
+            print("Received data");
+            print(response.data[0].uid);
           }
           break;
         default:
