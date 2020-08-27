@@ -1,6 +1,7 @@
 import 'package:app_mobile/models/device.dart';
 import 'package:app_mobile/models/devices/watermixer.dart';
 import 'package:flutter/material.dart';
+import 'package:app_mobile/utils/misc.dart';
 
 class Watermixer extends StatelessWidget {
   final ActiveDevice activeDevice;
@@ -46,7 +47,7 @@ class Watermixer extends StatelessWidget {
                     fontSize: 14,
                     color: Colors.black.withOpacity(0.6)),
               ),
-              Text(data.remainingSeconds.toString(),
+              Text(parseTotalSeconds(data.remainingSeconds).toString(),
                   style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
             ]),
           ]),
