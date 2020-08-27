@@ -34,8 +34,10 @@ class InactiveDevice extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.warning,
-                      size: 50,
+                      size: 48,
                     ),
+                    Text("Device is not active",
+                        style: TextStyle(fontSize: 16)),
                     GestureDetector(
                       child: Text(
                         "Need help? Click here",
