@@ -24,10 +24,14 @@ class InactiveDevice extends StatelessWidget {
               SizedBox(
                 height: 5,
               ),
-              Text(firebaseDevice.type.toUpperCase(),
+              Text(
+                  firebaseDevice.type[0] +
+                      firebaseDevice.type.substring(1).toLowerCase(),
                   style: TextStyle(fontSize: 24)),
-              SizedBox(
-                height: 5,
+              Divider(
+                indent: 20,
+                endIndent: 20,
+                thickness: 1,
               ),
               Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
