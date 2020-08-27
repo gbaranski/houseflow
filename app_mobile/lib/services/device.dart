@@ -44,7 +44,8 @@ class DeviceService extends ChangeNotifier {
         case 'DATA':
           {
             print("Received data");
-            print(response.data[0].uid);
+            _activeDevices = response.data;
+            notifyListeners();
           }
           break;
         default:
