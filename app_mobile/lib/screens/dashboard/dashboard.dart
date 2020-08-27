@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:app_mobile/screens/devices/alarmclock.dart';
 import 'package:app_mobile/screens/devices/watermixer.dart';
+import 'package:app_mobile/screens/devices/inactive.dart';
 
 class Dashboard extends StatelessWidget {
   Widget deviceWidget(BuildContext context, ActiveDevice activeDevice) {
@@ -47,7 +48,7 @@ class Dashboard extends StatelessWidget {
                         (_device) => _device.uid == firebaseDevice.uid);
                     return deviceWidget(context, activeDevice);
                   } else {
-                    return inactiveDevice(context, firebaseDevice);
+                    return InactiveDevice(firebaseDevice);
                   }
                 }),
           ),

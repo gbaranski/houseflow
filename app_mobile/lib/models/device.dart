@@ -9,7 +9,7 @@ class FirebaseDevice {
 
 class ActiveDevice extends FirebaseDevice {
   String ip;
-  dynamic data;
+  Map<String, dynamic> data;
 
   ActiveDevice(
       {@required this.ip, @required this.data, @required uid, @required type})

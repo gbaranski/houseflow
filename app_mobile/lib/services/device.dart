@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:app_mobile/models/user.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/status.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class DeviceService extends ChangeNotifier {
@@ -69,5 +70,11 @@ class DeviceService extends ChangeNotifier {
     _webSocketChannel = _initWebsocket(token);
     _webSocketChannel.stream.listen(_onData, onError: _onError);
     return await getFirebaseDevices(firebaseUser);
+  }
+
+  @override
+  void dispose() {
+    _webSocketChannel.sink.close(goingAway);
+    super.dispose();
   }
 }
