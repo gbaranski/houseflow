@@ -3,6 +3,7 @@ import 'dart:core';
 import 'package:control_home/models/device.dart';
 import 'package:control_home/models/misc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:control_home/shared/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:control_home/models/user.dart';
@@ -32,7 +33,7 @@ class DeviceService extends ChangeNotifier {
   }
 
   WebSocketChannel _initWebsocket(String token) {
-    return IOWebSocketChannel.connect('ws://192.168.1.10:8001',
+    return IOWebSocketChannel.connect(WS_URL,
         headers: {"sec-websocket-protocol": token});
   }
 
