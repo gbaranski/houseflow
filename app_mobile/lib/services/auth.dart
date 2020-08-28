@@ -1,3 +1,4 @@
+import 'package:app_mobile/models/device.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:app_mobile/models/user.dart';
@@ -9,6 +10,7 @@ class AuthService extends ChangeNotifier {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _fcm = FirebaseMessaging();
+  final List<String> _subscribedTopics = [];
   auth.User currentUser;
   FirebaseUser firebaseUser;
 
@@ -45,6 +47,13 @@ class AuthService extends ChangeNotifier {
     );
     final String token = await _fcm.getToken();
     print("FCM TOKEN: $token");
+  }
+
+  void subscribeToAllDevicesTopic(List<FirebaseDevice> devices) {
+    devices.forEach((device) {
+      _subscribedTopics.add(device.uid);
+      _fcm.subscribeToTopic(device.uid);
+    });
   }
 
   Future<FirebaseUser> _convertToFirebaseUser(auth.User user) async {
@@ -124,7 +133,9 @@ class AuthService extends ChangeNotifier {
 
   Future signOut() async {
     try {
+      _subscribedTopics.forEach((topic) => _fcm.unsubscribeFromTopic(topic));
       firebaseUser = null;
+      currentUser = null;
       return await _auth.signOut();
     } catch (e) {
       print(e.toString());

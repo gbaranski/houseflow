@@ -10,11 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class Wrapper extends StatelessWidget {
-  Widget buildTargetScreen(
-      BuildContext context, FirebaseUser firebaseUser, auth.User currentUser) {
+  Widget buildTargetScreen(BuildContext context) {
     final deviceService = Provider.of<DeviceService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
 
-    final init = deviceService.init(firebaseUser, currentUser);
+    final init =
+        deviceService.init(authService.firebaseUser, authService.currentUser);
     return FutureBuilder<List<FirebaseDevice>>(
         future: init,
         builder: (BuildContext context,
@@ -22,6 +23,8 @@ class Wrapper extends StatelessWidget {
           if (snapshot.hasData) {
             print("Snapshot data received");
             deviceService.firebaseDevices = snapshot.data;
+            authService
+                .subscribeToAllDevicesTopic(deviceService.firebaseDevices);
             print(deviceService.firebaseDevices);
             return Home();
           }
@@ -47,8 +50,7 @@ class Wrapper extends StatelessWidget {
             builder: (context, child) {
               print("ChangeNotifierProvider");
               authModel.initFcm(context);
-              return buildTargetScreen(
-                  context, authModel.firebaseUser, authModel.currentUser);
+              return buildTargetScreen(context);
             });
       }
     });
