@@ -4,6 +4,7 @@ import 'package:app_mobile/models/devices/alarmclock.dart';
 import 'package:app_mobile/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:app_mobile/shared/constants.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
 class Alarmclock extends StatelessWidget {
@@ -48,9 +49,15 @@ class Alarmclock extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text("${data.sensor.temperature}°C",
-                    style:
-                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                Row(children: [
+                  Icon(
+                    MdiIcons.thermometer,
+                    color: Colors.black.withOpacity(0.75),
+                  ),
+                  Text("${data.sensor.temperature}°C",
+                      style:
+                          TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                ]),
                 Text(
                   "Alarm time",
                   style: TextStyle(
@@ -70,9 +77,16 @@ class Alarmclock extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text("${data.sensor.humidity}%",
-                    style:
-                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                Row(children: [
+                  Icon(
+                    MdiIcons.waterPercent,
+                    color: Colors.black.withOpacity(0.75),
+                    size: 26,
+                  ),
+                  Text("${data.sensor.humidity}%",
+                      style:
+                          TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                ]),
                 Text(
                   "Remaining time",
                   style: TextStyle(
