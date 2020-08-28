@@ -36,6 +36,12 @@ class DeviceService extends ChangeNotifier {
         headers: {"sec-websocket-protocol": token});
   }
 
+  String sendRequest(Map<String, dynamic> request) {
+    final json = jsonEncode(request);
+    _webSocketChannel.sink.add(json);
+    return json;
+  }
+
   void _onData(dynamic data) {
     try {
       Map responseMap = jsonDecode(data);
