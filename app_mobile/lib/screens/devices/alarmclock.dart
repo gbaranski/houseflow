@@ -64,9 +64,12 @@ class Alarmclock extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text(data.alarmTime.toReadableString(),
-                    style:
-                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                Row(children: [
+                  Text(data.alarmTime.toReadableString(),
+                      style:
+                          TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                  Text(data.alarmState == true ? "/ON" : "/OFF"),
+                ])
               ]),
               Column(children: [
                 Text(
