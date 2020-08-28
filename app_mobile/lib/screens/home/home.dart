@@ -1,12 +1,8 @@
-import 'package:app_mobile/screens/dashboard/dashboard.dart';
-import 'package:app_mobile/screens/my_profile/my_profile.dart';
-import 'package:app_mobile/screens/settings/settings.dart';
-import 'package:app_mobile/services/auth.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:app_mobile/shared/constants.dart';
+import 'package:control_home/screens/dashboard/dashboard.dart';
+import 'package:control_home/screens/my_profile/my_profile.dart';
+import 'package:control_home/screens/settings/settings.dart';
+import 'package:control_home/shared/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   @override

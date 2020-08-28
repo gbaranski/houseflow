@@ -1,8 +1,8 @@
-import 'package:app_mobile/models/device.dart';
-import 'package:app_mobile/utils/misc.dart';
-import 'package:app_mobile/shared/help_screen.dart';
+import 'package:control_home/models/device.dart';
+import 'package:control_home/utils/misc.dart';
+import 'package:control_home/shared/help_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:app_mobile/shared/constants.dart';
+import 'package:control_home/shared/constants.dart';
 
 class InactiveDevice extends StatelessWidget {
   final FirebaseDevice firebaseDevice;

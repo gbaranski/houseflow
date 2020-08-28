@@ -1,8 +1,8 @@
-import 'package:app_mobile/models/device.dart';
-import 'package:app_mobile/services/auth.dart';
-import 'package:app_mobile/shared/device_icon.dart';
-import 'package:app_mobile/utils/misc.dart';
-import 'package:app_mobile/services/device.dart';
+import 'package:control_home/models/device.dart';
+import 'package:control_home/services/auth.dart';
+import 'package:control_home/shared/device_icon.dart';
+import 'package:control_home/utils/misc.dart';
+import 'package:control_home/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
