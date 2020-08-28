@@ -1,5 +1,4 @@
 import 'package:app_mobile/models/device.dart';
-import 'package:app_mobile/models/devices/index.dart';
 import 'package:app_mobile/models/devices/alarmclock.dart';
 import 'package:app_mobile/services/device.dart';
 import 'package:flutter/material.dart';

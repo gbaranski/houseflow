@@ -1,4 +1,5 @@
 import 'package:app_mobile/models/device.dart';
+import 'package:app_mobile/utils/misc.dart';
 import 'package:app_mobile/shared/help_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app_mobile/shared/constants.dart';
@@ -24,9 +25,7 @@ class InactiveDevice extends StatelessWidget {
               SizedBox(
                 height: 5,
               ),
-              Text(
-                  firebaseDevice.type[0] +
-                      firebaseDevice.type.substring(1).toLowerCase(),
+              Text(upperFirstCharacter(firebaseDevice.type),
                   style: TextStyle(fontSize: 24)),
               Divider(
                 indent: 20,
