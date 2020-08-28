@@ -7,18 +7,18 @@ import 'package:app_mobile/screens/devices/watermixer.dart';
 import 'package:app_mobile/screens/devices/inactive.dart';
 
 class Dashboard extends StatelessWidget {
-  Widget deviceWidget(BuildContext context, ActiveDevice activeDevice) {
-    switch (activeDevice.type) {
+  Widget deviceWidget(BuildContext context, String uid, String type) {
+    switch (type) {
       case 'ALARMCLOCK':
         {
           return Alarmclock(
-            activeDevice: activeDevice,
+            uid: uid,
           );
         }
         break;
       case 'WATERMIXER':
         {
-          return Watermixer(uid: activeDevice.uid);
+          return Watermixer(uid: uid);
         }
         break;
       default:
@@ -48,7 +48,8 @@ class Dashboard extends StatelessWidget {
                       final activeDevice = deviceModel.activeDevices
                           .singleWhere(
                               (_device) => _device.uid == firebaseDevice.uid);
-                      return deviceWidget(context, activeDevice);
+                      return deviceWidget(
+                          context, activeDevice.uid, activeDevice.type);
                     } else {
                       return InactiveDevice(firebaseDevice);
                     }

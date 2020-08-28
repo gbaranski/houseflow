@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:app_mobile/models/device.dart';
-import 'package:app_mobile/models/misc.dart';
 import 'package:app_mobile/models/devices/watermixer.dart';
 import 'package:app_mobile/services/device.dart';
 import 'package:flutter/material.dart';
