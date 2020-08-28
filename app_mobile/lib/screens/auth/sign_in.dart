@@ -40,7 +40,7 @@ class _SignInState extends State<SignIn> {
                       height: 50,
                     ),
                     SvgPicture.asset(
-                      'assets/images/logo.svg',
+                      logoDirectory,
                       semanticsLabel: "Logo",
                       height: 200,
                     ),

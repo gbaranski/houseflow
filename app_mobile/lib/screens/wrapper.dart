@@ -16,6 +16,7 @@ class Wrapper extends StatelessWidget {
 
     final init =
         deviceService.init(authService.firebaseUser, authService.currentUser);
+    return SplashScreen();
     return FutureBuilder<List<FirebaseDevice>>(
         future: init,
         builder: (BuildContext context,

@@ -30,3 +30,5 @@ const Color LayoutBlueColor1 = Colors.blueAccent;
 const Color NavigationUnselectedItemColor = Colors.blueGrey;
 
 const double CardMinHeight = 170;
+
+const logoDirectory = 'assets/images/logo.svg';
