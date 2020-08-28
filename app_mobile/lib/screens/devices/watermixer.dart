@@ -1,17 +1,35 @@
+import 'dart:convert';
+
 import 'package:app_mobile/models/device.dart';
+import 'package:app_mobile/models/misc.dart';
 import 'package:app_mobile/models/devices/watermixer.dart';
+import 'package:app_mobile/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:app_mobile/utils/misc.dart';
 import 'package:app_mobile/shared/constants.dart';
+import 'package:provider/provider.dart';
 
 class Watermixer extends StatelessWidget {
-  final ActiveDevice activeDevice;
+  final String uid;
 
-  Watermixer({@required this.activeDevice});
+  Watermixer({@required this.uid});
 
   @override
   Widget build(BuildContext context) {
+    final deviceService = Provider.of<DeviceService>(context);
+
+    final ActiveDevice activeDevice = deviceService.activeDevices
+        .singleWhere((_device) => _device.uid == this.uid);
+
     final WatermixerData data = WatermixerData.fromJson(activeDevice.data);
+
+    final startMixing = () {
+      final Map<String, dynamic> request = {
+        "deviceUid": activeDevice.uid,
+        "requestType": "START_MIXING",
+      };
+      print(deviceService.sendRequest(request));
+    };
 
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: CardMinHeight),
@@ -66,7 +84,9 @@ class Watermixer extends StatelessWidget {
                   children: <Widget>[
                     FlatButton(
                       child: const Text('START MIXING'),
-                      onPressed: () {/* ... */},
+                      onPressed: () {
+                        startMixing();
+                      },
                     ),
                   ],
                 ),

@@ -18,7 +18,7 @@ class Dashboard extends StatelessWidget {
         break;
       case 'WATERMIXER':
         {
-          return Watermixer(activeDevice: activeDevice);
+          return Watermixer(uid: activeDevice.uid);
         }
         break;
       default:

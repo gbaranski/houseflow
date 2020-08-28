@@ -1,4 +1,5 @@
 import 'package:app_mobile/models/device.dart';
+import 'package:flutter/material.dart';
 
 class ServerResponse {
   final String requestType;
