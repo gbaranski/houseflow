@@ -67,7 +67,7 @@ void sendDataOverWebsocket()
 
 void handleMessage(uint8_t payload[], size_t length)
 {
-    const int capacity = JSON_OBJECT_SIZE(2) + 3 * JSON_OBJECT_SIZE(1) + 3 * JSON_OBJECT_SIZE(1);
+    const int capacity = JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(1) + 3 * JSON_OBJECT_SIZE(1);
     StaticJsonDocument<capacity> reqJSON;
     deserializeJson(reqJSON, payload);
     String reqType = reqJSON["type"];
@@ -81,7 +81,7 @@ void handleMessage(uint8_t payload[], size_t length)
     }
     else if (reqType == "SET_STATE")
     {
-        bool newState = reqJSON["data"];
+        bool newState = reqJSON["data"]["state"];
         Serial.println("[WSc] Received state: " + newState);
         setAlarmState(newState);
     }

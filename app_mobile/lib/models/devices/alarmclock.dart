@@ -15,7 +15,9 @@ class AlarmclockData {
   }
 
   AlarmclockData(
-      {@required alarmState, @required this.alarmTime, @required this.sensor});
+      {@required this.alarmState,
+      @required this.alarmTime,
+      @required this.sensor});
 }
 
 class SensorData {
