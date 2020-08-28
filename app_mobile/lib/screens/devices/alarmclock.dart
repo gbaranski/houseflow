@@ -1,5 +1,6 @@
 import 'package:app_mobile/models/device.dart';
 import 'package:app_mobile/models/devices/alarmclock.dart';
+import 'package:app_mobile/models/devices/index.dart';
 import 'package:app_mobile/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:app_mobile/shared/constants.dart';
@@ -19,6 +20,30 @@ class Alarmclock extends StatelessWidget {
         .singleWhere((_device) => _device.uid == this.uid);
 
     final AlarmclockData data = AlarmclockData.fromJson(activeDevice.data);
+
+    final switchAlarmState = () {
+      final Map<String, dynamic> request = {
+        "deviceUid": activeDevice.uid,
+        "requestType": "SET_STATE",
+        "data": {
+          "state": data.alarmState == true ? false : true,
+        }
+      };
+      print(deviceService.sendRequest(request));
+    };
+
+    final sendAlarmTime = (DeviceDateTime time) {
+      final Map<String, dynamic> request = {
+        "deviceUid": activeDevice.uid,
+        "requestType": "SET_TIME",
+        "data": {
+          "hour": time.hour,
+          "minute": time.minute,
+          "second": time.second,
+        },
+      };
+      print(deviceService.sendRequest(request));
+    };
 
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: CardMinHeight),
@@ -68,7 +93,7 @@ class Alarmclock extends StatelessWidget {
                   Text(data.alarmTime.toReadableString(),
                       style:
                           TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
-                  Text(data.alarmState == true ? "/ON" : "/OFF"),
+                  Text(data.alarmState ? "ON" : "OFF"),
                 ])
               ]),
               Column(children: [
@@ -108,8 +133,21 @@ class Alarmclock extends StatelessWidget {
                   alignment: MainAxisAlignment.center,
                   children: <Widget>[
                     FlatButton(
-                      child: const Text('START MIXING'),
-                      onPressed: () {},
+                      child: const Text('SWITCH STATE'),
+                      onPressed: () {
+                        switchAlarmState();
+                      },
+                    ),
+                    FlatButton(
+                      child: const Text('SET TIME'),
+                      onPressed: () async {
+                        showTimePicker(
+                                context: context, initialTime: TimeOfDay.now())
+                            .then((date) {
+                          sendAlarmTime(new DeviceDateTime(
+                              hour: date.hour, minute: date.minute, second: 0));
+                        });
+                      },
                     ),
                   ],
                 ),
