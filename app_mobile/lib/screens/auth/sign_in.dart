@@ -36,16 +36,15 @@ class _SignInState extends State<SignIn> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       height: 50,
                     ),
-                    // TODO move to constants
                     SvgPicture.asset(
                       'assets/images/logo.svg',
                       semanticsLabel: "Logo",
                       height: 200,
                     ),
-                    SizedBox(height: 30),
+                    const SizedBox(height: 10),
                     Form(
                         key: _formKey,
                         child: Column(children: <Widget>[
@@ -55,7 +54,7 @@ class _SignInState extends State<SignIn> {
                             formKey: _formKey,
                           ),
                         ])),
-                    SizedBox(
+                    const SizedBox(
                       height: 15,
                     ),
                     Row(
@@ -158,7 +157,6 @@ class _SignInState extends State<SignIn> {
                         ),
                       ],
                     ),
-
                     SizedBox(
                       height: 20,
                     ),
