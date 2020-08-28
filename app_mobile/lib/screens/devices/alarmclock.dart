@@ -1,9 +1,9 @@
-import 'package:app_mobile/models/device.dart';
-import 'package:app_mobile/models/devices/alarmclock.dart';
-import 'package:app_mobile/models/devices/index.dart';
-import 'package:app_mobile/services/device.dart';
+import 'package:control_home/models/device.dart';
+import 'package:control_home/models/devices/alarmclock.dart';
+import 'package:control_home/models/devices/index.dart';
+import 'package:control_home/services/device.dart';
 import 'package:flutter/material.dart';
-import 'package:app_mobile/shared/constants.dart';
+import 'package:control_home/shared/constants.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 

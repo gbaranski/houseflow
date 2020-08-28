@@ -1,10 +1,10 @@
-import 'package:app_mobile/models/device.dart';
-import 'package:app_mobile/services/device.dart';
+import 'package:control_home/models/device.dart';
+import 'package:control_home/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:app_mobile/screens/devices/alarmclock.dart';
-import 'package:app_mobile/screens/devices/watermixer.dart';
-import 'package:app_mobile/screens/devices/inactive.dart';
+import 'package:control_home/screens/devices/alarmclock.dart';
+import 'package:control_home/screens/devices/watermixer.dart';
+import 'package:control_home/screens/devices/inactive.dart';
 
 class Dashboard extends StatelessWidget {
   Widget deviceWidget(BuildContext context, String uid, String type) {

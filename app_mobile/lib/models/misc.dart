@@ -1,4 +1,4 @@
-import 'package:app_mobile/models/device.dart';
+import 'package:control_home/models/device.dart';
 import 'package:flutter/material.dart';
 
 class ServerResponse {

@@ -1,5 +1,5 @@
-import 'package:app_mobile/screens/wrapper.dart';
-import 'package:app_mobile/services/auth.dart';
+import 'package:control_home/screens/wrapper.dart';
+import 'package:control_home/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

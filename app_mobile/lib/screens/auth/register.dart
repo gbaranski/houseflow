@@ -1,5 +1,5 @@
-import 'package:app_mobile/services/auth.dart';
-import 'package:app_mobile/shared/login_form.dart';
+import 'package:control_home/services/auth.dart';
+import 'package:control_home/shared/login_form.dart';
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {
