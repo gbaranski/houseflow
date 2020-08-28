@@ -46,6 +46,7 @@ class Wrapper extends StatelessWidget {
             create: (_) => DeviceService(),
             builder: (context, child) {
               print("ChangeNotifierProvider");
+              authModel.initFcm(context);
               return buildTargetScreen(
                   context, authModel.firebaseUser, authModel.currentUser);
             });
