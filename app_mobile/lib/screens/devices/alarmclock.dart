@@ -48,11 +48,9 @@ class Alarmclock extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text(data.sensor.temperature.toString(),
+                Text("${data.sensor.temperature}°C",
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
-              ]),
-              Column(children: [
                 Text(
                   "Alarm time",
                   style: TextStyle(
@@ -61,6 +59,28 @@ class Alarmclock extends StatelessWidget {
                       color: Colors.black.withOpacity(0.6)),
                 ),
                 Text(data.alarmTime.toReadableString(),
+                    style:
+                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+              ]),
+              Column(children: [
+                Text(
+                  "Humidity",
+                  style: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 14,
+                      color: Colors.black.withOpacity(0.6)),
+                ),
+                Text("${data.sensor.humidity}%",
+                    style:
+                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+                Text(
+                  "Remaining time",
+                  style: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 14,
+                      color: Colors.black.withOpacity(0.6)),
+                ),
+                Text(data.alarmTime.timeDiff(),
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
               ]),
