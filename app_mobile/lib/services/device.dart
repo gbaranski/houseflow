@@ -60,15 +60,21 @@ class DeviceService extends ChangeNotifier {
     }
   }
 
-  void _onError(dynamic data) {
+  void _onError(
+      dynamic data, FirebaseUser firebaseUser, auth.User currentUser) async {
     print("Error $data}");
+    await Future.delayed(Duration(milliseconds: 1000));
+    print("Reconnecting!");
+    init(firebaseUser, currentUser);
   }
 
   Future<List<FirebaseDevice>> init(
       FirebaseUser firebaseUser, auth.User currentUser) async {
     final token = await currentUser.getIdToken(true);
     _webSocketChannel = _initWebsocket(token);
-    _webSocketChannel.stream.listen(_onData, onError: _onError);
+    _webSocketChannel.stream.listen(_onData, onError: (dynamic data) {
+      _onError(data, firebaseUser, currentUser);
+    });
     return await getFirebaseDevices(firebaseUser);
   }
 
