@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { Device, Watermixer } from '@gbaranski/types';
+import { onConnection } from './app';
 
 const { DEVICE_UID, DEVICE_SECRET, WS_URL } = process.env;
 
@@ -14,15 +14,4 @@ const websocket = new WebSocket(WS_URL, {
   },
 });
 
-websocket.on('open', () => {
-  console.log('Connection opened')
-  setInterval(() => {
-    const request: Device.ResponseDevice<Watermixer.Data> = {
-      responseFor: 'GET_DATA',
-      ok: true,
-      data: Watermixer.SAMPLE,
-    };
-    websocket.send(JSON.stringify(request));
-  }, 500)
-});
-websocket.on('pong', function () { this.pong() })
+websocket.on('open', () => onConnection(websocket));

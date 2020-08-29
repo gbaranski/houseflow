@@ -22,6 +22,8 @@ export const wss: WebSocket.Server = new WebSocket.Server({
 });
 
 wss.on('connection', onConnection);
+wss.on('close', () => console.log("Connection closed"))
+wss.on('error', () => console.log("Connection error"));
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
