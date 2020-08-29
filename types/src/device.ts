@@ -14,15 +14,15 @@ export namespace Device {
     | 'TEST_SIREN'
     | 'REBOOT'
     | 'UNKNOWN';
-  export type RequestDevice = ((
-    type: 'GET_DATA' | 'START_MIXING' | 'REBOOT',
-  ) => any) &
-    ((type: 'SET_TIME', data: DateTime) => any) &
-    ((type: 'SET_STATE', data: boolean) => any);
+
+  export interface RequestDevice {
+    type: RequestType,
+    data?: DateTime | State
+  }
 
   export interface ResponseDevice<
     T extends Alarmclock.Data | Watermixer.Data | undefined
-  > {
+    > {
     ok: boolean;
     responseFor: RequestType;
     data: T;
@@ -36,10 +36,10 @@ export namespace Device {
   }
   export interface ActiveDevice<
     DeviceData extends
-      | Alarmclock.Data
-      | Watermixer.Data
-      | AnyDeviceData = AnyDeviceData
-  > extends FirebaseDevice {
+    | Alarmclock.Data
+    | Watermixer.Data
+    | AnyDeviceData = AnyDeviceData
+    > extends FirebaseDevice {
     data: DeviceData;
     ip: string;
   }

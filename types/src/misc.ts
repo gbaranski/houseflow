@@ -7,7 +7,9 @@ export interface DateTime {
   second: number;
 }
 
-export type State = boolean;
+export type State = {
+  state: boolean;
+};
 
 export interface TempHistory {
   unixTime: number;
