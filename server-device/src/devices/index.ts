@@ -14,7 +14,7 @@ export type AnyDeviceObject = WatermixerDevice | AlarmclockDevice;
 export default abstract class Device<DeviceData extends AnyDeviceData> {
   public static currentDeviceObjects: AnyDeviceObject[] = [];
 
-  private _status = false;
+  public status = false;
 
   public abstract handleMessage(message: WebSocket.Data): void;
 
@@ -23,8 +23,40 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     public readonly firebaseDevice: DeviceType.FirebaseDevice,
     protected activeDevice: DeviceType.ActiveDevice,
   ) {
+    this.initHandlers();
     Device.currentDeviceObjects.push(this);
-    this._status = true;
+    this.status = true;
+  }
+
+  private initHandlers() {
+    const terminateConnection = (reason: string) => {
+      this.terminateConnection(reason);
+      clearInterval(pingInterval);
+    };
+
+    const pingInterval = setInterval(() => {
+      if (!this.status) {
+        return terminateConnection('Ping not received');
+      }
+      this.status = false;
+      this.ws.ping();
+    }, 2000);
+
+    this.ws.on('message', (message) => this.handleMessage(message));
+    this.ws.on('pong', () => {
+      this.status = true;
+    });
+    this.ws.on('ping', () => {
+      this.ws.pong();
+    });
+    this.ws.on('error', (err) => {
+      console.log(err.message);
+      terminateConnection(`Connection error UID: ${this.firebaseDevice.uid}`);
+    });
+    this.ws.on('close', (code, reason) => {
+      terminateConnection(`Connection closed UID: ${this.firebaseDevice.uid} CODE: ${code} REASON: ${reason}`);
+    });
+
   }
 
   public requestDevice(request: Client.Request): boolean {
@@ -34,7 +66,7 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     if (!this.ws.OPEN) {
       throw new Error('Websocket is not at OPEN state');
     }
-    if (!this._status) {
+    if (!this.status) {
       throw new Error('Device status is false');
     }
     const requestData = {
@@ -52,15 +84,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     console.log(
       `Websocket error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
     );
-    this._status = false;
+    this.status = false;
     publishDeviceDisconnect(this.activeDevice);
   }
 
-  set status(status: boolean) {
-    this._status = status;
-  }
-
-  get status(): boolean {
-    return this._status;
-  }
 }

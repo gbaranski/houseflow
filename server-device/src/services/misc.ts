@@ -7,7 +7,7 @@ export function getIpStr(req: IncomingMessage): string {
     req.headers['X-Forwarded-For'] ||
     req.headers['X-Real-IP '] ||
     req.connection.remoteAddress ||
-    '';
+    'unknown';
   return ip instanceof Array ? ip[0] : ip;
 }
 
