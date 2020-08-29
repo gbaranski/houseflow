@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gbaranski/control-home-types.git"
+    "url": "git+https://github.com/gbaranski/Control-Home.git"
   },
   "author": "gbaranski",
   "license": "MIT",
