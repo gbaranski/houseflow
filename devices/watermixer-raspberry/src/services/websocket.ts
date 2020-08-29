@@ -16,5 +16,4 @@ export const sendData = (ws: WebSocket) => {
         rand: Math.random(),
     };
     ws.send(JSON.stringify(response));
-    console.log(ws.readyState);
 }

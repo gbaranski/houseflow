@@ -45,14 +45,13 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     this.ws.on('message', (message) => this.handleMessage(message));
     this.ws.on('pong', () => {
       this.status = true;
-      console.log("Pong recieved");
     });
     this.ws.on('error', (err) => {
       console.log(err.message);
-      terminateConnection(`Connection error UID: ${this.firebaseDevice.uid}`);
+      terminateConnection(err.message);
     });
     this.ws.on('close', (code, reason) => {
-      terminateConnection(`Connection closed UID: ${this.firebaseDevice.uid} CODE: ${code} REASON: ${reason}`);
+      terminateConnection(`CODE: ${code} REASON: ${reason}`);
     });
 
   }
@@ -70,7 +69,6 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     };
     console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
     this.ws.send(JSON.stringify(requestData));
-    console.log({ state: this.ws.readyState });
 
     return true;
   }
