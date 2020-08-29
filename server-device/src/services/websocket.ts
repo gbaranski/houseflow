@@ -55,10 +55,7 @@ export const onConnection = async (ws: WebSocket, req: IncomingMessage) => {
         break;
 
       default:
-        console.log(
-          `Error recognizing device with type ${firebaseDevice.type}!, terminating`,
-        );
-        ws.terminate();
+        throw new Error("failed recognizing")
         break;
     }
 
