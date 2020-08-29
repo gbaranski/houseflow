@@ -3,7 +3,6 @@ import 'package:control_home/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 void main() => runApp(App());
@@ -13,9 +12,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        theme: ThemeData().copyWith(
-            textTheme:
-                GoogleFonts.openSansTextTheme(Theme.of(context).textTheme)),
+        theme: ThemeData(fontFamily: 'OpenSans'),
         home: FutureBuilder(
           future: Firebase.initializeApp(),
           builder: (context, snapshot) {
