@@ -5,6 +5,11 @@ module.exports = {
   },
   extends: [
     'airbnb-base',
+    'plugin:import/errors',
+    'plugin:import/warnings',
+    'plugin:import/typescript',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -13,7 +18,9 @@ module.exports = {
   },
   plugins: [
     '@typescript-eslint',
+    'import',
   ],
   rules: {
+    'no-console': 'off',
   },
 };
