@@ -81,6 +81,8 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
       `Websocket error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
     );
     this.status = false;
+    Device.currentDeviceObjects = Device.currentDeviceObjects
+      .filter((deviceObj) => deviceObj.firebaseDevice.uid !== this.firebaseDevice.uid);
     publishDeviceDisconnect(this.activeDevice);
   }
 
