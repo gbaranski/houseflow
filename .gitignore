@@ -1,6 +1,7 @@
 # GLOBAL
 node_modules
 .env
+.idea
 firebaseConfig.json
 .DS_Store
 
