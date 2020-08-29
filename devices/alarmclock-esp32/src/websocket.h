@@ -136,53 +136,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     }
 }
 
-String getToken()
-{
-    WiFiClientSecure *client = new WiFiClientSecure;
-    if (client)
-    {
-        client->setCACert(intermediateCACertificate);
-
-        {
-            HTTPClient https;
-            https.begin(TOKEN_SERVER_URL);
-            https.addHeader("deviceType", "WATERMIXER");
-            https.addHeader("uid", ALARMCLOCK_UID);
-            https.addHeader("secret", ALARMCLOCK_SECRET);
-            https.addHeader("accept", "text/plain");
-            int httpCode = https.GET();
-            if (httpCode == 200)
-            {
-                String token = https.getString();
-                https.end();
-                Serial.println("Success retreiving token");
-                Serial.println(token);
-                delete client;
-                return token;
-            }
-            else if (httpCode == 401)
-            {
-                Serial.println("Unauthorized when attempting to retreive token");
-                https.end();
-                connectWebSocket();
-                delete client;
-                return "";
-            }
-            else
-            {
-                Serial.println("Unhandled error when fetching token CODE: " + httpCode);
-                https.end();
-                connectWebSocket();
-                delete client;
-                return "";
-            }
-        }
-        
-    } else {
-        Serial.println("Unable to create client");
-        return "";
-    }
-}
 
 void setupWebsocket()
 {
@@ -203,15 +156,13 @@ void connectWebSocket()
         delay(10);
     }
     webSocket.setExtraHeaders((
-                                  "token: " + getToken() +
-                                  "\r\ndevicetype: ALARMCLOCK" +
-                                  "\r\nuid: " + ALARMCLOCK_UID +
+                                  "uid: " + ALARMCLOCK_UID +
                                   "\r\nsecret: " + ALARMCLOCK_SECRET)
                                   .c_str());
 
     webSocket.beginSslWithCA(websockets_server, websockets_port, websockets_path, intermediateCACertificate);
     webSocket.onEvent(webSocketEvent);
-    webSocket.enableHeartbeat(2000, 2000, 2);
+    webSocket.enableHeartbeat(5000, 5000, 2);
 }
 
 boolean isWifiRunning()
