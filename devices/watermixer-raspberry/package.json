@@ -1,0 +1,35 @@
+{
+  "name": "watermixer-raspberry",
+  "version": "1.0.0",
+  "description": "Watermixer device which works on raspberry",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node -r dotenv/config -r tsconfig-paths/register .",
+    "start:dev": "ts-node-dev -r dotenv/config -r tsconfig-paths/register .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "iot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gbaranski/Control-Home.git"
+  },
+  "author": "gbaranski",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "ws": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^14.6.2",
+    "@gbaranski/types": "^4.0.28",
+    "@types/ws": "^7.2.6",
+    "eslint": "^7.7.0",
+    "prettier": "^2.1.1",
+    "ts-node": "^9.0.0",
+    "ts-node-dev": "^1.0.0-pre.61",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.0.2"
+  }
+}
