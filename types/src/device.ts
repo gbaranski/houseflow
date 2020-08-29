@@ -32,7 +32,6 @@ export namespace Device {
     type: DeviceType;
     secret?: string;
     uid: string;
-    subscribed: boolean;
   }
   export interface ActiveDevice<
     DeviceData extends
