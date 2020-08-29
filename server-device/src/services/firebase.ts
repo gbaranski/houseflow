@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { Device, Client } from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('@/firebaseConfig.json');
@@ -41,46 +41,4 @@ export async function convertToFirebaseDevice(
 
   const snapshotData = snapshot.data() as Device.FirebaseDevice;
   return snapshotData;
-}
-
-export async function decodeClientToken(
-  token: string,
-): Promise<admin.auth.DecodedIdToken> {
-  try {
-    const decodedClient = await admin.auth().verifyIdToken(token);
-    return decodedClient;
-  } catch (e) {
-    throw e;
-  }
-}
-
-export function sendMessage(username: string, requestTypeString: string): void {
-  const message = {
-    name: 'Alert',
-    data: {
-      title: 'Home alert!',
-      body: `${username} requested ${requestTypeString}!`,
-    },
-    notification: {
-      title: 'Home alert!',
-      body: `${username} requested ${requestTypeString}`,
-    },
-    topic: 'admin',
-  };
-  admin
-    .messaging()
-    .send(message)
-    .catch((error): void => {
-      console.log('Error sending message:', error);
-    });
-}
-
-export async function convertToFirebaseUser(
-  uid: string,
-): Promise<Client.FirebaseUser> {
-  if (!uid) throw new Error('User UID is not defined');
-  const usersDoc = await usersCollection.doc(uid).get();
-  if (!usersDoc.exists) throw new Error('User does not exist in database');
-  const usersData = usersDoc.data() as Client.FirebaseUser;
-  return usersData;
 }
