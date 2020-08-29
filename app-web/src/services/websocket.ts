@@ -1,7 +1,7 @@
 import { Client } from '@gbaranski/types';
 
 const WSS_URL =
-  process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://wsc.gbaranski.com:443';
+  process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://api.gbaranski.com:443/wsc';
 
 console.log({ processenv: process.env.NODE_ENV });
 let websocket: WebSocket | undefined;
