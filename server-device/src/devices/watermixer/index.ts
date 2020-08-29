@@ -23,6 +23,7 @@ export class WatermixerDevice extends Device<Watermixer.Data> {
       message as string,
     ) as DeviceType.ResponseDevice<undefined>;
     if (parsedResponse.responseFor === 'GET_DATA') {
+      console.log("Received data", parsedResponse);
       const activeDevice = {
         ...this.activeDevice,
         data: (parsedResponse.data as unknown) as AnyDeviceData,

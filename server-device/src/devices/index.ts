@@ -40,14 +40,12 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
       }
       this.status = false;
       this.ws.ping();
-    }, 2000);
+    }, 5000);
 
     this.ws.on('message', (message) => this.handleMessage(message));
     this.ws.on('pong', () => {
       this.status = true;
-    });
-    this.ws.on('ping', () => {
-      this.ws.pong();
+      console.log("Pong recieved");
     });
     this.ws.on('error', (err) => {
       console.log(err.message);
@@ -66,15 +64,13 @@ export default abstract class Device<DeviceData extends AnyDeviceData> {
     if (!this.ws.OPEN) {
       throw new Error('Websocket is not at OPEN state');
     }
-    if (!this.status) {
-      throw new Error('Device status is false');
-    }
     const requestData = {
       type: request.requestType,
       data: request.data,
     };
-    console.log(requestData);
+    console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
     this.ws.send(JSON.stringify(requestData));
+    console.log({ state: this.ws.readyState });
 
     return true;
   }
