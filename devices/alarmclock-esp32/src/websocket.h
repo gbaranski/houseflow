@@ -138,35 +138,48 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 
 String getToken()
 {
-    // std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
-    // client->setFingerprint(fingerprint);
-    // http.begin(*client, TOKEN_SERVER_URL);
-    http.begin(TOKEN_SERVER_URL);
-    http.addHeader("deviceType", "WATERMIXER");
-    http.addHeader("uid", ALARMCLOCK_UID);
-    http.addHeader("secret", ALARMCLOCK_SECRET);
-    http.addHeader("accept", "text/plain");
-    int httpCode = http.GET();
-    if (httpCode == 200)
+    WiFiClientSecure *client = new WiFiClientSecure;
+    if (client)
     {
-        String token = http.getString();
-        http.end();
-        Serial.println("Success retreiving token");
-        Serial.println(token);
-        return token;
-    }
-    else if (httpCode == 401)
-    {
-        Serial.println("Unauthorized when attempting to retreive token");
-        http.end();
-        connectWebSocket();
-        return "";
-    }
-    else
-    {
-        Serial.println("Unhandled error when fetching token CODE: " + httpCode);
-        http.end();
-        connectWebSocket();
+        client->setCACert(intermediateCACertificate);
+
+        {
+            HTTPClient https;
+            https.begin(TOKEN_SERVER_URL);
+            https.addHeader("deviceType", "WATERMIXER");
+            https.addHeader("uid", ALARMCLOCK_UID);
+            https.addHeader("secret", ALARMCLOCK_SECRET);
+            https.addHeader("accept", "text/plain");
+            int httpCode = https.GET();
+            if (httpCode == 200)
+            {
+                String token = https.getString();
+                https.end();
+                Serial.println("Success retreiving token");
+                Serial.println(token);
+                delete client;
+                return token;
+            }
+            else if (httpCode == 401)
+            {
+                Serial.println("Unauthorized when attempting to retreive token");
+                https.end();
+                connectWebSocket();
+                delete client;
+                return "";
+            }
+            else
+            {
+                Serial.println("Unhandled error when fetching token CODE: " + httpCode);
+                https.end();
+                connectWebSocket();
+                delete client;
+                return "";
+            }
+        }
+        
+    } else {
+        Serial.println("Unable to create client");
         return "";
     }
 }
@@ -196,7 +209,7 @@ void connectWebSocket()
                                   "\r\nsecret: " + ALARMCLOCK_SECRET)
                                   .c_str());
 
-    webSocket.begin(websockets_server, websockets_port, websockets_path);
+    webSocket.beginSslWithCA(websockets_server, websockets_port, websockets_path, intermediateCACertificate);
     webSocket.onEvent(webSocketEvent);
     webSocket.enableHeartbeat(2000, 2000, 2);
 }
