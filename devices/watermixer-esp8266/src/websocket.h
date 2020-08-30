@@ -130,41 +130,6 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     }
 }
 
-String getToken()
-{
-    // std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
-    // client->setFingerprint(fingerprint);
-    // http.begin(*client, TOKEN_SERVER_URL);
-    http.begin(TOKEN_SERVER_URL);
-    http.addHeader("deviceType", "WATERMIXER");
-    http.addHeader("uid", WATERMIXER_UID);
-    http.addHeader("secret", WATERMIXER_SECRET);
-    http.addHeader("accept", "text/plain");
-    int httpCode = http.GET();
-    if (httpCode == 200)
-    {
-        String token = http.getString();
-        http.end();
-        Serial.println("Success retreiving token");
-        Serial.println(token);
-        return token;
-    }
-    else if (httpCode == 401)
-    {
-        Serial.println("Unauthorized when attempting to retreive token");
-        http.end();
-        connectWebSocket();
-        return "";
-    }
-    else
-    {
-        Serial.println("Unhandled error when fetching token CODE: " + httpCode);
-        http.end();
-        connectWebSocket();
-        return "";
-    }
-}
-
 void setupWebsocket()
 {
     Serial.println();
@@ -182,15 +147,13 @@ void connectWebSocket()
         delay(10);
     }
     webSocket.setExtraHeaders((
-                                  "token: " + getToken() +
-                                  "\r\ndevicetype: WATERMIXER" +
-                                  "\r\nuid: " + WATERMIXER_UID +
+                                  "uid: " + WATERMIXER_UID +
                                   "\r\nsecret: " + WATERMIXER_SECRET)
                                   .c_str());
 
     webSocket.begin(websockets_server, websockets_port, websockets_path);
     webSocket.onEvent(webSocketEvent);
-    webSocket.enableHeartbeat(2000, 2000, 2);
+    webSocket.enableHeartbeat(5000, 5000, 2);
 }
 
 boolean isWifiRunning()
