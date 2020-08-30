@@ -1,5 +1,5 @@
 import redis from 'redis';
-import { Device as DeviceType, Client } from '@gbaranski/types';
+import { Client } from '@gbaranski/types';
 import { SubChannel } from '@/types';
 import Device from '@/devices';
 
