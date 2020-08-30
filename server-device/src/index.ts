@@ -1,11 +1,12 @@
-import WebSocket from 'ws';
 import chalk from 'chalk';
 import http from 'http';
-import { verifyDevice, onConnection } from '@/services/websocket';
-import '@/services/redis_pub';
-import '@/services/redis_sub';
+import mqtt from 'mqtt';
+import { onConnection } from '@/services/mqtt';
+// import '@/services/redis_pub';
+// import '@/services/redis_sub';
+import { ON_CONNECTED_TOPIC } from './topics';
 
-const PORT = process.env.PORT_DEVICE;
+const PORT = process.env.PORT_DEVICE || 8001;
 if (!PORT) throw new Error('Port is not defined in .env');
 
 const requestListener: http.RequestListener = (req, res) => {
@@ -15,15 +16,20 @@ const requestListener: http.RequestListener = (req, res) => {
 
 const httpServer = http.createServer(requestListener);
 
-export const wss: WebSocket.Server = new WebSocket.Server({
-  server: httpServer,
-  clientTracking: true,
-  verifyClient: verifyDevice,
-});
+const mqttClient = mqtt.connect('mqtt://localhost:1883');
+mqttClient.on('connect', () => {
+  mqttClient.subscribe(ON_CONNECTED_TOPIC);
+  console.log("Initialized connection with MQTT");
 
-wss.on('connection', onConnection);
-wss.on('close', () => console.log("Connection closed"))
-wss.on('error', () => console.log("Connection error"));
+  mqttClient.on('message', (topic, message) => {
+    switch (topic) {
+      case ON_CONNECTED_TOPIC:
+        onConnection(mqttClient, message);
+        break;
+    }
+  })
+})
+
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

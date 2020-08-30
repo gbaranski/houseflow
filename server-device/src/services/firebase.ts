@@ -13,7 +13,6 @@ admin.initializeApp({
 const db = admin.firestore();
 const devicePrivateCollection = db.collection('devices-private');
 const deviceCollection = db.collection('devices');
-const usersCollection = db.collection('users');
 
 export async function validateDevice(
   uid: string,
