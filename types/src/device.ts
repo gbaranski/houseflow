@@ -19,7 +19,7 @@ export namespace Device {
 
   export interface RequestDevice {
     topic: {
-      topic: RequestTopic;
+      name: RequestTopic;
       uid: string;
     };
     data?: DateTime | State;
@@ -27,7 +27,7 @@ export namespace Device {
 
   export interface ResponseDevice<
     T extends Alarmclock.Data | Watermixer.Data | undefined
-  > {
+    > {
     responseFor: RequestType;
     data: T;
   }
@@ -39,10 +39,10 @@ export namespace Device {
   }
   export interface ActiveDevice<
     DeviceData extends
-      | Alarmclock.Data
-      | Watermixer.Data
-      | AnyDeviceData = AnyDeviceData
-  > extends FirebaseDevice {
+    | Alarmclock.Data
+    | Watermixer.Data
+    | AnyDeviceData = AnyDeviceData
+    > extends FirebaseDevice {
     data: DeviceData;
     ip: string;
   }
