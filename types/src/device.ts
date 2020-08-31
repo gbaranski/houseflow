@@ -15,15 +15,19 @@ export namespace Device {
     | 'REBOOT'
     | 'UNKNOWN';
 
+  export type RequestTopic = 'startmix';
+
   export interface RequestDevice {
-    type: RequestType,
-    data?: DateTime | State
+    topic: {
+      topic: RequestTopic;
+      uid: string;
+    };
+    data?: DateTime | State;
   }
 
   export interface ResponseDevice<
     T extends Alarmclock.Data | Watermixer.Data | undefined
-    > {
-    ok: boolean;
+  > {
     responseFor: RequestType;
     data: T;
   }
@@ -35,10 +39,10 @@ export namespace Device {
   }
   export interface ActiveDevice<
     DeviceData extends
-    | Alarmclock.Data
-    | Watermixer.Data
-    | AnyDeviceData = AnyDeviceData
-    > extends FirebaseDevice {
+      | Alarmclock.Data
+      | Watermixer.Data
+      | AnyDeviceData = AnyDeviceData
+  > extends FirebaseDevice {
     data: DeviceData;
     ip: string;
   }
