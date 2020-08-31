@@ -1,6 +1,6 @@
 {
   "name": "@gbaranski/types",
-  "version": "4.0.31",
+  "version": "4.0.32",
   "description": "Types for controlhome app and website",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,4 +28,3 @@
     "ws": "^7.3.1"
   }
 }
-
