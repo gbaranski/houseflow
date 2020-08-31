@@ -2,8 +2,8 @@ import chalk from 'chalk';
 import http from 'http';
 import mqtt from 'mqtt';
 import { onConnection } from '@/services/mqtt';
-// import '@/services/redis_pub';
-// import '@/services/redis_sub';
+import '@/services/redis_pub';
+import '@/services/redis_sub';
 import { ON_CONNECTED_TOPIC } from './topics';
 
 const PORT = process.env.PORT_DEVICE || 8001;
@@ -16,7 +16,7 @@ const requestListener: http.RequestListener = (req, res) => {
 
 const httpServer = http.createServer(requestListener);
 
-const mqttClient = mqtt.connect('mqtt://localhost:1883');
+const mqttClient = mqtt.connect('mqtt://mosquitto:1883');
 mqttClient.on('connect', () => {
   mqttClient.subscribe(ON_CONNECTED_TOPIC);
   console.log("Initialized connection with MQTT");

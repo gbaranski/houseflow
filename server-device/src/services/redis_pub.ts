@@ -5,6 +5,7 @@ export const redisPublisher = redis.createClient('redis://redis:6379');
 redisPublisher.on('connect', () => console.log('Initialized redis publisher'));
 
 export const publishDeviceData = (device: Device.ActiveDevice) => {
+  console.log({ device });
   redisPublisher.publish('device_data', JSON.stringify(device));
 };
 
