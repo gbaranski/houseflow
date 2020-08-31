@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <PubSubClient.h>
 
@@ -15,13 +16,22 @@ long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
+void subscribeTopics() { client.subscribe(START_MIX_TOPIC.c_str()); }
+void publishConnected() { client.publish(ON_CONNECT_TOPIC, ON_CONNECT_JSON); }
+
 void callback(char* topic, byte* message, unsigned int length) {
-  Serial.println("message arrived on topic:");
-  Serial.print(topic);
+  Serial.println(topic);
+
+  Serial.println();
+  if (String(topic) == START_MIX_TOPIC) {
+    Serial.println("Received start mixing");
+    startMixing();
+    return;
+  }
   Serial.print(". Message: ");
   String messageTemp;
 
-  for (int i = 0; i < length; i++) {
+  for (unsigned int i = 0; i < length; i++) {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
@@ -38,10 +48,8 @@ void reconnect() {
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("inTopic");
+      subscribeTopics();
+      publishConnected();
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -54,8 +62,10 @@ void reconnect() {
 
 void initializeMqtt() {
   Serial.println("Initializing MQTT");
-  client.setServer(mqtt_server, 1883);
+  client.setServer(MQTT_SERVER, 1883);
   client.setCallback(callback);
+  subscribeTopics();
+  publishConnected();
 }
 
 void mqttLoop() {
@@ -63,15 +73,15 @@ void mqttLoop() {
     reconnect();
   }
   client.loop();
-  unsigned long now = millis();
-  if (now - lastMsg > 2000) {
-    lastMsg = now;
-    ++value;
-    snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    client.publish("outTopic", msg);
-  }
+  // unsigned long now = millis();
+  // if (now - lastMsg > 2000) {
+  //   lastMsg = now;
+  //   ++value;
+  //   snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
+  //   Serial.print("Publish message: ");
+  //   Serial.println(msg);
+  //   client.publish("outTopic", msg);
+  // }
 }
 
 #endif
