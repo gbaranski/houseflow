@@ -4,6 +4,7 @@ import {
 } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
 import { getRequestTopic } from '@/topics';
+import { publishDeviceDisconnect, publishDeviceData } from '@/services/redis_pub';
 
 export default abstract class Device {
   public static currentDeviceObjects: Device[] = [];
@@ -17,6 +18,7 @@ export default abstract class Device {
   ) {
     Device.currentDeviceObjects.push(this);
     this.status = true;
+    publishDeviceData(this.activeDevice);
   }
 
   public requestDevice(request: Client.Request): boolean {
@@ -39,7 +41,7 @@ export default abstract class Device {
     this.status = false;
     Device.currentDeviceObjects = Device.currentDeviceObjects
       .filter((deviceObj) => deviceObj.firebaseDevice.uid !== this.firebaseDevice.uid);
-    // publishDeviceDisconnect(this.activeDevice);
+    publishDeviceDisconnect(this.activeDevice);
   }
 
 }
