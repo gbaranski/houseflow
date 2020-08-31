@@ -1,37 +1,29 @@
 import {
   Device as DeviceType,
   Client,
+  Watermixer,
+  Alarmclock,
+  AnyDeviceData,
 } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
-import { getRequestTopic } from '@/topics';
 import { publishDeviceDisconnect, publishDeviceData } from '@/services/redis_pub';
 
-export default abstract class Device {
-  public static currentDeviceObjects: Device[] = [];
+export default abstract class Device<DataType extends Watermixer.Data | Alarmclock.Data | AnyDeviceData> {
+  public static currentDeviceObjects: Device<AnyDeviceData>[] = [];
 
   public status = false;
 
   constructor(
-    private mqttClient: MqttClient,
+    protected mqttClient: MqttClient,
     public readonly firebaseDevice: DeviceType.FirebaseDevice,
-    protected activeDevice: DeviceType.ActiveDevice,
+    protected activeDevice: DeviceType.ActiveDevice<DataType>,
   ) {
     Device.currentDeviceObjects.push(this);
     this.status = true;
     publishDeviceData(this.activeDevice);
   }
 
-  public requestDevice(request: Client.Request): boolean {
-
-    const requestData = {
-      type: request.requestType,
-      data: request.data,
-    };
-    console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
-    this.mqttClient.publish(getRequestTopic(this.firebaseDevice.uid), 'START_MIXING');
-
-    return true;
-  }
+  abstract requestDevice(request: Client.Request): any;
 
   public terminateConnection(reason: string): void {
     console.log("should terminate now");
