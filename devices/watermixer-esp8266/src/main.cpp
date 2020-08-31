@@ -9,6 +9,7 @@
 #include "config.h"
 #include "gpio.h"
 #include "mqtt.h"
+#include "ota.h"
 
 void setup() {
   // put your setup code here, to run once:
@@ -20,6 +21,7 @@ void setup() {
   wifiManager.autoConnect();
 
   Serial.println("Connected to WiFi");
+  checkUpdates();
   initializeMqtt();
 }
 

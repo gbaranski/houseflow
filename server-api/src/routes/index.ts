@@ -1,9 +1,9 @@
 import express from 'express';
-import apiRouter from './api';
+import deviceRouter from './device/index';
 
 const router = express.Router();
 
-router.use('/api', apiRouter);
+router.use('/device', deviceRouter)
 
 router.get('/', (req, res): void => {
   res.send('Hello from API server');
