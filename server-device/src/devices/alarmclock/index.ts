@@ -19,14 +19,14 @@ class AlarmclockDevice extends Device<Alarmclock.Data> {
     console.log({ message });
   }
 
-  public requestDevice(request: Client.Request) {
-    const requestData = {
-      type: request.requestType,
-      data: request.data,
-    };
-    console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
-    // this.mqttClient.publish(getRequestTopic(this.firebaseDevice.uid), request.requestType);
-    console.log("Not implemeented sending");
+  public requestDevice(request: DeviceType.RequestDevice) {
+    // const requestData = {
+    //   type: request.requestType,
+    //   data: request.data,
+    // };
+    // console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
+    // // this.mqttClient.publish(getRequestTopic(this.firebaseDevice.uid), request.requestType);
+    // console.log("Not implemeented sending");
 
     return true;
   }

@@ -1,12 +1,14 @@
-import { Client } from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
 import { getWebsocket } from '@/services/websocket';
 
 export default () => {
   const mixWater = (uid: string) => {
     console.log('Mixing water');
-    const req: Client.Request = {
-      deviceUid: uid,
-      requestType: 'START_MIXING',
+    const req: Device.RequestDevice = {
+      topic: {
+        name: 'startmix',
+        uid,
+      }
     };
     getWebsocket()?.send(JSON.stringify(req));
   };

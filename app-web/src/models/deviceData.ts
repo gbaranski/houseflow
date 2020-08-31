@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Device, AnyDeviceData, Client, CurrentConnections } from '@gbaranski/types';
+import { Device, Client, CurrentConnections } from '@gbaranski/types';
 import { setupOnOpenListeners } from '@/services/websocket';
 import { getAllowedDevices, getAllDevices } from '@/services/firebase';
 
