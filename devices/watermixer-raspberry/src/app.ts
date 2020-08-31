@@ -1,5 +1,6 @@
 import { MqttClient } from "mqtt";
-import { EVENT_REQUEST_TOPIC, ON_CONNECTED_TOPIC } from "./topics";
+import { ON_CONNECTED_TOPIC, START_MIX_TOPIC } from "./topics";
+import { startMixing } from "./services/relay";
 
 const { DEVICE_UID, DEVICE_SECRET, MQTT_URL } = process.env;
 
@@ -19,14 +20,14 @@ const publishOnConnectedMessage = (mqtt: MqttClient) => {
 }
 
 const subscribeToTopics = (mqtt: MqttClient) => {
-    mqtt.subscribe(EVENT_REQUEST_TOPIC);
+    mqtt.subscribe(START_MIX_TOPIC);
 }
 
 export const onMessage = (topic: String, message: Buffer) => {
     console.log({ topic, message });
     switch (topic) {
-        case EVENT_REQUEST_TOPIC:
-            console.log("Received request on EVENT_REQUEST_TOPIC");
+        case START_MIX_TOPIC:
+            startMixing();
             break;
         default:
             console.log("Unrecognized topic");

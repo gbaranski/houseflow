@@ -5,7 +5,6 @@ import {
   Alarmclock
 } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
-import { getRequestTopic } from '@/topics';
 
 class AlarmclockDevice extends Device<Alarmclock.Data> {
   constructor(
@@ -26,7 +25,8 @@ class AlarmclockDevice extends Device<Alarmclock.Data> {
       data: request.data,
     };
     console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
-    this.mqttClient.publish(getRequestTopic(this.firebaseDevice.uid), request.requestType);
+    // this.mqttClient.publish(getRequestTopic(this.firebaseDevice.uid), request.requestType);
+    console.log("Not implemeented sending");
 
     return true;
   }

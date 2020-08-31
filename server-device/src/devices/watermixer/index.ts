@@ -3,8 +3,8 @@ import {
   Device as DeviceType, Client, Watermixer,
 } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
-import { getRequestTopic } from '@/topics';
 import { publishDeviceData } from '@/services/redis_pub';
+import { startMixingTopic } from '@/topics';
 
 class WatermixerDevice extends Device<Watermixer.Data> {
   private static MIXER_TIMEOUT_SECONDS = 600;
@@ -56,9 +56,9 @@ class WatermixerDevice extends Device<Watermixer.Data> {
       data: request.data,
     };
     console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
-    this.mqttClient.publish(getRequestTopic(this.firebaseDevice.uid), request.requestType);
 
     if (request.requestType === 'START_MIXING') {
+      this.mqttClient.publish(startMixingTopic(this.firebaseDevice.uid), "");
       console.log("Starting mixing water");
       this.startMixing();
     }
