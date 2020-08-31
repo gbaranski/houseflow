@@ -51,7 +51,7 @@
     "@ant-design/icons": "^4.2.2",
     "@ant-design/pro-layout": "^6.4.3",
     "@ant-design/pro-table": "^2.5.6",
-    "@gbaranski/types": "^4.0.31",
+    "@gbaranski/types": "^4.0.32",
     "@mdi/js": "^5.5.55",
     "@mdi/react": "^1.4.0",
     "antd": "^4.4.0",

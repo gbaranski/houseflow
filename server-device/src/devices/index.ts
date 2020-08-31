@@ -23,7 +23,7 @@ export default abstract class Device<DataType extends Watermixer.Data | Alarmclo
     publishDeviceData(this.activeDevice);
   }
 
-  abstract requestDevice(request: Client.Request): any;
+  abstract requestDevice(request: DeviceType.RequestDevice): any;
 
   public terminateConnection(reason: string): void {
     console.log("should terminate now");
