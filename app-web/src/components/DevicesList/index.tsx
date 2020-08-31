@@ -1,7 +1,7 @@
 import React from 'react';
 import WatermixerCard from '@/components/Watermixer/card';
 import DeviceCardSkeleton from '@/components/DeviceCardSkeleton';
-import { Device, Watermixer, AnyDeviceData, Alarmclock } from '@gbaranski/types';
+import { Device, Watermixer, Alarmclock } from '@gbaranski/types';
 import { Col } from 'antd';
 import AlarmclockCard from '../Alarmclock/card';
 

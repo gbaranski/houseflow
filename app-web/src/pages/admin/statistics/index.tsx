@@ -3,7 +3,7 @@ import { PageContainer } from '@ant-design/pro-layout';
 import { Card, Table } from 'antd';
 import { useModel } from 'umi';
 import { sendCurrentConnectionsRequest } from '@/services/websocket';
-import { Device, AnyDeviceData, Client } from '@gbaranski/types';
+import { Device, Client } from '@gbaranski/types';
 
 const DeviceTable = (props: {
   online: Device.ActiveDevice[];

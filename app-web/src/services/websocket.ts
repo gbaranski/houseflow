@@ -1,5 +1,3 @@
-import { Client } from '@gbaranski/types';
-
 const WSS_URL =
   process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://api.gbaranski.com:443/wsc';
 
@@ -27,9 +25,10 @@ export const getWebsocket = (): WebSocket | undefined => {
 };
 
 export const sendCurrentConnectionsRequest = () => {
-  if (!websocket) throw new Error('Websocket is not defined');
-  const req: Client.Request = {
-    requestType: 'CONNECTIONS',
-  };
-  websocket.send(JSON.stringify(req));
+  console.log("Not implemented");
+  // if (!websocket) throw new Error('Websocket is not defined');
+  // const req: Device.RequestDevice = {
+  //   requestType: 'CONNECTIONS',
+  // };
+  // websocket.send(JSON.stringify(req));
 };

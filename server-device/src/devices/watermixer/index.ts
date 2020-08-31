@@ -4,7 +4,7 @@ import {
 } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
 import { publishDeviceData } from '@/services/redis_pub';
-import { startMixingTopic } from '@/topics';
+import { getEventTopic } from '@/topics';
 
 class WatermixerDevice extends Device<Watermixer.Data> {
   private static MIXER_TIMEOUT_SECONDS = 600;
@@ -50,15 +50,11 @@ class WatermixerDevice extends Device<Watermixer.Data> {
 
   }
 
-  public requestDevice(request: Client.Request) {
-    const requestData = {
-      type: request.requestType,
-      data: request.data,
-    };
-    console.log('Sending', requestData, `to ${this.firebaseDevice.uid}`);
+  public requestDevice(request: DeviceType.RequestDevice) {
+    console.log('Sending', request, `to ${this.firebaseDevice.uid}`);
 
-    if (request.requestType === 'START_MIXING') {
-      this.mqttClient.publish(startMixingTopic(this.firebaseDevice.uid), "");
+    if (request.topic.name === 'startmix') {
+      this.mqttClient.publish(getEventTopic(request), "");
       console.log("Starting mixing water");
       this.startMixing();
     }

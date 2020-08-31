@@ -1,5 +1,5 @@
 import redis from 'redis';
-import { Client } from '@gbaranski/types';
+import { Client, Device as DeviceType } from '@gbaranski/types';
 import { SubChannel } from '@/types';
 import Device from '@/devices';
 
@@ -14,15 +14,13 @@ redisSubscriber.on('message', (channel, message) => {
 });
 
 const handleRequest = (message: string) => {
-  const request = JSON.parse(message) as Client.Request;
-  if (!request.deviceUid) throw new Error('Device uid is not defined');
+  const request = JSON.parse(message) as DeviceType.RequestDevice;
+  if (!request.topic.uid) throw new Error('Device uid is not defined');
 
   const deviceObj = Device.currentDeviceObjects.find(
-    (devObj) => request.deviceUid === devObj.firebaseDevice.uid,
+    (devObj) => request.topic.uid === devObj.firebaseDevice.uid,
   );
   if (!deviceObj) throw new Error('Couldnt find device object');
-  if (request.requestType === 'CONNECTIONS')
-    throw new Error('This request shouldnt go there!');
   deviceObj.requestDevice(request);
 };
 

@@ -107,11 +107,10 @@ export default class WebSocketClient {
     this.websocket.send(JSON.stringify(clientResponse));
   }
 
-  private static parseMessage(message: WebSocket.Data): Client.Request {
-    const parsedMsg = (message as unknown) as Client.Request;
-    if (!parsedMsg.deviceUid && parsedMsg.requestType !== 'CONNECTIONS')
-      throw new Error('Uid is missing');
-    if (!parsedMsg.requestType) throw new Error('Request type is missing');
+  private static parseMessage(message: WebSocket.Data): Device.RequestDevice {
+    const parsedMsg = (message as unknown) as Device.RequestDevice;
+    if (!parsedMsg.topic.uid && !parsedMsg.topic.name)
+      throw new Error('Topic or Topic.UID is missing is missing');
     return parsedMsg;
   }
 
@@ -125,22 +124,22 @@ export default class WebSocketClient {
         throw new Error('Wrong message type');
       const parsedMsg = WebSocketClient.parseMessage(JSON.parse(message));
 
-      if (parsedMsg.requestType === 'CONNECTIONS') {
-        console.log('Someone requesting connections!');
-        if (this.firebaseUser.role !== 'admin') {
-          console.log('No permissions');
-          return;
-        }
-        const res: Client.Response = {
-          requestType: 'CONNECTIONS',
-          data: await this.getAllWebsocketConnections(),
-        };
-        this.websocket.send(JSON.stringify(res));
-        return;
-      }
+      // if (parsedMsg.requestType === 'CONNECTIONS') {
+      //   console.log('Someone requesting connections!');
+      //   if (this.firebaseUser.role !== 'admin') {
+      //     console.log('No permissions');
+      //     return;
+      //   }
+      //   const res: Client.Response = {
+      //     requestType: 'CONNECTIONS',
+      //     data: await this.getAllWebsocketConnections(),
+      //   };
+      //   this.websocket.send(JSON.stringify(res));
+      //   return;
+      // }
 
       const deviceObject = (await this.getCurrentConnectionWithAccess()).find(
-        (_deviceObject) => _deviceObject.uid === parsedMsg.deviceUid,
+        (_deviceObject) => _deviceObject.uid === parsedMsg.topic.uid,
       );
       if (!deviceObject) throw new Error('Could not find device');
       publishRequest(parsedMsg);
