@@ -5,6 +5,7 @@ import { convertToFirebaseDevice } from '@/services/firebase';
 import { MqttClient } from 'mqtt';
 
 export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
+  console.log(message.toString('UTF-8'));
   const { uid, secret } = JSON.parse(message.toString('UTF-8')) as { uid: string; secret: string };
 
   try {

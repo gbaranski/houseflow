@@ -7,10 +7,13 @@
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
 
 #include "config.h"
+#include "gpio.h"
 #include "mqtt.h"
 
 void setup() {
   // put your setup code here, to run once:
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, 1);
   Serial.begin(9600);
   Serial.println("Initializing WiFi");
   WiFiManager wifiManager;
@@ -21,6 +24,14 @@ void setup() {
 }
 
 void loop() {
+  if (mixingStarted) {
+    unsigned long now = millis();
+
+    if (now - lastMixingMillis > 1000) {
+      mixingStarted = false;
+      digitalWrite(RELAY_PIN, 1);
+    }
+  }
   // put your main code here, to run repeatedly:
   mqttLoop();
 }
