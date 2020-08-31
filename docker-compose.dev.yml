@@ -11,23 +11,17 @@ services:
     networks:
       - backend
 
-  server-api:
-    tty: true
-    container_name: 'server-api'
-    depends_on:
-      - redis
-    env_file:
-      - .env
-    build:
-      context: ./server-api
-      dockerfile: Dockerfile
+  mosquitto:
+    image: 'eclipse-mosquitto'
+    container_name: 'mosquitto'
     ports:
-      - $PORT_API:$PORT_API
-    restart: 'unless-stopped'
-    volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
+      - 1883:1883
     networks:
       - backend
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
 
   server-device:
     tty: true
@@ -35,7 +29,7 @@ services:
     command: npm run start:dev
     depends_on:
       - redis
-      - server-api
+      - mosquitto
     env_file:
       - .env
     build:
@@ -53,8 +47,10 @@ services:
   server-client:
     tty: true
     container_name: 'server-client'
+    command: npm run start:dev
     depends_on:
       - redis
+      - mosquitto
       - server-device
     env_file:
       - .env
