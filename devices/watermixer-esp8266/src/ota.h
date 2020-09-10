@@ -44,6 +44,7 @@ void checkUpdates() {
 
     case HTTP_UPDATE_OK:
       Serial.println("HTTP_UPDATE_OK");
+      ESP.restart();
       break;
   }
 }
