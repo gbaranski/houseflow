@@ -25,8 +25,7 @@ services:
   server-api:
     tty: true
     container_name: 'server-api'
-    depends_on:
-      - redis
+    command: npm run start:dev
     env_file:
       - .env
     build:
@@ -37,6 +36,8 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/src/firebaseConfig.json
+      - ./server-api/src:/server/src
+      - ./server-api/bin:/server/bin
     networks:
       - backend
 
