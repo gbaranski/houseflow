@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { Device } from '@gbaranski/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('@/firebaseConfig.json');
@@ -10,12 +11,15 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
+const deviceCollection = db.collection('devices');
 const devicePrivateCollection = db.collection('devices-private');
 
-export async function validateDevice(
-  uid: string,
-  secret: string,
-): Promise<{ secret: string }> {
+export interface DeviceCredentials {
+  uid: string;
+  secret: string;
+}
+
+export async function validateDevice({ uid, secret }: DeviceCredentials): Promise<{ secret: string }> {
   const snapshot = await devicePrivateCollection.doc(uid).get();
   if (!snapshot.exists) throw new Error('Does not exist!');
 
@@ -28,4 +32,16 @@ export async function validateDevice(
     throw new Error("Device doesn't match");
   }
   return snapshotData;
+}
+
+
+export async function findDeviceInDatabase(uid: string) {
+  const snapshot = await deviceCollection.doc(uid).get();
+  if (!snapshot.exists) throw new Error("Device doesn't exist");
+
+  const firebaseDevice = snapshot.data() as Device.FirebaseDevice;
+  if (!firebaseDevice.type || !firebaseDevice.uid) {
+    throw new Error("Invalid firebase device");
+  }
+  return firebaseDevice;
 }

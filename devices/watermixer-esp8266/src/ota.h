@@ -1,7 +1,10 @@
 #include <Arduino.h>
+#include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <ESP8266httpUpdate.h>
 
 #include "config.h"
+
+WiFiClient wifiClient;
 
 void update_started() {
   Serial.println("CALLBACK:  HTTP update process started");
@@ -23,7 +26,6 @@ void update_error(int err) {
 void checkUpdates() {
   t_httpUpdate_return ret;
 
-  ESPhttpUpdate.rebootOnUpdate(false);
   ESPhttpUpdate.onStart(update_started);
   ESPhttpUpdate.onEnd(update_finished);
   ESPhttpUpdate.onProgress(update_progress);
@@ -44,7 +46,6 @@ void checkUpdates() {
 
     case HTTP_UPDATE_OK:
       Serial.println("HTTP_UPDATE_OK");
-      ESP.restart();
       break;
   }
 }
