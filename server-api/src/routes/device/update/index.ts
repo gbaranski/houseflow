@@ -1,29 +1,53 @@
 import express, { Request, Response, NextFunction } from 'express';
-import fs, { readSync } from 'fs'
+import path from 'path'
+import { validateDevice, DeviceCredentials, findDeviceInDatabase } from '@/services/firebase';
 import { findBinaryFile } from './misc';
 
 const router = express.Router();
+
 
 router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.log(`${err.message} IP: ${req.headers.host}`);
     res.sendStatus(401);
 })
 
-router.use('/esp8266', async (req, res): Promise<any> => {
+router.use('/esp8266', (req, res, next) => {
+    if (req.get('x-ESP8266-sdk-version') && req.get('x-ESP8266-version') && req.get("x-ESP8266-sketch-md5")) {
+        next();
+    } else {
+        throw new Error("Device headers are invalid");
+    }
+})
 
-    const staMac = req.get('x-esp8266-sta-mac');
-    const sdkVersion = req.get("x-esp8266-sdk-version");
-    const sketchMd5 = req.get('x-esp8266-sketch-md5');
-    if (!sdkVersion) throw new Error("SDK Version not defined");
-    if (!staMac) throw new Error("STA Mac not defined");
-    if (!sketchMd5) throw new Error("Sketch MD5 not defined");
+router.use('/esp8266', async (req, res): Promise<any> => {
+    const sketchMd5 = req.get('x-ESP8266-sketch-md5');
+    const versionHeader = req.get('x-ESP8266-version');
+    if (!versionHeader || !sketchMd5) throw new Error("Version and MD5 is not defined");
+
+
+    const deviceCredentials: DeviceCredentials = JSON.parse(versionHeader);
+    console.log(deviceCredentials);
+    if (!deviceCredentials.secret || !deviceCredentials.uid) throw new Error("Device credentials are invalid");
 
     try {
-        const file = await findBinaryFile(staMac);
-        console.log({ devMd5: sketchMd5, fMd5: file.md5 });
-        if (file.md5 === sketchMd5) return res.sendStatus(304);
+        await validateDevice(deviceCredentials);
+        const firebaseDevice = await findDeviceInDatabase(deviceCredentials.uid);
+        const file = await findBinaryFile(firebaseDevice.type);
+        if (file.md5 === sketchMd5) {
+            console.log("MD5 is equal, skipping update");
+            return res.sendStatus(304);
+        } else {
+            console.log("MD5 doesnt match", {
+                deviceMd5: sketchMd5,
+                fileMd5: file.md5,
+            })
+            res.set("Content-Type", "application/octet-stream");
+            res.set("Content-Disposition", `attachment;filename=${path.basename(file.path)}`)
+            res.set('Content-Length', String(file.size));
+            res.set('x-MD5', file.md5);
 
-        res.download(file.path, (err) => err !== undefined ?? console.log(err));
+            return res.sendFile(file.path);
+        }
     } catch (e) {
         console.log(e.message);
         res.sendStatus(500);
