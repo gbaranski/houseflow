@@ -9,7 +9,7 @@
 #include "config.h"
 #include "gpio.h"
 #include "mqtt.h"
-#include "ota.h"
+#include "remoteUpdate.h"
 
 void setup() {
   // put your setup code here, to run once:
