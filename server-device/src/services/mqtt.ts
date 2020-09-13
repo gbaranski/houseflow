@@ -6,10 +6,13 @@ import { MqttClient } from 'mqtt';
 
 export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
   console.log(message.toString('UTF-8'));
-  const { uid, secret } = JSON.parse(message.toString('UTF-8')) as { uid: string; secret: string };
+  const { uid, secret } = JSON.parse(message.toString('UTF-8')) as {
+    uid: string;
+    secret: string;
+  };
 
   try {
-    if (!uid || !secret) throw new Error("UID or secret not defined");
+    if (!uid || !secret) throw new Error('UID or secret not defined');
 
     const firebaseDevice = await convertToFirebaseDevice(uid);
 
@@ -18,7 +21,8 @@ export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
         new WatermixerDevice(mqttClient, firebaseDevice, {
           ...firebaseDevice,
           data: Watermixer.SAMPLE,
-          ip: '8.8.8.8', // to be changed
+          ip: '8.8.8.8',
+          // FIXME: Change this one
         });
         break;
 
@@ -26,18 +30,19 @@ export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
         new AlarmclockDevice(mqttClient, firebaseDevice, {
           ...firebaseDevice,
           data: Alarmclock.SAMPLE,
-          ip: '8.8.8.8', // to be changed
+          ip: '8.8.8.8',
+          // FIXME: Change this one
         });
         break;
 
       default:
-        throw new Error("failed recognizing")
+        throw new Error('failed recognizing');
         break;
     }
 
     console.log(`UID: ${uid} connected`);
   } catch (e) {
-    console.log("Should terminate here");
+    console.log('Should terminate here');
     console.error(`UID: ${uid} failed due to ${e.message}`);
     return;
   }
