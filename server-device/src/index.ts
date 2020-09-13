@@ -2,8 +2,7 @@ import chalk from 'chalk';
 import http from 'http';
 import mqtt from 'mqtt';
 import { onConnection } from '@/services/mqtt';
-import '@/services/redis_pub';
-import '@/services/redis_sub';
+import '@/services/gcloud';
 import { ON_CONNECTED_TOPIC } from './topics';
 
 const PORT = process.env.PORT_DEVICE || 8001;
@@ -19,7 +18,7 @@ const httpServer = http.createServer(requestListener);
 const mqttClient = mqtt.connect('mqtt://mosquitto:1883');
 mqttClient.on('connect', () => {
   mqttClient.subscribe(ON_CONNECTED_TOPIC);
-  console.log("Initialized connection with MQTT");
+  console.log('Initialized connection with MQTT');
 
   mqttClient.on('message', (topic, message) => {
     switch (topic) {
@@ -27,9 +26,8 @@ mqttClient.on('connect', () => {
         onConnection(mqttClient, message);
         break;
     }
-  })
-})
-
+  });
+});
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
