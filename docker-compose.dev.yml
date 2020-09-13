@@ -35,7 +35,7 @@ services:
       - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/firebaseConfig.json
       - ./server-api/src:/server/src
       - ./server-api/bin:/server/bin
     networks:
@@ -58,7 +58,7 @@ services:
       - $PORT_DEVICE:$PORT_DEVICE
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/firebaseConfig.json
       - ./server-device/src:/server/src
     networks:
       - backend
@@ -81,7 +81,8 @@ services:
       - $PORT_CLIENT:$PORT_CLIENT
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/firebaseConfig.json
+      - ./server-client/src:/server/src
     networks:
       - backend
 

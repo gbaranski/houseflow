@@ -1,14 +1,15 @@
+import { publishDeviceData, removeDeviceTopic } from '@/services/gcloud';
 import {
   Device as DeviceType,
-  Client,
   Watermixer,
   Alarmclock,
   AnyDeviceData,
 } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
-import { publishDeviceDisconnect, publishDeviceData } from '@/services/redis_pub';
 
-export default abstract class Device<DataType extends Watermixer.Data | Alarmclock.Data | AnyDeviceData> {
+export default abstract class Device<
+  DataType extends Watermixer.Data | Alarmclock.Data | AnyDeviceData
+> {
   public static currentDeviceObjects: Device<AnyDeviceData>[] = [];
 
   public status = false;
@@ -26,14 +27,14 @@ export default abstract class Device<DataType extends Watermixer.Data | Alarmclo
   abstract requestDevice(request: DeviceType.RequestDevice): any;
 
   public terminateConnection(reason: string): void {
-    console.log("should terminate now");
+    console.log('should terminate now');
     console.log(
       `Websocket error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
     );
     this.status = false;
-    Device.currentDeviceObjects = Device.currentDeviceObjects
-      .filter((deviceObj) => deviceObj.firebaseDevice.uid !== this.firebaseDevice.uid);
-    publishDeviceDisconnect(this.activeDevice);
+    Device.currentDeviceObjects = Device.currentDeviceObjects.filter(
+      (deviceObj) => deviceObj.firebaseDevice.uid !== this.firebaseDevice.uid,
+    );
+    removeDeviceTopic(this.activeDevice.uid);
   }
-
 }
