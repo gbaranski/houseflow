@@ -9,11 +9,9 @@ export namespace Watermixer {
 
   export interface Data {
     finishMixTimestamp: number;
-    isTimerOn: boolean;
   }
 
   export const SAMPLE: Data = {
     finishMixTimestamp: 0,
-    isTimerOn: true,
   };
 }
