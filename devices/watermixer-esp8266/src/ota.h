@@ -31,7 +31,7 @@ void checkUpdates() {
   ESPhttpUpdate.onProgress(update_progress);
   ESPhttpUpdate.onError(update_error);
 
-  ret = ESPhttpUpdate.update(UPDATE_IP, UPDATE_PORT, UPDATE_PATH, VERSION);
+  ret = ESPhttpUpdate.update(wifiClient, UPDATE_URL, VERSION);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
