@@ -8,12 +8,12 @@ export namespace Watermixer {
   }
 
   export interface Data {
-    remainingSeconds: number;
-    isTimerOn: boolean; // 1 or 0
+    finishMixTimestamp: number;
+    isTimerOn: boolean;
   }
 
   export const SAMPLE: Data = {
-    remainingSeconds: 0,
+    finishMixTimestamp: 0,
     isTimerOn: true,
   };
 }
