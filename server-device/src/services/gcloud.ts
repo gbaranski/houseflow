@@ -3,18 +3,23 @@ import { PubSub } from '@google-cloud/pubsub';
 
 const pubSubClient = new PubSub();
 
-export async function createDeviceTopic(uid: string) {
-  await pubSubClient.createTopic(uid);
-  console.log(`Topic ${uid} created.`);
-}
-
-export async function removeDeviceTopic(uid: string) {
-  await pubSubClient.topic(uid).delete();
-  console.log(`Topic ${uid} deleted.`);
+enum Topics {
+  DEVICE_DATA = 'device_data',
+  DEVICE_DISCONNECT = 'device_disconnect',
 }
 
 export async function publishDeviceData(device: Device.ActiveDevice) {
   const dataBuffer = Buffer.from(JSON.stringify(device));
-  const messageId = await pubSubClient.topic(device.uid).publish(dataBuffer);
-  console.log(`Message ${messageId} published.`);
+  const messageId = await pubSubClient
+    .topic(Topics.DEVICE_DATA)
+    .publish(dataBuffer);
+  console.log(`Data for ${device.uid} published ID ${messageId}.`);
+}
+
+export async function publishDeviceDisconnect(device: Device.ActiveDevice) {
+  const dataBuffer = Buffer.from(JSON.stringify(device));
+  const messageId = await pubSubClient
+    .topic(Topics.DEVICE_DISCONNECT)
+    .publish(dataBuffer);
+  console.log(`Disconnect for ${device.uid} published ID ${messageId}.`);
 }

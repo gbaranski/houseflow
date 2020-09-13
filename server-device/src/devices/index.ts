@@ -1,4 +1,4 @@
-import { publishDeviceData, removeDeviceTopic } from '@/services/gcloud';
+import { publishDeviceData, publishDeviceDisconnect } from '@/services/gcloud';
 import {
   Device as DeviceType,
   Watermixer,
@@ -29,12 +29,12 @@ export default abstract class Device<
   public terminateConnection(reason: string): void {
     console.log('should terminate now');
     console.log(
-      `Websocket error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
+      `Error ${reason} ${this.firebaseDevice.type} UID: ${this.firebaseDevice.uid}`,
     );
     this.status = false;
     Device.currentDeviceObjects = Device.currentDeviceObjects.filter(
       (deviceObj) => deviceObj.firebaseDevice.uid !== this.firebaseDevice.uid,
     );
-    removeDeviceTopic(this.activeDevice.uid);
+    publishDeviceDisconnect(this.activeDevice);
   }
 }
