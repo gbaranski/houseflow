@@ -1,11 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express';
-import path from 'path';
 import {
   validateDevice,
   DeviceCredentials,
   findDeviceInDatabase,
 } from '@/services/firebase';
-import { findBinaryFile } from './misc';
+import { findBinaryFile, sendBinaryFile } from './misc';
 
 const router = express.Router();
 
@@ -35,7 +34,6 @@ router.use(
       throw new Error('Version and MD5 is not defined');
 
     const deviceCredentials: DeviceCredentials = JSON.parse(versionHeader);
-    console.log(deviceCredentials);
     if (!deviceCredentials.secret || !deviceCredentials.uid)
       throw new Error('Device credentials are invalid');
 
@@ -43,23 +41,12 @@ router.use(
       await validateDevice(deviceCredentials);
       const firebaseDevice = await findDeviceInDatabase(deviceCredentials.uid);
       const file = await findBinaryFile(firebaseDevice.type);
+
       if (file.md5 === sketchMd5) {
         console.log('MD5 is equal, skipping update');
         return res.sendStatus(304);
       } else {
-        console.log('MD5 doesnt match', {
-          deviceMd5: sketchMd5,
-          fileMd5: file.md5,
-        });
-        res.set('Content-Type', 'application/octet-stream');
-        res.set(
-          'Content-Disposition',
-          `attachment;filename=${path.basename(file.path)}`,
-        );
-        res.set('Content-Length', String(file.size));
-        res.set('x-MD5', file.md5);
-
-        return res.sendFile(file.path);
+        return sendBinaryFile(res, file);
       }
     } catch (e) {
       console.log(e.message);
