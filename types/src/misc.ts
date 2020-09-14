@@ -29,3 +29,9 @@ export interface CurrentConnections {
   devices: Device.ActiveDevice[];
   clients: Client.ActiveUser[];
 }
+
+enum CloudTopics {
+  DEVICE_DATA = 'device_data',
+  DEVICE_DISCONNECT = 'device_disconnect',
+  DEVICE_REQUEST = 'device_request',
+}
