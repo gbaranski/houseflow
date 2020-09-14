@@ -1,4 +1,4 @@
-import { Device } from '@gbaranski/types';
+import { Device, CloudTopics } from '@gbaranski/types';
 import { PubSub, Message } from '@google-cloud/pubsub';
 import { io } from '..';
 import { updateDeviceData } from './websocket';
@@ -7,17 +7,11 @@ export let activeDevices: Device.ActiveDevice[] = [];
 
 const pubSubClient = new PubSub();
 
-enum Topics {
-  DEVICE_DATA = 'device_data',
-  DEVICE_DISCONNECT = 'device_disconnect',
-  DEVICE_REQUEST = 'device_request',
-}
-
 export async function subscribeToDevicesData() {
-  const subscription = pubSubClient.subscription(Topics.DEVICE_DATA);
+  const subscription = pubSubClient.subscription(CloudTopics.DEVICE_DATA);
   subscription.on('message', onDataMessage);
   subscription.on('error', onDataError);
-  console.log(`Subscribed to ${Topics.DEVICE_DATA}`);
+  console.log(`Subscribed to ${CloudTopics.DEVICE_DATA}`);
 }
 
 const onDataError = (message: Message) => {
@@ -42,7 +36,7 @@ const onDataMessage = async (message: Message) => {
 export const publishRequest = async (request: Device.RequestDevice) => {
   const dataBuffer = Buffer.from(JSON.stringify(request));
   const messageId = await pubSubClient
-    .topic(Topics.DEVICE_REQUEST)
+    .topic(CloudTopics.DEVICE_REQUEST)
     .publish(dataBuffer);
   console.log(
     `Request for ${request.topic.uid} ${request.topic.name} published ID ${messageId}.`,

@@ -4,6 +4,7 @@ import mqtt from 'mqtt';
 import { onConnection } from '@/services/mqtt';
 import '@/services/gcloud';
 import { ON_CONNECTED_TOPIC } from './topics';
+import { subscribeToRequests } from '@/services/gcloud';
 
 const PORT = process.env.PORT_DEVICE || 8001;
 if (!PORT) throw new Error('Port is not defined in .env');
@@ -28,6 +29,8 @@ mqttClient.on('connect', () => {
     }
   });
 });
+
+subscribeToRequests();
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

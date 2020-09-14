@@ -1,14 +1,14 @@
 import Device from '@/devices';
-import { Device as DeviceType } from '@gbaranski/types';
+import { Device as DeviceType, CloudTopics } from '@gbaranski/types';
 import { Message, PubSub } from '@google-cloud/pubsub';
 
 const pubSubClient = new PubSub();
 
-enum Topics {
-  DEVICE_DATA = 'device_data',
-  DEVICE_DISCONNECT = 'device_disconnect',
-  DEVICE_REQUEST = 'device_request',
-}
+export const subscribeToRequests = () => {
+  const subscription = pubSubClient.subscription(CloudTopics.DEVICE_REQUEST);
+  subscription.on('message', onRequestMessage);
+  subscription.on('error', onSubError);
+};
 const onSubError = (message: Message) => {
   console.log(`Error on data topic: ${message.data}`);
   message.ack();
@@ -34,7 +34,7 @@ const onRequestMessage = async (message: Message) => {
 export async function publishDeviceData(device: DeviceType.ActiveDevice) {
   const dataBuffer = Buffer.from(JSON.stringify(device));
   const messageId = await pubSubClient
-    .topic(Topics.DEVICE_DATA)
+    .topic(CloudTopics.DEVICE_DATA)
     .publish(dataBuffer);
   console.log(`Data for ${device.uid} published ID ${messageId}.`);
 }
@@ -42,11 +42,7 @@ export async function publishDeviceData(device: DeviceType.ActiveDevice) {
 export async function publishDeviceDisconnect(device: DeviceType.ActiveDevice) {
   const dataBuffer = Buffer.from(JSON.stringify(device));
   const messageId = await pubSubClient
-    .topic(Topics.DEVICE_DISCONNECT)
+    .topic(CloudTopics.DEVICE_DISCONNECT)
     .publish(dataBuffer);
   console.log(`Disconnect for ${device.uid} published ID ${messageId}.`);
 }
-
-const subscription = pubSubClient.subscription(Topics.DEVICE_REQUEST);
-subscription.on('message', onRequestMessage);
-subscription.on('error', onSubError);

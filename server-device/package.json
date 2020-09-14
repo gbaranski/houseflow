@@ -20,7 +20,7 @@
   "author": "gbaranski",
   "license": "ISC",
   "devDependencies": {
-    "@gbaranski/types": "^4.0.34",
+    "@gbaranski/types": "^4.0.36",
     "@types/geoip-lite": "^1.1.31",
     "@types/jsonwebtoken": "^8.5.0",
     "@types/node-fetch": "^2.5.7",
