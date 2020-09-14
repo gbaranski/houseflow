@@ -10,6 +10,7 @@ const pubSubClient = new PubSub();
 enum Topics {
   DEVICE_DATA = 'device_data',
   DEVICE_DISCONNECT = 'device_disconnect',
+  DEVICE_REQUEST = 'device_request',
 }
 
 export async function subscribeToDevicesData() {
@@ -24,7 +25,7 @@ const onDataError = (message: Message) => {
   message.ack();
 };
 
-const onDataMessage = (message: Message) => {
+const onDataMessage = async (message: Message) => {
   console.log(`Received data ${message.id}`);
   console.log(`Data: ${message.data.toString()}`);
   const activeDevice = JSON.parse(
@@ -36,4 +37,14 @@ const onDataMessage = (message: Message) => {
     .filter((device) => activeDevice.uid !== device.uid)
     .concat(activeDevice);
   updateDeviceData(io, activeDevice);
+};
+
+export const publishRequest = async (request: Device.RequestDevice) => {
+  const dataBuffer = Buffer.from(JSON.stringify(request));
+  const messageId = await pubSubClient
+    .topic(Topics.DEVICE_REQUEST)
+    .publish(dataBuffer);
+  console.log(
+    `Request for ${request.topic.uid} ${request.topic.name} published ID ${messageId}.`,
+  );
 };

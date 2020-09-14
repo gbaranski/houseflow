@@ -2,7 +2,7 @@ import socketio from 'socket.io';
 import { decodeClientToken } from '@/services/firebase';
 import { admin } from 'firebase-admin/lib/auth';
 import { Device } from '@gbaranski/types';
-import { activeDevices } from './gcloud';
+import { activeDevices, publishRequest } from './gcloud';
 
 export const verifyClient = async (
   socket: socketio.Socket,
@@ -36,11 +36,20 @@ export const setupEventListeners = (
   socket.on('disconnect', () => {
     console.log(`${uid} disconnected`);
   });
-  socket.on('get_active_devices', (fn) => {
+  socket.on('get_active_devices', (cb) => {
     const devices: Device.ActiveDevice[] = activeDevices.filter((device) =>
       firebaseDevices.some((_device) => _device.uid === device.uid),
     );
-    fn(JSON.stringify(devices));
+    cb(JSON.stringify(devices));
+  });
+  socket.on('device_request', (data, cb) => {
+    const req: Device.RequestDevice = JSON.parse(data);
+    //FIXME: Add some type for that
+    if (!firebaseDevices.some((device) => device.uid === req.topic.uid))
+      return cb('Failed! Permission denied!');
+    publishRequest(req);
+
+    cb('Sent!');
   });
 };
 
