@@ -44,7 +44,7 @@ export const setupEventListeners = (
   });
   socket.on('device_request', (data, cb) => {
     const req: Device.RequestDevice = JSON.parse(data);
-    //FIXME: Add some type for that
+    //FIXME: Add some type for returned value
     if (!firebaseDevices.some((device) => device.uid === req.topic.uid))
       return cb('Failed! Permission denied!');
     publishRequest(req);

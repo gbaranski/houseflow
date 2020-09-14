@@ -41,4 +41,5 @@ export const publishRequest = async (request: Device.RequestDevice) => {
   console.log(
     `Request for ${request.topic.uid} ${request.topic.name} published ID ${messageId}.`,
   );
+  console.log(`PUBLISH TIME: ${Date.now()}`);
 };

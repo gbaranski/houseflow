@@ -16,7 +16,7 @@ const requestListener: http.RequestListener = (req, res) => {
 
 const httpServer = http.createServer(requestListener);
 
-const mqttClient = mqtt.connect('mqtt://mosquitto:1883');
+export const mqttClient = mqtt.connect('mqtt://mosquitto:1883');
 mqttClient.on('connect', () => {
   mqttClient.subscribe(ON_CONNECTED_TOPIC);
   console.log('Initialized connection with MQTT');

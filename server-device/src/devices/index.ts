@@ -1,11 +1,12 @@
 import { publishDeviceData, publishDeviceDisconnect } from '@/services/gcloud';
+import { getEventTopic } from '@/topics';
 import {
   Device as DeviceType,
   Watermixer,
   Alarmclock,
   AnyDeviceData,
 } from '@gbaranski/types';
-import { MqttClient } from 'mqtt';
+import { mqttClient } from '..';
 
 export default abstract class Device<
   DataType extends Watermixer.Data | Alarmclock.Data | AnyDeviceData
@@ -15,16 +16,37 @@ export default abstract class Device<
   public status = false;
 
   constructor(
-    protected mqttClient: MqttClient,
     public readonly firebaseDevice: DeviceType.FirebaseDevice,
-    protected activeDevice: DeviceType.ActiveDevice<DataType>,
+    protected _activeDevice: DeviceType.ActiveDevice<DataType>,
   ) {
     Device.currentDeviceObjects.push(this);
     this.status = true;
-    publishDeviceData(this.activeDevice);
+    publishDeviceData(this._activeDevice);
   }
 
-  abstract requestDevice(request: DeviceType.RequestDevice): any;
+  public static async sendRequest(
+    request: DeviceType.RequestDevice,
+    deviceObj: Promise<Device<AnyDeviceData>>,
+  ) {
+    console.log(`Sending ${request.topic.name} to ${request.topic.uid}`);
+
+    mqttClient.publish(
+      getEventTopic(request),
+      request.data ? JSON.stringify(request.data) : '',
+    );
+    deviceObj
+      .then((deviceObjectResolved) =>
+        deviceObjectResolved.handleRequest(request),
+      )
+      .catch((e) => {
+        //FIXME: fix that one below
+        console.log(
+          `${e} when searching for deviceObject, might be because server restarted but ESP keeps connection`,
+        );
+      });
+  }
+
+  abstract handleRequest(request: DeviceType.RequestDevice): any;
 
   public terminateConnection(reason: string): void {
     console.log('should terminate now');
@@ -35,6 +57,10 @@ export default abstract class Device<
     Device.currentDeviceObjects = Device.currentDeviceObjects.filter(
       (deviceObj) => deviceObj.firebaseDevice.uid !== this.firebaseDevice.uid,
     );
-    publishDeviceDisconnect(this.activeDevice);
+    publishDeviceDisconnect(this._activeDevice);
+  }
+
+  get activeDevice(): DeviceType.ActiveDevice<DataType> {
+    return this._activeDevice;
   }
 }

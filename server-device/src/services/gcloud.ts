@@ -1,5 +1,9 @@
 import Device from '@/devices';
-import { Device as DeviceType, CloudTopics } from '@gbaranski/types';
+import {
+  Device as DeviceType,
+  CloudTopics,
+  AnyDeviceData,
+} from '@gbaranski/types';
 import { Message, PubSub } from '@google-cloud/pubsub';
 
 const pubSubClient = new PubSub();
@@ -15,20 +19,27 @@ const onSubError = (message: Message) => {
 };
 
 const onRequestMessage = async (message: Message) => {
-  console.log(`Received request ${message.id}`);
-  console.log(`Request: ${message.data.toString()}`);
+  console.log(`RECEIVE TIME: ${Date.now()}`);
   const request = JSON.parse(
     message.data.toString(),
   ) as DeviceType.RequestDevice;
-  message.ack();
+  console.log(
+    `Received request: ${request.topic.name} to ${request.topic.uid}`,
+  );
 
   if (!request.topic.uid) throw new Error('Device uid is not defined');
 
-  const deviceObj = Device.currentDeviceObjects.find(
-    (devObj) => request.topic.uid === devObj.firebaseDevice.uid,
+  const deviceObjPromise = new Promise<Device<AnyDeviceData>>(
+    (resolve, reject) => {
+      const found = Device.currentDeviceObjects.find(
+        (deviceObject) => request.topic.uid === deviceObject.firebaseDevice.uid,
+      );
+      if (found) resolve(found);
+      if (!found) reject("Couldn't find device object");
+    },
   );
-  if (!deviceObj) throw new Error('Couldnt find device object');
-  deviceObj.requestDevice(request);
+  Device.sendRequest(request, deviceObjPromise);
+  message.ack();
 };
 
 export async function publishDeviceData(device: DeviceType.ActiveDevice) {

@@ -1,25 +1,20 @@
 import Device from '../';
-import {
-  Device as DeviceType,
-  Client,
-  Alarmclock
-} from '@gbaranski/types';
-import { MqttClient } from 'mqtt';
+import { Device as DeviceType, Alarmclock } from '@gbaranski/types';
 
 class AlarmclockDevice extends Device<Alarmclock.Data> {
   constructor(
-    mqttClient: MqttClient,
     firebaseDevice: DeviceType.FirebaseDevice,
     activeDevice: DeviceType.ActiveDevice<Alarmclock.Data>,
   ) {
-    super(mqttClient, firebaseDevice, activeDevice);
+    super(firebaseDevice, activeDevice);
   }
 
-  public handleMessage(message: any): void { // TODO fix later
+  public handleMessage(message: any): void {
+    // TODO fix later
     console.log({ message });
   }
 
-  public requestDevice(request: DeviceType.RequestDevice) {
+  public handleRequest(request: DeviceType.RequestDevice) {
     // const requestData = {
     //   type: request.requestType,
     //   data: request.data,
