@@ -9,15 +9,16 @@ export default () => {
   const [allConnections, setAllConnections] = useState<CurrentConnections>();
   const [allFirebaseDevices, setAllFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
 
-  const onMessage = (message: MessageEvent) => {
-    const response = JSON.parse(message.data) as Client.Response;
-    if (response.requestType === 'DATA') {
-      console.log('Received new data', response.data);
-      setActiveDevices(response.data as Device.ActiveDevice[]);
-    } else if (response.requestType === 'CONNECTIONS') {
-      console.log('Received connections', response.data);
-      setAllConnections(response.data as CurrentConnections);
-    }
+  const onMessage = (message: string) => {
+    console.log(message);
+    // const response = JSON.parse(message.data) as Client.Response;
+    // if (response.requestType === 'DATA') {
+    //   console.log('Received new data', response.data);
+    //   setActiveDevices(response.data as Device.ActiveDevice[]);
+    // } else if (response.requestType === 'CONNECTIONS') {
+    //   console.log('Received connections', response.data);
+    //   setAllConnections(response.data as CurrentConnections);
+    // }
   };
 
   const setupListeners = () => {
