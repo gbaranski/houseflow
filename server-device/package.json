@@ -29,7 +29,7 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-import-resolver-typescript": "^2.2.1",
     "eslint-plugin-import": "^2.22.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "ts-node": "^8.10.2",
     "ts-node-dev": "^1.0.0-pre.57",
     "tsconfig-paths": "^3.9.0",
