@@ -5,14 +5,21 @@ import { useModel } from 'umi';
 import DeviceList from '@/components/DevicesList';
 
 export default (): React.ReactNode => {
-  const { setupListeners, getAndSetFirebaseDevices, firebaseDevices, activeDevices } = useModel(
-    'deviceData',
-  );
+  const {
+    getAndSetFirebaseDevices,
+    firebaseDevices,
+    activeDevices,
+    getActiveDevices,
+    setDataListeners,
+  } = useModel('deviceData');
   const { initialState } = useModel('@@initialState');
-  const { firebaseUser } = initialState || {};
-  setupListeners();
+  const { firebaseUser, socket } = initialState || {};
+
   useEffect(() => {
     getAndSetFirebaseDevices(firebaseUser);
+    if (!socket) throw new Error('Socket is not defined');
+    getActiveDevices(socket);
+    setDataListeners(socket);
   }, []);
 
   return (

@@ -2,14 +2,13 @@ import socketio from 'socket.io';
 import chalk from 'chalk';
 import {
   joinDeviceChannels,
-  publishDeviceData,
   setupEventListeners,
   verifyClient,
 } from '@/services/websocket';
 import http from 'http';
 import { convertToFirebaseUser, DocumentReference } from './services/firebase';
-import { activeDevices, subscribeToDevicesData } from './services/gcloud';
-import { Device, Watermixer } from '@gbaranski/types';
+import { subscribeToDevicesData } from './services/gcloud';
+import { Device } from '@gbaranski/types';
 
 const PORT = process.env.PORT_CLIENT;
 if (!PORT) throw new Error('Port is not defined in .env');
@@ -48,13 +47,7 @@ io.on('connection', async (socket) => {
     ),
   );
   joinDeviceChannels(firebaseDevices, firebaseUser.uid, socket);
-  setupEventListeners(socket, firebaseUser.uid);
-
-  activeDevices.forEach((device) => {
-    if (firebaseDevices.some((_device) => _device.uid === device.uid)) {
-      publishDeviceData(io, device);
-    }
-  });
+  setupEventListeners(socket, firebaseUser.uid, firebaseDevices);
 });
 
 httpServer.listen(PORT, () =>
