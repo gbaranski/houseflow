@@ -1,3 +1,4 @@
+import { mdiPowerSocketIt } from '@mdi/js';
 import io from 'socket.io-client';
 
 const SOCKET_URL =
@@ -14,16 +15,17 @@ export const connectWebsocket = (token: string) => {
       token,
     },
   });
+  setupOnOpenListeners();
   console.log({ socket });
 };
 
-export const setupOnOpenListeners = (onDeviceData: (message: string) => any) => {
+export const setupOnOpenListeners = () => {
+  console.log('SetupOnOpenListeners');
   if (!socket) throw new Error('Websocket is not defined');
-  socket.on('open', () => {
+  socket.on('connect', () => {
+    console.log('Socket opened');
     if (!socket) throw new Error('Websocket is not defined');
-
-    socket.removeEventListener('device_data');
-    socket.on('device_data', onDeviceData);
+    socket.on('device_data', (data: any) => console.log(data));
   });
 };
 

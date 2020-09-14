@@ -2,13 +2,14 @@ import socketio from 'socket.io';
 import chalk from 'chalk';
 import {
   joinDeviceChannels,
+  publishDeviceData,
   setupEventListeners,
   verifyClient,
 } from '@/services/websocket';
 import http from 'http';
-import '@/services/redis_sub';
-import '@/services/redis_pub';
-import { convertToFirebaseUser } from './services/firebase';
+import { convertToFirebaseUser, DocumentReference } from './services/firebase';
+import { activeDevices, subscribeToDevicesData } from './services/gcloud';
+import { Device, Watermixer } from '@gbaranski/types';
 
 const PORT = process.env.PORT_CLIENT;
 if (!PORT) throw new Error('Port is not defined in .env');
@@ -18,9 +19,10 @@ const requestListener: http.RequestListener = (req, res) => {
   res.end('Hello from client zone');
 };
 
+subscribeToDevicesData();
 const httpServer = http.createServer(requestListener);
 
-const io = socketio(httpServer, {});
+export const io = socketio(httpServer, {});
 
 io.use(async (socket, next) => {
   try {
@@ -39,8 +41,20 @@ io.on('connection', async (socket) => {
   const decodedClient = await verifyClient(socket);
   const firebaseUser = await convertToFirebaseUser(decodedClient.uid);
 
-  joinDeviceChannels(firebaseUser, socket);
+  const firebaseDevices = await Promise.all(
+    firebaseUser.devices.map(
+      async (ref: DocumentReference) =>
+        (await ref.get()).data() as Device.ActiveDevice,
+    ),
+  );
+  joinDeviceChannels(firebaseDevices, firebaseUser.uid, socket);
   setupEventListeners(socket, firebaseUser.uid);
+
+  activeDevices.forEach((device) => {
+    if (firebaseDevices.some((_device) => _device.uid === device.uid)) {
+      publishDeviceData(io, device);
+    }
+  });
 });
 
 httpServer.listen(PORT, () =>
