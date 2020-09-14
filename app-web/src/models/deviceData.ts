@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Device, Client, CurrentConnections } from '@gbaranski/types';
-import { setupOnOpenListeners } from '@/services/websocket';
 import { getAllowedDevices, getAllDevices } from '@/services/firebase';
 
 export default () => {
@@ -9,19 +8,26 @@ export default () => {
   const [allConnections, setAllConnections] = useState<CurrentConnections>();
   const [allFirebaseDevices, setAllFirebaseDevices] = useState<Device.FirebaseDevice[]>([]);
 
-  const onMessage = (message: string) => {
-    console.log(message);
-    // const response = JSON.parse(message.data) as Client.Response;
-    // if (response.requestType === 'DATA') {
-    //   console.log('Received new data', response.data);
-    //   setActiveDevices(response.data as Device.ActiveDevice[]);
-    // } else if (response.requestType === 'CONNECTIONS') {
-    //   console.log('Received connections', response.data);
-    //   setAllConnections(response.data as CurrentConnections);
-    // }
+  const setDataListeners = (socket: SocketIOClient.Socket) => {
+    socket.on('device_update', (data: string) => {
+      console.log(`Received device_update ${data}`);
+      const activeDevice: Device.ActiveDevice = JSON.parse(data);
+      const doesAlreadyExist = activeDevices.some((device) => device.uid === activeDevice.uid);
+      if (doesAlreadyExist) {
+        setActiveDevices(
+          activeDevices.map((device) => (device.uid === activeDevice.uid ? activeDevice : device)),
+        );
+      } else {
+        setActiveDevices(activeDevices.concat(activeDevice));
+      }
+    });
   };
-
-  const setupListeners = () => {};
+  const getActiveDevices = (socket: SocketIOClient.Socket) => {
+    socket.emit('get_active_devices', (data: string) => {
+      console.log({ deviceData: JSON.parse(data) });
+      setActiveDevices(JSON.parse(data));
+    });
+  };
 
   const getAndSetFirebaseDevices = async (firebaseUser: Client.FirebaseUser | undefined) => {
     if (!firebaseUser) throw new Error('Firebase user is not defined');
@@ -36,11 +42,12 @@ export default () => {
   };
 
   return {
+    setDataListeners,
+    getActiveDevices,
     activeDevices,
     setActiveDevices,
     firebaseDevices,
     setFirebaseDevices,
-    setupListeners,
     getAndSetFirebaseDevices,
     allConnections,
     allFirebaseDevices,

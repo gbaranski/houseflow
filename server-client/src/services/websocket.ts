@@ -1,7 +1,8 @@
 import socketio from 'socket.io';
-import { decodeClientToken, DocumentReference } from '@/services/firebase';
+import { decodeClientToken } from '@/services/firebase';
 import { admin } from 'firebase-admin/lib/auth';
-import { Client, Device, Watermixer } from '@gbaranski/types';
+import { Device } from '@gbaranski/types';
+import { activeDevices } from './gcloud';
 
 export const verifyClient = async (
   socket: socketio.Socket,
@@ -23,7 +24,11 @@ export const joinDeviceChannels = async (
   });
 };
 
-export const setupEventListeners = (socket: socketio.Socket, uid: string) => {
+export const setupEventListeners = (
+  socket: socketio.Socket,
+  uid: string,
+  firebaseDevices: Device.FirebaseDevice[],
+) => {
   socket.on('event', (data) => {
     console.log(`${uid} sent event`);
     console.log(data);
@@ -31,12 +36,18 @@ export const setupEventListeners = (socket: socketio.Socket, uid: string) => {
   socket.on('disconnect', () => {
     console.log(`${uid} disconnected`);
   });
+  socket.on('get_active_devices', (fn) => {
+    const devices: Device.ActiveDevice[] = activeDevices.filter((device) =>
+      firebaseDevices.some((_device) => _device.uid === device.uid),
+    );
+    fn(JSON.stringify(devices));
+  });
 };
 
-export const publishDeviceData = (
+export const updateDeviceData = (
   socket: socketio.Server,
   device: Device.ActiveDevice,
 ) => {
-  console.log('Publishing device data over socket');
-  socket.to(device.uid).emit('device_data', JSON.stringify(device));
+  console.log(`Publishing ${device.uid} data over socket`);
+  socket.to(device.uid).emit('device_update', JSON.stringify(device));
 };

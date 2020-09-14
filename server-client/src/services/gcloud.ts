@@ -1,7 +1,7 @@
 import { Device } from '@gbaranski/types';
 import { PubSub, Message } from '@google-cloud/pubsub';
 import { io } from '..';
-import { publishDeviceData } from './websocket';
+import { updateDeviceData } from './websocket';
 
 export let activeDevices: Device.ActiveDevice[] = [];
 
@@ -35,5 +35,5 @@ const onDataMessage = (message: Message) => {
   activeDevices = activeDevices
     .filter((device) => activeDevice.uid !== device.uid)
     .concat(activeDevice);
-  publishDeviceData(io, activeDevice);
+  updateDeviceData(io, activeDevice);
 };

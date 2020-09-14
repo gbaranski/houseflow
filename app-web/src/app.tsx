@@ -26,7 +26,6 @@ export async function getInitialState(): Promise<{
       if (!firebaseUser) throw new Error('No user in database'); // handle it later
 
       const socket = await connectWebsocket(await getIdToken());
-      socket.on('device_data', console.log);
 
       return {
         socket,
