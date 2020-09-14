@@ -4,6 +4,10 @@ import { MqttClient } from 'mqtt';
 import { getEventTopic } from '@/topics';
 import { publishDeviceData } from '@/services/gcloud';
 
+const MILLIS_IN_SECOND = 1000;
+const SECOND_IN_MINUTE = 60;
+const MIX_MINUTES = 10;
+
 class WatermixerDevice extends Device<Watermixer.Data> {
   constructor(
     mqttClient: MqttClient,
@@ -19,7 +23,8 @@ class WatermixerDevice extends Device<Watermixer.Data> {
   }
 
   private startMixing() {
-    this.activeDevice.data.finishMixTimestamp = Date.now();
+    this.activeDevice.data.finishMixTimestamp =
+      Date.now() + MILLIS_IN_SECOND * SECOND_IN_MINUTE * MIX_MINUTES;
 
     publishDeviceData(this.activeDevice);
   }

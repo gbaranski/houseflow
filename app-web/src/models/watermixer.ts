@@ -1,16 +1,18 @@
 import { Device } from '@gbaranski/types';
-import { getWebsocket } from '@/services/websocket';
+import { message } from 'antd';
 
 export default () => {
-  const mixWater = (uid: string) => {
+  const mixWater = (uid: string, socket: SocketIOClient.Socket) => {
     console.log('Mixing water');
     const req: Device.RequestDevice = {
       topic: {
         name: 'startmix',
         uid,
-      }
+      },
     };
-    getWebsocket()?.send(JSON.stringify(req));
+    socket.emit('device_request', JSON.stringify(req), (data: string) => {
+      message.info(data);
+    });
   };
 
   return {
