@@ -15,14 +15,14 @@ import {
 import { message } from 'antd';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyCpRLmvfBf-SpwkDUHKa_vrbEeIvSzHNOY',
-  authDomain: 'controlhome-7bbcc.firebaseapp.com',
-  databaseURL: 'https://controlhome-7bbcc.firebaseio.com',
-  projectId: 'controlhome-7bbcc',
-  storageBucket: 'controlhome-7bbcc.appspot.com',
-  messagingSenderId: '794654805763',
-  appId: '1:794654805763:web:9178272307d06e5eade336',
-  measurementId: 'G-J8271YJZER',
+  apiKey: 'AIzaSyAC2m1CB6x8J4YXnmmkdY6LL9cW3xXjNwM',
+  authDomain: 'controlhome.firebaseapp.com',
+  databaseURL: 'https://controlhome.firebaseio.com',
+  projectId: 'controlhome',
+  storageBucket: 'controlhome.appspot.com',
+  messagingSenderId: '917528821196',
+  appId: '1:917528821196:web:49e832b53c90b6aab57169',
+  measurementId: 'G-GET25DVWHE',
 };
 
 const app = firebase.initializeApp(firebaseConfig);
@@ -74,7 +74,8 @@ export async function getTempHistory() {
 
 export async function convertToFirebaseUser(user: firebase.User): Promise<Client.FirebaseUser> {
   if (!user) throw new Error('User is not defined');
-  const usersDoc = await usersCollection.doc(user.uid).get();
+  console.log('Converting to firebase user');
+  const usersDoc = await usersCollection.doc(user.uid).get({});
   if (!usersDoc.exists) throw new Error('User does not exist in database');
   const usersData = usersDoc.data() as Client.FirebaseUser;
   const firebaseUser: Client.FirebaseUser = {
