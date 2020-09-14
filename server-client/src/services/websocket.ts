@@ -1,7 +1,7 @@
 import socketio from 'socket.io';
 import { decodeClientToken, DocumentReference } from '@/services/firebase';
 import { admin } from 'firebase-admin/lib/auth';
-import { Client, Device } from '@gbaranski/types';
+import { Client, Device, Watermixer } from '@gbaranski/types';
 
 export const verifyClient = async (
   socket: socketio.Socket,
@@ -13,16 +13,13 @@ export const verifyClient = async (
 };
 
 export const joinDeviceChannels = async (
-  firebaseUser: Client.FirebaseUser,
+  devices: Device.FirebaseDevice[],
+  clientUid: string,
   client: socketio.Socket,
 ) => {
-  firebaseUser.devices.forEach(async (deviceRef: DocumentReference) => {
-    const snapshot = await deviceRef.get();
-    const device = snapshot.data() as Device.FirebaseDevice;
-    if (!device.uid)
-      throw new Error('There was an error with retreiving device uid');
+  devices.forEach(async (device) => {
     client.join(device.uid);
-    console.log(`${firebaseUser.uid} joined ${device.uid}`);
+    console.log(`${clientUid} joined ${device.uid}`);
   });
 };
 
@@ -34,4 +31,12 @@ export const setupEventListeners = (socket: socketio.Socket, uid: string) => {
   socket.on('disconnect', () => {
     console.log(`${uid} disconnected`);
   });
+};
+
+export const publishDeviceData = (
+  socket: socketio.Server,
+  device: Device.ActiveDevice,
+) => {
+  console.log('Publishing device data over socket');
+  socket.to(device.uid).emit('device_data', JSON.stringify(device));
 };
