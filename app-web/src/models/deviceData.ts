@@ -21,9 +21,7 @@ export default () => {
     // }
   };
 
-  const setupListeners = () => {
-    setupOnOpenListeners(onMessage);
-  };
+  const setupListeners = () => {};
 
   const getAndSetFirebaseDevices = async (firebaseUser: Client.FirebaseUser | undefined) => {
     if (!firebaseUser) throw new Error('Firebase user is not defined');
