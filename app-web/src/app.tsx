@@ -14,6 +14,7 @@ export async function getInitialState(): Promise<{
   firebaseUser?: Client.FirebaseUser;
   currentUser?: firebase.User;
   settings?: LayoutSettings;
+  socket?: SocketIOClient.Socket;
 }> {
   console.log('getInitalState', history.location.pathname);
   if (history.location.pathname !== '/user/login') {
@@ -23,9 +24,12 @@ export async function getInitialState(): Promise<{
 
       const firebaseUser = await convertToFirebaseUser(currentUser);
       if (!firebaseUser) throw new Error('No user in database'); // handle it later
-      connectWebsocket(await getIdToken());
+
+      const socket = await connectWebsocket(await getIdToken());
+      socket.on('device_data', console.log);
 
       return {
+        socket,
         firebaseUser,
         currentUser,
         settings: defaultSettings,
