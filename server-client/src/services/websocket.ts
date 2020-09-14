@@ -1,53 +1,37 @@
-import { VerifyInfo, VerifyCallback } from '@/types';
-import { decodeClientToken, convertToFirebaseUser } from '@/services/firebase';
-import WebSocket from 'ws';
-import { IncomingMessage } from 'http';
-import { getIpStr } from '@/services/misc';
-import WebSocketClient from '@/client';
-import { Client } from '@gbaranski/types';
+import socketio from 'socket.io';
+import { decodeClientToken, DocumentReference } from '@/services/firebase';
+import { admin } from 'firebase-admin/lib/auth';
+import { Client, Device } from '@gbaranski/types';
 
-export const verifyClient = (
-  info: VerifyInfo,
-  callback: VerifyCallback,
-): void => {
-  const rawToken = info.req.headers['sec-websocket-protocol'];
-  if (rawToken instanceof Array || !rawToken) {
-    callback(false, 400, 'Invalid token headers');
-    return;
-  }
-  try {
-    decodeClientToken(rawToken);
-  } catch (e) {
-    console.log(e);
-    callback(false, 401, 'Unauthorized');
-    return;
-  }
-  callback(true);
+export const verifyClient = async (
+  socket: socketio.Socket,
+): Promise<admin.auth.DecodedIdToken> => {
+  const { token } = socket.request;
+  if (!token) throw new Error('Token is not defined');
+  if (typeof token !== 'string') throw new Error('Token is not type of string');
+  return await decodeClientToken(token);
 };
 
-export const onConnection = async (ws: WebSocket, req: IncomingMessage) => {
-  const rawToken = req.headers['sec-websocket-protocol'];
-  if (!rawToken || rawToken instanceof Array) {
-    console.error('Missing or invalid token');
-    ws.terminate();
-    return;
-  }
+export const joinDeviceChannels = async (
+  firebaseUser: Client.FirebaseUser,
+  client: socketio.Socket,
+) => {
+  firebaseUser.devices.forEach(async (deviceRef: DocumentReference) => {
+    const snapshot = await deviceRef.get();
+    const device = snapshot.data() as Device.FirebaseDevice;
+    if (!device.uid)
+      throw new Error('There was an error with retreiving device uid');
+    client.join(device.uid);
+    console.log(`${firebaseUser.uid} joined ${device.uid}`);
+  });
+};
 
-  try {
-    const decodedClientId = decodeClientToken(rawToken);
-    console.log(
-      `New connection IP:${getIpStr(req)} UID:${(await decodedClientId).uid}`,
-    );
-    const firebaseUser = await convertToFirebaseUser(
-      (await decodedClientId).uid,
-    );
-    const activeUser: Client.ActiveUser = {
-      ...firebaseUser,
-      ip: getIpStr(req),
-    };
-    new WebSocketClient(ws, firebaseUser, activeUser);
-  } catch (e) {
-    console.error(e);
-    ws.terminate();
-  }
+export const setupEventListeners = (socket: socketio.Socket, uid: string) => {
+  socket.on('event', (data) => {
+    console.log(`${uid} sent event`);
+    console.log(data);
+  });
+  socket.on('disconnect', () => {
+    console.log(`${uid} disconnected`);
+  });
 };

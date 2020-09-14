@@ -1,9 +1,14 @@
-import WebSocket from 'ws';
+import socketio from 'socket.io';
 import chalk from 'chalk';
-import { verifyClient, onConnection } from '@/services/websocket';
+import {
+  joinDeviceChannels,
+  setupEventListeners,
+  verifyClient,
+} from '@/services/websocket';
 import http from 'http';
 import '@/services/redis_sub';
 import '@/services/redis_pub';
+import { convertToFirebaseUser } from './services/firebase';
 
 const PORT = process.env.PORT_CLIENT;
 if (!PORT) throw new Error('Port is not defined in .env');
@@ -15,18 +20,29 @@ const requestListener: http.RequestListener = (req, res) => {
 
 const httpServer = http.createServer(requestListener);
 
-export const wss: WebSocket.Server = new WebSocket.Server({
-  server: httpServer,
-  clientTracking: true,
-  verifyClient,
+const io = socketio(httpServer, {});
+
+io.use(async (socket, next) => {
+  try {
+    await verifyClient(socket);
+    next();
+  } catch (e) {
+    console.log(`${e.message} at Socket.IO client`);
+    socket.error(e.message);
+    socket.disconnect(true);
+  }
 });
 
-wss.on('connection', onConnection);
+io.on('connection', async (socket) => {
+  console.log('Someone is connecting');
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-httpServer.listen(PORT, '0.0.0.0', () =>
-  console.log(
-    chalk.yellow(`Listening for websocket_clients connection at port ${PORT}`),
-  ),
+  const decodedClient = await verifyClient(socket);
+  const firebaseUser = await convertToFirebaseUser(decodedClient.uid);
+
+  joinDeviceChannels(firebaseUser, socket);
+  setupEventListeners(socket, firebaseUser.uid);
+});
+
+httpServer.listen(PORT, () =>
+  console.log(chalk.yellow(`Listening for HTTP requests at ${PORT}`)),
 );

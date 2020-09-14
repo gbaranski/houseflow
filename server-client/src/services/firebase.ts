@@ -42,12 +42,8 @@ export async function convertToFirebaseDevice(
 export async function decodeClientToken(
   token: string,
 ): Promise<admin.auth.DecodedIdToken> {
-  try {
-    const decodedClient = await admin.auth().verifyIdToken(token);
-    return decodedClient;
-  } catch (e) {
-    throw e;
-  }
+  const decodedClient = await admin.auth().verifyIdToken(token);
+  return decodedClient;
 }
 
 export function sendMessage(username: string, requestTypeString: string): void {
