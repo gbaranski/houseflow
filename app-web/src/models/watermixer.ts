@@ -4,6 +4,7 @@ import { message } from 'antd';
 export default () => {
   const mixWater = (uid: string, socket: SocketIOClient.Socket) => {
     console.log('Mixing water');
+    console.log(Date.now());
     const req: Device.RequestDevice = {
       topic: {
         name: 'startmix',

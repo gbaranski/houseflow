@@ -15,10 +15,11 @@ export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
     if (!uid || !secret) throw new Error('UID or secret not defined');
 
     const firebaseDevice = await convertToFirebaseDevice(uid);
+    console.log(mqttClient.options);
 
     switch (firebaseDevice.type) {
       case 'WATERMIXER':
-        new WatermixerDevice(mqttClient, firebaseDevice, {
+        new WatermixerDevice(firebaseDevice, {
           ...firebaseDevice,
           data: Watermixer.SAMPLE,
           ip: '8.8.8.8',
@@ -27,7 +28,7 @@ export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
         break;
 
       case 'ALARMCLOCK':
-        new AlarmclockDevice(mqttClient, firebaseDevice, {
+        new AlarmclockDevice(firebaseDevice, {
           ...firebaseDevice,
           data: Alarmclock.SAMPLE,
           ip: '8.8.8.8',
