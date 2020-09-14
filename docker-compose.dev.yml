@@ -1,16 +1,5 @@
 version: '3.8'
 services:
-  redis:
-    image: 'redis:alpine'
-    container_name: 'redis'
-    command: ['redis-server', '--bind', 'redis', '--port', '6379']
-    ports:
-      - 6379:6379
-    environment:
-      - REDIS_REPLICATION_MODE=master
-    networks:
-      - backend
-
   mosquitto:
     image: 'eclipse-mosquitto'
     container_name: 'mosquitto'
@@ -22,6 +11,7 @@ services:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+
   server-api:
     tty: true
     container_name: 'server-api'
@@ -46,7 +36,6 @@ services:
     container_name: 'server-device'
     command: npm run start:dev
     depends_on:
-      - redis
       - server-api
       - mosquitto
     env_file:
@@ -68,7 +57,6 @@ services:
     container_name: 'server-client'
     command: npm run start:dev
     depends_on:
-      - redis
       - mosquitto
       - server-device
       - server-api
