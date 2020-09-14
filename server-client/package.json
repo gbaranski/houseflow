@@ -21,8 +21,6 @@
   "devDependencies": {
     "@gbaranski/types": "^4.0.36",
     "@types/geoip-lite": "^1.1.31",
-    "@types/jsonwebtoken": "^8.5.0",
-    "@types/redis": "^2.8.25",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
     "@typescript-eslint/parser": "^3.10.1",
     "dotenv": "^8.2.0",
@@ -40,8 +38,6 @@
     "@types/socket.io": "^2.1.11",
     "firebase-admin": "^9.1.0",
     "geoip-lite": "^1.4.2",
-    "jsonwebtoken": "^8.5.1",
-    "redis": "^3.0.2",
     "socket.io": "^2.3.0"
   }
 }
