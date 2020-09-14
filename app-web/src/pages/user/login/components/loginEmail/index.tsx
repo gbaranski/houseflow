@@ -1,9 +1,10 @@
 import React from 'react';
 import { signInWithCredentials } from '@/services/firebase';
 import { message, Input, Button, Form } from 'antd';
-import { history } from 'umi';
+import { history, useModel } from 'umi';
 
 export default function LoginEmail() {
+  const initialState = useModel('@@initialState');
   const onFinish = async (values: {
     email: string;
     password: string;
@@ -14,6 +15,7 @@ export default function LoginEmail() {
       if (!credentials.user) throw new Error('Current user not defined');
       message.info('User logged in');
       history.replace('/welcome');
+      initialState.refresh();
     } catch (e) {
       message.error(e.message);
       console.log(e);
