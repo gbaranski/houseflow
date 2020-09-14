@@ -1,31 +1,38 @@
-const WSS_URL =
-  process.env.NODE_ENV === 'development' ? 'ws://localhost:8001' : 'wss://api.gbaranski.com:443/wsc';
+import io from 'socket.io-client';
+
+const SOCKET_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:8001'
+    : 'https://api.gbaranski.com:443/wsc';
 
 console.log({ processenv: process.env.NODE_ENV });
-let websocket: WebSocket | undefined;
+let socket: SocketIOClient.Socket | undefined;
 
 export const connectWebsocket = (token: string) => {
-  websocket = new WebSocket(WSS_URL, token);
+  socket = io(SOCKET_URL, {
+    query: {
+      token,
+    },
+  });
+  console.log({ socket });
 };
 
-export const setupOnOpenListeners = (onMessage: (message: MessageEvent) => any) => {
-  if (!websocket) throw new Error('Websocket is not defined');
-  if (websocket.OPEN) {
-    websocket.onmessage = onMessage;
-    return;
-  }
-  websocket.onopen = () => {
-    if (!websocket) throw new Error('Websocket is not defined');
-    websocket.onmessage = onMessage;
-  };
+export const setupOnOpenListeners = (onDeviceData: (message: string) => any) => {
+  if (!socket) throw new Error('Websocket is not defined');
+  socket.on('open', () => {
+    if (!socket) throw new Error('Websocket is not defined');
+
+    socket.removeEventListener('device_data');
+    socket.on('device_data', onDeviceData);
+  });
 };
 
-export const getWebsocket = (): WebSocket | undefined => {
-  return websocket;
+export const getWebsocket = (): SocketIOClient.Socket | undefined => {
+  return socket;
 };
 
 export const sendCurrentConnectionsRequest = () => {
-  console.log("Not implemented");
+  console.log('Not implemented');
   // if (!websocket) throw new Error('Websocket is not defined');
   // const req: Device.RequestDevice = {
   //   requestType: 'CONNECTIONS',

@@ -6,7 +6,7 @@ import { Client, Device } from '@gbaranski/types';
 export const verifyClient = async (
   socket: socketio.Socket,
 ): Promise<admin.auth.DecodedIdToken> => {
-  const { token } = socket.request;
+  const { token } = socket.handshake.query;
   if (!token) throw new Error('Token is not defined');
   if (typeof token !== 'string') throw new Error('Token is not type of string');
   return await decodeClientToken(token);
