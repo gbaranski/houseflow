@@ -24,7 +24,10 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
     >
       <Row justify="space-around">
         <Col span={10} style={{ textAlign: 'left' }}>
-          <Statistic title="Mixing state" value={parseWaterBoolean(device.data.isTimerOn)} />
+          <Statistic
+            title="Mixing state"
+            value={parseWaterBoolean(device.data.finishMixTimestamp)}
+          />
         </Col>
         <Col span={10} style={{ textAlign: 'right' }}>
           <Statistic title="Time left" value={parseSeconds(device.data.remainingSeconds)} />
