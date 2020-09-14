@@ -30,7 +30,7 @@ export interface CurrentConnections {
   clients: Client.ActiveUser[];
 }
 
-enum CloudTopics {
+export enum CloudTopics {
   DEVICE_DATA = 'device_data',
   DEVICE_DISCONNECT = 'device_disconnect',
   DEVICE_REQUEST = 'device_request',
