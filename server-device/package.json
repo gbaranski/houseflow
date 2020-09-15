@@ -21,6 +21,7 @@
   "license": "ISC",
   "devDependencies": {
     "@gbaranski/types": "^4.0.36",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/geoip-lite": "^1.1.31",
     "@types/node-fetch": "^2.5.7",
     "@typescript-eslint/eslint-plugin": "^3.10.1",
@@ -40,6 +41,7 @@
     "chalk": "^4.1.0",
     "firebase-admin": "^9.1.0",
     "geoip-lite": "^1.4.2",
+    "jsonwebtoken": "^8.5.1",
     "mqtt": "^4.2.1"
   }
 }

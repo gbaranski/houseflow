@@ -43,7 +43,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect(DEVICE_UID)) {
+    if (client.connect("WATERMIXER", DEVICE_UID, DEVICE_SECRET)) {
       Serial.println("connected");
       subscribeTopics();
       publishConnected();

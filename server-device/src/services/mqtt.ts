@@ -15,7 +15,6 @@ export const onConnection = async (mqttClient: MqttClient, message: Buffer) => {
     if (!uid || !secret) throw new Error('UID or secret not defined');
 
     const firebaseDevice = await convertToFirebaseDevice(uid);
-    console.log(mqttClient.options);
 
     switch (firebaseDevice.type) {
       case 'WATERMIXER':
