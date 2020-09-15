@@ -9,6 +9,7 @@
 
 Home automation platform for IoT devices like ESP8266 and ESP32, most of it is built on Typescript and C++
 
+## Documentation is a little bit outdated, will update soon
 ## Documentation
 The documentation is divided into several sections:
 
