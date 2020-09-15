@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import chalk from 'chalk';
 import http from 'http';
 import mqtt from 'mqtt';
@@ -7,7 +8,8 @@ import { ON_CONNECTED_TOPIC } from './topics';
 import { subscribeToRequests } from '@/services/gcloud';
 
 const PORT = process.env.PORT_DEVICE || 8001;
-if (!PORT) throw new Error('Port is not defined in .env');
+const JWT_KEY = process.env.JWT_KEY;
+if (!JWT_KEY) throw new Error('JWT_KEY is not defined in .env');
 
 const requestListener: http.RequestListener = (req, res) => {
   res.writeHead(200);
@@ -16,7 +18,13 @@ const requestListener: http.RequestListener = (req, res) => {
 
 const httpServer = http.createServer(requestListener);
 
-export const mqttClient = mqtt.connect('mqtt://mosquitto:1883');
+const mqttToken = jwt.sign({}, JWT_KEY, { expiresIn: '5m' });
+export const mqttClient = mqtt.connect('mqtt://mosquitto:1883', {
+  username: 'server-device',
+  password: mqttToken,
+  clientId: `server-device_${Math.random().toString(16).substr(2, 8)}`,
+});
+
 mqttClient.on('connect', () => {
   mqttClient.subscribe(ON_CONNECTED_TOPIC);
   console.log('Initialized connection with MQTT');
