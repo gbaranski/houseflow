@@ -29,48 +29,5 @@ services:
     networks:
       - backend
 
-  server-device:
-    tty: true
-    container_name: 'server-device'
-    command: npm run start:dev
-    depends_on:
-      - server-api
-      - mosquitto
-    env_file:
-      - .env
-    build:
-      context: ./server-device
-      dockerfile: Dockerfile
-    ports:
-      - $PORT_DEVICE:$PORT_DEVICE
-    restart: 'unless-stopped'
-    volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./server-device/src:/server/src
-    networks:
-      - backend
-
-  server-client:
-    tty: true
-    container_name: 'server-client'
-    command: npm run start:dev
-    depends_on:
-      - mosquitto
-      - server-device
-      - server-api
-    env_file:
-      - .env
-    build:
-      context: ./server-client
-      dockerfile: Dockerfile
-    ports:
-      - $PORT_CLIENT:$PORT_CLIENT
-    restart: 'unless-stopped'
-    volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./server-client/src:/server/src
-    networks:
-      - backend
-
 networks:
   backend:
