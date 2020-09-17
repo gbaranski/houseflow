@@ -1,17 +1,9 @@
 import firebase, { User } from 'firebase/app';
 import 'firebase/firestore';
+import 'firebase/firebase-database';
 import 'firebase/analytics';
 import 'firebase/auth';
-
-import {
-  RequestHistory,
-  TempHistory,
-  Client,
-  Device,
-  Alarmclock,
-  Watermixer,
-  AnyDeviceData,
-} from '@gbaranski/types';
+import { Client, Device, Alarmclock, Watermixer, AnyDeviceData } from '@gbaranski/types';
 import { message } from 'antd';
 
 const firebaseConfig = {
@@ -28,11 +20,12 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
+const database = firebase.database();
+const usersRef = database.ref('users');
+
 const firestore = firebase.firestore();
-const requestFirestoreCollection = firestore.collection('requests');
 const devicesFirestoreCollection = firestore.collection('devices');
 const devicesPrivateFirestoreCollection = firestore.collection('devices-private');
-const tempHistoryFirestoreCollection = firestore.collection('temp-history');
 const usersFirestoreCollection = firestore.collection('users');
 
 export const firebaseAuth: firebase.auth.Auth = app.auth();
@@ -51,25 +44,6 @@ export async function signInWithCredentials(
 export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredential> {
   await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   return firebaseAuth.signInWithPopup(googleProvider);
-}
-
-export async function getRequestHistory() {
-  const requestHistory: RequestHistory[] = [];
-  (await requestFirestoreCollection.get()).forEach((doc) => {
-    const docData: RequestHistory = doc.data() as RequestHistory;
-    requestHistory.push(docData);
-  });
-  return requestHistory;
-}
-
-export async function getTempHistory() {
-  const tempHistory: TempHistory[] = [];
-  (await tempHistoryFirestoreCollection.get()).forEach((doc) => {
-    const docData: TempHistory = doc.data() as TempHistory;
-    tempHistory.push(docData);
-  });
-  console.log(tempHistory);
-  return tempHistory;
 }
 
 export async function convertToFirebaseUser(user: firebase.User): Promise<Client.FirebaseUser> {
