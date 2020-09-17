@@ -28,12 +28,12 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
-const db = firebase.firestore();
-const requestCollection = db.collection('requests');
-const devicesCollection = db.collection('devices');
-const devicesPrivateCollection = db.collection('devices-private');
-const tempHistoryCollection = db.collection('temp-history');
-const usersCollection = db.collection('users');
+const firestore = firebase.firestore();
+const requestFirestoreCollection = firestore.collection('requests');
+const devicesFirestoreCollection = firestore.collection('devices');
+const devicesPrivateFirestoreCollection = firestore.collection('devices-private');
+const tempHistoryFirestoreCollection = firestore.collection('temp-history');
+const usersFirestoreCollection = firestore.collection('users');
 
 export const firebaseAuth: firebase.auth.Auth = app.auth();
 
@@ -55,7 +55,7 @@ export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredent
 
 export async function getRequestHistory() {
   const requestHistory: RequestHistory[] = [];
-  (await requestCollection.get()).forEach((doc) => {
+  (await requestFirestoreCollection.get()).forEach((doc) => {
     const docData: RequestHistory = doc.data() as RequestHistory;
     requestHistory.push(docData);
   });
@@ -64,7 +64,7 @@ export async function getRequestHistory() {
 
 export async function getTempHistory() {
   const tempHistory: TempHistory[] = [];
-  (await tempHistoryCollection.get()).forEach((doc) => {
+  (await tempHistoryFirestoreCollection.get()).forEach((doc) => {
     const docData: TempHistory = doc.data() as TempHistory;
     tempHistory.push(docData);
   });
@@ -75,7 +75,7 @@ export async function getTempHistory() {
 export async function convertToFirebaseUser(user: firebase.User): Promise<Client.FirebaseUser> {
   if (!user) throw new Error('User is not defined');
   console.log('Converting to firebase user');
-  const usersDoc = await usersCollection.doc(user.uid).get({});
+  const usersDoc = await usersFirestoreCollection.doc(user.uid).get({});
   if (!usersDoc.exists) throw new Error('User does not exist in database');
   const usersData = usersDoc.data() as Client.FirebaseUser;
   const firebaseUser: Client.FirebaseUser = {
@@ -141,19 +141,19 @@ export function getCurrentUser(): Promise<User | undefined> {
 export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
   if (!firebaseDevice.secret) throw new Error('Secret is mising!');
 
-  await devicesCollection.doc(firebaseDevice.uid).set({
+  await devicesFirestoreCollection.doc(firebaseDevice.uid).set({
     uid: firebaseDevice.uid,
     type: firebaseDevice.type,
   });
 
-  await devicesPrivateCollection.doc(firebaseDevice.uid).set({
+  await devicesPrivateFirestoreCollection.doc(firebaseDevice.uid).set({
     secret: firebaseDevice.secret,
   });
 }
 
 export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
   const devices: Device.FirebaseDevice[] = [];
-  const querySnapshot = devicesCollection.get();
+  const querySnapshot = devicesFirestoreCollection.get();
   (await querySnapshot).forEach((doc) => {
     const data = doc.data();
     if (!data.uid || !data.type)
@@ -170,8 +170,8 @@ export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
 
 export async function deleteDevice(device: Device.FirebaseDevice) {
   try {
-    await devicesCollection.doc(device.uid).delete();
-    await devicesPrivateCollection.doc(device.uid).delete();
+    await devicesFirestoreCollection.doc(device.uid).delete();
+    await devicesPrivateFirestoreCollection.doc(device.uid).delete();
     message.info(`Success deleting device with UID: ${device.uid}`);
   } catch (e) {
     message.error(`Failed removing device with ID ${device.uid}`);
