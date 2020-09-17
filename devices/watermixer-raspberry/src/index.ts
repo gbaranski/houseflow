@@ -8,8 +8,9 @@ if (!DEVICE_UID || !DEVICE_SECRET || !MQTT_URL) {
 }
 
 const mqttClient = mqtt.connect(MQTT_URL, {
-  username: 'watermixer',
-  password: 'sometoken',
+  clientId: 'device_' + Math.random().toString(16).substr(2, 8),
+  username: DEVICE_UID,
+  password: DEVICE_SECRET,
 });
 
 mqttClient.on('connect', () => onConnection(mqttClient));
