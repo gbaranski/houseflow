@@ -22,17 +22,11 @@ const validateForDevice = async (requestData: RequestData) => {
   });
 };
 
-const validateForServerDevice = (requestData: RequestData) => {
-  jwt.verify(requestData.password, JWT_KEY);
-};
-
 const router = express.Router();
 router.post('/user', async (req, res) => {
   const requestData = getRequestData(req);
   try {
-    if (requestData.clientid.startsWith('server-device')) {
-      validateForServerDevice(requestData);
-    } else {
+    if (requestData.clientid.startsWith('device')) {
       await validateForDevice(requestData);
     }
     res.sendStatus(200);
