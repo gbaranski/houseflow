@@ -1,38 +1,11 @@
-import { JWT_KEY } from '@/index';
 import { validateDevice } from '@/services/firebase';
 import express from 'express';
-import jwt from 'jsonwebtoken';
-
-interface RequestData {
-  clientid: string;
-  username: string;
-  password: string;
-}
-
-const getRequestData = (req: express.Request): RequestData => ({
-  clientid: req.body.clientid,
-  username: req.body.username,
-  password: req.body.password,
-});
-
-const validateForDevice = async (requestData: RequestData) => {
-  await validateDevice({
-    uid: requestData.username,
-    secret: requestData.password,
-  });
-};
 
 const router = express.Router();
+
 router.post('/user', async (req, res) => {
-  const requestData = getRequestData(req);
-  try {
-    if (requestData.clientid.startsWith('device')) {
-      await validateForDevice(requestData);
-    }
-    res.sendStatus(200);
-  } catch (e) {
-    console.log(`${requestData.clientid} failed due to ${e.message} `);
-  }
+  console.log('USER: ', req.body);
+  res.sendStatus(200);
 });
 
 router.post('/acl', (req, res) => {
