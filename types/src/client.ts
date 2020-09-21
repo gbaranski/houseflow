@@ -3,7 +3,7 @@ export namespace Client {
 
   export interface FirebaseUserDevice {
     notification: boolean;
-    uid: boolean;
+    uid: string;
   }
 
   export interface FirebaseUser {
