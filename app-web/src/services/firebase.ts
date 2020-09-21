@@ -92,7 +92,7 @@ export async function getAllowedDevices(
 
 export const subscribeAllowedDevices = (
   firebaseUser: Client.FirebaseUser,
-  onUpdate: (firebaseDevice: Device.FirebaseDevice) => any,
+  onUpdate: (firebaseDevice: Device.FirebaseDevice) => void,
 ) => {
   firebaseUser.devices.forEach((device) => {
     deviceRef.child(device.uid).on('value', (snapshot) => {
