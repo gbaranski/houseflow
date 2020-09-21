@@ -27,22 +27,22 @@ export namespace Device {
 
   export interface ResponseDevice<
     T extends Alarmclock.Data | Watermixer.Data | undefined
-    > {
+  > {
     responseFor: RequestType;
     data: T;
   }
 
-  export interface FirebaseDevice {
-    type: DeviceType;
-    secret?: string;
-    uid: string;
-  }
-  export interface ActiveDevice<
+  export interface FirebaseDevice<
     DeviceData extends
-    | Alarmclock.Data
-    | Watermixer.Data
-    | AnyDeviceData = AnyDeviceData
-    > extends FirebaseDevice {
+      | Alarmclock.Data
+      | Watermixer.Data
+      | AnyDeviceData = AnyDeviceData
+  > {
+    uid: string;
+    secret?: string;
+    type: DeviceType;
+
+    status: boolean;
     data: DeviceData;
     ip: string;
   }
