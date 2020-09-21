@@ -118,7 +118,7 @@ export function getCurrentUser(): Promise<User | undefined> {
 }
 
 export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
-  throw new Error('Not implemented');
+  deviceRef.child(firebaseDevice.uid).update(firebaseDevice);
 }
 
 export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
