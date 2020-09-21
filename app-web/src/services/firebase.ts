@@ -128,3 +128,11 @@ export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
 export async function deleteDevice(device: Device.FirebaseDevice) {
   throw new Error('Not implemented');
 }
+
+export async function giveUserDevicePermission(
+  firebaseUser: Client.FirebaseUser,
+  userDevice: Client.FirebaseUserDevice,
+): Promise<void> {
+  const newUserDevices = firebaseUser.devices.concat(userDevice);
+  usersRef.child(firebaseUser.uid).child('devices').update(newUserDevices);
+}
