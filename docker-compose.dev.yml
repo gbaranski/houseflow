@@ -6,7 +6,7 @@ services:
     environment:
       - EMQX_NAME=emqx
       - EMQX_LOG__LEVEL=debug
-      - EMQX_ALLOW_ANONYMOUS=true
+      - EMQX_ALLOW_ANONYMOUS=false
 
       - EMQX_LOADED_PLUGINS=emqx_management,emqx_auth_http,emqx_recon,emqx_retainer,emqx_dashboard
 
@@ -14,12 +14,12 @@ services:
       - EMQX_AUTH__HTTP__AUTH_REQ=http://178.19.181.85/auth/user
       - EMQX_AUTH__HTTP__AUTH_REQ__METHOD=POST
       - EMQX_AUTH__HTTP__AUTH_REQ__PARAMS=clientId=%c,username=%u,password=%P,ipaddr=%a,protocol=%r
-      - EMQX_AUTH__HTTP__AUTH_REQ__CONTENT_TYPE=JSON
+      - EMQX_AUTH__HTTP__AUTH_REQ__CONTENT_TYPE=json
 
       # ------------------------------
       - EMQX_AUTH__HTTP__ACL_REQ=http://server-api:8000/auth/acl
       - EMQX_AUTH__HTTP__ACL_REQ__METHOD=POST
-      - EMQX_AUTH__HTTP__ACL_REQ__CONTENT_TYPE=JSON
+      - EMQX_AUTH__HTTP__ACL_REQ__CONTENT_TYPE=json
       - EMQX_AUTH__HTTP__ACL_REQ__PARAMS=access=%A,username=%u,clientId=%c,ipaddr=%A,topic=%t,mountPoint=%m
     ports:
       - 1883:1883 # MQTT

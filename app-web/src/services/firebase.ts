@@ -1,10 +1,8 @@
 import firebase, { User } from 'firebase/app';
-import 'firebase/firestore';
 import 'firebase/firebase-database';
 import 'firebase/analytics';
 import 'firebase/auth';
 import { Client, Device, Alarmclock, Watermixer, AnyDeviceData } from '@gbaranski/types';
-import { message } from 'antd';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAC2m1CB6x8J4YXnmmkdY6LL9cW3xXjNwM',
@@ -22,11 +20,7 @@ firebase.analytics();
 
 const database = firebase.database();
 const usersRef = database.ref('users');
-
-const firestore = firebase.firestore();
-const devicesFirestoreCollection = firestore.collection('devices');
-const devicesPrivateFirestoreCollection = firestore.collection('devices-private');
-const usersFirestoreCollection = firestore.collection('users');
+const deviceRef = database.ref('devices');
 
 export const firebaseAuth: firebase.auth.Auth = app.auth();
 
@@ -46,17 +40,30 @@ export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredent
   return firebaseAuth.signInWithPopup(googleProvider);
 }
 
-export async function convertToFirebaseUser(user: firebase.User): Promise<Client.FirebaseUser> {
+export const getUser = async (user: firebase.User): Promise<Client.FirebaseUser> => {
   if (!user) throw new Error('User is not defined');
-  console.log('Converting to firebase user');
-  const usersDoc = await usersFirestoreCollection.doc(user.uid).get({});
-  if (!usersDoc.exists) throw new Error('User does not exist in database');
-  const usersData = usersDoc.data() as Client.FirebaseUser;
-  const firebaseUser: Client.FirebaseUser = {
-    ...usersData,
-  };
-  return firebaseUser;
-}
+  console.log('Retreiving firebase user');
+
+  return new Promise<Client.FirebaseUser>((resolve) => {
+    usersRef
+      .child(user.uid)
+      .once('value')
+      .then((snapshot) => {
+        const firebaseUser = snapshot.val();
+        console.log(firebaseUser);
+        resolve(firebaseUser);
+      });
+  });
+};
+
+export const getDevice = (uid: string): Promise<Device.FirebaseDevice> => {
+  return new Promise<Device.FirebaseDevice>((resolve) => {
+    deviceRef
+      .child(uid)
+      .once('value')
+      .then((snapshot) => resolve(snapshot.val()));
+  });
+};
 
 export async function getIdToken(): Promise<string> {
   if (!firebaseAuth.currentUser)
@@ -78,24 +85,22 @@ export function getSampleData(deviceType: Device.DeviceType): AnyDeviceData {
 export async function getAllowedDevices(
   firebaseUser: Client.FirebaseUser,
 ): Promise<Device.FirebaseDevice[]> {
-  const currentDevices = firebaseUser.devices.map(async (doc) => {
-    const docSnapshot = await doc.get();
-    const docData = docSnapshot.data();
-    if (!docData) throw new Error('Document data is not defined');
+  const currentDevices = firebaseUser.devices.map(async (userDevice) => getDevice(userDevice.uid));
 
-    const parsedDocData = docData as Device.FirebaseDevice;
-    if (!parsedDocData.type) throw new Error('Type od allowed device not defined');
-    const currentDevice: Device.FirebaseDevice = {
-      uid: parsedDocData.uid,
-      type: parsedDocData.type,
-    };
-    return currentDevice;
-  });
-
-  const resolvedDevices = await Promise.all(currentDevices);
-
-  return resolvedDevices;
+  return await Promise.all(currentDevices);
 }
+
+export const subscribeAllowedDevices = (
+  firebaseUser: Client.FirebaseUser,
+  onUpdate: (firebaseDevice: Device.FirebaseDevice) => any,
+) => {
+  firebaseUser.devices.forEach((device) => {
+    deviceRef.child(device.uid).on('value', (snapshot) => {
+      console.log('Device update: ', snapshot.val());
+      onUpdate(snapshot.val());
+    });
+  });
+};
 
 let userLoaded: boolean = false;
 
@@ -113,42 +118,13 @@ export function getCurrentUser(): Promise<User | undefined> {
 }
 
 export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
-  if (!firebaseDevice.secret) throw new Error('Secret is mising!');
-
-  await devicesFirestoreCollection.doc(firebaseDevice.uid).set({
-    uid: firebaseDevice.uid,
-    type: firebaseDevice.type,
-  });
-
-  await devicesPrivateFirestoreCollection.doc(firebaseDevice.uid).set({
-    secret: firebaseDevice.secret,
-  });
+  throw new Error('Not implemented');
 }
 
 export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
-  const devices: Device.FirebaseDevice[] = [];
-  const querySnapshot = devicesFirestoreCollection.get();
-  (await querySnapshot).forEach((doc) => {
-    const data = doc.data();
-    if (!data.uid || !data.type)
-      throw new Error('Something went wrong with retreiving all devices');
-    const firebaseDevice: Device.FirebaseDevice = {
-      uid: data.uid as string,
-      type: data.type as Device.DeviceType,
-    };
-    devices.push(firebaseDevice);
-  });
-  await Promise.all(devices);
-  return devices;
+  throw new Error('Not implemented');
 }
 
 export async function deleteDevice(device: Device.FirebaseDevice) {
-  try {
-    await devicesFirestoreCollection.doc(device.uid).delete();
-    await devicesPrivateFirestoreCollection.doc(device.uid).delete();
-    message.info(`Success deleting device with UID: ${device.uid}`);
-  } catch (e) {
-    message.error(`Failed removing device with ID ${device.uid}`);
-    console.log(e);
-  }
+  throw new Error('Not implemented');
 }

@@ -6,15 +6,16 @@ import { Client } from '@gbaranski/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
-import { convertToFirebaseUser, getCurrentUser, getIdToken } from '@/services/firebase';
-import { connectWebsocket } from '@/services/websocket';
+import { getCurrentUser, getIdToken, getUser } from '@/services/firebase';
 import defaultSettings from '../config/defaultSettings';
+import { connectMqtt } from './services/mqtt';
+import { MqttClient } from 'mqtt';
 
 export async function getInitialState(): Promise<{
   firebaseUser?: Client.FirebaseUser;
   currentUser?: firebase.User;
   settings?: LayoutSettings;
-  socket?: SocketIOClient.Socket;
+  mqtt?: MqttClient;
 }> {
   console.log('getInitalState', history.location.pathname);
   if (history.location.pathname !== '/user/login') {
@@ -22,19 +23,19 @@ export async function getInitialState(): Promise<{
       const currentUser = await getCurrentUser();
       if (!currentUser) throw new Error('Redirect to login page');
 
-      const firebaseUser = await convertToFirebaseUser(currentUser);
+      const firebaseUser = await getUser(currentUser);
+
       if (!firebaseUser) throw new Error('No user in database'); // handle it later
 
-      const socket = await connectWebsocket(await getIdToken());
+      // const mqtt = await connectMqtt(await getIdToken(), currentUser.uid);
 
       return {
-        socket,
         firebaseUser,
         currentUser,
         settings: defaultSettings,
       };
     } catch (error) {
-      console.log(error);
+      console.error(error);
       history.push('/user/login');
     }
   }

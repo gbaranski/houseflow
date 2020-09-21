@@ -6,7 +6,6 @@ import { parseDateTime, getOnFinishTime } from '@/utils/utils';
 import Icon from '@mdi/react';
 import { mdiThermometer, mdiWaterPercent } from '@mdi/js';
 import { useModel } from 'umi';
-import { getWebsocket } from '@/services/websocket';
 
 interface AlarmclockCardProps {
   device: Device.ActiveDevice<Alarmclock.Data>;
@@ -75,7 +74,7 @@ const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
         <Tooltip title="Switch state">
           <PoweroffOutlined
             key="switchState"
-          // onClick={() => setState(device.uid, !device.data.alarmState)}
+            // onClick={() => setState(device.uid, !device.data.alarmState)}
           />
         </Tooltip>,
       ]}
@@ -130,7 +129,7 @@ const AlarmclockCard: React.FC<AlarmclockCardProps> = ({ device }) => {
           <Statistic
             title="Alarm time"
             value={parseDateTime(device.data.alarmTime)}
-          // suffix={parseAlarmclockBoolean(device.data.alarmState)}
+            // suffix={parseAlarmclockBoolean(device.data.alarmState)}
           />
         </Col>
         <Col span={12}>
