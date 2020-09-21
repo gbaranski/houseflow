@@ -6,9 +6,8 @@ import { Client } from '@gbaranski/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
-import { getCurrentUser, getIdToken, getUser } from '@/services/firebase';
+import { getCurrentUser, getUser } from '@/services/firebase';
 import defaultSettings from '../config/defaultSettings';
-import { connectMqtt } from './services/mqtt';
 import { MqttClient } from 'mqtt';
 
 export async function getInitialState(): Promise<{
