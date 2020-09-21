@@ -1,32 +1,24 @@
 import React, { useEffect } from 'react';
-import { PageContainer } from '@ant-design/pro-layout';
+import { PageContainer, PageLoading } from '@ant-design/pro-layout';
 import { Card, Row } from 'antd';
 import { useModel } from 'umi';
 import DeviceList from '@/components/DevicesList';
 
 export default (): React.ReactNode => {
-  const {
-    getAndSetFirebaseDevices,
-    firebaseDevices,
-    activeDevices,
-    getActiveDevices,
-    setDataListeners,
-  } = useModel('deviceData');
+  const { firebaseDevices, initializeFirebaseDevices } = useModel('deviceData');
   const { initialState } = useModel('@@initialState');
-  const { firebaseUser, socket } = initialState || {};
+  const { firebaseUser } = initialState || {};
+  if (!firebaseUser) return <PageLoading />;
 
   useEffect(() => {
-    getAndSetFirebaseDevices(firebaseUser);
-    if (!socket) throw new Error('Socket is not defined');
-    getActiveDevices(socket);
-    setDataListeners(socket);
+    initializeFirebaseDevices(firebaseUser);
   }, []);
 
   return (
     <PageContainer>
       <Card>
         <Row>
-          <DeviceList activeDevices={activeDevices} firebaseDevices={firebaseDevices} />
+          <DeviceList firebaseDevices={firebaseDevices} />
         </Row>
       </Card>
     </PageContainer>
