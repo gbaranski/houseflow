@@ -5,8 +5,8 @@ services:
     container_name: 'emqx'
     environment:
       - EMQX_NAME=emqx
-      - EMQX_LOG__LEVEL=debug
-      - EMQX_ALLOW_ANONYMOUS=false
+      # - EMQX_LOG__LEVEL=debug
+      - EMQX_ALLOW_ANONYMOUS=true
 
       - EMQX_LOADED_PLUGINS=emqx_management,emqx_auth_http,emqx_recon,emqx_retainer,emqx_dashboard
 

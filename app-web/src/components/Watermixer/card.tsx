@@ -2,12 +2,21 @@ import React from 'react';
 import { Card, Statistic, Row, Col, Tooltip } from 'antd';
 import { CoffeeOutlined } from '@ant-design/icons';
 import { Device, Watermixer } from '@gbaranski/types';
+import { useModel } from 'umi';
+import PageLoading from '../PageLoading';
 
 interface WatermixerCardProps {
   device: Device.FirebaseDevice<Watermixer.Data>;
 }
 const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
+  const { initialState } = useModel('@@initialState');
+  const { mqtt } = initialState || {};
+
+  const { mixWater } = useModel('watermixer');
+
   const hasElapsed = (timestamp: number) => Date.now() > timestamp;
+  // TODO: fix later
+  if (!mqtt) return <PageLoading />;
 
   return (
     <Card
@@ -16,12 +25,7 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
       bodyStyle={{ minHeight: 180 }}
       actions={[
         <Tooltip title="Start mixing">
-          <CoffeeOutlined
-            key="Mix"
-            onClick={() => {
-              throw new Error('Not implemented');
-            }}
-          />
+          <CoffeeOutlined key="Mix" onClick={() => mixWater(device.uid, mqtt)} />
         </Tooltip>,
       ]}
     >

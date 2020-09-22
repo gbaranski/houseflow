@@ -46,6 +46,10 @@ export const getUser = async (user: firebase.User): Promise<Client.FirebaseUser 
   return <Client.FirebaseUser>(await usersCollection.doc(user.uid).get()).data();
 };
 
+export const getIdToken = () => {
+  return firebaseAuth.currentUser?.getIdToken();
+};
+
 export const subscribeAllowedDevices = (
   firebaseUser: Client.FirebaseUser,
   onUpdate: (firebaseDevice: Device.FirebaseDevice) => void,

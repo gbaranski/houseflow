@@ -6,8 +6,9 @@ import { Client } from '@gbaranski/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
-import { getCurrentUser, getUser } from '@/services/firebase';
+import { getCurrentUser, getIdToken, getUser } from '@/services/firebase';
 import defaultSettings from '../config/defaultSettings';
+import { connectMqtt } from './services/mqtt';
 import { MqttClient } from 'mqtt';
 
 export async function getInitialState(): Promise<{
@@ -26,17 +27,19 @@ export async function getInitialState(): Promise<{
       console.log({ firebaseUser });
 
       if (!firebaseUser) throw new Error('No user in database'); // handle it later
-
-      // const mqtt = await connectMqtt(await getIdToken(), currentUser.uid);
+      const token = await getIdToken();
+      if (!token) throw new Error('ID Token is invalid');
+      const mqtt = await connectMqtt(token, currentUser.uid);
 
       return {
+        mqtt,
         firebaseUser,
         currentUser,
         settings: defaultSettings,
       };
     } catch (error) {
       console.error(error);
-      history.push('/user/login');
+      // history.push('/user/login');
     }
   }
   return {
