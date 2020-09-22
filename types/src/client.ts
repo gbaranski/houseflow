@@ -10,7 +10,7 @@ export namespace Client {
   }
 
   export interface FirebaseUser {
-    devices: Map<Uid, FirebaseUserDevice>[];
+    devices: FirebaseUserDevice[];
     role: UserRole;
     uid: Uid;
   }
