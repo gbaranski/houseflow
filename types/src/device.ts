@@ -1,5 +1,5 @@
 import { Alarmclock, Watermixer } from '.';
-import { DateTime, State } from './misc';
+import { DateTime, State, Uid } from './misc';
 
 export type AnyDeviceData = Alarmclock.Data | Watermixer.Data;
 
@@ -20,7 +20,7 @@ export namespace Device {
   export interface RequestDevice {
     topic: {
       name: RequestTopic;
-      uid: string;
+      uid: Uid;
     };
     data?: DateTime | State;
   }
@@ -38,7 +38,7 @@ export namespace Device {
       | Watermixer.Data
       | AnyDeviceData = AnyDeviceData
   > {
-    uid: string;
+    uid: Uid;
     secret?: string;
     type: DeviceType;
 

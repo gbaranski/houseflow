@@ -8,6 +8,8 @@ export type State = {
   state: boolean;
 };
 
+export type Uid = string;
+
 export enum CloudTopics {
   DEVICE_DATA = 'device_data',
   DEVICE_DISCONNECT = 'device_disconnect',

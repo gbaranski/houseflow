@@ -1,13 +1,6 @@
-import WebSocket from 'ws';
 import { DateTime } from './';
 
 export namespace Alarmclock {
-  export interface Active {
-    status: boolean;
-    data: Data;
-    ws: WebSocket | undefined;
-  }
-
   export interface Data {
     alarmTime: DateTime;
     alarmState: boolean;
