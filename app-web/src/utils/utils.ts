@@ -67,3 +67,7 @@ export function parseDateTime(alarmTime: DateTime): string {
 export function getOnFinishTime(onFinish: DateTime): Moment {
   return moment(`${onFinish.hour}:${onFinish.minute}:${onFinish.second}`, 'HH:mm:ss');
 }
+
+export const getRandomShortUid = () => {
+  return Math.random().toString(16).substr(2, 8);
+};
