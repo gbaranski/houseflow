@@ -11,6 +11,7 @@ const mqttClient = mqtt.connect(MQTT_URL, {
   clientId: 'device_' + Math.random().toString(16).substr(2, 8),
   username: DEVICE_UID,
   password: DEVICE_SECRET,
+  protocolVersion: 4,
 });
 
 mqttClient.on('connect', () => onConnection(mqttClient));
