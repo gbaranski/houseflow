@@ -1,11 +1,6 @@
 import { connect, MqttClient } from 'mqtt';
 
-const BROKER_URL =
-  process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8083'
-    : 'mqtt://api.gbaranski.com:443/wsc';
-
-console.log({ processenv: process.env.NODE_ENV });
+const BROKER_URL = 'ws://localhost:8083/mqtt';
 
 export const connectMqtt = (token: string, uid: string) => {
   return new Promise<MqttClient>((resolve, reject) => {

@@ -1,19 +1,11 @@
-import { Device } from '@gbaranski/types';
-import { message } from 'antd';
+import { MqttClient } from 'mqtt';
 
 export default () => {
-  const mixWater = (uid: string, socket: SocketIOClient.Socket) => {
+  const mixWater = (uid: string, mqttClient: MqttClient) => {
     console.log('Mixing water');
     console.log(Date.now());
-    const req: Device.RequestDevice = {
-      topic: {
-        name: 'startmix',
-        uid,
-      },
-    };
-    socket.emit('device_request', JSON.stringify(req), (data: string) => {
-      message.info(data);
-    });
+
+    mqttClient.publish(`${uid}/event/startmix`, '');
   };
 
   return {
