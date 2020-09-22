@@ -15,3 +15,8 @@ export enum CloudTopics {
   DEVICE_DISCONNECT = 'device_disconnect',
   DEVICE_REQUEST = 'device_request',
 }
+
+export interface Topic {
+  request: string;
+  response: string;
+}
