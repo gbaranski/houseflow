@@ -5,7 +5,7 @@ import { useModel } from 'umi';
 import DeviceList from '@/components/DevicesList';
 
 export default (): React.ReactNode => {
-  const { firebaseDevices, initializeFirebaseDevices } = useModel('deviceData');
+  const { firebaseDevices, initializeFirebaseDevices } = useModel('device');
   const { initialState } = useModel('@@initialState');
   const { firebaseUser } = initialState || {};
   if (!firebaseUser) return <PageLoading />;
