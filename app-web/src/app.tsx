@@ -23,6 +23,7 @@ export async function getInitialState(): Promise<{
       if (!currentUser) throw new Error('Redirect to login page');
 
       const firebaseUser = await getUser(currentUser);
+      console.log({ firebaseUser });
 
       if (!firebaseUser) throw new Error('No user in database'); // handle it later
 
