@@ -1,8 +1,8 @@
 import firebase, { User } from 'firebase/app';
-import 'firebase/firebase-database';
+import 'firebase/firestore';
 import 'firebase/analytics';
 import 'firebase/auth';
-import { Client, Device, Alarmclock, Watermixer, AnyDeviceData } from '@gbaranski/types';
+import { Client, Device } from '@gbaranski/types';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAC2m1CB6x8J4YXnmmkdY6LL9cW3xXjNwM',
@@ -18,9 +18,9 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
-const database = firebase.database();
-const usersRef = database.ref('users');
-const deviceRef = database.ref('devices');
+const database = firebase.firestore();
+const usersCollection = database.collection('users');
+const deviceCollection = database.collection('devices');
 
 export const firebaseAuth: firebase.auth.Auth = app.auth();
 
@@ -40,64 +40,22 @@ export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredent
   return firebaseAuth.signInWithPopup(googleProvider);
 }
 
-export const getUser = async (user: firebase.User): Promise<Client.FirebaseUser> => {
+export const getUser = async (user: firebase.User): Promise<Client.FirebaseUser | undefined> => {
   if (!user) throw new Error('User is not defined');
   console.log('Retreiving firebase user');
-
-  return new Promise<Client.FirebaseUser>((resolve) => {
-    usersRef
-      .child(user.uid)
-      .once('value')
-      .then((snapshot) => {
-        const firebaseUser = snapshot.val();
-        console.log(firebaseUser);
-        resolve(firebaseUser);
-      });
-  });
+  return <Client.FirebaseUser>(await usersCollection.doc(user.uid).get()).data();
 };
-
-export const getDevice = (uid: string): Promise<Device.FirebaseDevice> => {
-  return new Promise<Device.FirebaseDevice>((resolve) => {
-    deviceRef
-      .child(uid)
-      .once('value')
-      .then((snapshot) => resolve(snapshot.val()));
-  });
-};
-
-export async function getIdToken(): Promise<string> {
-  if (!firebaseAuth.currentUser)
-    throw new Error('Cannot retreive ID token cause currentUser not defined');
-  return firebaseAuth.currentUser.getIdToken(true);
-}
-
-export function getSampleData(deviceType: Device.DeviceType): AnyDeviceData {
-  switch (deviceType) {
-    case 'ALARMCLOCK':
-      return Alarmclock.SAMPLE;
-    case 'WATERMIXER':
-      return Watermixer.SAMPLE;
-    default:
-      return Watermixer.SAMPLE;
-  }
-}
-
-export async function getAllowedDevices(
-  firebaseUser: Client.FirebaseUser,
-): Promise<Device.FirebaseDevice[]> {
-  const currentDevices = firebaseUser.devices.map(async (userDevice) => getDevice(userDevice.uid));
-
-  return await Promise.all(currentDevices);
-}
 
 export const subscribeAllowedDevices = (
   firebaseUser: Client.FirebaseUser,
   onUpdate: (firebaseDevice: Device.FirebaseDevice) => void,
 ) => {
-  firebaseUser.devices.forEach((device) => {
-    deviceRef.child(device.uid).on('value', (snapshot) => {
-      console.log('Device update: ', snapshot.val());
-      onUpdate(snapshot.val());
+  firebaseUser.devices.forEach((firebaseDevice) => {
+    deviceCollection.doc(firebaseDevice.uid).onSnapshot((doc) => {
+      const newFirebaseDevice = doc.data();
+      if (!newFirebaseDevice) throw new Error('Document data empty');
+      console.log('Device update: ', doc.data());
+      onUpdate(newFirebaseDevice as Device.FirebaseDevice);
     });
   });
 };
@@ -118,21 +76,10 @@ export function getCurrentUser(): Promise<User | undefined> {
 }
 
 export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
-  deviceRef.child(firebaseDevice.uid).update(firebaseDevice);
+  await deviceCollection.doc(firebaseDevice.uid).update(firebaseDevice);
 }
 
-export async function getAllDevices(): Promise<Device.FirebaseDevice[]> {
-  throw new Error('Not implemented');
-}
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deleteDevice(device: Device.FirebaseDevice) {
   throw new Error('Not implemented');
-}
-
-export async function giveUserDevicePermission(
-  firebaseUser: Client.FirebaseUser,
-  userDevice: Client.FirebaseUserDevice,
-): Promise<void> {
-  const newUserDevices = firebaseUser.devices.concat(userDevice);
-  usersRef.child(firebaseUser.uid).child('devices').update(newUserDevices);
 }
