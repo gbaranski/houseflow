@@ -25,7 +25,7 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
       bodyStyle={{ minHeight: 180 }}
       actions={[
         <Tooltip title="Start mixing">
-          <CoffeeOutlined key="Mix" onClick={() => mixWater(device.uid, mqtt)} />
+          <CoffeeOutlined key="Mix" onClick={() => mixWater(device, mqtt)} />
         </Tooltip>,
       ]}
     >
