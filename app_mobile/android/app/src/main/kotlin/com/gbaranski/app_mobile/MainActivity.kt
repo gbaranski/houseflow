@@ -1,4 +1,4 @@
-package com.gbaranski.controlhome
+package com.gbaranski.homeflow
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:core';
-import 'package:control_home/models/device.dart';
-import 'package:control_home/models/misc.dart';
+import 'package:homeflow/models/device.dart';
+import 'package:homeflow/models/misc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:control_home/shared/constants.dart';
+import 'package:homeflow/shared/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
-import 'package:control_home/models/user.dart';
+import 'package:homeflow/models/user.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';

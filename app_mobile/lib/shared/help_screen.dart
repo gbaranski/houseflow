@@ -1,4 +1,4 @@
-import 'package:control_home/shared/constants.dart';
+import 'package:homeflow/shared/constants.dart';
 import 'package:flutter/material.dart';
 
 class HelpScreen extends StatelessWidget {

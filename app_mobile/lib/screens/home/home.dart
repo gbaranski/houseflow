@@ -1,7 +1,7 @@
-import 'package:control_home/screens/dashboard/dashboard.dart';
-import 'package:control_home/screens/my_profile/my_profile.dart';
-import 'package:control_home/screens/settings/settings.dart';
-import 'package:control_home/shared/constants.dart';
+import 'package:homeflow/screens/dashboard/dashboard.dart';
+import 'package:homeflow/screens/my_profile/my_profile.dart';
+import 'package:homeflow/screens/settings/settings.dart';
+import 'package:homeflow/shared/constants.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {

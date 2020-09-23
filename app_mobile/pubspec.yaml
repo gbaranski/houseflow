@@ -1,5 +1,5 @@
-name: control_home
-description: Control-Home App
+name: homeflow
+description: Homeflow
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -25,15 +25,14 @@ dependencies:
     sdk: flutter
   firebase_core: '0.5.0'
   firebase_auth: '^0.18.0+1'
-  cloud_firestore: "^0.14.0+2"
-  provider: "4.3.2+1"
-  firebase_messaging: "7.0.0"
-  flutter_spinkit: "^4.1.2+1"
-  flutter_svg: "0.18.1"
-  material_design_icons_flutter: "4.0.5345"
-  web_socket_channel: "1.1.0"
+  cloud_firestore: '^0.14.0+2'
+  provider: '4.3.2+1'
+  firebase_messaging: '7.0.0'
+  flutter_spinkit: '^4.1.2+1'
+  flutter_svg: '0.18.1'
+  material_design_icons_flutter: '4.0.5345'
+  web_socket_channel: '1.1.0'
   google_sign_in: '^4.5.3'
-
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -54,7 +53,6 @@ flutter:
     - family: OpenSans
       fonts:
         - asset: assets/fonts/OpenSans-Regular.ttf
-
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

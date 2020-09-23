@@ -1,6 +1,6 @@
-import 'package:control_home/services/auth.dart';
-import 'package:control_home/shared/constants.dart';
-import 'package:control_home/shared/profile_image.dart';
+import 'package:homeflow/services/auth.dart';
+import 'package:homeflow/shared/constants.dart';
+import 'package:homeflow/shared/profile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';

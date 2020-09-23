@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.gbaranski.controlhome"
+        applicationId "com.gbaranski.homeflow"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode flutterVersionCode.toInteger()

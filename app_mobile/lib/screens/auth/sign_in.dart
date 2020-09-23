@@ -1,7 +1,7 @@
-import 'package:control_home/screens/auth/register.dart';
-import 'package:control_home/services/auth.dart';
-import 'package:control_home/shared/constants.dart';
-import 'package:control_home/shared/login_form.dart';
+import 'package:homeflow/screens/auth/register.dart';
+import 'package:homeflow/services/auth.dart';
+import 'package:homeflow/shared/constants.dart';
+import 'package:homeflow/shared/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
