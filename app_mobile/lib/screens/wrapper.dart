@@ -10,48 +10,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class Wrapper extends StatelessWidget {
-  Widget buildTargetScreen(BuildContext context) {
-    final deviceService = Provider.of<DeviceService>(context, listen: false);
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    final init =
-        deviceService.init(authService.firebaseUser, authService.currentUser);
-    return FutureBuilder<List<FirebaseDevice>>(
-        future: init,
-        builder: (BuildContext context,
-            AsyncSnapshot<List<FirebaseDevice>> snapshot) {
-          if (snapshot.hasData) {
-            print("Snapshot data received");
-            deviceService.firebaseDevices = snapshot.data;
-            authService
-                .subscribeToAllDevicesTopic(deviceService.firebaseDevices);
-            print(deviceService.firebaseDevices);
-            return Home();
-          }
-          return SplashScreen();
-        });
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<auth.User>(context);
 
     return Consumer<AuthService>(builder: (context, authModel, child) {
-      print(authModel.authStatus);
+      print("AuthState: ${authModel.authStatus}");
       if (authModel.authStatus == AuthStatus.NOT_DETERMINED) {
         return SplashScreen();
       }
       if (user == null) {
         return SignIn();
       } else {
-        print(user);
-        return ChangeNotifierProvider(
-            create: (_) => DeviceService(),
-            builder: (context, child) {
-              print("ChangeNotifierProvider");
-              authModel.initFcm(context);
-              return buildTargetScreen(context);
-            });
+        print("CurrentUser: $user");
+        return Home();
       }
     });
   }

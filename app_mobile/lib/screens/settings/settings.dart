@@ -9,23 +9,24 @@ import 'package:provider/provider.dart';
 class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthService>(builder: (context, authModel, child) {
-      final deviceModel = Provider.of<DeviceService>(context, listen: false);
-      deviceModel.getFirebaseDevices(authModel.firebaseUser);
-      return ListView.builder(
-          itemCount: deviceModel.firebaseDevices.length,
-          itemBuilder: (context, index) {
-            final FirebaseDevice firebaseDevice =
-                deviceModel.firebaseDevices[index];
+    return Text("Hello");
+    // return Consumer<AuthService>(builder: (context, authModel, child) {
+    //   final deviceModel = Provider.of<DeviceService>(context, listen: false);
+    //   deviceModel.getFirebaseDevices(authModel.firebaseUser);
+    //   return ListView.builder(
+    //       itemCount: deviceModel.firebaseDevices.length,
+    //       itemBuilder: (context, index) {
+    //         final FirebaseDevice firebaseDevice =
+    //             deviceModel.firebaseDevices[index];
 
-            return ExpansionTile(
-              leading: DeviceIcon(firebaseDevice.type),
-              title: Text(upperFirstCharacter(firebaseDevice.type)),
-              children: [
-                Text("UID: ${firebaseDevice.uid}"),
-              ],
-            );
-          });
-    });
+    //         return ExpansionTile(
+    //           leading: DeviceIcon(firebaseDevice.type),
+    //           title: Text(upperFirstCharacter(firebaseDevice.type)),
+    //           children: [
+    //             Text("UID: ${firebaseDevice.uid}"),
+    //           ],
+    //         );
+    //       });
+    // });
   }
 }

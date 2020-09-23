@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
 class WatermixerData {
-  int remainingSeconds;
-  bool isTimerOn;
+  int finishMixTimestamp;
 
   factory WatermixerData.fromJson(Map<String, dynamic> json) {
     return WatermixerData(
-      remainingSeconds: json["remainingSeconds"],
-      isTimerOn: json["isTimerOn"],
+      finishMixTimestamp: json["finishMixTimestamp"],
     );
   }
-  WatermixerData({@required this.remainingSeconds, @required this.isTimerOn});
+  WatermixerData({@required this.finishMixTimestamp});
 }

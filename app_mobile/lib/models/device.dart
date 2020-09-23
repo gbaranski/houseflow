@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 
 class FirebaseDevice {
-  String uid;
-  String type;
-
-  FirebaseDevice({@required this.uid, @required this.type});
-}
-
-class ActiveDevice extends FirebaseDevice {
-  String ip;
   Map<String, dynamic> data;
+  String ip;
+  bool status;
+  String type;
+  String uid;
 
-  ActiveDevice(
-      {@required this.ip, @required this.data, @required uid, @required type})
-      : super(uid: uid, type: type);
+  FirebaseDevice(
+      {@required this.data,
+      @required this.ip,
+      @required this.status,
+      @required this.type,
+      @required this.uid});
 }

@@ -33,4 +33,5 @@ const double CardMinHeight = 170;
 
 const logoDirectory = 'assets/images/logo.svg';
 
-const WS_URL = 'wss://wsc.gbaranski.com';
+const MQTT_HOST = '192.168.1.10';
+const MQTT_PORT = 1883;

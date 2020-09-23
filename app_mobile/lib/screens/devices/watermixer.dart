@@ -1,31 +1,25 @@
 import 'package:homeflow/models/device.dart';
 import 'package:homeflow/models/devices/watermixer.dart';
-import 'package:homeflow/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/utils/misc.dart';
 import 'package:homeflow/shared/constants.dart';
-import 'package:provider/provider.dart';
 
 class Watermixer extends StatelessWidget {
-  final String uid;
+  final FirebaseDevice firebaseDevice;
 
-  Watermixer({@required this.uid});
+  Watermixer({@required this.firebaseDevice});
 
   @override
   Widget build(BuildContext context) {
-    final deviceService = Provider.of<DeviceService>(context);
-
-    final ActiveDevice activeDevice = deviceService.activeDevices
-        .singleWhere((_device) => _device.uid == this.uid);
-
-    final WatermixerData data = WatermixerData.fromJson(activeDevice.data);
+    final WatermixerData data = WatermixerData.fromJson(firebaseDevice.data);
 
     final startMixing = () {
       final Map<String, dynamic> request = {
-        "deviceUid": activeDevice.uid,
+        "deviceUid": firebaseDevice.uid,
         "requestType": "START_MIXING",
       };
-      print(deviceService.sendRequest(request));
+      print("Sending request");
+      // print(deviceService.sendRequest(request));
     };
 
     return ConstrainedBox(
@@ -56,7 +50,11 @@ class Watermixer extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text(data.isTimerOn ? "Mixing!" : "Idle",
+                Text(
+                    data.finishMixTimestamp >
+                            DateTime.now().millisecondsSinceEpoch
+                        ? "Mixing!"
+                        : "Idle",
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
               ]),
@@ -68,7 +66,7 @@ class Watermixer extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text(parseTotalSeconds(data.remainingSeconds).toString(),
+                Text(parseTotalSeconds(data.finishMixTimestamp).toString(),
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
               ]),
