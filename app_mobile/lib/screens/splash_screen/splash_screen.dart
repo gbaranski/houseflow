@@ -24,7 +24,7 @@ class SplashScreen extends StatelessWidget {
               height: 10,
             ),
             Text(
-              "Control Home",
+              "Homeflow",
               style: TextStyle(
                 fontSize: 32,
               ),
