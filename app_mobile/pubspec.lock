@@ -85,6 +85,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.3"
+  event_bus:
+    dependency: transitive
+    description:
+      name: event_bus
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.1.1"
   fake_async:
     dependency: transitive
     description:
@@ -247,6 +254,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.8"
+  mqtt_client:
+    dependency: "direct main"
+    description:
+      name: mqtt_client
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "8.0.0"
   nested:
     dependency: transitive
     description:
@@ -378,13 +392,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.8"
-  web_socket_channel:
-    dependency: "direct main"
-    description:
-      name: web_socket_channel
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "1.1.0"
   xml:
     dependency: transitive
     description:
