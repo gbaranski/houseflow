@@ -1,24 +1,28 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homeflow/models/device.dart';
+import 'package:homeflow/services/auth.dart';
 import 'package:homeflow/services/device.dart';
 import 'package:flutter/material.dart';
+import 'package:homeflow/services/firebase.dart';
 import 'package:provider/provider.dart';
-import 'package:homeflow/screens/devices/alarmclock.dart';
 import 'package:homeflow/screens/devices/watermixer.dart';
 import 'package:homeflow/screens/devices/inactive.dart';
 
-class Dashboard extends StatelessWidget {
-  Widget deviceWidget(BuildContext context, String uid, String type) {
-    switch (type) {
-      case 'ALARMCLOCK':
-        {
-          return Alarmclock(
-            uid: uid,
-          );
-        }
-        break;
+class Dashboard extends StatefulWidget {
+  @override
+  _DashboardState createState() => _DashboardState();
+}
+
+class _DashboardState extends State<Dashboard> {
+  List<FirebaseDevice> firebaseDevices = [];
+
+  Widget deviceWidget(BuildContext context, FirebaseDevice firebaseDevice) {
+    switch (firebaseDevice.type) {
       case 'WATERMIXER':
         {
-          return Watermixer(uid: uid);
+          return Watermixer(
+            firebaseDevice: firebaseDevice,
+          );
         }
         break;
       default:
@@ -32,39 +36,48 @@ class Dashboard extends StatelessWidget {
     return Text("${device.type} inactive");
   }
 
-  Widget deviceList(BuildContext context) {
-    return Consumer<DeviceService>(
-      builder: (context, deviceModel, child) {
-        return Container(
-          child: Column(children: [
-            Expanded(
-              child: ListView.builder(
-                  itemCount: deviceModel.firebaseDevices.length,
-                  itemBuilder: (context, index) {
-                    final firebaseDevice = deviceModel.firebaseDevices[index];
-                    final active = deviceModel.activeDevices
-                        .any((element) => element.uid == firebaseDevice.uid);
-                    if (active) {
-                      final activeDevice = deviceModel.activeDevices
-                          .singleWhere(
-                              (_device) => _device.uid == firebaseDevice.uid);
-                      return deviceWidget(
-                          context, activeDevice.uid, activeDevice.type);
-                    } else {
-                      return InactiveDevice(firebaseDevice);
-                    }
-                  }),
-            ),
-          ]),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: deviceList(context),
+    return Consumer<AuthService>(
+      builder: (context, deviceModel, child) {
+        return StreamBuilder(
+            stream: FirebaseService.getFirebaseDevicesQueries(
+                    deviceModel.firebaseUser)
+                .snapshots(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              print("Snapshot ${snapshot.data}");
+              if (snapshot.hasError) {
+                return Text("Something went wrong");
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+
+              return Container(
+                child: Column(children: [
+                  Expanded(
+                    child: ListView.builder(
+                        itemCount: snapshot.data.docs.length,
+                        itemBuilder: (context, index) {
+                          final data = snapshot.data.docs[index].data();
+                          final device = FirebaseDevice(
+                              data: data['data'],
+                              ip: data['ip'],
+                              status: data['status'],
+                              type: data['type'],
+                              uid: data['uid']);
+                          if (device.status) {
+                            return deviceWidget(context, device);
+                          } else {
+                            return InactiveDevice(device);
+                          }
+                        }),
+                  ),
+                ]),
+              );
+            });
+      },
     );
   }
 }
