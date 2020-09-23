@@ -5,16 +5,15 @@ import 'firebase/auth';
 import { Client, Device } from '@gbaranski/types';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAC2m1CB6x8J4YXnmmkdY6LL9cW3xXjNwM',
-  authDomain: 'controlhome.firebaseapp.com',
-  databaseURL: 'https://controlhome.firebaseio.com',
-  projectId: 'controlhome',
-  storageBucket: 'controlhome.appspot.com',
-  messagingSenderId: '917528821196',
-  appId: '1:917528821196:web:49e832b53c90b6aab57169',
-  measurementId: 'G-GET25DVWHE',
+  apiKey: 'AIzaSyDSUqpk5HAU4dTw9cNbIcvhz1lb4z9W4mQ',
+  authDomain: 'homeflow-ece2e.firebaseapp.com',
+  databaseURL: 'https://homeflow-ece2e.firebaseio.com',
+  projectId: 'homeflow-ece2e',
+  storageBucket: 'homeflow-ece2e.appspot.com',
+  messagingSenderId: '123295801335',
+  appId: '1:123295801335:web:b8d0cf2c304f7db4d258f2',
+  measurementId: 'G-WWKC11TVQ6',
 };
-
 const app = firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 

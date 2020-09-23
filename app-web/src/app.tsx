@@ -39,7 +39,7 @@ export async function getInitialState(): Promise<{
       };
     } catch (error) {
       console.error(error);
-      // history.push('/user/login');
+      history.push('/user/login');
     }
   }
   return {
