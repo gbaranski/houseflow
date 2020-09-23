@@ -13,22 +13,32 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  List<FirebaseDevice> firebaseDevices = [];
+  Widget device(BuildContext context, String uid) {
+    return StreamBuilder(
+      stream: FirebaseService.getFirebaseDeviceSnapshot(uid),
+      builder:
+          (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        if (snapshot.hasError) return Text("Error occured");
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return CircularProgressIndicator();
+        final Map<String, dynamic> data = snapshot.data.data();
+        final FirebaseDevice firebaseDevice = FirebaseDevice.fromMap(data);
 
-  Widget deviceWidget(BuildContext context, FirebaseDevice firebaseDevice) {
-    switch (firebaseDevice.type) {
-      case 'WATERMIXER':
-        {
-          return Watermixer(
-            firebaseDevice: firebaseDevice,
-          );
+        switch (firebaseDevice.type) {
+          case 'WATERMIXER':
+            {
+              return Watermixer(
+                firebaseDevice: firebaseDevice,
+              );
+            }
+            break;
+          default:
+            {
+              return Text("Some error occured");
+            }
         }
-        break;
-      default:
-        {
-          return Text("Some error occured");
-        }
-    }
+      },
+    );
   }
 
   Widget inactiveDevice(BuildContext context, FirebaseDevice device) {
@@ -38,39 +48,19 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
-      builder: (context, deviceModel, child) {
-        return StreamBuilder(
-            stream: FirebaseService.getFirebaseDevicesQueries(
-                    deviceModel.firebaseUser)
-                .snapshots(),
-            builder:
-                (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              print("Snapshot ${snapshot.data}");
-              if (snapshot.hasError) {
-                return Text("Something went wrong");
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
-
-              return Container(
-                child: Column(children: [
-                  Expanded(
-                    child: ListView.builder(
-                        itemCount: snapshot.data.docs.length,
-                        itemBuilder: (context, index) {
-                          final data = snapshot.data.docs[index].data();
-                          final device = FirebaseDevice.fromMap(data);
-                          if (device.status) {
-                            return deviceWidget(context, device);
-                          } else {
-                            return InactiveDevice(device);
-                          }
-                        }),
-                  ),
-                ]),
-              );
-            });
+      builder: (context, authModel, child) {
+        return Container(
+          child: Column(children: [
+            Expanded(
+              child: ListView.builder(
+                  itemCount: authModel.firebaseUser.devices.length,
+                  itemBuilder: (context, index) {
+                    return device(
+                        context, authModel.firebaseUser.devices[index].uid);
+                  }),
+            ),
+          ]),
+        );
       },
     );
   }
