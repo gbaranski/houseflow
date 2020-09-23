@@ -60,13 +60,15 @@ class Watermixer extends StatelessWidget {
               ]),
               Column(children: [
                 Text(
-                  "Remaining Time",
+                  "Mixing time",
                   style: TextStyle(
                       fontWeight: FontWeight.w300,
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text(parseTotalSeconds(data.finishMixTimestamp).toString(),
+                Text(
+                    durationToString(
+                        getEpochDiffDuration(data.finishMixTimestamp)),
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
               ]),
