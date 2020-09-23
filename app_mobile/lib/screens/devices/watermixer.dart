@@ -3,19 +3,46 @@ import 'package:homeflow/models/devices/watermixer.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/utils/misc.dart';
 import 'package:homeflow/shared/constants.dart';
+import 'dart:async';
 
-class Watermixer extends StatelessWidget {
+class Watermixer extends StatefulWidget {
   final FirebaseDevice firebaseDevice;
 
   Watermixer({@required this.firebaseDevice});
 
   @override
+  _WatermixerState createState() => _WatermixerState();
+}
+
+class _WatermixerState extends State<Watermixer> {
+  Timer _countdownTimer;
+  String mixingTimeString = "";
+
+  void startCounting(int finishMixTimestamp) {
+    final callback = (Timer timer) => setState(() {
+          mixingTimeString =
+              durationToString(getEpochDiffDuration(finishMixTimestamp));
+        });
+
+    _countdownTimer = Timer.periodic(Duration(seconds: 1), callback);
+    callback(_countdownTimer);
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final WatermixerData data = WatermixerData.fromJson(firebaseDevice.data);
+    final WatermixerData data =
+        WatermixerData.fromJson(widget.firebaseDevice.data);
+    startCounting(data.finishMixTimestamp);
 
     final startMixing = () {
       final Map<String, dynamic> request = {
-        "deviceUid": firebaseDevice.uid,
+        "deviceUid": widget.firebaseDevice.uid,
         "requestType": "START_MIXING",
       };
       print("Sending request");
@@ -66,9 +93,7 @@ class Watermixer extends StatelessWidget {
                       fontSize: 14,
                       color: Colors.black.withOpacity(0.6)),
                 ),
-                Text(
-                    durationToString(
-                        getEpochDiffDuration(data.finishMixTimestamp)),
+                Text(mixingTimeString,
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
               ]),
