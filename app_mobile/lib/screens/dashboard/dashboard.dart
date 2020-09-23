@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homeflow/models/device.dart';
 import 'package:homeflow/services/auth.dart';
-import 'package:homeflow/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/services/firebase.dart';
 import 'package:provider/provider.dart';
@@ -61,12 +60,7 @@ class _DashboardState extends State<Dashboard> {
                         itemCount: snapshot.data.docs.length,
                         itemBuilder: (context, index) {
                           final data = snapshot.data.docs[index].data();
-                          final device = FirebaseDevice(
-                              data: data['data'],
-                              ip: data['ip'],
-                              status: data['status'],
-                              type: data['type'],
-                              uid: data['uid']);
+                          final device = FirebaseDevice.fromMap(data);
                           if (device.status) {
                             return deviceWidget(context, device);
                           } else {

@@ -7,6 +7,15 @@ class FirebaseDevice {
   String type;
   String uid;
 
+  factory FirebaseDevice.fromMap(Map<String, dynamic> map) {
+    return FirebaseDevice(
+        data: map['data'],
+        ip: map['ip'],
+        status: map['status'],
+        type: map['type'],
+        uid: map['uid']);
+  }
+
   FirebaseDevice(
       {@required this.data,
       @required this.ip,
