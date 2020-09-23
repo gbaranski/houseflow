@@ -79,6 +79,10 @@ export function getCurrentUser(): Promise<User | undefined> {
   });
 }
 
+export async function updateDevice(device: Device.FirebaseDevice) {
+  await deviceCollection.doc(device.uid).set(device);
+}
+
 export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
   await deviceCollection.doc(firebaseDevice.uid).update(firebaseDevice);
 }

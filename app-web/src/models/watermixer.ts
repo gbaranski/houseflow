@@ -1,14 +1,19 @@
+import { updateDevice } from '@/services/firebase';
 import { getRandomShortUid } from '@/utils/utils';
 import { Watermixer, Device } from '@gbaranski/types';
 import { MqttClient } from 'mqtt';
 
+const MILLIS_IN_SECOND = 1000;
+const SECOND_IN_MINUTE = 60;
+const MIX_MINUTES = 10;
+
 export default () => {
-  const mixWater = (uid: string, mqttClient: MqttClient) => {
-    const topic = Watermixer.getStartMixingTopic(uid);
+  const mixWater = (device: Device.FirebaseDevice, mqttClient: MqttClient) => {
+    const startMixingTopic = Watermixer.getStartMixingTopic(device.uid);
     const request: Device.Request = {
       correlationData: getRandomShortUid(),
     };
-    mqttClient.subscribe(topic.response);
+    mqttClient.subscribe(startMixingTopic.response);
 
     const createListener = () =>
       mqttClient.once('message', (topic, payload, packet) => {
@@ -17,6 +22,14 @@ export default () => {
 
         if (request.correlationData === responseRequest.correlationData) {
           console.log('That was response for previous request');
+          mqttClient.unsubscribe(startMixingTopic.response);
+          const finishMixTimestamp = Date.now() + MILLIS_IN_SECOND * SECOND_IN_MINUTE * MIX_MINUTES;
+          updateDevice({
+            ...device,
+            data: {
+              finishMixTimestamp,
+            },
+          });
           return;
         }
         createListener();
@@ -24,7 +37,7 @@ export default () => {
 
     createListener();
 
-    mqttClient.publish(topic.request, JSON.stringify(request));
+    mqttClient.publish(startMixingTopic.request, JSON.stringify(request));
   };
 
   return {
