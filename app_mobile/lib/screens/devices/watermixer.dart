@@ -1,9 +1,9 @@
-import 'package:control_home/models/device.dart';
-import 'package:control_home/models/devices/watermixer.dart';
-import 'package:control_home/services/device.dart';
+import 'package:homeflow/models/device.dart';
+import 'package:homeflow/models/devices/watermixer.dart';
+import 'package:homeflow/services/device.dart';
 import 'package:flutter/material.dart';
-import 'package:control_home/utils/misc.dart';
-import 'package:control_home/shared/constants.dart';
+import 'package:homeflow/utils/misc.dart';
+import 'package:homeflow/shared/constants.dart';
 import 'package:provider/provider.dart';
 
 class Watermixer extends StatelessWidget {

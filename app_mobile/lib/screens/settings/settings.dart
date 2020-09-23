@@ -1,8 +1,8 @@
-import 'package:control_home/models/device.dart';
-import 'package:control_home/services/auth.dart';
-import 'package:control_home/shared/device_icon.dart';
-import 'package:control_home/utils/misc.dart';
-import 'package:control_home/services/device.dart';
+import 'package:homeflow/models/device.dart';
+import 'package:homeflow/services/auth.dart';
+import 'package:homeflow/shared/device_icon.dart';
+import 'package:homeflow/utils/misc.dart';
+import 'package:homeflow/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

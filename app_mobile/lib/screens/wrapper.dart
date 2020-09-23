@@ -1,10 +1,10 @@
-import 'package:control_home/models/device.dart';
-import 'package:control_home/models/user.dart';
-import 'package:control_home/screens/auth/sign_in.dart';
-import 'package:control_home/screens/home/home.dart';
-import 'package:control_home/screens/splash_screen/splash_screen.dart';
-import 'package:control_home/services/auth.dart';
-import 'package:control_home/services/device.dart';
+import 'package:homeflow/models/device.dart';
+import 'package:homeflow/models/user.dart';
+import 'package:homeflow/screens/auth/sign_in.dart';
+import 'package:homeflow/screens/home/home.dart';
+import 'package:homeflow/screens/splash_screen/splash_screen.dart';
+import 'package:homeflow/services/auth.dart';
+import 'package:homeflow/services/device.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

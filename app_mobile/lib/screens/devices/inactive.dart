@@ -1,8 +1,8 @@
-import 'package:control_home/models/device.dart';
-import 'package:control_home/utils/misc.dart';
-import 'package:control_home/shared/help_screen.dart';
+import 'package:homeflow/models/device.dart';
+import 'package:homeflow/utils/misc.dart';
+import 'package:homeflow/shared/help_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:control_home/shared/constants.dart';
+import 'package:homeflow/shared/constants.dart';
 
 class InactiveDevice extends StatelessWidget {
   final FirebaseDevice firebaseDevice;
