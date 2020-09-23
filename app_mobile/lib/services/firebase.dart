@@ -66,12 +66,8 @@ class FirebaseService {
     );
   }
 
-  static Query getFirebaseDevicesQueries(FirebaseUser firebaseUser) {
-    print("FirebaseUser devices: ${firebaseUser.devices}");
-    final List<String> uidList =
-        firebaseUser.devices.map((device) => device.uid).toList();
-    return _devicesCollection
-        .where("uid", whereIn: ['ba15f964-0686-42f9-8ae2-dee17a445075']);
+  static Stream<DocumentSnapshot> getFirebaseDeviceSnapshot(String uid) {
+    return _devicesCollection.doc(uid).snapshots();
   }
 
   static void unsubscribeTopic(String topic) {
