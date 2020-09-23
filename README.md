@@ -1,4 +1,4 @@
-# Control-Home
+# Homeflow
 ![code-coverage](https://img.shields.io/badge/coverage-0%25-red)
 ![status](https://img.shields.io/badge/status-OK-GREEN)
 [![build-status](https://img.shields.io/github/workflow/status/gbaranski/Control-Home/Docker)](https://github.com/gbaranski/Control-Home/actions)
