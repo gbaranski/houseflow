@@ -23,3 +23,10 @@ class FirebaseDevice {
       @required this.type,
       @required this.uid});
 }
+
+class RequestTopic {
+  final String request;
+  final String response;
+
+  RequestTopic({@required this.request, @required this.response});
+}
