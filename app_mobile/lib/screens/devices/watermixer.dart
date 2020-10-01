@@ -62,7 +62,10 @@ class _WatermixerState extends State<Watermixer> {
 
       req.whenComplete(() {
         hasCompleted = true;
-        const snackbar = SnackBar(content: Text("Success mixing water!"));
+        const snackbar = SnackBar(
+          content: Text("Success mixing water!"),
+          duration: Duration(milliseconds: 500),
+        );
         Scaffold.of(context).showSnackBar(snackbar);
         final WatermixerData newDeviceData = WatermixerData(
             finishMixTimestamp:
