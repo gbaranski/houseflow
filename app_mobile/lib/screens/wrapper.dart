@@ -6,6 +6,7 @@ import 'package:homeflow/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:homeflow/services/mqtt.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:provider/provider.dart';
 
 class Wrapper extends StatelessWidget {
@@ -23,11 +24,28 @@ class Wrapper extends StatelessWidget {
       } else {
         print("CurrentUser: $user");
 
-        return FutureProvider<MqttService>(
-          create: (_) async => MqttService(
-              token: await authModel.currentUser.getIdToken(),
-              userUid: authModel.currentUser.uid),
-          child: Home(),
+        final MqttService mqttService = new MqttService(
+            getToken: authModel.currentUser.getIdToken,
+            userUid: authModel.currentUser.uid);
+
+        return ChangeNotifierProvider<MqttService>.value(
+          value: mqttService,
+          child: mqttService.mqttClient != null &&
+                  mqttService.mqttClient.connectionStatus.state ==
+                      MqttConnectionState.connected
+              ? Home()
+              : FutureBuilder<MqttClient>(
+                  future: mqttService.connect(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<MqttClient> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (snapshot.hasData) {
+                        return Home();
+                      }
+                    }
+                    return SplashScreen();
+                  },
+                ),
         );
       }
     });

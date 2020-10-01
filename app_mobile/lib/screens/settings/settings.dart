@@ -2,7 +2,6 @@ import 'package:homeflow/models/device.dart';
 import 'package:homeflow/services/auth.dart';
 import 'package:homeflow/shared/device_icon.dart';
 import 'package:homeflow/utils/misc.dart';
-import 'package:homeflow/services/device.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
