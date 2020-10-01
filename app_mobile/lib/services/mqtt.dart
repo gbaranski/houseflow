@@ -88,10 +88,10 @@ class MqttService extends ChangeNotifier {
     return await completer.future;
   }
 
-  void _onError(
-      dynamic data, FirebaseUser firebaseUser, auth.User currentUser) async {
-    print("Error $data}");
-    await Future.delayed(Duration(milliseconds: 1000));
-    print("Reconnecting!");
+  @override
+  void dispose() {
+    this.mqttClient.disconnect();
+
+    super.dispose();
   }
 }
