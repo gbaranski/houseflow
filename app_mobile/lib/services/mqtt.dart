@@ -5,20 +5,23 @@ import 'package:homeflow/models/device.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:homeflow/shared/constants.dart';
-import 'package:homeflow/models/user.dart';
 import 'dart:async';
 
 class MqttService extends ChangeNotifier {
   MqttClient mqttClient;
 
-  MqttService({@required String userUid, @required String token}) {
-    print("MQTT Service constructor");
+  final String userUid;
 
-    Completer<MqttClient> completer = Completer();
+  final Future<String> Function([bool]) getToken;
+
+  Future<MqttClient> connect() async {
     mqttClient = MqttServerClient.withPort(MQTT_HOST, userUid, MQTT_PORT);
+    mqttClient.autoReconnect = true;
+
+    final token = getToken();
+    Completer<MqttClient> completer = Completer<MqttClient>();
     mqttClient.logging(on: true);
     mqttClient.onConnected = () {
       print("Connected to MQTT");
@@ -33,7 +36,7 @@ class MqttService extends ChangeNotifier {
 
     final connMessage = MqttConnectMessage()
         .withClientIdentifier(userUid)
-        .authenticateAs(userUid, token)
+        .authenticateAs(userUid, await token)
         .keepAliveFor(60)
         .startClean();
     mqttClient.connectionMessage = connMessage;
@@ -42,7 +45,10 @@ class MqttService extends ChangeNotifier {
       print("MQTT Exception $e");
       mqttClient.disconnect();
     });
+    return await completer.future;
   }
+
+  MqttService({@required this.userUid, @required this.getToken});
 
   static String getRandomShortString() {
     final randomNum = Random();
@@ -90,7 +96,9 @@ class MqttService extends ChangeNotifier {
 
   @override
   void dispose() {
-    this.mqttClient.disconnect();
+    mqttClient.autoReconnect = false;
+    mqttClient.disconnect();
+    mqttClient = null;
 
     super.dispose();
   }
