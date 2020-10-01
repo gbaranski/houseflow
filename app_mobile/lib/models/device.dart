@@ -15,6 +15,15 @@ class FirebaseDevice {
         type: map['type'],
         uid: map['uid']);
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'data': data,
+      'ip': ip,
+      'status': status,
+      'type': type,
+      'uid': uid,
+    };
+  }
 
   FirebaseDevice(
       {@required this.data,

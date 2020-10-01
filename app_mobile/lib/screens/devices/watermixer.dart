@@ -1,6 +1,7 @@
 import 'package:homeflow/models/device.dart';
 import 'package:homeflow/models/devices/watermixer.dart';
 import 'package:flutter/material.dart';
+import 'package:homeflow/services/firebase.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:homeflow/services/mqtt.dart';
@@ -8,6 +9,8 @@ import 'package:homeflow/utils/misc.dart';
 import 'package:provider/provider.dart';
 import 'package:homeflow/shared/constants.dart';
 import 'dart:async';
+
+const tenMinutesInMillis = 1000 * 10 * 60;
 
 class Watermixer extends StatefulWidget {
   final FirebaseDevice firebaseDevice;
@@ -61,6 +64,16 @@ class _WatermixerState extends State<Watermixer> {
         hasCompleted = true;
         const snackbar = SnackBar(content: Text("Success mixing water!"));
         Scaffold.of(context).showSnackBar(snackbar);
+        final WatermixerData newDeviceData = WatermixerData(
+            finishMixTimestamp:
+                DateTime.now().millisecondsSinceEpoch + tenMinutesInMillis);
+        final FirebaseDevice newDevice = FirebaseDevice(
+            data: newDeviceData.toJson(),
+            ip: widget.firebaseDevice.ip,
+            status: widget.firebaseDevice.status,
+            type: widget.firebaseDevice.type,
+            uid: widget.firebaseDevice.uid);
+        FirebaseService.updateFirebaseDevice(newDevice);
       });
       Future.delayed(Duration(seconds: 2), () {
         if (!hasCompleted) {

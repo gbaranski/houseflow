@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:homeflow/models/device.dart';
 import 'package:homeflow/models/user.dart';
 
 class FirebaseService {
@@ -68,6 +69,10 @@ class FirebaseService {
 
   static Stream<DocumentSnapshot> getFirebaseDeviceSnapshot(String uid) {
     return _devicesCollection.doc(uid).snapshots();
+  }
+
+  static updateFirebaseDevice(FirebaseDevice firebaseDevice) {
+    _devicesCollection.doc(firebaseDevice.uid).update(firebaseDevice.toJson());
   }
 
   static void unsubscribeTopic(String topic) {
