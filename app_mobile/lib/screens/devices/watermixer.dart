@@ -26,10 +26,16 @@ class _WatermixerState extends State<Watermixer> {
   String mixingTimeString = "";
 
   void startCounting(int finishMixTimestamp) {
-    final callback = (Timer timer) => setState(() {
-          mixingTimeString =
-              durationToString(getEpochDiffDuration(finishMixTimestamp));
-        });
+    final callback = (Timer timer) {
+      if (!this.mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        mixingTimeString =
+            durationToString(getEpochDiffDuration(finishMixTimestamp));
+      });
+    };
 
     _countdownTimer = Timer.periodic(Duration(seconds: 1), callback);
     callback(_countdownTimer);
@@ -38,6 +44,7 @@ class _WatermixerState extends State<Watermixer> {
   @override
   void dispose() {
     _countdownTimer.cancel();
+    _countdownTimer = null;
     super.dispose();
   }
 
