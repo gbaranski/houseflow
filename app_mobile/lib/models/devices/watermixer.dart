@@ -8,5 +8,11 @@ class WatermixerData {
       finishMixTimestamp: json["finishMixTimestamp"],
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'finishMixTimestamp': finishMixTimestamp,
+    };
+  }
+
   WatermixerData({@required this.finishMixTimestamp});
 }
