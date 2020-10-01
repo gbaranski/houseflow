@@ -46,15 +46,28 @@ class _WatermixerState extends State<Watermixer> {
         WatermixerData.fromJson(widget.firebaseDevice.data);
     startCounting(data.finishMixTimestamp);
 
-    final startMixing = () {
+    final startMixing = () async {
       print("MQTT CONN STAT: ${mqttService.mqttClient.connectionStatus}");
       final String uid = widget.firebaseDevice.uid;
       final RequestTopic topic = RequestTopic(
           request: '$uid/event/startmix/request',
-          response: '$uid/event/startmix/request');
+          response: '$uid/event/startmix/response');
 
-      mqttService.sendMessage(
+      bool hasCompleted = false;
+      final Future req = mqttService.sendMessage(
           topic: topic, qos: MqttQos.atMostOnce, data: null);
+
+      req.whenComplete(() {
+        hasCompleted = true;
+        const snackbar = SnackBar(content: Text("Success mixing water!"));
+        Scaffold.of(context).showSnackBar(snackbar);
+      });
+      Future.delayed(Duration(seconds: 2), () {
+        if (!hasCompleted) {
+          const snackbar = SnackBar(content: Text("No response from device!"));
+          Scaffold.of(context).showSnackBar(snackbar);
+        }
+      });
     };
 
     return ConstrainedBox(

@@ -85,7 +85,7 @@ class MqttService extends ChangeNotifier {
         retain: false);
     print("Published message");
 
-    return completer.future;
+    return await completer.future;
   }
 
   void _onError(
