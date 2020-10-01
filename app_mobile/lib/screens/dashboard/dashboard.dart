@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:homeflow/services/firebase.dart';
 import 'package:provider/provider.dart';
 import 'package:homeflow/screens/devices/watermixer.dart';
-import 'package:homeflow/screens/devices/inactive.dart';
 
 class Dashboard extends StatefulWidget {
   @override
