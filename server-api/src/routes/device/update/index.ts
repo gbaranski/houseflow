@@ -1,9 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import {
-  validateDevice,
-  DeviceCredentials,
-  findDeviceInDatabase,
-} from '@/services/firebase';
+import { validateDevice, findDeviceInDatabase } from '@/services/firebase';
 import { findBinaryFile, sendBinaryFile } from './misc';
 
 const router = express.Router();
@@ -33,7 +29,9 @@ router.use(
     if (!versionHeader || !sketchMd5)
       throw new Error('Version and MD5 is not defined');
 
-    const deviceCredentials: DeviceCredentials = JSON.parse(versionHeader);
+    const deviceCredentials: { secret: string; uid: string } = JSON.parse(
+      versionHeader,
+    );
     if (!deviceCredentials.secret || !deviceCredentials.uid)
       throw new Error('Device credentials are invalid');
 

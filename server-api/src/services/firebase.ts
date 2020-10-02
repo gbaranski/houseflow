@@ -1,36 +1,31 @@
 import * as admin from 'firebase-admin';
-import { Device } from '@gbaranski/types';
+import { Client, Device } from '@gbaranski/types';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
 admin.initializeApp();
 
 const db = admin.firestore();
+const auth = admin.auth();
+const usersCollection = db.collection('users');
 const deviceCollection = db.collection('devices');
 const devicePrivateCollection = db.collection('devices-private');
 
-export interface DeviceCredentials {
-  uid: string;
-  secret: string;
-}
-
-export async function validateDevice({
+export const validateDevice = async ({
   uid,
   secret,
-}: DeviceCredentials): Promise<{ secret: string }> {
-  const snapshot = await devicePrivateCollection.doc(uid).get();
-  if (!snapshot.exists) throw new Error('Does not exist!');
+}: {
+  uid: string;
+  secret: string;
+}) => {
+  const deviceData = (await devicePrivateCollection.doc(uid).get()).data() as {
+    secret: string;
+  };
+  console.log({ fsS: deviceData.secret, secret });
+  if (deviceData.secret !== secret) throw new Error('secret missmatch');
+};
 
-  const snapshotData = snapshot.data() as { secret: string };
-  if (snapshotData.secret !== secret) {
-    console.log({
-      currentSecret: snapshotData.secret,
-      desiredSecret: secret,
-    });
-    throw new Error("Device doesn't match");
-  }
-  return snapshotData;
-}
+export const decodeToken = (token: string) => auth.verifyIdToken(token);
 
 export async function findDeviceInDatabase(uid: string) {
   const snapshot = await deviceCollection.doc(uid).get();
