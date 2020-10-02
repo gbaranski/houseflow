@@ -5,12 +5,8 @@ export interface UserRequest {
   password: string;
 }
 
-export enum MqttAccess {
-  'sub' = 1,
-  'pub' = 2,
-}
 export interface AclRequest {
-  access: MqttAccess;
+  access: '1' | '2'; // 1 = sub, 2 = pub
   clientid: string;
   ip: string;
   username: string;

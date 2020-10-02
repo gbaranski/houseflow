@@ -1,6 +1,12 @@
-import { decodeToken, validateDevice } from '@/services/firebase';
+import {
+  decodeToken,
+  firebaseUsers,
+  validateDevice,
+} from '@/services/firebase';
 import express from 'express';
-import { UserRequest } from './types';
+import { AclRequest, UserRequest } from './types';
+
+const UUID_LENGTH = 32;
 
 const router = express.Router();
 
@@ -20,11 +26,11 @@ router.post('/user', async (req, res) => {
     } else {
       throw new Error('unrecognized client');
     }
-    console.log(`Authorized ${userRequest.username}`);
+    console.log(`Authorized user ${userRequest.username}`);
     res.sendStatus(200);
   } catch (e) {
     console.log(
-      `Failed authorization with ${userRequest.username} e ${e.message}`,
+      `Failed user authorization with ${userRequest.username} ${e.message}`,
     );
     res.sendStatus(400);
   }
@@ -32,19 +38,34 @@ router.post('/user', async (req, res) => {
 
 router.post('/acl', (req, res) => {
   console.log('ACL: ', req.body);
-  res.sendStatus(200);
-});
+  const aclRequest: AclRequest = req.body;
+  try {
+    if (aclRequest.clientid.startsWith('device_')) {
+      if (!aclRequest.topic.startsWith(`${aclRequest.username}/`))
+        throw new Error('not allowed topic');
+    } else if (
+      aclRequest.clientid.startsWith('web_') ||
+      aclRequest.clientid.startsWith('mobile_')
+    ) {
+      const firebaseUser = firebaseUsers.find(
+        (user) => user.uid === aclRequest.username,
+      );
+      if (!firebaseUser) throw new Error(' firebase user not found');
+      const toSubscribeDeviceUid = aclRequest.topic.substring(0, UUID_LENGTH);
+      if (
+        !firebaseUser.devices.find(
+          (device) => device.uid === toSubscribeDeviceUid,
+        )
+      )
+        throw new Error('not allowed device topic');
+    }
+  } catch (e) {
+    console.log(
+      `ACL Auth failed due ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
+    );
+  }
 
-router.post('/superuser', (req, res) => {
-  console.log('SuperUser: ', req.body);
   res.sendStatus(200);
-  // const userData = getRequestData(req);
-  // try {
-  //   jwt.verify(userData.password, JWT_KEY);
-  //   res.sendStatus(200);
-  // } catch (e) {
-  //   res.sendStatus(403);
-  // }
 });
 
 export default router;

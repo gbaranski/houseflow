@@ -11,6 +11,17 @@ const usersCollection = db.collection('users');
 const deviceCollection = db.collection('devices');
 const devicePrivateCollection = db.collection('devices-private');
 
+export let firebaseUsers: Client.FirebaseUser[] = [];
+
+usersCollection.onSnapshot((snapshot) =>
+  snapshot.docs.forEach((doc) => {
+    const firebaseUser = doc.data() as Client.FirebaseUser;
+    firebaseUsers = firebaseUsers
+      .filter((user) => user.uid !== firebaseUser.uid)
+      .concat(firebaseUser);
+  }),
+);
+
 export const validateDevice = async ({
   uid,
   secret,
