@@ -20,22 +20,23 @@ services:
 
     networks:
       - backend
+
   server-api:
     tty: true
-    container_name: 'server-api'
+    container_name: 'server_api'
     command: npm run start:dev
     env_file:
       - .env
     build:
-      context: ./server-api
+      context: ./server_api
       dockerfile: Dockerfile
     ports:
       - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./server-api/src:/server/src
-      - ./server-api/bin:/server/bin
+      - ./server_api/src:/server/src
+      - ./server_api/bin:/server/bin
     networks:
       - backend
 

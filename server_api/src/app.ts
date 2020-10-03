@@ -26,16 +26,6 @@ morgan.token('country', (req: express.Request) => {
   }
 });
 
-morgan.token('devOrUsr', (req: express.Request) => {
-  const username = req.header('username');
-  const device = req.header('device');
-  if (username || device) {
-    return chalk.magenta(username || device);
-  } else {
-    return chalk.gray.bold('unknown');
-  }
-});
-
 morgan.token('ip', (req: express.Request) => {
   return chalk.cyan.bold(getIpStr(req));
 });
@@ -53,8 +43,6 @@ app.use(
       tokens.ip(req, res),
       chalk.dim('-'),
       chalk.gray.bold(tokens.country(req, res)),
-      chalk.dim('-'),
-      chalk.bold(tokens.devOrUsr(req, res)),
     ].join(' ');
   }),
 );
