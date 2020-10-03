@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function getUser() {
+    	return get(/databases/$(database)/documents/users/$(request.auth.uid)); 
+		}
+    function isDeviceAllowed() {
+    return {"uid": resource.id, "notification": true} in getUser().data.devices 
+        || {"uid": resource.id, "notification": false} in getUser().data.devices;
+    }
+
+  	match /users/{userId} {
+			allow read: 
+      	if request.auth != null && request.auth.uid == userId;
+
+      allow update: 
+      	if request.auth != null && getUser().data.role == "admin";
+    }
+    
+    match /devices/{deviceId} {
+			allow read: 
+      	if request.auth != null 
+      	&& getUser().data.role == "admin" 
+        || isDeviceAllowed();
+        
+      allow write: 
+      	if request.auth != null
+        && getUser().data.role == "admin"
+        || isDeviceAllowed();
+        
+      allow create: 
+      	if request.auth != null 
+        && getUser().data.role == "admin";
+      
+			allow delete: 
+      	if request.auth != null 
+        && getUser().data.role == "admin";
+
+    }
+    match /devices-private/{deviceId} {
+			allow create: 
+      	if request.auth != null 
+        && getUser().data.role == "admin" 
+        && request.resource.data.secret != null;
+        
+			allow delete: 
+      	if request.auth != null 
+      	&& getUser().data.role == "admin";
+    }
+  }
+}
