@@ -1,7 +1,7 @@
 import { getRandomShortUid } from '@/utils/utils';
 import { connect, MqttClient } from 'mqtt';
 
-const BROKER_URL = 'ws://localhost:8083/mqtt';
+const BROKER_URL = 'wss://localhost:8084/mqtt';
 
 export const connectMqtt = (token: string, uid: string) => {
   return new Promise<MqttClient>((resolve, reject) => {

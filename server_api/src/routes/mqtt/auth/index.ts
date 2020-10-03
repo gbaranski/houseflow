@@ -6,7 +6,7 @@ import {
 import express from 'express';
 import { AclRequest, UserRequest } from './types';
 
-const UUID_LENGTH = 32;
+const UUID_LENGTH = 36;
 
 const router = express.Router();
 
@@ -63,6 +63,8 @@ router.post('/acl', (req, res) => {
     console.log(
       `ACL Auth failed due ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
     );
+    res.sendStatus(400);
+    return;
   }
 
   res.sendStatus(200);
