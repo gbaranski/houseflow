@@ -1,69 +1,45 @@
 version: '3.8'
 services:
-  redis:
-    image: 'redis:alpine'
-    container_name: 'redis'
-    command: ['redis-server', '--bind', 'redis', '--port', '6379']
-    ports:
-      - 6379:6379
+  emqx:
+    image: 'emqx/emqx'
+    container_name: 'emqx'
     environment:
-      - REDIS_REPLICATION_MODE=master
+      - EMQX_NAME=emqx
+      - EMQX_ALLOW_ANONYMOUS=false
+      - EMQX_LISTENER__SSL__EXTERNAL=8883
+      - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/key.pem
+      - EMQX_LISTENER__SSL__EXTERNAL__CERTFILE=etc/certs/cert.pem
+
+      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+    ports:
+      - 1883:1883 # MQTT
+      - 8883:8883 # MQTT/SSL
+      - 8083:8083 # MQTT/WS
+      - 8084:8084 # MQTT/WSS
+      - 18083:18083 # DASHBOARD
+    volumes:
+      - ./emqx/plugins:/opt/emqx/etc/plugins
+      - ./certs:/opt/emqx/etc/certs
+
     networks:
       - backend
 
   server-api:
     tty: true
-    container_name: 'server-api'
-    depends_on:
-      - redis
+    container_name: 'server_api'
+    command: npm run start
     env_file:
       - .env
     build:
-      context: ./server-api
+      context: ./server_api
       dockerfile: Dockerfile
     ports:
       - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
-    networks:
-      - backend
-
-  server-device:
-    tty: true
-    container_name: 'server-device'
-    depends_on:
-      - redis
-      - server-api
-    env_file:
-      - .env
-    build:
-      context: ./server-device
-      dockerfile: Dockerfile
-    ports:
-      - $PORT_DEVICE:$PORT_DEVICE
-    restart: 'unless-stopped'
-    volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
-    networks:
-      - backend
-
-  server-client:
-    tty: true
-    container_name: 'server-client'
-    depends_on:
-      - redis
-      - server-device
-    env_file:
-      - .env
-    build:
-      context: ./server-client
-      dockerfile: Dockerfile
-    ports:
-      - $PORT_CLIENT:$PORT_CLIENT
-    restart: 'unless-stopped'
-    volumes:
-      - ./firebaseConfig.json:/server/src/firebaseConfig.json
+      - ./firebaseConfig.json:/server/firebaseConfig.json
+      - ./server_api/src:/server/src
+      - ./server_api/bin:/server/bin
     networks:
       - backend
 
@@ -80,6 +56,7 @@ services:
       - 443:443
     restart: 'unless-stopped'
     volumes:
+      - ./certs:/etc/ssl/nginx/certs
       - ./nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
       - ./nginx/certs/key.pem:/etc/ssl/nginx/key.pem
     networks:
