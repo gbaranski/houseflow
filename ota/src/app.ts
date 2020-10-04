@@ -32,9 +32,9 @@ app.use(
 app.use(express.json()); // for parsing application/json
 
 app.get('/', (req, res): void => {
-  res.send('Hello from auth server at /');
+  res.send('Hello from ota server at /');
 });
 
-app.use('/auth', routes);
+app.use('/ota', routes);
 
 export default app;
