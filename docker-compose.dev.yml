@@ -21,22 +21,21 @@ services:
     networks:
       - backend
 
-  server-api:
+  auth:
     tty: true
-    container_name: 'server_api'
+    container_name: 'auth'
     command: npm run start:dev
     env_file:
       - .env
     build:
-      context: ./server_api
+      context: ./auth
       dockerfile: Dockerfile
     ports:
-      - $PORT_API:$PORT_API
+      - $PORT_AUTH:$PORT_AUTH
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./server_api/src:/server/src
-      - ./server_api/bin:/server/bin
+      - ./auth/src:/auth/src
     networks:
       - backend
 
