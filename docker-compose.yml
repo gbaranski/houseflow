@@ -1,28 +1,28 @@
 version: '3.8'
 services:
-  emqx:
-    image: 'emqx/emqx'
-    container_name: 'emqx'
-    environment:
-      - EMQX_NAME=emqx
-      - EMQX_ALLOW_ANONYMOUS=false
-      - EMQX_LISTENER__SSL__EXTERNAL=8883
-      - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/key.pem
-      - EMQX_LISTENER__SSL__EXTERNAL__CERTFILE=etc/certs/cert.pem
+  # emqx:
+  #   image: 'emqx/emqx'
+  #   container_name: 'emqx'
+  #   environment:
+  #     - EMQX_NAME=emqx
+  #     - EMQX_ALLOW_ANONYMOUS=false
+  #     - EMQX_LISTENER__SSL__EXTERNAL=8883
+  #     - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/key.pem
+  #     - EMQX_LISTENER__SSL__EXTERNAL__CERTFILE=etc/certs/cert.pem
 
-      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
-    ports:
-      - 1883:1883 # MQTT
-      - 8883:8883 # MQTT/SSL
-      - 8083:8083 # MQTT/WS
-      - 8084:8084 # MQTT/WSS
-      - 18083:18083 # DASHBOARD
-    volumes:
-      - ./emqx/plugins:/opt/emqx/etc/plugins
-      - ./certs:/opt/emqx/etc/certs
+  #     - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+  #   ports:
+  #     - 1883:1883 # MQTT
+  #     - 8883:8883 # MQTT/SSL
+  #     - 8083:8083 # MQTT/WS
+  #     - 8084:8084 # MQTT/WSS
+  #     - 18083:18083 # DASHBOARD
+  #   volumes:
+  #     - ./emqx/plugins:/opt/emqx/etc/plugins
+  #     - ./certs:/opt/emqx/etc/certs
 
-    networks:
-      - backend
+  #   networks:
+  #     - backend
 
   api:
     tty: true

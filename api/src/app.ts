@@ -31,10 +31,6 @@ app.use(
 );
 app.use(express.json()); // for parsing application/json
 
-app.get('/', (req, res): void => {
-  res.send('Hello from api server at /');
-});
-
-app.use('/api', routes);
+app.use('/', routes);
 
 export default app;
