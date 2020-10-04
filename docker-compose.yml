@@ -24,22 +24,48 @@ services:
     networks:
       - backend
 
-  server-api:
+  api:
     tty: true
-    container_name: 'server_api'
+    container_name: 'api'
     command: npm run start
     env_file:
       - .env
     build:
-      context: ./server_api
+      context: ./api
       dockerfile: Dockerfile
-    ports:
-      - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./server_api/src:/server/src
-      - ./server_api/bin:/server/bin
+    networks:
+      - backend
+
+  auth:
+    tty: true
+    container_name: 'auth'
+    command: npm run start
+    env_file:
+      - .env
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    restart: 'unless-stopped'
+    volumes:
+      - ./firebaseConfig.json:/server/firebaseConfig.json
+    networks:
+      - backend
+
+  ota:
+    tty: true
+    container_name: 'ota'
+    command: npm run start
+    env_file:
+      - .env
+    build:
+      context: ./ota
+      dockerfile: Dockerfile
+    restart: 'unless-stopped'
+    volumes:
+      - ./firebaseConfig.json:/server/firebaseConfig.json
     networks:
       - backend
 
@@ -57,8 +83,6 @@ services:
     restart: 'unless-stopped'
     volumes:
       - ./certs:/etc/ssl/nginx/certs
-      - ./nginx/certs/cert.pem:/etc/ssl/nginx/cert.pem
-      - ./nginx/certs/key.pem:/etc/ssl/nginx/key.pem
     networks:
       - backend
 
