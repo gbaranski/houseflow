@@ -2,7 +2,7 @@ import http from 'http';
 import app from './app';
 import chalk from 'chalk';
 
-export const PORT = process.env.PORT_AUTH as string;
+export const PORT = process.env.PORT_OTA as string;
 
 if (!PORT) throw new Error('PORT is not defined');
 
