@@ -22,7 +22,7 @@ services:
     networks:
       - backend
 
-  api:
+  webhooks:
     tty: true
     container_name: 'api'
     command: npm run start:dev
@@ -35,8 +35,8 @@ services:
       - $PORT_API:$PORT_API
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./api/src:/server/src
+      - ./firebaseConfig.json:/app/firebaseConfig.json
+      - ./api/src:/app/src
     networks:
       - backend
 
@@ -53,8 +53,8 @@ services:
       - $PORT_AUTH:$PORT_AUTH
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./auth/src:/server/src
+      - ./firebaseConfig.json:/app/firebaseConfig.json
+      - ./auth/src:/app/src
     networks:
       - backend
 
@@ -71,8 +71,8 @@ services:
       - $PORT_OTA:$PORT_OTA
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
-      - ./ota/src:/server/src
+      - ./firebaseConfig.json:/app/firebaseConfig.json
+      - ./ota/src:/app/src
     networks:
       - backend
 
