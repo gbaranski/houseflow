@@ -24,19 +24,15 @@ services:
 
   webhooks:
     tty: true
-    container_name: 'api'
-    command: npm run start:dev
+    container_name: 'webhooks'
     env_file:
       - .env
     build:
-      context: ./api
+      context: ./webhooks
       dockerfile: Dockerfile
     ports:
-      - $PORT_API:$PORT_API
+      - $PORT_WEBHOOK:$PORT_WEBHOOK
     restart: 'unless-stopped'
-    volumes:
-      - ./firebaseConfig.json:/app/firebaseConfig.json
-      - ./api/src:/app/src
     networks:
       - backend
 
@@ -73,6 +69,22 @@ services:
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
       - ./ota/src:/app/src
+    networks:
+      - backend
+  nginx:
+    tty: true
+    container_name: 'nginx'
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+    restart: 'unless-stopped'
+    volumes:
+      - ./certs:/etc/ssl/nginx/certs
     networks:
       - backend
 
