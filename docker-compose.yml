@@ -35,7 +35,7 @@ services:
       dockerfile: Dockerfile
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
+      - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
       - backend
 
@@ -50,7 +50,7 @@ services:
       dockerfile: Dockerfile
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
+      - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
       - backend
 
@@ -65,7 +65,7 @@ services:
       dockerfile: Dockerfile
     restart: 'unless-stopped'
     volumes:
-      - ./firebaseConfig.json:/server/firebaseConfig.json
+      - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
       - backend
 
