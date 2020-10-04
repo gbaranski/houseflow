@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({ origin: CORS_WHITELIST }));
 morgan.token('code', (req: express.Request, res: express.Response) => {
   const code = res.statusCode;
-  if (code === 401 || code === 403) {
+  if (code === 400 || code === 401 || code === 403) {
     return chalk.red.bold(code);
   } else {
     return chalk.green.bold(code);
