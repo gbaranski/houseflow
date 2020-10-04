@@ -17,27 +17,26 @@ services:
       - 18083:18083
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
-
     networks:
       - backend
 
-  # api:
-  #   tty: true
-  #   container_name: 'api'
-  #   command: npm run start:dev
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./api
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - $PORT_API:$PORT_API
-  #   restart: 'unless-stopped'
-  #   volumes:
-  #     - ./firebaseConfig.json:/server/firebaseConfig.json
-  #     - ./api/src:/server/src
-  #   networks:
-  #     - backend
+  api:
+    tty: true
+    container_name: 'api'
+    command: npm run start:dev
+    env_file:
+      - .env
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - $PORT_API:$PORT_API
+    restart: 'unless-stopped'
+    volumes:
+      - ./firebaseConfig.json:/server/firebaseConfig.json
+      - ./api/src:/server/src
+    networks:
+      - backend
 
   auth:
     tty: true
