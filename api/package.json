@@ -1,0 +1,37 @@
+{
+  "name": "homeflow-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node -r dotenv/config -r tsconfig-paths/register .",
+    "start:dev": "ts-node-dev -r dotenv/config -r tsconfig-paths/register ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gbaranski/homeflow.git"
+  },
+  "author": "gbaranski",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gbaranski/homeflow/issues"
+  },
+  "homepage": "https://github.com/gbaranski/homeflow#readme",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "firebase-admin": "^9.2.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@gbaranski/types": "^4.0.43",
+    "@types/cors": "^2.8.7",
+    "@types/express": "^4.17.8",
+    "@types/morgan": "^1.9.1",
+    "@types/node": "^14.11.2",
+    "dotenv": "^8.2.0",
+    "ts-node-dev": "^1.0.0-pre.63",
+    "tsconfig-paths": "^3.9.0"
+  }
+}
