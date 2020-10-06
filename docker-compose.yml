@@ -1,37 +1,34 @@
 version: '3.8'
 services:
-  # emqx:
-  #   image: 'emqx/emqx'
-  #   container_name: 'emqx'
-  #   environment:
-  #     - EMQX_NAME=emqx
-  #     - EMQX_ALLOW_ANONYMOUS=false
-  #     - EMQX_LISTENER__SSL__EXTERNAL=8883
-  #     - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/key.pem
-  #     - EMQX_LISTENER__SSL__EXTERNAL__CERTFILE=etc/certs/cert.pem
+  emqx:
+    image: 'emqx/emqx'
+    container_name: 'emqx'
+    environment:
+      - EMQX_NAME=emqx
+      # - EMQX_LOG__LEVEL=debug
+      - EMQX_ALLOW_ANONYMOUS=false
 
-  #     - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
-  #   ports:
-  #     - 1883:1883 # MQTT
-  #     - 8883:8883 # MQTT/SSL
-  #     - 8083:8083 # MQTT/WS
-  #     - 8084:8084 # MQTT/WSS
-  #     - 18083:18083 # DASHBOARD
-  #   volumes:
-  #     - ./emqx/plugins:/opt/emqx/etc/plugins
-  #     - ./certs:/opt/emqx/etc/certs
+      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+    env_file:
+      - .env
+    ports:
+      - 1883:1883 # MQTT
+      - 8083:8083
+      - 8883:8883
+      - 8084:8084
+      - 18083:18083
+    volumes:
+      - ./emqx/plugins:/opt/emqx/etc/plugins
+    networks:
+      - backend
 
-  #   networks:
-  #     - backend
-
-  api:
+  webhooks:
     tty: true
-    container_name: 'api'
-    command: npm run start
+    container_name: 'webhooks'
     env_file:
       - .env
     build:
-      context: ./api
+      context: ./webhooks
       dockerfile: Dockerfile
     restart: 'unless-stopped'
     volumes:
