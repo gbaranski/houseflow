@@ -31,7 +31,7 @@ services:
       context: ./webhooks
       dockerfile: Dockerfile
     ports:
-      - $PORT_WEBHOOK:$PORT_WEBHOOK
+      - $PORT_WEBHOOKS:$PORT_WEBHOOKS
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
