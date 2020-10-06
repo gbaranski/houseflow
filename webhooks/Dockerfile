@@ -1,9 +1,16 @@
 FROM golang:latest
 
-WORKDIR /go/src/app
+ENV GO111MODULE=on
+
+WORKDIR /app
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
 COPY . .
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 
-CMD ["app"]
+CMD ["/app/webhooks"]

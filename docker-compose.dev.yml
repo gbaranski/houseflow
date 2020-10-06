@@ -22,21 +22,21 @@ services:
     networks:
       - backend
 
-  # webhooks:
-  #   tty: true
-  #   container_name: 'webhooks'
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./webhooks
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - $PORT_WEBHOOK:$PORT_WEBHOOK
-  #   restart: 'unless-stopped'
-  #   volumes:
-  #     - ./firebaseConfig.json:/go/src/app/firebaseConfig.json
-  #   networks:
-  #     - backend
+  webhooks:
+    tty: true
+    container_name: 'webhooks'
+    env_file:
+      - .env
+    build:
+      context: ./webhooks
+      dockerfile: Dockerfile
+    ports:
+      - $PORT_WEBHOOK:$PORT_WEBHOOK
+    restart: 'unless-stopped'
+    volumes:
+      - ./firebaseConfig.json:/app/firebaseConfig.json
+    networks:
+      - backend
 
   auth:
     tty: true
