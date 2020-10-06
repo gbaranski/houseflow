@@ -4,17 +4,14 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 
 	server "github.com/gbaranski/homeflow/webhooks/server"
 	services "github.com/gbaranski/homeflow/webhooks/services"
 )
 
+const port = 80
+
 func main() {
-	PORT := os.Getenv("PORT_WEBHOOKS")
-	if len(PORT) == 0 {
-		log.Fatalln("Port is not defined")
-	}
 	firebaseClient, error := services.InitFirebase(context.Background())
 	if error != nil {
 		log.Fatalln(error)
@@ -24,5 +21,5 @@ func main() {
 		server.OnEvent(w, req, firebaseClient)
 	})
 
-	http.ListenAndServe(":"+PORT, nil)
+	http.ListenAndServe(":"+string(port), nil)
 }

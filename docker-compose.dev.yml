@@ -30,8 +30,6 @@ services:
     build:
       context: ./webhooks
       dockerfile: Dockerfile
-    ports:
-      - $PORT_WEBHOOKS:$PORT_WEBHOOKS
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
@@ -47,8 +45,6 @@ services:
     build:
       context: ./auth
       dockerfile: Dockerfile
-    ports:
-      - $PORT_AUTH:$PORT_AUTH
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
@@ -65,14 +61,13 @@ services:
     build:
       context: ./ota
       dockerfile: Dockerfile
-    ports:
-      - $PORT_OTA:$PORT_OTA
     restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
       - ./ota/src:/app/src
     networks:
       - backend
+
   nginx:
     tty: true
     container_name: 'nginx'

@@ -2,9 +2,7 @@ import http from 'http';
 import app from './app';
 import chalk from 'chalk';
 
-export const PORT = process.env.PORT_OTA as string;
-
-if (!PORT) throw new Error('PORT is not defined');
+export const PORT = 80;
 
 const httpServer = http.createServer(app);
 
