@@ -9,8 +9,6 @@ import (
 	services "github.com/gbaranski/homeflow/webhooks/services"
 )
 
-const port = 80
-
 func main() {
 	firebaseClient, error := services.InitFirebase(context.Background())
 	if error != nil {
@@ -21,5 +19,5 @@ func main() {
 		server.OnEvent(w, req, firebaseClient)
 	})
 
-	http.ListenAndServe(":"+string(port), nil)
+	http.ListenAndServe(":80", nil)
 }
