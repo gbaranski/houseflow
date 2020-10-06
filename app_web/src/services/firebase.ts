@@ -90,3 +90,7 @@ export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promi
 export async function deleteDevice(device: Device.FirebaseDevice) {
   throw new Error('Not implemented');
 }
+
+export const sendPasswordResetEmail = (email: string) => {
+  return firebaseAuth.sendPasswordResetEmail(email);
+};
