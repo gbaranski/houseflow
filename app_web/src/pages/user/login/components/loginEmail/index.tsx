@@ -1,10 +1,22 @@
 import React from 'react';
-import { signInWithCredentials } from '@/services/firebase';
-import { message, Input, Button, Form } from 'antd';
+import { sendPasswordResetEmail, signInWithCredentials } from '@/services/firebase';
+import { message, Input, Button, Form, Popconfirm } from 'antd';
 import { history, useModel } from 'umi';
+import { useForm } from 'antd/lib/form/Form';
 
 export default function LoginEmail() {
   const initialState = useModel('@@initialState');
+  const [form] = useForm();
+
+  const onPasswordReset = async () => {
+    try {
+      await form.validateFields(['email']);
+      const email = form.getFieldValue('email');
+      await sendPasswordResetEmail(email);
+      message.success('Sent email! Check your inbox');
+    } catch (e) {}
+  };
+
   const onFinish = async (values: {
     email: string;
     password: string;
@@ -24,10 +36,10 @@ export default function LoginEmail() {
 
   return (
     <Form
-      name="normal_login"
+      name="loginForm"
       initialValues={{ remember: true }}
-      // @ts-ignore
       onFinish={onFinish}
+      form={form}
       className="login-form"
     >
       <Form.Item
@@ -38,15 +50,22 @@ export default function LoginEmail() {
       </Form.Item>
 
       <Form.Item
+        noStyle
         name="password"
         rules={[{ required: true, message: 'Please input your password!', type: 'string' }]}
       >
         <Input.Password placeholder="password" />
       </Form.Item>
-
-      {/* <Form.Item name="remember" valuePropName="checked" noStyle>
-        <Checkbox>Remember me</Checkbox>
-      </Form.Item> */}
+      <Form.Item>
+        <Popconfirm
+          title="Are you sure you want to reset password?"
+          onConfirm={onPasswordReset}
+          okText="Yes"
+          cancelText="No"
+        >
+          <a href="#">Forgot password?</a>
+        </Popconfirm>
+      </Form.Item>
 
       <Form.Item style={{}}>
         <Button type="primary" htmlType="submit" className="login-form-button">
