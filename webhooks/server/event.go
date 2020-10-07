@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	services "github.com/gbaranski/homeflow/webhooks/services"
 	types "github.com/gbaranski/homeflow/webhooks/types"
@@ -30,14 +31,18 @@ func OnEvent(w http.ResponseWriter, req *http.Request, client *services.Firebase
 		log.Printf("Failed parsing request body %s\n", err)
 		return
 	}
-
 	e, err := utils.BytesToWebhookEvent(bytes)
 	if err != nil {
 		log.Printf("Failed parsing bytes to WebhookEvent %s\n", err)
 		return
 	}
 
-	fmt.Printf("Received request at /event, action: %s\n", e.Action)
+	log.Printf("Received request at /event, action: %s\n", e.Action)
+
+	if strings.HasPrefix(e.ClientID, "device_") == false {
+		log.Printf("Cancelling %s because it isn't device", e.ClientID)
+		return
+	}
 
 	switch e.Action {
 	case "client_connected":
