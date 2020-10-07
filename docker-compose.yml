@@ -3,22 +3,29 @@ services:
   emqx:
     image: 'emqx/emqx'
     container_name: 'emqx'
+    env_file:
+      - .env
     environment:
       - EMQX_NAME=emqx
       # - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=false
+      - EMQX_LISTENER__SSL__EXTERNAL_KEYFILE=etc/certs/$KEYFILE.pem
+      - EMQX_LISTENER__SSL__EXTERNAL_CERTFILE=etc/certs/$CERTFILE.pem
+
+      - EMQX_LISTENER__WSS__EXTERNAL_KEYFILE=etc/certs/$KEYFILE.pem
+      - EMQX_LISTENER__WSS__EXTERNAL_CERTFILE=etc/certs/$CERTFILE.pem
 
       - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
-    env_file:
-      - .env
     ports:
       - 1883:1883 # MQTT
-      - 8083:8083
-      - 8883:8883
-      - 8084:8084
-      - 18083:18083
+      - 8883:8883 # MQTT/SSL
+      - 8083:8083 # MQTT/WS
+      - 8084:8084 # MQTT/WSS
+      - 18083:18083 # Dashboard
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
+
+      - ./certs:/opt/emqx/etc/certs
     networks:
       - backend
 
