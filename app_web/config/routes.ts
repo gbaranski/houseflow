@@ -10,6 +10,11 @@ export const routes: IRoute[] = [
         path: '/user/login',
         component: './user/login',
       },
+      {
+        name: 'register',
+        path: '/user/register',
+        component: './user/register',
+      },
     ],
   },
   {

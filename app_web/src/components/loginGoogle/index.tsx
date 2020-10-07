@@ -4,7 +4,7 @@ import { history, useModel } from 'umi';
 import { GoogleOutlined } from '@ant-design/icons';
 import { signToGoogleWithPopup } from '@/services/firebase';
 
-export default function LoginGoogle() {
+export default function LoginGoogle({ register }: { register?: boolean }) {
   const initialState = useModel('@@initialState');
   const handleSubmit = async () => {
     try {
@@ -19,7 +19,7 @@ export default function LoginGoogle() {
   };
   return (
     <Button onClick={handleSubmit} icon={<GoogleOutlined />} block style={{ marginBottom: 10 }}>
-      Sign in with Google
+      {register ? 'Register' : 'Sign in'} with Google
     </Button>
   );
 }

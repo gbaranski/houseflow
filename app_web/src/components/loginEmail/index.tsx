@@ -4,7 +4,7 @@ import { message, Input, Button, Form, Popconfirm } from 'antd';
 import { history, useModel } from 'umi';
 import { useForm } from 'antd/lib/form/Form';
 
-export default function LoginEmail() {
+export default function LoginEmail({ register }: { register?: boolean }) {
   const initialState = useModel('@@initialState');
   const [form] = useForm();
 
@@ -46,29 +46,63 @@ export default function LoginEmail() {
       className="login-form"
     >
       <Form.Item
+        style={{ marginBottom: 12 }}
         name="email"
+        hasFeedback
         rules={[{ required: true, message: 'Please input your email!', type: 'email' }]}
       >
-        <Input placeholder="email" />
+        <Input placeholder="Email" />
       </Form.Item>
 
       <Form.Item
-        noStyle
+        style={{ marginBottom: 12 }}
         name="password"
+        hasFeedback
         rules={[{ required: true, message: 'Please input your password!', type: 'string' }]}
       >
-        <Input.Password placeholder="password" />
+        <Input.Password placeholder="Password" />
       </Form.Item>
 
-      <Form.Item>
-        <Popconfirm
-          title="Are you sure you want to reset password?"
-          onConfirm={onPasswordReset}
-          okText="Yes"
-          cancelText="No"
+      {register && (
+        <Form.Item
+          style={{ marginBottom: 12 }}
+          name="confirmPassword"
+          hasFeedback
+          dependencies={['password']}
+          rules={[
+            { required: true, message: 'Please input your password!', type: 'string' },
+            ({ getFieldValue }) => ({
+              validator(rule, value) {
+                if (!value || getFieldValue('password') === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject('The two passwords that you entered do not match!');
+              },
+            }),
+          ]}
         >
-          <a href="#">Forgot password?</a>
-        </Popconfirm>
+          <Input.Password placeholder="Confirm password" />
+        </Form.Item>
+      )}
+
+      <Form.Item style={{ marginBottom: -10 }}>
+        {!register && (
+          <Form.Item style={{ float: 'left' }}>
+            <Popconfirm
+              title="Are you sure you want to reset password?"
+              onConfirm={onPasswordReset}
+              okText="Yes"
+              cancelText="No"
+            >
+              <a href="#">Forgot password?</a>
+            </Popconfirm>
+          </Form.Item>
+        )}
+
+        <Form.Item style={{ float: register ? 'left' : 'right' }}>
+          {register && <a onClick={() => history.replace('/user/login')}>Already have account</a>}
+          {!register && <a onClick={() => history.replace('/user/register')}>Create account</a>}
+        </Form.Item>
       </Form.Item>
 
       <Form.Item>
@@ -78,7 +112,7 @@ export default function LoginEmail() {
           className="login-form-button"
           style={{ width: '100%' }}
         >
-          Log in
+          {register ? 'Register' : 'Log in'}
         </Button>
       </Form.Item>
     </Form>
