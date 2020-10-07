@@ -18,7 +18,10 @@ export async function getInitialState(): Promise<{
   mqtt?: MqttClient;
 }> {
   console.log('getInitalState', history.location.pathname);
-  if (history.location.pathname !== '/user/login' && history.pathname !== '/user/register') {
+  if (
+    history.location.pathname !== '/user/login' &&
+    history.location.pathname !== '/user/register'
+  ) {
     try {
       const currentUser = await getCurrentUser();
       if (!currentUser) throw new Error('Redirect to login page');

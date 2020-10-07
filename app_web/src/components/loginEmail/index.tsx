@@ -3,6 +3,12 @@ import { sendPasswordResetEmail, signInWithCredentials } from '@/services/fireba
 import { message, Input, Button, Form, Popconfirm } from 'antd';
 import { history, useModel } from 'umi';
 import { useForm } from 'antd/lib/form/Form';
+import { Rule } from 'antd/lib/form';
+
+const passwordValidationRules: Rule[] = [
+  { required: true, message: 'Please input your password!', type: 'string' },
+  { min: 8, message: 'Your password needs to be atleast 8 characters long' },
+];
 
 export default function LoginEmail({ register }: { register?: boolean }) {
   const initialState = useModel('@@initialState');
@@ -58,7 +64,7 @@ export default function LoginEmail({ register }: { register?: boolean }) {
         style={{ marginBottom: 12 }}
         name="password"
         hasFeedback
-        rules={[{ required: true, message: 'Please input your password!', type: 'string' }]}
+        rules={passwordValidationRules}
       >
         <Input.Password placeholder="Password" />
       </Form.Item>
@@ -70,7 +76,7 @@ export default function LoginEmail({ register }: { register?: boolean }) {
           hasFeedback
           dependencies={['password']}
           rules={[
-            { required: true, message: 'Please input your password!', type: 'string' },
+            ...passwordValidationRules,
             ({ getFieldValue }) => ({
               validator(rule, value) {
                 if (!value || getFieldValue('password') === value) {
