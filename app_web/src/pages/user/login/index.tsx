@@ -1,20 +1,14 @@
 import React from 'react';
-import Footer from '@/components/Footer';
-import styles from './style.less';
-import LoginEmail from './components/loginEmail';
-import LoginGoogle from './components/loginGoogle';
+import LoginEmail from '@/components/loginEmail';
+import LoginGoogle from '@/components/loginGoogle';
+import LoginRegisterTemplate from '@/components/loginTemplate';
 
 const Login: React.FC<{}> = () => {
   return (
-    <div className={styles.container}>
-      <div className={styles.content}>
-        <div className={styles.main}>
-          <LoginGoogle />
-          <LoginEmail />
-        </div>
-      </div>
-      <Footer />
-    </div>
+    <LoginRegisterTemplate>
+      <LoginGoogle />
+      <LoginEmail />
+    </LoginRegisterTemplate>
   );
 };
 

@@ -59,6 +59,7 @@ export default function LoginEmail() {
       >
         <Input.Password placeholder="password" />
       </Form.Item>
+
       <Form.Item>
         <Popconfirm
           title="Are you sure you want to reset password?"
@@ -70,9 +71,14 @@ export default function LoginEmail() {
         </Popconfirm>
       </Form.Item>
 
-      <Form.Item style={{}}>
-        <Button type="primary" htmlType="submit" className="login-form-button">
-          Submit
+      <Form.Item>
+        <Button
+          type="primary"
+          htmlType="submit"
+          className="login-form-button"
+          style={{ width: '100%' }}
+        >
+          Log in
         </Button>
       </Form.Item>
     </Form>
