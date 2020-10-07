@@ -1,6 +1,7 @@
 import firebase, { User } from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/analytics';
+import 'firebase/functions';
 import 'firebase/auth';
 import { Client, Device } from '@gbaranski/types';
 
@@ -14,14 +15,15 @@ const firebaseConfig = {
   appId: '1:123295801335:web:b8d0cf2c304f7db4d258f2',
   measurementId: 'G-WWKC11TVQ6',
 };
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 firebase.analytics();
 
 const database = firebase.firestore();
+const functions = firebase.app().functions('europe-west1');
 const usersCollection = database.collection('users');
 const deviceCollection = database.collection('devices');
 
-export const firebaseAuth: firebase.auth.Auth = app.auth();
+export const firebaseAuth: firebase.auth.Auth = firebase.auth();
 
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
@@ -44,10 +46,11 @@ export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredent
   return firebaseAuth.signInWithPopup(googleProvider);
 }
 
-export const getUser = async (user: firebase.User): Promise<Client.FirebaseUser | undefined> => {
-  if (!user) throw new Error('User is not defined');
+export const getFirebaseUser = async (
+  user: firebase.User,
+): Promise<Client.FirebaseUser | undefined> => {
   console.log('Retreiving firebase user');
-  return <Client.FirebaseUser>(await usersCollection.doc(user.uid).get()).data();
+  return <Client.FirebaseUser | undefined>(await usersCollection.doc(user.uid).get()).data();
 };
 
 export const getIdToken = () => {
@@ -99,3 +102,5 @@ export async function deleteDevice(device: Device.FirebaseDevice) {
 export const sendPasswordResetEmail = (email: string) => {
   return firebaseAuth.sendPasswordResetEmail(email);
 };
+
+export const initializeNewUser = functions.httpsCallable('initializeNewUser');

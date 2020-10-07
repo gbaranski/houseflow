@@ -32,7 +32,10 @@ export default function LoginEmail({ register }: { register?: boolean }) {
       await sendPasswordResetEmail(email);
       message.success('Sent email! Check your inbox');
     } catch (e) {
-      if (!e.message) return message.error('Please input your email');
+      if (!e.message) {
+        message.error('Please input your email');
+        return;
+      }
       message.error(e.message);
     }
   };
@@ -55,13 +58,7 @@ export default function LoginEmail({ register }: { register?: boolean }) {
   };
 
   return (
-    <Form
-      name="loginForm"
-      initialValues={{ remember: true }}
-      onFinish={onFinish}
-      form={form}
-      className="login-form"
-    >
+    <Form name="loginForm" onFinish={onFinish} form={form} className="login-form">
       <Form.Item
         style={{ marginBottom: 12 }}
         name="email"
