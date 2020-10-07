@@ -14,7 +14,10 @@ export default function LoginEmail() {
       const email = form.getFieldValue('email');
       await sendPasswordResetEmail(email);
       message.success('Sent email! Check your inbox');
-    } catch (e) {}
+    } catch (e) {
+      if (!e.message) return message.error('Please input your email');
+      message.error(e.message);
+    }
   };
 
   const onFinish = async (values: {
