@@ -2,12 +2,10 @@ import React, { useCallback } from 'react';
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Menu, Spin } from 'antd';
 import { history, useModel } from 'umi';
-import { getPageQuery } from '@/utils/utils';
-import { stringify } from 'querystring';
 import { firebaseAuth } from '@/services/firebase';
+import { AvatarProps } from 'antd/lib/avatar';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
-import { AvatarProps } from 'antd/lib/avatar';
 
 export interface GlobalHeaderRightProps {
   menu?: boolean;
@@ -16,18 +14,9 @@ export interface GlobalHeaderRightProps {
 /**
  * 退出登录，并且将当前的 url 保存
  */
-const loginOut = async () => {
+const signOut = async () => {
   await firebaseAuth.signOut();
-  const { redirect } = getPageQuery();
-  // Note: There may be security issues, please note
-  if (window.location.pathname !== '/user/login' && !redirect) {
-    history.replace({
-      pathname: '/user/login',
-      search: stringify({
-        redirect: window.location.href,
-      }),
-    });
-  }
+  history.push('/user/login');
 };
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
@@ -42,8 +31,13 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     }) => {
       const { key } = event;
       if (key === 'logout') {
-        setInitialState({ ...initialState, currentUser: undefined, firebaseUser: undefined });
-        loginOut();
+        setInitialState({
+          ...initialState,
+          currentUser: undefined,
+          firebaseUser: undefined,
+          mqtt: undefined,
+        });
+        signOut();
         return;
       }
       history.push(`/account/${key}`);
