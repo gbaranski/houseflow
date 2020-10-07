@@ -17,7 +17,7 @@ export default (): React.ReactNode => {
   return (
     <PageContainer>
       <Card>
-        {firebaseDevices.length > 1 ? (
+        {firebaseDevices.length > 0 ? (
           <Row>
             <DeviceList firebaseDevices={firebaseDevices} />
           </Row>
