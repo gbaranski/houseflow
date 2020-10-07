@@ -13,5 +13,6 @@ export namespace Client {
     devices: FirebaseUserDevice[];
     role: UserRole;
     uid: Uid;
+    username: string;
   }
 }
