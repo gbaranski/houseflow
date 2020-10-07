@@ -102,8 +102,9 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   return (
     <HeaderDropdown overlay={menuHeaderDropdown}>
       <span className={`${styles.action} ${styles.account}`}>
-        {currentUser.photoURL && <CustomAvatar src={currentUser.photoURL} />}
-        {!currentUser.photoURL && (
+        {currentUser.photoURL ? (
+          <CustomAvatar src={currentUser.photoURL} />
+        ) : (
           <CustomAvatar icon={<UserOutlined style={{ color: 'black' }} />} />
         )}
         <span className={`${styles.name} anticon`}>

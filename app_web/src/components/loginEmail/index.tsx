@@ -114,8 +114,11 @@ export default function LoginEmail({ register }: { register?: boolean }) {
         )}
 
         <Form.Item style={{ float: register ? 'left' : 'right' }}>
-          {register && <a onClick={() => history.replace('/user/login')}>Already have account</a>}
-          {!register && <a onClick={() => history.replace('/user/register')}>Create account</a>}
+          {register ? (
+            <a onClick={() => history.replace('/user/login')}>Already have account</a>
+          ) : (
+            <a onClick={() => history.replace('/user/register')}>Create account</a>
+          )}
         </Form.Item>
       </Form.Item>
 
