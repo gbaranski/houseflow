@@ -34,6 +34,11 @@ export async function signInWithCredentials(
   return firebaseAuth.signInWithEmailAndPassword(email, password);
 }
 
+export const registerWithCredentials = async (email: string, password: string) => {
+  await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  return firebaseAuth.createUserWithEmailAndPassword(email, password);
+};
+
 export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredential> {
   await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   return firebaseAuth.signInWithPopup(googleProvider);

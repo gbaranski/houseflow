@@ -1,7 +1,11 @@
-import React from 'react';
-import { sendPasswordResetEmail, signInWithCredentials } from '@/services/firebase';
+import React, { useState } from 'react';
+import {
+  registerWithCredentials,
+  sendPasswordResetEmail,
+  signInWithCredentials,
+} from '@/services/firebase';
 import { message, Input, Button, Form, Popconfirm } from 'antd';
-import { history, useModel } from 'umi';
+import { useHistory, useModel } from 'umi';
 import { useForm } from 'antd/lib/form/Form';
 import { Rule } from 'antd/lib/form';
 
@@ -10,8 +14,15 @@ const passwordValidationRules: Rule[] = [
   { min: 8, message: 'Your password needs to be atleast 8 characters long' },
 ];
 
+interface FormSubmitValues {
+  email: string;
+  password: string;
+}
+
 export default function LoginEmail({ register }: { register?: boolean }) {
   const initialState = useModel('@@initialState');
+  const [buttonLoading, setButtonLoading] = useState(false);
+  const history = useHistory();
   const [form] = useForm();
 
   const onPasswordReset = async () => {
@@ -26,20 +37,20 @@ export default function LoginEmail({ register }: { register?: boolean }) {
     }
   };
 
-  const onFinish = async (values: {
-    email: string;
-    password: string;
-    remember: boolean;
-  }): Promise<void> => {
+  const onFinish = async (values: FormSubmitValues): Promise<void> => {
     try {
-      const credentials = await signInWithCredentials(values.email, values.password);
-      if (!credentials.user) throw new Error('Current user not defined');
+      setButtonLoading(true);
+      const submitFunc = register ? registerWithCredentials : signInWithCredentials;
+      const credentials = await submitFunc(values.email, values.password);
+      if (!credentials) throw new Error('Credentials are not defined');
       message.info('User logged in');
       history.replace('/welcome');
       initialState.refresh();
     } catch (e) {
       message.error(e.message);
       console.log(e);
+    } finally {
+      setButtonLoading(false);
     }
   };
 
@@ -113,6 +124,7 @@ export default function LoginEmail({ register }: { register?: boolean }) {
 
       <Form.Item>
         <Button
+          loading={buttonLoading}
           type="primary"
           htmlType="submit"
           className="login-form-button"
