@@ -7,9 +7,9 @@ import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
 import { getCurrentUser, getIdToken, getFirebaseUser } from '@/services/firebase';
+import { MqttClient } from 'mqtt';
 import defaultSettings from '../config/defaultSettings';
 import { connectMqtt } from './services/mqtt';
-import { MqttClient } from 'mqtt';
 
 export async function getInitialState(): Promise<{
   firebaseUser?: Client.FirebaseUser;
@@ -30,6 +30,7 @@ export async function getInitialState(): Promise<{
       console.log({ firebaseUser });
 
       if (!firebaseUser) {
+        console.log('Firebase user is not defined, pushing to /user/wizard');
         history.push('/user/wizard');
         return {
           currentUser,

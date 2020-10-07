@@ -1,6 +1,6 @@
 import LoginRegisterTemplate from '@/components/loginTemplate';
 import { initializeNewUser } from '@/services/firebase';
-import { Button, Form, Input, message, Row } from 'antd';
+import { Button, Form, Input, message } from 'antd';
 import React, { useState } from 'react';
 import { useModel, useHistory } from 'umi';
 

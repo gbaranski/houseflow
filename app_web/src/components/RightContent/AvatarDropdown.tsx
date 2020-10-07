@@ -7,6 +7,7 @@ import { stringify } from 'querystring';
 import { firebaseAuth } from '@/services/firebase';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
+import { AvatarProps } from 'antd/lib/avatar';
 
 export interface GlobalHeaderRightProps {
   menu?: boolean;
@@ -63,14 +64,13 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   );
 
   if (!initialState) {
+    console.log('Initialstate is not defined');
     return loading;
   }
 
-  const { currentUser } = initialState;
+  const { currentUser, firebaseUser } = initialState;
 
-  if (!currentUser || !currentUser.displayName) {
-    return loading;
-  }
+  if (!currentUser || !firebaseUser) return loading;
 
   const menuHeaderDropdown = (
     <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick}>
@@ -94,16 +94,21 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
       </Menu.Item>
     </Menu>
   );
+
+  const CustomAvatar = (props: AvatarProps) => (
+    <Avatar size="small" className={styles.avatar} alt="avatar" {...props} />
+  );
+
   return (
     <HeaderDropdown overlay={menuHeaderDropdown}>
       <span className={`${styles.action} ${styles.account}`}>
-        <Avatar
-          size="small"
-          className={styles.avatar}
-          src={currentUser.photoURL || ''}
-          alt="avatar"
-        />
-        <span className={`${styles.name} anticon`}>{currentUser.displayName}</span>
+        {currentUser.photoURL && <CustomAvatar src={currentUser.photoURL} />}
+        {!currentUser.photoURL && (
+          <CustomAvatar icon={<UserOutlined style={{ color: 'black' }} />} />
+        )}
+        <span className={`${styles.name} anticon`}>
+          {currentUser.displayName || firebaseUser.username}
+        </span>
       </span>
     </HeaderDropdown>
   );
