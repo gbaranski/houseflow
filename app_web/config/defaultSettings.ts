@@ -12,7 +12,7 @@ export default {
   menu: {
     locale: true,
   },
-  title: 'Control Home',
+  title: 'Homeflow',
   pwa: false,
   iconfontUrl: '',
 } as LayoutSettings & {

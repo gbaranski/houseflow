@@ -13,7 +13,7 @@ export default defineConfig({
     hmr: true,
   },
   layout: {
-    name: 'Control Home',
+    name: 'Homeflow',
     locale: true,
     siderWidth: 208,
   },

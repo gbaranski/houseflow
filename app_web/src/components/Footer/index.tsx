@@ -8,14 +8,14 @@ export default () => (
     links={[
       {
         key: 'website',
-        title: 'Control Home',
-        href: 'https://github.com/gbaranski/Control-Home',
+        title: 'Homeflow',
+        href: 'https://github.com/gbaranski/homeflow',
         blankTarget: true,
       },
       {
         key: 'github',
         title: <GithubOutlined />,
-        href: 'https://github.com/gbaranski/Control-Home',
+        href: 'https://github.com/gbaranski/homeflow',
         blankTarget: true,
       },
     ]}
