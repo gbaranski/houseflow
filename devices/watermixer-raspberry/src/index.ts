@@ -7,11 +7,12 @@ if (!DEVICE_UID || !DEVICE_SECRET || !MQTT_URL) {
   throw new Error('DEVICE_UID or DEVICE_SECRET are not defined in .env');
 }
 
-const mqttClient = mqtt.connect(MQTT_URL, {
+const mqttClient = mqtt.connect('mqtts://api.gbaranski.com:8883', {
   clientId: 'device_' + Math.random().toString(16).substr(2, 8),
   username: DEVICE_UID,
   password: DEVICE_SECRET,
   protocolVersion: 4,
 });
+mqttClient.on('error', console.log);
 
 mqttClient.on('connect', () => onConnection(mqttClient));
