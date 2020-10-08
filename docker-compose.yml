@@ -9,11 +9,11 @@ services:
       - EMQX_NAME=emqx
       # - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=false
-      - EMQX_LISTENER__SSL__EXTERNAL_KEYFILE=etc/certs/emqx.key
-      - EMQX_LISTENER__SSL__EXTERNAL_CERTFILE=etc/certs/emqx.crt
+      - EMQX_LISTENER__SSL__EXTERNAL_KEYFILE=/etc/certs/key.pem
+      - EMQX_LISTENER__SSL__EXTERNAL_CERTFILE=/etc/certs/cert.pem
 
-      - EMQX_LISTENER__WSS__EXTERNAL_KEYFILE=etc/certs/emqx.key
-      - EMQX_LISTENER__WSS__EXTERNAL_CERTFILE=etc/certs/emqx.crt
+      - EMQX_LISTENER__WSS__EXTERNAL_KEYFILE=/etc/certs/key.pem
+      - EMQX_LISTENER__WSS__EXTERNAL_CERTFILE=/etc/certs/cert.pem
 
       - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
@@ -25,8 +25,8 @@ services:
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
 
-      - ./certs/key.pem:/opt/emqx/etc/certs/emqx.key
-      - ./certs/cert.pem:/opt/emqx/etc/certs/emqx.crt
+      - ./certs/key.pem:/etc/certs/key.pem
+      - ./certs/cert.pem:/etc/certs/cert.pem
     networks:
       - backend
 
