@@ -8,9 +8,10 @@
 #define DEVICE_UID "UID"
 #define DEVICE_SECRET "SECRET"
 #define ON_CONNECT_TOPIC "on/connected"
-#define UPDATE_URL "http://IP:PORT/update/esp8266"
+#define UPDATE_URL "http://IP:PORT/ota/esp8266"
 
-const String START_MIX_TOPIC = DEVICE_UID "/event/todevice/startmix";
+const String START_MIX_TOPIC_REQUEST = DEVICE_UID "/event/startmix/request";
+const String START_MIX_TOPIC_RESPONSE = DEVICE_UID "/event/startmix/response";
 const char* ON_CONNECT_JSON =
     "{\"uid\": \"" DEVICE_UID "\",\"secret\":\"" DEVICE_SECRET "\"}";
 
