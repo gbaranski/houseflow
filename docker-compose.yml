@@ -11,9 +11,11 @@ services:
       - EMQX_ALLOW_ANONYMOUS=false
       - EMQX_LISTENER__SSL__EXTERNAL_KEYFILE=/etc/certs/key.pem
       - EMQX_LISTENER__SSL__EXTERNAL_CERTFILE=/etc/certs/cert.pem
+      - EMQX_LISTENER__SSL__EXTERNAL_CACERTFILE=/etc/certs/cacert.pem
 
       - EMQX_LISTENER__WSS__EXTERNAL_KEYFILE=/etc/certs/key.pem
       - EMQX_LISTENER__WSS__EXTERNAL_CERTFILE=/etc/certs/cert.pem
+      - EMQX_LISTENER__WSS__EXTERNAL_CACERTFILE=/etc/certs/cacert.pem
 
       - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
@@ -27,6 +29,7 @@ services:
 
       - ./certs/key.pem:/etc/certs/key.pem
       - ./certs/cert.pem:/etc/certs/cert.pem
+      - ./certs/cacert.pem:/etc/certs/cacert.pem
     networks:
       - backend
 

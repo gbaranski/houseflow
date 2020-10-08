@@ -16,6 +16,7 @@ secret.h
 
 cert.pem
 key.pem
+cacert.pem
 dist
 
 *.log
