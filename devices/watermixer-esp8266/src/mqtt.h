@@ -16,19 +16,12 @@ long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
-void subscribeTopics() { client.subscribe(START_MIX_TOPIC.c_str()); }
-void publishConnected() { client.publish(ON_CONNECT_TOPIC, ON_CONNECT_JSON); }
+void subscribeTopics() { client.subscribe(START_MIX_TOPIC_REQUEST.c_str()); }
 
 void callback(char* topic, byte* message, unsigned int length) {
-  Serial.println(topic);
+  Serial.printf("Topic: %s\n", topic);
 
-  Serial.println();
-  if (String(topic) == START_MIX_TOPIC) {
-    Serial.println("Received start mixing");
-    startMixing();
-    return;
-  }
-  Serial.print(". Message: ");
+  Serial.print("Message: ");
   String messageTemp;
 
   for (unsigned int i = 0; i < length; i++) {
@@ -36,6 +29,19 @@ void callback(char* topic, byte* message, unsigned int length) {
     messageTemp += (char)message[i];
   }
   Serial.println();
+  if (String(topic) == START_MIX_TOPIC_REQUEST) {
+    startMixing();
+    byte* p = (byte*)malloc(length);
+    // Copy the payload to the new buffer
+    memcpy(p, message, length);
+    client.publish(START_MIX_TOPIC_RESPONSE.c_str(), p, length);
+    // Free the memory
+    free(p);
+
+    return;
+  } else {
+    Serial.printf("%s is not start mixing topic", topic);
+  }
 }
 
 void reconnect() {
@@ -43,10 +49,9 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("WATERMIXER", DEVICE_UID, DEVICE_SECRET)) {
+    if (client.connect("device_watermixer1", DEVICE_UID, DEVICE_SECRET)) {
       Serial.println("connected");
       subscribeTopics();
-      publishConnected();
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -62,7 +67,6 @@ void initializeMqtt() {
   client.setServer(MQTT_SERVER, 1883);
   client.setCallback(callback);
   subscribeTopics();
-  publishConnected();
 }
 
 void mqttLoop() {

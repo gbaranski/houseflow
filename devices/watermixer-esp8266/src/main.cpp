@@ -21,7 +21,7 @@ void setup() {
   wifiManager.autoConnect();
 
   Serial.println("Connected to WiFi");
-  checkUpdates();
+  // checkUpdates();
   initializeMqtt();
 }
 

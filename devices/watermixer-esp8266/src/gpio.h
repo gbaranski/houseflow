@@ -9,6 +9,7 @@ boolean mixingStarted = false;
 unsigned long lastMixingMillis = 0;
 
 void startMixing() {
+  Serial.println("Starting mix");
   digitalWrite(RELAY_PIN, 0);
   mixingStarted = true;
   lastMixingMillis = millis();
