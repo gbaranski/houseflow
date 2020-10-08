@@ -7,7 +7,7 @@ services:
       - .env
     environment:
       - EMQX_NAME=emqx
-      - EMQX_LOG__LEVEL=debug
+      # - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=false
 
       - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/emqx.key
