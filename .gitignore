@@ -17,6 +17,7 @@ secret.h
 privkey.pem
 fullchain.pem
 cacert.pem
+ca.pem
 dist
 
 *.log

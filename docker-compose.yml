@@ -9,11 +9,9 @@ services:
       - EMQX_NAME=emqx
       - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=false
-      - EMQX_LISTENER__SSL__EXTERNAL__VERIFY=verify_peer
       - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/emqx.key
       - EMQX_LISTENER__SSL__EXTERNAL__CERTFILE=etc/certs/emqx.crt
 
-      - EMQX_LISTENER__WSS__EXTERNAL__VERIFY=verify_peer
       - EMQX_LISTENER__WSS__EXTERNAL__KEYFILE=etc/certs/emqx.key
       - EMQX_LISTENER__WSS__EXTERNAL__CERTFILE=etc/certs/emqx.crt
 
@@ -27,8 +25,8 @@ services:
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
 
-      - ./certs/privkey.pem:/opt/emqx/etc/certs/emqx.key
-      - ./certs/fullchain.pem:/opt/emqx/etc/certs/emqx.crt
+      - /etc/letsencrypt/live/$DOMAIN/privkey.pem:/opt/emqx/etc/certs/emqx.key
+      - /etc/letsencrypt/live/$DOMAIN/fullchain.pem:/opt/emqx/etc/certs/emqx.crt
     networks:
       - backend
 
