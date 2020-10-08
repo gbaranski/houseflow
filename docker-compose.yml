@@ -27,8 +27,8 @@ services:
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
 
-      - ./certs/key.pem:/opt/emqx/etc/certs/emqx.key
-      - ./certs/cert.pem:/opt/emqx/etc/certs/emqx.crt
+      - ./certs/privkey.pem:/opt/emqx/etc/certs/emqx.key
+      - ./certs/fullchain.pem:/opt/emqx/etc/certs/emqx.crt
     networks:
       - backend
 

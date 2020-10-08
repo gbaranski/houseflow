@@ -14,8 +14,8 @@ secret.h
 .vscode
 .firebase
 
-cert.pem
-key.pem
+privkey.pem
+fullchain.pem
 cacert.pem
 dist
 
