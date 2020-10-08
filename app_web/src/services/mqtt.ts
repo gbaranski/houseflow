@@ -9,7 +9,7 @@ const BROKER_URL = process.env.NODE_ENV === 'development' ? BROKER_DEV_URL : BRO
 export const connectMqtt = (token: string, uid: string) => {
   return new Promise<mqtt.MqttClient>((resolve, reject) => {
     const client = mqtt.connect(BROKER_PROD_URL, {
-      clientId: `web_ + ${getRandomShortUid()}`,
+      clientId: `web_${getRandomShortUid()}`,
       username: uid,
 
       password: token,
