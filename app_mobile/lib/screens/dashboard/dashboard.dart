@@ -49,7 +49,17 @@ class _DashboardState extends State<Dashboard> {
     return Consumer<AuthService>(
       builder: (context, authModel, child) {
         return Container(
+          alignment: Alignment.center,
           child: Column(children: [
+            Text(
+              "Devices",
+              style: TextStyle(fontSize: 24, color: Colors.black54),
+            ),
+            if (authModel.firebaseUser.devices.length < 1)
+              (Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                      "You don't have any devices, if you feel thats an issue, contact us"))),
             Expanded(
               child: ListView.builder(
                   itemCount: authModel.firebaseUser.devices.length,
@@ -57,7 +67,7 @@ class _DashboardState extends State<Dashboard> {
                     return device(
                         context, authModel.firebaseUser.devices[index].uid);
                   }),
-            ),
+            )
           ]),
         );
       },
