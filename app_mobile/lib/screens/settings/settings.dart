@@ -30,11 +30,44 @@ class Settings extends StatelessWidget {
                   final FirebaseDevice firebaseDevice =
                       FirebaseDevice.fromMap(data);
 
+                  final subscribe = () {
+                    final SnackBar snackBar = SnackBar(
+                        content: Text(
+                            "Success subscribing to ${firebaseDevice.uid}"));
+                    FirebaseService.subscribeTopic(firebaseDevice.uid)
+                        .then((_) {
+                      Scaffold.of(context).showSnackBar(snackBar);
+                    });
+                  };
+
+                  final unsubscribe = () {
+                    final SnackBar snackBar = SnackBar(
+                        content: Text(
+                            "Success unsubscribing to ${firebaseDevice.uid}"));
+                    FirebaseService.unsubscribeTopic(firebaseDevice.uid)
+                        .then((_) {
+                      Scaffold.of(context).showSnackBar(snackBar);
+                    });
+                  };
+
                   return ExpansionTile(
                     leading: DeviceIcon(firebaseDevice.type),
                     title: Text(upperFirstCharacter(firebaseDevice.type)),
                     children: [
                       Text("UID: ${firebaseDevice.uid}"),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          OutlineButton(
+                            child: Text("Subscribe"),
+                            onPressed: subscribe,
+                          ),
+                          OutlineButton(
+                            child: Text("Unsubscribe"),
+                            onPressed: unsubscribe,
+                          )
+                        ],
+                      )
                     ],
                   );
                 });

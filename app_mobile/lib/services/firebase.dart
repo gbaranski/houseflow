@@ -54,7 +54,11 @@ class FirebaseService {
     if (user == null) return null;
     if (user.isAnonymous)
       return FirebaseUser(
-          devices: [], role: 'user', uid: user.uid, isAnonymous: true);
+          devices: [],
+          role: 'user',
+          uid: user.uid,
+          isAnonymous: true,
+          username: "Anonymous");
     final doc = await _usersCollection.doc(user.uid).get();
     if (!doc.exists) {
       print("Does not exist");
@@ -74,12 +78,12 @@ class FirebaseService {
     _devicesCollection.doc(firebaseDevice.uid).update(firebaseDevice.toJson());
   }
 
-  static void unsubscribeTopic(String topic) {
-    _fcm.unsubscribeFromTopic(topic);
+  static Future<void> unsubscribeTopic(String topic) {
+    return _fcm.unsubscribeFromTopic(topic);
   }
 
-  static void subscribeTopic(String topic) {
-    _fcm.subscribeToTopic(topic);
+  static Future<void> subscribeTopic(String topic) {
+    return _fcm.subscribeToTopic(topic);
   }
 
   static HttpsCallable initializeNewUser() {
