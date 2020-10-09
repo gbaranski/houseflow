@@ -12,7 +12,7 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 
 class MqttService extends ChangeNotifier implements ReassembleHandler {
-  MqttClient mqttClient;
+  static MqttClient mqttClient;
 
   final String userUid;
 
@@ -61,7 +61,7 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     return base64UrlEncode(randomInts);
   }
 
-  Future sendMessage(
+  static Future sendMessage(
       {RequestTopic topic, MqttQos qos, Map<String, dynamic> data}) async {
     final randomShortString = getRandomShortString();
     final completer = Completer();
@@ -96,6 +96,12 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     print("Published message");
 
     return await completer.future;
+  }
+
+  static void disconnectDueToSignOut() {
+    mqttClient.disconnect();
+    mqttClient.autoReconnect = false;
+    print("Disconnected from MQTT due to sign out");
   }
 
   @override

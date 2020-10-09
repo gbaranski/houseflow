@@ -3,10 +3,8 @@ import 'package:homeflow/models/devices/watermixer.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/services/firebase.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:homeflow/services/mqtt.dart';
 import 'package:homeflow/utils/misc.dart';
-import 'package:provider/provider.dart';
 import 'package:homeflow/shared/constants.dart';
 import 'dart:async';
 
@@ -50,21 +48,19 @@ class _WatermixerState extends State<Watermixer> {
 
   @override
   Widget build(BuildContext context) {
-    final MqttService mqttService =
-        Provider.of<MqttService>(context, listen: false);
     final WatermixerData data =
         WatermixerData.fromJson(widget.firebaseDevice.data);
     startCounting(data.finishMixTimestamp);
 
     final startMixing = () async {
-      print("MQTT CONN STAT: ${mqttService.mqttClient.connectionStatus}");
+      print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
       final String uid = widget.firebaseDevice.uid;
       final RequestTopic topic = RequestTopic(
           request: '$uid/event/startmix/request',
           response: '$uid/event/startmix/response');
 
       bool hasCompleted = false;
-      final Future req = mqttService.sendMessage(
+      final Future req = MqttService.sendMessage(
           topic: topic, qos: MqttQos.atMostOnce, data: null);
 
       req.whenComplete(() {

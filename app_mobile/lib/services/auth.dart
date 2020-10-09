@@ -18,9 +18,8 @@ class AuthService extends ChangeNotifier {
       if (event == null) {
         authStatus = AuthStatus.NOT_LOGGED_IN;
       } else {
-        firebaseUser = await FirebaseService.convertToFirebaseUser(event);
+        authStatus = AuthStatus.NOT_RETREIVED_FIRESTORE;
         currentUser = event;
-        authStatus = AuthStatus.LOGGED_IN;
       }
       print("Initialized");
       notifyListeners();

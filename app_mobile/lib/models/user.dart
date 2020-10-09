@@ -24,6 +24,7 @@ class FirebaseUser {
 
 enum AuthStatus {
   NOT_DETERMINED,
+  NOT_RETREIVED_FIRESTORE,
   NOT_LOGGED_IN,
   LOGGED_IN,
 }

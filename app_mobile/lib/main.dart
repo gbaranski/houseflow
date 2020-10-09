@@ -22,8 +22,10 @@ class App extends StatelessWidget {
             }
             if (snapshot.connectionState == ConnectionState.done) {
               final AuthService authService = AuthService();
+
               return StreamProvider<User>.value(
                   value: authService.user,
+                  initialData: null,
                   child: ChangeNotifierProvider<AuthService>.value(
                       value: authService, child: Wrapper()));
             }
