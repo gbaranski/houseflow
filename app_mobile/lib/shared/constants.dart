@@ -33,5 +33,5 @@ const double CardMinHeight = 170;
 
 const logoDirectory = 'assets/images/logo.svg';
 
-const MQTT_HOST = '192.168.1.10';
+const MQTT_HOST = 'api.gbaranski.com';
 const MQTT_PORT = 1883;

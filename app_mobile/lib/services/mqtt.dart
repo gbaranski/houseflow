@@ -17,7 +17,9 @@ class MqttService extends ChangeNotifier {
   final Future<String> Function([bool]) getToken;
 
   Future<MqttClient> connect() async {
-    mqttClient = MqttServerClient.withPort(MQTT_HOST, userUid, MQTT_PORT);
+    final clientShortId = "mobile_$getRandomShortString()";
+
+    mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
     mqttClient.autoReconnect = true;
 
     final token = getToken();
@@ -35,7 +37,7 @@ class MqttService extends ChangeNotifier {
     };
 
     final connMessage = MqttConnectMessage()
-        .withClientIdentifier(userUid)
+        .withClientIdentifier(clientShortId)
         .authenticateAs(userUid, await token)
         .keepAliveFor(60)
         .startClean();
