@@ -43,7 +43,7 @@ class MyProfile extends StatelessWidget {
                 color: LayoutBlueColor1,
                 textColor: Colors.white,
                 child: Text("Log out"),
-                onPressed: model.signOut,
+                onPressed: () => model.signOut(model.firebaseUser),
               )
             ],
           ),

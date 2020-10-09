@@ -71,10 +71,11 @@ class AuthService extends ChangeNotifier {
     return user;
   }
 
-  Future signOut() async {
+  Future signOut(FirebaseUser firebaseUser) async {
     try {
-      _subscribedTopics
-          .forEach((topic) => FirebaseService.unsubscribeTopic(topic));
+      firebaseUser.devices.forEach((element) {
+        FirebaseService.unsubscribeTopic(element.uid);
+      });
       firebaseUser = null;
       currentUser = null;
       return await _auth.signOut();
