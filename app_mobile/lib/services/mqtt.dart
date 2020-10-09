@@ -28,7 +28,7 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     mqttClient.secure = true;
 
     // Security context
-    final context = SecurityContext.defaultContext;
+    final context = new SecurityContext();
     context.setTrustedCertificatesBytes(utf8.encode(ROOT_CA));
 
     mqttClient.onBadCertificate = (dynamic a) {

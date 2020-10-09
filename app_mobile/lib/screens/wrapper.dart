@@ -35,8 +35,7 @@ class Wrapper extends StatelessWidget {
         stream: FirebaseService.firebaseUserStream(authModel.currentUser),
         builder:
             (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (!snapshot.hasData ||
-              snapshot.connectionState == ConnectionState.none) {
+          if (!snapshot.hasData) {
             return SplashScreen();
           }
           if (snapshot.data.data() == null) {
