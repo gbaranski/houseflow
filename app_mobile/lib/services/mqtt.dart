@@ -9,7 +9,9 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:homeflow/shared/constants.dart';
 import 'dart:async';
 
-class MqttService extends ChangeNotifier {
+import 'package:provider/provider.dart';
+
+class MqttService extends ChangeNotifier implements ReassembleHandler {
   MqttClient mqttClient;
 
   final String userUid;
@@ -17,14 +19,14 @@ class MqttService extends ChangeNotifier {
   final Future<String> Function([bool]) getToken;
 
   Future<MqttClient> connect() async {
-    final clientShortId = "mobile_$getRandomShortString()";
+    final clientShortId = "mobile_${getRandomShortString()}";
 
     mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
     mqttClient.autoReconnect = true;
 
     final token = getToken();
     Completer<MqttClient> completer = Completer<MqttClient>();
-    mqttClient.logging(on: true);
+//    mqttClient.logging(on: true);
     mqttClient.onConnected = () {
       print("Connected to MQTT");
       completer.complete(mqttClient);
@@ -98,10 +100,16 @@ class MqttService extends ChangeNotifier {
 
   @override
   void dispose() {
-    mqttClient.autoReconnect = false;
     mqttClient.disconnect();
-    mqttClient = null;
-
+    mqttClient.autoReconnect = false;
+    print("Disconnected from MQTT due to dispose");
     super.dispose();
+  }
+
+  @override
+  void reassemble() {
+    mqttClient.disconnect();
+    mqttClient.autoReconnect = false;
+    print("Disconnected from MQTT due to reassemble");
   }
 }
