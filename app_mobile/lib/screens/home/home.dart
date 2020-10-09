@@ -55,7 +55,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: LayoutBlueColor1,
-          title: Text("Control Home"),
+          title: Text("Homeflow"),
         ),
         bottomNavigationBar: navigation(context),
         body: _navPages.elementAt(_currentIndex));
