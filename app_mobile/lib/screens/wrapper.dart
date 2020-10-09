@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homeflow/models/user.dart';
+import 'package:homeflow/screens/auth/init_user.dart';
 import 'package:homeflow/screens/auth/sign_in.dart';
 import 'package:homeflow/screens/home/home.dart';
 import 'package:homeflow/screens/splash_screen/splash_screen.dart';
@@ -28,16 +30,22 @@ class Wrapper extends StatelessWidget {
       }
 
       print("CurrentUser: ${authModel.currentUser}");
-      return FutureBuilder(
-        future: FirebaseService.convertToFirebaseUser(authModel.currentUser),
-        builder: (BuildContext context, AsyncSnapshot<FirebaseUser> snapshot) {
-          if (snapshot.connectionState != ConnectionState.done ||
-              !snapshot.hasData ||
-              authModel.currentUser.getIdToken == null) {
+
+      return StreamBuilder(
+        stream: FirebaseService.firebaseUserStream(authModel.currentUser),
+        builder:
+            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+          if (!snapshot.hasData ||
+              snapshot.connectionState == ConnectionState.none) {
             return SplashScreen();
           }
+          if (snapshot.data.data() == null) {
+            print("Received, redirecting to init user");
+            return InitUser();
+          }
+          print(snapshot.data);
 
-          authModel.firebaseUser = snapshot.data;
+          authModel.firebaseUser = FirebaseUser.fromMap(snapshot.data.data());
 
           print("Firebase user ${authModel.firebaseUser}");
 

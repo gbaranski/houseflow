@@ -99,8 +99,10 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
   }
 
   static void disconnectDueToSignOut() {
-    mqttClient.disconnect();
-    mqttClient.autoReconnect = false;
+    if (mqttClient != null) {
+      mqttClient.disconnect();
+      mqttClient.autoReconnect = false;
+    }
     print("Disconnected from MQTT due to sign out");
   }
 
