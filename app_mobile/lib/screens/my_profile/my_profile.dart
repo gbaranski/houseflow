@@ -33,7 +33,7 @@ class MyProfile extends StatelessWidget {
                   });
                 },
                 child: Text(
-                  model.currentUser.displayName,
+                  model.firebaseUser.username,
                   style: const TextStyle(
                     fontSize: 26,
                   ),

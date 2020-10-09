@@ -11,6 +11,7 @@ class FirebaseUser {
   final List<FirebaseUserDevice> devices;
   final String role;
   final String uid;
+  final String username;
 
   // This doesn't exist in firestore, but needed to handle it later
   final bool isAnonymous;
@@ -22,18 +23,20 @@ class FirebaseUser {
         .toList();
 
     return FirebaseUser(
-      uid: map['uid'],
-      role: map['role'],
-      devices: userDevices,
-      isAnonymous: false,
-    );
+        uid: map['uid'],
+        role: map['role'],
+        devices: userDevices,
+        isAnonymous: false,
+        username: map['username']);
   }
 
-  FirebaseUser(
-      {@required this.devices,
-      @required this.role,
-      @required this.uid,
-      @required this.isAnonymous});
+  FirebaseUser({
+    @required this.devices,
+    @required this.role,
+    @required this.uid,
+    @required this.isAnonymous,
+    @required this.username,
+  });
 }
 
 enum AuthStatus {
