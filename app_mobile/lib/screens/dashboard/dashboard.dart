@@ -51,10 +51,6 @@ class _DashboardState extends State<Dashboard> {
         return Container(
           alignment: Alignment.center,
           child: Column(children: [
-            Text(
-              "Devices",
-              style: TextStyle(fontSize: 24, color: Colors.black54),
-            ),
             if (authModel.firebaseUser.devices.length < 1)
               (Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
