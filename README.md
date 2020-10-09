@@ -5,7 +5,7 @@
 [![server-status](https://img.shields.io/website?down_color=red&down_message=down&label=server&up_color=gree&up_message=up&url=https%3A%2F%2Fapi.gbaranski.com)](https://api.gbaranski.com)
 ![github-stars](https://img.shields.io/github/stars/gbaranski/Control-Home?style=social)
 
-Home automation platform for IoT devices like ESP8266 and ESP32, most of it is built on Typescript and C++
+Set up, manage, and control your Homeflow devices, that includes connected home products like lights, cameras, thermostats, relays and more – all from the Homeflow app.
 
 The documentation is divided into several sections:
 
