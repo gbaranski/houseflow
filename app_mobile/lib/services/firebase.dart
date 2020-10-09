@@ -16,6 +16,7 @@ class FirebaseService {
   static final _devicesCollection = _firestore.collection('devices');
 
   static void initFcm(BuildContext context) async {
+    print("Initializing FCM");
     _fcm.configure(
       onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");

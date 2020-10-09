@@ -49,6 +49,7 @@ class Wrapper extends StatelessWidget {
 
           print("Firebase user ${authModel.firebaseUser}");
 
+          FirebaseService.initFcm(context);
           final MqttService mqttService = MqttService(
               getToken: authModel.currentUser.getIdToken,
               userUid: authModel.currentUser.uid);
