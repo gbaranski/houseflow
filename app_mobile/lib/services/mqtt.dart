@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:core';
+import 'dart:convert';
 import 'package:homeflow/models/device.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,7 @@ import 'dart:async';
 import 'package:provider/provider.dart';
 
 class MqttService extends ChangeNotifier implements ReassembleHandler {
-  static MqttClient mqttClient;
+  static MqttServerClient mqttClient;
 
   final String userUid;
 
@@ -23,6 +25,17 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
 
     mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
     mqttClient.autoReconnect = true;
+    mqttClient.secure = true;
+
+    // Security context
+    final context = SecurityContext.defaultContext;
+    context.setTrustedCertificatesBytes(utf8.encode(ROOT_CA));
+
+    mqttClient.onBadCertificate = (dynamic a) {
+      print("Wrong MQTT certificate");
+      print("a: $a");
+      return false;
+    };
 
     final token = getToken();
     Completer<MqttClient> completer = Completer<MqttClient>();
