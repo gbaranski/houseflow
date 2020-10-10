@@ -60,8 +60,12 @@ class _DashboardState extends State<Dashboard> {
               child: ListView.builder(
                   itemCount: authModel.firebaseUser.devices.length,
                   itemBuilder: (context, index) {
-                    return device(
-                        context, authModel.firebaseUser.devices[index].uid);
+                    return Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 15),
+                      child: device(
+                          context, authModel.firebaseUser.devices[index].uid),
+                    );
                   }),
             )
           ]),

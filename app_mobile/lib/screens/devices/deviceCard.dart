@@ -10,6 +10,8 @@ class DeviceCard extends StatelessWidget {
     return ConstrainedBox(
         constraints: const BoxConstraints(minHeight: CardMinHeight),
         child: Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           child: InkWell(
             splashColor: Colors.blue.withAlpha(20),
             onTap: () => print("Card tapped"),
