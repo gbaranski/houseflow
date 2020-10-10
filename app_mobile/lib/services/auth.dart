@@ -71,7 +71,7 @@ class AuthService extends ChangeNotifier {
     return user;
   }
 
-  Future signOut(FirebaseUser firebaseUser) async {
+  Future signOut() async {
     try {
       firebaseUser.devices.forEach((element) {
         FirebaseService.unsubscribeTopic(element.uid);

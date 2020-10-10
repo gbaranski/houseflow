@@ -1,8 +1,11 @@
 import 'package:homeflow/screens/dashboard/dashboard.dart';
 import 'package:homeflow/screens/my_profile/my_profile.dart';
 import 'package:homeflow/screens/settings/settings.dart';
+import 'package:homeflow/services/auth.dart';
 import 'package:homeflow/shared/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:homeflow/shared/profile_image.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -52,12 +55,30 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: LayoutBlueColor1,
-          title: Text("Homeflow"),
-        ),
-        bottomNavigationBar: navigation(context),
-        body: _navPages.elementAt(_currentIndex));
+    return Consumer<AuthService>(
+      builder: (BuildContext context, authModel, child) {
+        return Scaffold(
+            appBar: AppBar(
+              leading: Text("Leading"),
+              actions: [
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MyProfile(
+                              firebaseUser: authModel.firebaseUser,
+                              currentUser: authModel.currentUser,
+                              signOut: authModel.signOut))),
+                  child: ProfileImage(
+                    imageUrl: authModel.currentUser.photoURL,
+                  ),
+                ),
+              ],
+              backgroundColor: LayoutBlueColor1,
+            ),
+            bottomNavigationBar: navigation(context),
+            body: _navPages.elementAt(_currentIndex));
+      },
+    );
   }
 }
