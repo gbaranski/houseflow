@@ -4,8 +4,6 @@ import 'package:homeflow/screens/devices/inactive.dart';
 import 'package:homeflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/services/firebase.dart';
-import 'package:homeflow/shared/constants.dart';
-import 'package:homeflow/utils/misc.dart';
 import 'package:provider/provider.dart';
 import 'package:homeflow/screens/devices/watermixer.dart';
 
@@ -22,7 +20,7 @@ class _DashboardState extends State<Dashboard> {
           (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
         if (snapshot.hasError) return Text("Error occured");
         if (snapshot.connectionState == ConnectionState.waiting)
-          return CircularProgressIndicator();
+          return Container();
         final Map<String, dynamic> data = snapshot.data.data();
         final FirebaseDevice firebaseDevice = FirebaseDevice.fromMap(data);
         if (!firebaseDevice.status) return InactiveDevice(firebaseDevice);

@@ -55,6 +55,9 @@ class _HomeState extends State<Home> {
       builder: (BuildContext context, authModel, child) {
         return Scaffold(
             appBar: AppBar(
+                shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(bottom: Radius.circular(4))),
                 actions: [
                   GestureDetector(
                     onTap: () => Navigator.push(

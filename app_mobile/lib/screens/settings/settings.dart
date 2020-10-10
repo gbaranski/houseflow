@@ -25,7 +25,7 @@ class Settings extends StatelessWidget {
                     AsyncSnapshot<DocumentSnapshot> snapshot) {
                   if (snapshot.hasError) return Text("Error occured");
                   if (snapshot.connectionState == ConnectionState.waiting)
-                    return CircularProgressIndicator();
+                    return Container();
                   final Map<String, dynamic> data = snapshot.data.data();
                   final FirebaseDevice firebaseDevice =
                       FirebaseDevice.fromMap(data);
