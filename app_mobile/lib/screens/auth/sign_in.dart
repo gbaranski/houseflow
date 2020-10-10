@@ -13,7 +13,6 @@ class SignIn extends StatefulWidget {
 
 class _SignInState extends State<SignIn> {
   final AuthService _authService = AuthService();
-  final _formKey = GlobalKey<FormState>();
 
   String email = '';
   String password = '';
@@ -45,15 +44,10 @@ class _SignInState extends State<SignIn> {
                       height: 200,
                     ),
                     const SizedBox(height: 10),
-                    Form(
-                        key: _formKey,
-                        child: Column(children: <Widget>[
-                          LoginForm(
-                            onSubmit: _authService.signInWithEmailAndPassword,
-                            submitMessage: 'LOG IN',
-                            formKey: _formKey,
-                          ),
-                        ])),
+                    LoginForm(
+                      onSubmit: _authService.signInWithEmailAndPassword,
+                      submitMessage: 'LOG IN',
+                    ),
                     const SizedBox(
                       height: 15,
                     ),

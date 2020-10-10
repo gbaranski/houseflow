@@ -4,22 +4,18 @@ import 'package:flutter/material.dart';
 class LoginForm extends StatefulWidget {
   final Function onSubmit;
   final Function onSuccess;
-  final formKey;
   final String submitMessage;
-  final String successMessage;
 
   const LoginForm(
-      {@required this.onSubmit,
-      @required this.formKey,
-      @required this.submitMessage,
-      this.successMessage,
-      this.onSuccess});
+      {@required this.onSubmit, @required this.submitMessage, this.onSuccess});
 
   @override
   _LoginFormState createState() => _LoginFormState();
 }
 
 class _LoginFormState extends State<LoginForm> {
+  final formKey = GlobalKey<FormState>();
+
   FocusNode emailFocusNode;
   FocusNode passwordFocusNode;
 
@@ -40,17 +36,16 @@ class _LoginFormState extends State<LoginForm> {
   String email = '';
   String password = '';
 
-  void submitForm() async {
-    if (widget.formKey.currentState.validate()) {
+  void submitForm(BuildContext context) async {
+    if (formKey.currentState.validate()) {
+      formKey.currentState.save();
       try {
         await widget.onSubmit(email, password);
-        if (widget.successMessage != null) {
-          final snackBar = SnackBar(
-            content: Text(widget.successMessage),
-          );
-          Scaffold.of(context).showSnackBar(snackBar);
-        }
-        widget.onSuccess();
+        final snackBar = SnackBar(
+          content: Text("Success!"),
+        );
+        Scaffold.of(context).showSnackBar(snackBar);
+        widget.onSuccess?.call();
       } catch (e) {
         final snackBar = SnackBar(
           content: Text(e.toString()),
@@ -62,60 +57,66 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(height: 20.0),
-        TextFormField(
-          focusNode: emailFocusNode,
-          style: textInputTextStyle,
-          textInputAction: TextInputAction.next,
-          onFieldSubmitted: (term) {
-            emailFocusNode.unfocus();
-            passwordFocusNode.requestFocus();
-          },
-          decoration: textInputDecoration.copyWith(labelText: "Email"),
-          validator: (val) => val.isEmpty ? "Enter an email" : null,
-          onChanged: (value) {
-            setState(() {
-              email = value;
-            });
-          },
-        ),
-        const SizedBox(height: 20.0),
-        TextFormField(
-          focusNode: passwordFocusNode,
-          textInputAction: TextInputAction.done,
-          onFieldSubmitted: (term) {
-            submitForm();
-          },
-          style: textInputTextStyle,
-          decoration: textInputDecoration.copyWith(labelText: "Password"),
-          onChanged: (value) {
-            setState(() {
-              password = value;
-            });
-          },
-          validator: (val) =>
-              val.length < 6 ? "Enter password 8+ chars long" : null,
-          obscureText: true,
-        ),
-        const SizedBox(height: 25),
-        ButtonTheme(
-          height: 60,
-          shape: const RoundedRectangleBorder(
-              borderRadius: const BorderRadius.all(Radius.elliptical(30, 30))),
-          child: RaisedButton(
-            color: LayoutBlueColor1,
-            child: Text(
-              widget.submitMessage,
-              style: const TextStyle(color: Colors.white, fontSize: 22),
-            ),
-            onPressed: submitForm,
+    return Form(
+      key: formKey,
+      child: Container(
+          child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 20.0),
+          TextFormField(
+            keyboardType: TextInputType.emailAddress,
+            focusNode: emailFocusNode,
+            style: textInputTextStyle,
+            textInputAction: TextInputAction.next,
+            onFieldSubmitted: (term) {
+              emailFocusNode.unfocus();
+              passwordFocusNode.requestFocus();
+            },
+            decoration: textInputDecoration.copyWith(labelText: "Email"),
+            validator: (val) => val.isEmpty ? "Enter an email" : null,
+            onSaved: (value) {
+              setState(() {
+                email = value;
+              });
+            },
           ),
-        ),
-      ],
-    ));
+          const SizedBox(height: 20.0),
+          TextFormField(
+            keyboardType: TextInputType.text,
+            focusNode: passwordFocusNode,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (term) {
+              submitForm(context);
+            },
+            style: textInputTextStyle,
+            decoration: textInputDecoration.copyWith(labelText: "Password"),
+            onSaved: (value) {
+              setState(() {
+                password = value;
+              });
+            },
+            validator: (val) =>
+                val.length < 6 ? "Enter password 8+ chars long" : null,
+            obscureText: true,
+          ),
+          const SizedBox(height: 25),
+          ButtonTheme(
+            height: 60,
+            shape: const RoundedRectangleBorder(
+                borderRadius:
+                    const BorderRadius.all(Radius.elliptical(30, 30))),
+            child: RaisedButton(
+              color: LayoutBlueColor1,
+              child: Text(
+                widget.submitMessage,
+                style: const TextStyle(color: Colors.white, fontSize: 22),
+              ),
+              onPressed: () => submitForm(context),
+            ),
+          ),
+        ],
+      )),
+    );
   }
 }
