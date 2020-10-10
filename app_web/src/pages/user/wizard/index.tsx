@@ -22,6 +22,7 @@ const UserWizard = () => {
         username: values.username,
       });
       message.success('Success initializing user!');
+      history.replace('/welcome');
       initialState.refresh();
     } catch (e) {
       message.error(`${e.code} - ${e.message}`);
