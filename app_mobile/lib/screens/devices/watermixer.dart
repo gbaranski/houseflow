@@ -133,7 +133,11 @@ class _WatermixerState extends State<Watermixer> {
           ButtonBar(
             alignment: MainAxisAlignment.center,
             children: <Widget>[
-              FlatButton(
+              OutlineButton(
+                borderSide: BorderSide(
+                    color: LayoutBlueColor1.withAlpha(100), width: 0.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 child: const Text('START MIXING'),
                 onPressed: () {
                   startMixing();
