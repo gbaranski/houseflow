@@ -33,6 +33,12 @@ const double CardMinHeight = 170;
 
 const logoDirectory = 'assets/images/logo.svg';
 
+const SUPPORT_EMAIL = 'gbaranski19@gmail.com';
+const SUPPORT_EMAIL_URL = 'mailto:$SUPPORT_EMAIL';
+const SUPPORT_EMAIL_URL_ISSUE = "$SUPPORT_EMAIL_URL?subject=Issue";
+const GITHUB_URL = "https://github.com/gbaranski/homeflow";
+const GITHUB_URL_ISSUES = "$GITHUB_URL/issues";
+
 const MQTT_HOST = 'api.gbaranski.com';
 const MQTT_PORT = 8883;
 
