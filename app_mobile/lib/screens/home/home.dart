@@ -21,13 +21,17 @@ class _HomeState extends State<Home> {
 
   static const List<BottomNavigationBarItem> _navItems = [
     BottomNavigationBarItem(
-      icon: Icon(Icons.dashboard),
-      title: Text("Dashboard"),
-    ),
+        icon: Icon(
+          Icons.home,
+          size: 28,
+        ),
+        label: 'Home'),
     BottomNavigationBarItem(
-      icon: Icon(Icons.settings),
-      title: Text("Settings"),
-    ),
+        icon: Icon(
+          Icons.settings,
+          size: 28,
+        ),
+        label: 'Settings'),
   ];
 
   int _currentIndex = 0;
@@ -40,6 +44,7 @@ class _HomeState extends State<Home> {
 
   BottomNavigationBar navigation(BuildContext context) {
     return BottomNavigationBar(
+      selectedFontSize: 14,
       type: BottomNavigationBarType.shifting,
       items: _navItems,
       currentIndex: _currentIndex,
