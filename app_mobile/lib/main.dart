@@ -18,7 +18,7 @@ class App extends StatelessWidget {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               print(snapshot.error);
-              return Text("Error");
+              return const Text("Error");
             }
             if (snapshot.connectionState == ConnectionState.done) {
               final AuthService authService = AuthService();
@@ -30,7 +30,7 @@ class App extends StatelessWidget {
                       value: authService, child: Wrapper()));
             }
 
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           },
         ));
   }

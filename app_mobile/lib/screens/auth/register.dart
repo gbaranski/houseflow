@@ -18,7 +18,7 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Register"),
+          title: const Text("Register"),
         ),
         body: Container(
             padding: const EdgeInsets.symmetric(
@@ -27,7 +27,7 @@ class _RegisterState extends State<Register> {
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Form(
                       key: _formKey,
                       child: Column(children: <Widget>[
@@ -39,7 +39,7 @@ class _RegisterState extends State<Register> {
                           formKey: _formKey,
                         ),
                       ])),
-                  SizedBox(
+                  const SizedBox(
                     height: 50,
                   ),
                 ])));

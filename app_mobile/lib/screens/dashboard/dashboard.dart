@@ -35,7 +35,7 @@ class _DashboardState extends State<Dashboard> {
             break;
           default:
             {
-              return Text("Some error occured");
+              return const Text("Some error occured");
             }
         }
       },
@@ -52,7 +52,7 @@ class _DashboardState extends State<Dashboard> {
             if (authModel.firebaseUser.devices.length < 1)
               (Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
+                  child: const Text(
                       "You don't have any devices, if you feel thats an issue, contact us"))),
             Expanded(
               child: ListView.builder(

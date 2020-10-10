@@ -29,7 +29,7 @@ class MyProfile extends StatelessWidget {
               ProfileImage(
                 imageUrl: currentUser.photoURL,
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               GestureDetector(
@@ -37,7 +37,7 @@ class MyProfile extends StatelessWidget {
                   Clipboard.setData(ClipboardData(text: currentUser.uid))
                       .then((_) {
                     HapticFeedback.vibrate();
-                    final snackBar = SnackBar(
+                    const snackBar = SnackBar(
                       content: Text("UID copied to clipboard"),
                     );
                     Scaffold.of(context).showSnackBar(snackBar);

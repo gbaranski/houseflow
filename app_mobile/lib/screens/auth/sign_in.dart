@@ -64,14 +64,14 @@ class _SignInState extends State<SignIn> {
                           children: [
                             Row(
                               children: [
-                                Text(
+                                const Text(
                                   "Reset",
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: LayoutBlueColor1,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   " password!",
                                 ),
                               ],
@@ -88,10 +88,10 @@ class _SignInState extends State<SignIn> {
                                         builder: (context) => Register()));
                               },
                               child: Row(children: [
-                                Text("New user? "),
-                                Text(
+                                const Text("New user? "),
+                                const Text(
                                   "SIGN UP",
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: LayoutBlueColor1,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -107,12 +107,12 @@ class _SignInState extends State<SignIn> {
                       children: [
                         Text(
                           "OR",
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: LayoutBlueColor1,
                               fontSize: 18,
                               fontWeight: FontWeight.w800),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 15,
                         ),
                         Row(
@@ -122,7 +122,7 @@ class _SignInState extends State<SignIn> {
                               radius: 25,
                               backgroundColor: LayoutBlueColor1,
                               child: IconButton(
-                                icon: Icon(
+                                icon: const Icon(
                                   MdiIcons.google,
                                   color: Colors.white,
                                 ),
@@ -139,14 +139,14 @@ class _SignInState extends State<SignIn> {
                                 },
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               width: 10,
                             ),
-                            CircleAvatar(
+                            const CircleAvatar(
                               radius: 25,
                               backgroundColor: Colors.black45,
-                              child: IconButton(
-                                icon: Icon(
+                              child: const IconButton(
+                                icon: const Icon(
                                   MdiIcons.incognito,
                                   color: Colors.white,
                                 ),
@@ -157,7 +157,7 @@ class _SignInState extends State<SignIn> {
                         ),
                       ],
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 20,
                     ),
                   ]),

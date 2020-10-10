@@ -9,7 +9,7 @@ class ProfileImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return imageUrl == null
-        ? Icon(Icons.person_outline)
+        ? const Icon(Icons.person_outline)
         : CachedNetworkImage(
             imageUrl: imageUrl,
             imageBuilder: (context, imageProvider) => CircleAvatar(
@@ -17,7 +17,7 @@ class ProfileImage extends StatelessWidget {
                 backgroundImage: imageProvider,
               ),
             ),
-            placeholder: (context, url) => CircularProgressIndicator(),
+            placeholder: (context, url) => const CircularProgressIndicator(),
             errorWidget: (context, url, error) => Icon(Icons.error),
           );
   }

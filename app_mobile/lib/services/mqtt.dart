@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:core';
-import 'dart:convert';
 import 'package:homeflow/models/device.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

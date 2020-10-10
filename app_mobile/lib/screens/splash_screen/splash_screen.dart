@@ -8,7 +8,7 @@ class SplashScreen extends StatelessWidget {
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
         ),
         child: Column(
@@ -20,12 +20,12 @@ class SplashScreen extends StatelessWidget {
               height: 200,
               alignment: Alignment.center,
             ),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
-            Text(
+            const Text(
               "Homeflow",
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 32,
               ),
             )

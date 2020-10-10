@@ -4,21 +4,21 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class DeviceIcon extends StatelessWidget {
   final String deviceName;
 
-  DeviceIcon(this.deviceName);
+  const DeviceIcon(this.deviceName);
 
   Widget build(BuildContext context) {
     switch (this.deviceName) {
       case "ALARMCLOCK":
         {
-          return Icon(MdiIcons.alarm);
+          return const Icon(MdiIcons.alarm);
         }
       case "WATERMIXER":
         {
-          return Icon(MdiIcons.waterPump);
+          return const Icon(MdiIcons.waterPump);
         }
       default:
         {
-          return Icon(MdiIcons.alertCircle);
+          return const Icon(MdiIcons.alertCircle);
         }
     }
   }

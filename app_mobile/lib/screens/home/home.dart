@@ -20,14 +20,14 @@ class _HomeState extends State<Home> {
   ];
 
   static const List<BottomNavigationBarItem> _navItems = [
-    BottomNavigationBarItem(
-        icon: Icon(
+    const BottomNavigationBarItem(
+        icon: const Icon(
           Icons.home,
           size: 28,
         ),
         label: 'Home'),
-    BottomNavigationBarItem(
-        icon: Icon(
+    const BottomNavigationBarItem(
+        icon: const Icon(
           Icons.settings,
           size: 28,
         ),
@@ -60,9 +60,9 @@ class _HomeState extends State<Home> {
       builder: (BuildContext context, authModel, child) {
         return Scaffold(
             appBar: AppBar(
-                shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(bottom: Radius.circular(4))),
+                shape: const RoundedRectangleBorder(
+                    borderRadius: const BorderRadius.vertical(
+                        bottom: const Radius.circular(4))),
                 actions: [
                   GestureDetector(
                     onTap: () => Navigator.push(

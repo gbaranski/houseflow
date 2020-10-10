@@ -83,7 +83,7 @@ class _LoginFormState extends State<LoginForm> {
             });
           },
         ),
-        SizedBox(height: 20.0),
+        const SizedBox(height: 20.0),
         TextFormField(
           focusNode: passwordFocusNode,
           textInputAction: TextInputAction.done,
@@ -101,16 +101,16 @@ class _LoginFormState extends State<LoginForm> {
               val.length < 6 ? "Enter password 8+ chars long" : null,
           obscureText: true,
         ),
-        SizedBox(height: 25),
+        const SizedBox(height: 25),
         ButtonTheme(
           height: 60,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.elliptical(30, 30))),
+          shape: const RoundedRectangleBorder(
+              borderRadius: const BorderRadius.all(Radius.elliptical(30, 30))),
           child: RaisedButton(
             color: LayoutBlueColor1,
             child: Text(
               widget.submitMessage,
-              style: TextStyle(color: Colors.white, fontSize: 22),
+              style: const TextStyle(color: Colors.white, fontSize: 22),
             ),
             onPressed: submitForm,
           ),

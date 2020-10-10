@@ -8,7 +8,7 @@ class HelpScreen extends StatelessWidget {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      final SnackBar snackBar =
+      const SnackBar snackBar =
           SnackBar(content: Text("Something went wrong!"));
       Scaffold.of(context).showSnackBar(snackBar);
     }
@@ -18,35 +18,35 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Help"),
+        title: const Text("Help"),
         backgroundColor: LayoutBlueColor1,
       ),
       body: Container(
         margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         alignment: Alignment.topCenter,
         child: Column(children: [
-          Text(
+          const Text(
             "Looks like you've got a problem\nPlease contact us via methods below",
-            style: TextStyle(fontSize: 18),
+            style: const TextStyle(fontSize: 18),
           ),
-          SizedBox(
+          const SizedBox(
             height: 15,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GestureDetector(
-                child: Icon(
+                child: const Icon(
                   Icons.email,
                   size: 48,
                 ),
                 onTap: () => launchUrl(context, SUPPORT_EMAIL_URL_ISSUE),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
               GestureDetector(
-                child: Icon(
+                child: const Icon(
                   MdiIcons.github,
                   size: 48,
                 ),

@@ -13,7 +13,7 @@ class _InitUserState extends State<InitUser> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Initialize user"),
+        title: const Text("Initialize user"),
       ),
       body: Builder(builder: (context) {
         return Container(
@@ -46,12 +46,12 @@ class _InitUserState extends State<InitUser> {
                         Scaffold.of(context).showSnackBar(
                             SnackBar(content: Text('Error occured! $e')));
                       }).then((value) {
-                        Scaffold.of(context)
-                            .showSnackBar(SnackBar(content: Text('Success!')));
+                        Scaffold.of(context).showSnackBar(
+                            const SnackBar(content: Text('Success!')));
                       });
                     }
                   },
-                  child: Text('Submit'),
+                  child: const Text('Submit'),
                 )
               ],
             ),
