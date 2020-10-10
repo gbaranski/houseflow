@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homeflow/models/device.dart';
+import 'package:homeflow/screens/devices/inactive.dart';
 import 'package:homeflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/services/firebase.dart';
+import 'package:homeflow/shared/constants.dart';
+import 'package:homeflow/utils/misc.dart';
 import 'package:provider/provider.dart';
 import 'package:homeflow/screens/devices/watermixer.dart';
 
@@ -22,6 +25,7 @@ class _DashboardState extends State<Dashboard> {
           return CircularProgressIndicator();
         final Map<String, dynamic> data = snapshot.data.data();
         final FirebaseDevice firebaseDevice = FirebaseDevice.fromMap(data);
+        if (!firebaseDevice.status) return InactiveDevice(firebaseDevice);
 
         switch (firebaseDevice.type) {
           case 'WATERMIXER':
@@ -38,10 +42,6 @@ class _DashboardState extends State<Dashboard> {
         }
       },
     );
-  }
-
-  Widget inactiveDevice(BuildContext context, FirebaseDevice device) {
-    return Text("${device.type} inactive");
   }
 
   @override

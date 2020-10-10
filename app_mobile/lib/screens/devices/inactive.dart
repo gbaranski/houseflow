@@ -41,11 +41,11 @@ class InactiveDevice extends StatelessWidget {
                       size: 48,
                     ),
                     Text("Device is not active",
-                        style: TextStyle(fontSize: 16)),
+                        style: TextStyle(fontSize: 17)),
                     GestureDetector(
                       child: Text(
                         "Need help? Click here",
-                        style: TextStyle(fontSize: 12, color: LayoutBlueColor1),
+                        style: TextStyle(fontSize: 13, color: LayoutBlueColor1),
                       ),
                       onTap: () {
                         print("Tap need help");
