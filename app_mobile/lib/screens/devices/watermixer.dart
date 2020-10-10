@@ -1,6 +1,7 @@
 import 'package:homeflow/models/device.dart';
 import 'package:homeflow/models/devices/watermixer.dart';
 import 'package:flutter/material.dart';
+import 'package:homeflow/screens/devices/deviceCard.dart';
 import 'package:homeflow/services/firebase.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:homeflow/services/mqtt.dart';
@@ -89,74 +90,59 @@ class _WatermixerState extends State<Watermixer> {
       });
     };
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: CardMinHeight),
-      child: Card(
-          child: InkWell(
-        splashColor: Colors.blue.withAlpha(30),
-        onTap: () {
-          print('Card tapped.');
-        },
-        child: Container(
-          child: Column(children: [
-            SizedBox(
-              height: 5,
-            ),
-            Text("Watermixer", style: TextStyle(fontSize: 24)),
-            Divider(
-              indent: 20,
-              endIndent: 20,
-              thickness: 1,
-            ),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              Column(children: [
-                Text(
-                  "Mixing state",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 14,
-                      color: Colors.black.withOpacity(0.6)),
-                ),
-                Text(
-                    data.finishMixTimestamp >
-                            DateTime.now().millisecondsSinceEpoch
-                        ? "Mixing!"
-                        : "Idle",
-                    style:
-                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
-              ]),
-              Column(children: [
-                Text(
-                  "Mixing time",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w300,
-                      fontSize: 14,
-                      color: Colors.black.withOpacity(0.6)),
-                ),
-                Text(mixingTimeString,
-                    style:
-                        TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
-              ]),
-            ]),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ButtonBar(
-                  alignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    FlatButton(
-                      child: const Text('START MIXING'),
-                      onPressed: () {
-                        startMixing();
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            )
-          ]),
-        ),
-      )),
-    );
+    return DeviceCard(children: [
+      SizedBox(
+        height: 5,
+      ),
+      Text("Watermixer", style: TextStyle(fontSize: 24)),
+      Divider(
+        indent: 20,
+        endIndent: 20,
+        thickness: 1,
+      ),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        Column(children: [
+          Text(
+            "Mixing state",
+            style: TextStyle(
+                fontWeight: FontWeight.w300,
+                fontSize: 14,
+                color: Colors.black.withOpacity(0.6)),
+          ),
+          Text(
+              data.finishMixTimestamp > DateTime.now().millisecondsSinceEpoch
+                  ? "Mixing!"
+                  : "Idle",
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+        ]),
+        Column(children: [
+          Text(
+            "Mixing time",
+            style: TextStyle(
+                fontWeight: FontWeight.w300,
+                fontSize: 14,
+                color: Colors.black.withOpacity(0.6)),
+          ),
+          Text(mixingTimeString,
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
+        ]),
+      ]),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ButtonBar(
+            alignment: MainAxisAlignment.center,
+            children: <Widget>[
+              FlatButton(
+                child: const Text('START MIXING'),
+                onPressed: () {
+                  startMixing();
+                },
+              ),
+            ],
+          ),
+        ],
+      )
+    ]);
   }
 }
