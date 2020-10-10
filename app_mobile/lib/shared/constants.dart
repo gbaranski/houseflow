@@ -32,6 +32,7 @@ const Color NavigationUnselectedItemColor = Colors.blueGrey;
 const double CardMinHeight = 170;
 
 const logoDirectory = 'assets/images/logo.svg';
+const LOGO_DIR_192 = 'assets/images/logo-192x192.png';
 
 const SUPPORT_EMAIL = 'gbaranski19@gmail.com';
 const SUPPORT_EMAIL_URL = 'mailto:$SUPPORT_EMAIL';

@@ -52,10 +52,11 @@ dev_dependencies:
 flutter:
   assets:
     - assets/images/logo.svg
+    - assets/images/logo-192x192.png
   fonts:
     - family: OpenSans
       fonts:
-        - asset: assets/fonts/OpenSans-Regular.ttf
+        - asset: assets/fonts/OpenSans-Light.ttf
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

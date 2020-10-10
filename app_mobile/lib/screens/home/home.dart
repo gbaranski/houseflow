@@ -1,3 +1,4 @@
+import 'package:flutter_svg/svg.dart';
 import 'package:homeflow/screens/dashboard/dashboard.dart';
 import 'package:homeflow/screens/my_profile/my_profile.dart';
 import 'package:homeflow/screens/settings/settings.dart';
@@ -54,22 +55,30 @@ class _HomeState extends State<Home> {
       builder: (BuildContext context, authModel, child) {
         return Scaffold(
             appBar: AppBar(
-              actions: [
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => MyProfile(
-                              firebaseUser: authModel.firebaseUser,
-                              currentUser: authModel.currentUser,
-                              signOut: authModel.signOut))),
-                  child: ProfileImage(
-                    imageUrl: authModel.currentUser.photoURL,
+                actions: [
+                  GestureDetector(
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MyProfile(
+                                firebaseUser: authModel.firebaseUser,
+                                currentUser: authModel.currentUser,
+                                signOut: authModel.signOut))),
+                    child: ProfileImage(
+                      imageUrl: authModel.currentUser.photoURL,
+                    ),
                   ),
-                ),
-              ],
-              backgroundColor: LayoutBlueColor1,
-            ),
+                ],
+                titleSpacing: 0,
+                title: Text("Homeflow"),
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    radius: 2,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: AssetImage(LOGO_DIR_192),
+                  ),
+                )),
             bottomNavigationBar: navigation(context),
             body: _navPages.elementAt(_currentIndex));
       },
