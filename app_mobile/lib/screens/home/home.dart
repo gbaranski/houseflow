@@ -15,7 +15,6 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   static final List<Widget> _navPages = <Widget>[
     Dashboard(),
-    MyProfile(),
     Settings(),
   ];
 
@@ -23,10 +22,6 @@ class _HomeState extends State<Home> {
     BottomNavigationBarItem(
       icon: Icon(Icons.dashboard),
       title: Text("Dashboard"),
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      title: Text("My profile"),
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.settings),
@@ -59,7 +54,6 @@ class _HomeState extends State<Home> {
       builder: (BuildContext context, authModel, child) {
         return Scaffold(
             appBar: AppBar(
-              leading: Text("Leading"),
               actions: [
                 GestureDetector(
                   onTap: () => Navigator.push(

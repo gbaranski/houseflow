@@ -10,53 +10,56 @@ class MyProfile extends StatelessWidget {
   final firebase.User currentUser;
   final Future Function() signOut;
 
-  MyProfile(
-      {@required this.firebaseUser,
-      @required this.currentUser,
-      @required this.signOut});
+  MyProfile({
+    @required this.firebaseUser,
+    @required this.currentUser,
+    @required this.signOut,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body: Container(
-        padding: const EdgeInsets.only(top: 20),
-        alignment: Alignment.topCenter,
-        child: Column(
-          children: [
-            ProfileImage(
-              imageUrl: currentUser.photoURL,
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            GestureDetector(
-              onLongPress: () {
-                Clipboard.setData(ClipboardData(text: currentUser.uid))
-                    .then((_) {
-                  HapticFeedback.vibrate();
-                  final snackBar = SnackBar(
-                    content: Text("UID copied to clipboard"),
-                  );
-                  Scaffold.of(context).showSnackBar(snackBar);
-                });
-              },
-              child: Text(
-                firebaseUser.username,
-                style: const TextStyle(
-                  fontSize: 26,
+      body: Builder(
+        builder: (BuildContext context) => Container(
+          padding: const EdgeInsets.only(top: 20),
+          alignment: Alignment.topCenter,
+          child: Column(
+            children: [
+              ProfileImage(
+                imageUrl: currentUser.photoURL,
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              GestureDetector(
+                onLongPress: () {
+                  Clipboard.setData(ClipboardData(text: currentUser.uid))
+                      .then((_) {
+                    HapticFeedback.vibrate();
+                    final snackBar = SnackBar(
+                      content: Text("UID copied to clipboard"),
+                    );
+                    Scaffold.of(context).showSnackBar(snackBar);
+                  });
+                },
+                child: Text(
+                  firebaseUser.username,
+                  style: const TextStyle(
+                    fontSize: 26,
+                  ),
                 ),
               ),
-            ),
-            RaisedButton(
-              color: LayoutBlueColor1,
-              textColor: Colors.white,
-              child: Text("Log out"),
-              onPressed: () {
-                signOut().then((value) => Navigator.pop(context));
-              },
-            )
-          ],
+              RaisedButton(
+                color: LayoutBlueColor1,
+                textColor: Colors.white,
+                child: Text("Log out"),
+                onPressed: () {
+                  signOut().then((value) => Navigator.pop(context));
+                },
+              )
+            ],
+          ),
         ),
       ),
     );
