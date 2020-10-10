@@ -54,16 +54,19 @@ class Settings extends StatelessWidget {
                     leading: DeviceIcon(firebaseDevice.type),
                     title: Text(upperFirstCharacter(firebaseDevice.type)),
                     children: [
-                      Text("UID: ${firebaseDevice.uid}"),
+                      const Text(
+                        "Notifications",
+                        style: const TextStyle(fontSize: 18),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           OutlineButton(
-                            child: Text("Subscribe"),
+                            child: const Text("Subscribe"),
                             onPressed: subscribe,
                           ),
                           OutlineButton(
-                            child: Text("Unsubscribe"),
+                            child: const Text("Unsubscribe"),
                             onPressed: unsubscribe,
                           )
                         ],
