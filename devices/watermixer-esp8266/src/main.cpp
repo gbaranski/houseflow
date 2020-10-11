@@ -10,23 +10,22 @@
 #include "gpio.h"
 #include "memoryStorage.h"
 #include "mqtt.h"
-// #include "remoteUpdate.h"
+#include "remoteUpdate.h"
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting!");
   EEPROM.begin(512);
 
-#ifdef SET_CREDENTIALS
+#if SET_CREDENTIALS true
   ServerConfig newServerConfig = {
       DEVICE_UID,
       DEVICE_SECRET,
       MQTT_HOST,
   };
   writeServerConfig(serverConfig);
-#endif
-
   Serial.println("Success writing ServerConfig to EEPROM");
+#endif
 
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, 1);
@@ -34,8 +33,11 @@ void setup() {
   WiFiManager wifiManager;
   wifiManager.autoConnect();
   Serial.println("Connected to WiFi");
-
   ServerConfig serverConfig = readServerConfig();
+
+  checkUpdates("{\"uid\": \"" + String(serverConfig.uid) + "\",\"secret\":\"" +
+               String(serverConfig.secret) + "\"}");
+
   initializeMqtt(serverConfig);
 }
 
