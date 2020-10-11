@@ -6,6 +6,11 @@
 
 WiFiClient wifiClient;
 
+String getOnConnectJson() {
+  return "{\"uid\": \"" + String(serverConfig.uid) + "\",\"secret\":\"" +
+         String(serverConfig.secret) + "\"}";
+}
+
 void update_started() {
   Serial.println("CALLBACK:  HTTP update process started");
 }
