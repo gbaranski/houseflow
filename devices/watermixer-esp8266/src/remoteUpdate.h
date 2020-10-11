@@ -22,7 +22,7 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkUpdates(ServerConfig serverConfig) {
+void checkUpdates(ServerConfig serverConfig, BearSSL::WiFiClientSecure client) {
   String credentialsJson = "{\"uid\": \"" + String(serverConfig.uid) +
                            "\",\"secret\":\"" + String(serverConfig.secret) +
                            "\"}";
@@ -36,12 +36,6 @@ void checkUpdates(ServerConfig serverConfig) {
   ESPhttpUpdate.onEnd(update_finished);
   ESPhttpUpdate.onProgress(update_progress);
   ESPhttpUpdate.onError(update_error);
-
-  BearSSL::WiFiClientSecure client;
-
-  BearSSL::X509List x509(letsencryptauthorityx3_der,
-                         letsencryptauthorityx3_der_len);
-  client.setTrustAnchors(&x509);
 
   ret = ESPhttpUpdate.update(client, ota_url, credentialsJson);
 
