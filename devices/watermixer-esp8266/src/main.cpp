@@ -17,13 +17,14 @@ void setup() {
   Serial.println("Starting!");
   EEPROM.begin(512);
 
-#if SET_CREDENTIALS true
+#ifdef SET_CREDENTIALS
   ServerConfig newServerConfig = {
       DEVICE_UID,
       DEVICE_SECRET,
-      MQTT_HOST,
+      DEVICE_HOST,
+      DEVICE_OTA_PATH,
   };
-  writeServerConfig(serverConfig);
+  writeServerConfig(newServerConfig);
   Serial.println("Success writing ServerConfig to EEPROM");
 #endif
 
@@ -33,11 +34,10 @@ void setup() {
   WiFiManager wifiManager;
   wifiManager.autoConnect();
   Serial.println("Connected to WiFi");
+  configTime(3 * 3600, 0, "pool.ntp.org");
   ServerConfig serverConfig = readServerConfig();
 
-  checkUpdates("{\"uid\": \"" + String(serverConfig.uid) + "\",\"secret\":\"" +
-               String(serverConfig.secret) + "\"}");
-
+  checkUpdates(serverConfig);
   initializeMqtt(serverConfig);
 }
 
@@ -50,6 +50,5 @@ void loop() {
       digitalWrite(RELAY_PIN, 1);
     }
   }
-  // put your main code here, to run repeatedly:
   mqttLoop();
 }
