@@ -4,6 +4,7 @@
 #include <PubSubClient.h>
 
 #include "config.h"
+#include "memoryStorage.h"
 
 #ifndef MQTT_H
 #pragma once
@@ -11,12 +12,23 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+ServerConfig serverConfig;
+
 long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
-void subscribeTopics() { client.subscribe(START_MIX_TOPIC_REQUEST.c_str()); }
+struct StartMix {
+  String request;
+  String response;
+};
+
+struct MqttTopic {
+  StartMix startMix;
+} mqttTopic;
+
+void subscribeTopics() { client.subscribe(mqttTopic.startMix.request.c_str()); }
 
 void callback(char* topic, byte* message, unsigned int length) {
   Serial.printf("Topic: %s\n", topic);
@@ -29,12 +41,12 @@ void callback(char* topic, byte* message, unsigned int length) {
     messageTemp += (char)message[i];
   }
   Serial.println();
-  if (String(topic) == START_MIX_TOPIC_REQUEST) {
+  if (String(topic) == mqttTopic.startMix.request) {
     startMixing();
     byte* p = (byte*)malloc(length);
     // Copy the payload to the new buffer
     memcpy(p, message, length);
-    client.publish(START_MIX_TOPIC_RESPONSE.c_str(), p, length);
+    client.publish(mqttTopic.startMix.response.c_str(), p, length);
     // Free the memory
     free(p);
 
@@ -49,7 +61,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect(SHORT_UID, DEVICE_UID, DEVICE_SECRET)) {
+    if (client.connect(SHORT_UID, serverConfig.uid, serverConfig.secret)) {
       Serial.println("connected");
       subscribeTopics();
     } else {
@@ -62,9 +74,16 @@ void reconnect() {
   }
 }
 
-void initializeMqtt() {
+void initializeMqtt(ServerConfig _serverConfig) {
+  serverConfig = _serverConfig;
+
+  mqttTopic.startMix = {
+      String(serverConfig.uid) + String("/event/startmix/request"),
+      String(serverConfig.uid) + String("/event/startmix/response"),
+  };
+
   Serial.println("Initializing MQTT");
-  client.setServer(MQTT_SERVER, 1883);
+  client.setServer(serverConfig.mqttHost, 1883);
   client.setCallback(callback);
   subscribeTopics();
 }
