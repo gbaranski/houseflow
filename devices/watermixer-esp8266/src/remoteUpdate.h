@@ -6,11 +6,6 @@
 
 WiFiClient wifiClient;
 
-String getOnConnectJson() {
-  return "{\"uid\": \"" + String(serverConfig.uid) + "\",\"secret\":\"" +
-         String(serverConfig.secret) + "\"}";
-}
-
 void update_started() {
   Serial.println("CALLBACK:  HTTP update process started");
 }
@@ -28,7 +23,7 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkUpdates() {
+void checkUpdates(String credentialsJson) {
   t_httpUpdate_return ret;
 
   ESPhttpUpdate.onStart(update_started);
@@ -36,7 +31,7 @@ void checkUpdates() {
   ESPhttpUpdate.onProgress(update_progress);
   ESPhttpUpdate.onError(update_error);
 
-  ret = ESPhttpUpdate.update(wifiClient, UPDATE_URL, VERSION);
+  ret = ESPhttpUpdate.update(wifiClient, UPDATE_URL, credentialsJson);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
