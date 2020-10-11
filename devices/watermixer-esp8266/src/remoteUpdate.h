@@ -5,8 +5,6 @@
 
 #include "config.h"
 
-WiFiClient wifiClient;
-
 void update_started() {
   Serial.println("CALLBACK:  HTTP update process started");
 }
@@ -25,8 +23,13 @@ void update_error(int err) {
 }
 
 void checkUpdates(ServerConfig serverConfig) {
-  String credentialsJson =
-      "{\"uid\": \"" + String(serverConfig.uid) + "\",\"secret\":\"";
+  String credentialsJson = "{\"uid\": \"" + String(serverConfig.uid) +
+                           "\",\"secret\":\"" + String(serverConfig.secret) +
+                           "\"}";
+  String ota_url =
+      "https://" + String(serverConfig.host) + String(serverConfig.ota_path);
+  Serial.println("Will attempt OTA to: " + ota_url);
+  Serial.println("Will publish credentials: " + credentialsJson);
   t_httpUpdate_return ret;
 
   ESPhttpUpdate.onStart(update_started);
@@ -36,10 +39,11 @@ void checkUpdates(ServerConfig serverConfig) {
 
   BearSSL::WiFiClientSecure client;
 
-  ret = ESPhttpUpdate.update(
-      wifiClient,
-      "http://" + String(serverConfig.host) + String(serverConfig.ota_path),
-      credentialsJson);
+  BearSSL::X509List x509(letsencryptauthorityx3_der,
+                         letsencryptauthorityx3_der_len);
+  client.setTrustAnchors(&x509);
+
+  ret = ESPhttpUpdate.update(client, ota_url, credentialsJson);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
