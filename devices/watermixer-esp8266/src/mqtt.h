@@ -9,8 +9,7 @@
 #ifndef MQTT_H
 #pragma once
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+PubSubClient* pubSubClient;
 
 ServerConfig serverConfig;
 
@@ -28,7 +27,9 @@ struct MqttTopic {
   StartMix startMix;
 } mqttTopic;
 
-void subscribeTopics() { client.subscribe(mqttTopic.startMix.request.c_str()); }
+void subscribeTopics() {
+  pubSubClient->subscribe(mqttTopic.startMix.request.c_str());
+}
 
 void callback(char* topic, byte* message, unsigned int length) {
   Serial.printf("Topic: %s\n", topic);
@@ -46,7 +47,7 @@ void callback(char* topic, byte* message, unsigned int length) {
     byte* p = (byte*)malloc(length);
     // Copy the payload to the new buffer
     memcpy(p, message, length);
-    client.publish(mqttTopic.startMix.response.c_str(), p, length);
+    pubSubClient->publish(mqttTopic.startMix.response.c_str(), p, length);
     // Free the memory
     free(p);
 
@@ -58,15 +59,19 @@ void callback(char* topic, byte* message, unsigned int length) {
 
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
+  while (!pubSubClient->connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect(SHORT_UID, serverConfig.uid, serverConfig.secret)) {
+    String clientId = "device_";
+    clientId += String(random(0xffff), HEX);
+
+    if (pubSubClient->connect(clientId.c_str(), serverConfig.uid,
+                              serverConfig.secret)) {
       Serial.println("connected");
       subscribeTopics();
     } else {
       Serial.print("failed, rc=");
-      Serial.print(client.state());
+      Serial.print(pubSubClient->state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
@@ -74,7 +79,8 @@ void reconnect() {
   }
 }
 
-void initializeMqtt(ServerConfig _serverConfig) {
+void initializeMqtt(ServerConfig _serverConfig,
+                    BearSSL::WiFiClientSecure* wifiClientSecure) {
   serverConfig = _serverConfig;
 
   mqttTopic.startMix = {
@@ -82,17 +88,16 @@ void initializeMqtt(ServerConfig _serverConfig) {
       String(serverConfig.uid) + String("/event/startmix/response"),
   };
 
-  Serial.println("Initializing MQTT");
-  client.setServer(serverConfig.host, 1883);
-  client.setCallback(callback);
-  subscribeTopics();
-}
+  pubSubClient =
+      new PubSubClient(serverConfig.host, 8883, callback, *wifiClientSecure);
+  // while (true) {
+  //   if (!pubSubClient->connected()) {
+  //     reconnect();
+  //   }
+  //   pubSubClient->loop();
+  // }
 
-void mqttLoop() {
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+  Serial.println("Initializing MQTT");
 }
 
 #endif

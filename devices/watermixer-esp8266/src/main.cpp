@@ -6,11 +6,20 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
 
-#include "config.h"
 #include "gpio.h"
 #include "memoryStorage.h"
 #include "mqtt.h"
 #include "remoteUpdate.h"
+
+BearSSL::WiFiClientSecure client;
+BearSSL::X509List x509(letsencryptauthorityx3_der,
+                       letsencryptauthorityx3_der_len);
+
+void fetchCertAuthority() {
+  client.setTrustAnchors(&x509);
+  Serial.printf("Fetch cert authority: %u\n", ESP.getFreeHeap());
+  reconnect();
+}
 
 void setup() {
   Serial.begin(9600);
@@ -34,14 +43,26 @@ void setup() {
   WiFiManager wifiManager;
   wifiManager.autoConnect();
   Serial.println("Connected to WiFi");
-  configTime(3 * 3600, 0, "pool.ntp.org");
+
   ServerConfig serverConfig = readServerConfig();
 
-  checkUpdates(serverConfig);
-  initializeMqtt(serverConfig);
+  configTime(3 * 3600, 0, "pool.ntp.org");
+
+  checkUpdates(serverConfig, client);
+
+  initializeMqtt(serverConfig, &client);
+  fetchCertAuthority();
 }
 
 void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!pubSubClient->connected()) {
+      fetchCertAuthority();
+    } else {
+      pubSubClient->loop();
+    }
+  }
+
   if (mixingStarted) {
     unsigned long now = millis();
 
@@ -50,5 +71,4 @@ void loop() {
       digitalWrite(RELAY_PIN, 1);
     }
   }
-  mqttLoop();
 }
