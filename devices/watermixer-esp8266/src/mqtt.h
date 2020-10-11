@@ -83,7 +83,7 @@ void initializeMqtt(ServerConfig _serverConfig) {
   };
 
   Serial.println("Initializing MQTT");
-  client.setServer(serverConfig.mqttHost, 1883);
+  client.setServer(serverConfig.host, 1883);
   client.setCallback(callback);
   subscribeTopics();
 }

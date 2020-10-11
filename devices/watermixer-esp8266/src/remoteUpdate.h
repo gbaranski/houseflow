@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <ESP8266httpUpdate.h>
+#include <WiFiClientSecure.h>
 
 #include "config.h"
 
@@ -23,7 +24,9 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkUpdates(String credentialsJson) {
+void checkUpdates(ServerConfig serverConfig) {
+  String credentialsJson =
+      "{\"uid\": \"" + String(serverConfig.uid) + "\",\"secret\":\"";
   t_httpUpdate_return ret;
 
   ESPhttpUpdate.onStart(update_started);
@@ -31,7 +34,12 @@ void checkUpdates(String credentialsJson) {
   ESPhttpUpdate.onProgress(update_progress);
   ESPhttpUpdate.onError(update_error);
 
-  ret = ESPhttpUpdate.update(wifiClient, UPDATE_URL, credentialsJson);
+  BearSSL::WiFiClientSecure client;
+
+  ret = ESPhttpUpdate.update(
+      wifiClient,
+      "http://" + String(serverConfig.host) + String(serverConfig.ota_path),
+      credentialsJson);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:

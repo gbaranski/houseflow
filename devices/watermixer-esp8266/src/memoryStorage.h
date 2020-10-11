@@ -5,12 +5,14 @@
 #pragma once
 
 #define UUID_LENGTH 36
-#define MQTT_HOST_LENGTH 25
+#define HOST_LENGTH 25
+#define OTA_PATH 25
 
 struct ServerConfig {
   char uid[UUID_LENGTH + 1];
   char secret[UUID_LENGTH + 1];
-  char mqttHost[MQTT_HOST_LENGTH + 1];
+  char host[HOST_LENGTH + 1];
+  char ota_path[OTA_PATH + 1];
 };
 
 char generateRandomLetter() { return random(65, 90); }
@@ -20,7 +22,8 @@ ServerConfig readServerConfig() {
   EEPROM.get(0, serverConfig);
   Serial.printf("UID: %s\n", serverConfig.uid);
   Serial.printf("SECRET: %s\n", serverConfig.secret);
-  Serial.printf("MQTTHOST: %s\n", serverConfig.mqttHost);
+  Serial.printf("HOST: %s\n", serverConfig.host);
+  Serial.printf("OTA_PATH: %s\n", serverConfig.ota_path);
   return serverConfig;
 }
 
