@@ -25,7 +25,7 @@ void setup() {
   Serial.println("Starting!");
   EEPROM.begin(512);
 
-#ifdef SET_CREDENTIALS
+#if SET_CREDENTIALS == true
   ServerConfig newServerConfig = {
       DEVICE_UID,
       DEVICE_SECRET,
