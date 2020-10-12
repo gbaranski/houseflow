@@ -2,9 +2,11 @@
 #pragma once
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
+#include <WiFiUdp.h>
 
 #include "config.h"
 
@@ -25,8 +27,8 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkUpdates(ServerConfig serverConfig,
-                  BearSSL::WiFiClientSecure* client) {
+void checkHttpUpdates(ServerConfig serverConfig,
+                      BearSSL::WiFiClientSecure* client) {
   String credentialsJson = "{\"uid\": \"" + String(serverConfig.uid) +
                            "\",\"secret\":\"" + String(serverConfig.secret) +
                            "\"}";
@@ -59,5 +61,32 @@ void checkUpdates(ServerConfig serverConfig,
       break;
   }
 }
+
+void startArduinoOta(ServerConfig serverConfig) {
+  ArduinoOTA.setHostname("ESP8266_WATERMIXER");
+  ArduinoOTA.setPassword(serverConfig.uid);
+
+  ArduinoOTA.onStart([]() { Serial.println("Start"); });
+  ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR)
+      Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR)
+      Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+}
+
+void arduinoOtaLoop() { ArduinoOTA.handle(); }
 
 #endif

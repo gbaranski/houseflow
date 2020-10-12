@@ -47,8 +47,8 @@ void setup() {
 
   configTime(3 * 3600, 0, "pool.ntp.org");
 
-  checkUpdates(serverConfig, &client);
-
+  startArduinoOta(serverConfig);
+  checkHttpUpdates(serverConfig, &client);
   initializeMqtt(serverConfig, &client);
   fetchCertAuthority();
 }
@@ -71,6 +71,8 @@ void loop() {
       digitalWrite(RELAY_PIN, 1);
     }
   }
+
+  arduinoOtaLoop();
   if (now - lastTimePrintedHeap > 1000) {
     Serial.printf("Free heap: %u\n", ESP.getFreeHeap());
     lastTimePrintedHeap = millis();
