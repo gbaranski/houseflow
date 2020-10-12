@@ -17,7 +17,6 @@ BearSSL::X509List x509(letsencryptauthorityx3_der,
 
 void fetchCertAuthority() {
   client.setTrustAnchors(&x509);
-  Serial.printf("Fetch cert authority: %u\n", ESP.getFreeHeap());
   reconnect();
 }
 
@@ -54,6 +53,8 @@ void setup() {
   fetchCertAuthority();
 }
 
+unsigned long lastTimePrintedHeap = 0;
+
 void loop() {
   if (WiFi.status() == WL_CONNECTED) {
     if (!pubSubClient->connected()) {
@@ -63,12 +64,15 @@ void loop() {
     }
   }
 
+  unsigned long now = millis();
   if (mixingStarted) {
-    unsigned long now = millis();
-
     if (now - lastMixingMillis > 1000) {
       mixingStarted = false;
       digitalWrite(RELAY_PIN, 1);
     }
+  }
+  if (now - lastTimePrintedHeap > 1000) {
+    Serial.printf("Free heap: %u\n", ESP.getFreeHeap());
+    lastTimePrintedHeap = millis();
   }
 }
