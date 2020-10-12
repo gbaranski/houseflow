@@ -58,7 +58,6 @@ Web app made using [React](https://github.com/facebook/react) front-end framewor
 
 Mobile app made using [Flutter](https://github.com/flutter/flutter), I picked it over React Native.
 
-OLD PHOTO
 <img src="https://github.com/gbaranski/homeflow/blob/master/docs/mobile_app.png" width="150">
 
 ### Embedded devices
