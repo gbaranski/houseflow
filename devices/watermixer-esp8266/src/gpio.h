@@ -1,9 +1,9 @@
+#ifndef GPIO_H
+#pragma once
+
 #include <Arduino.h>
 
 #include "config.h"
-
-#ifndef GPIO_H
-#pragma once
 
 boolean mixingStarted = false;
 unsigned long lastMixingMillis = 0;

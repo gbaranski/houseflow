@@ -1,3 +1,6 @@
+#ifndef REMOTE_UPDATE_H
+#pragma once
+
 #include <Arduino.h>
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <ESP8266httpUpdate.h>
@@ -56,3 +59,5 @@ void checkUpdates(ServerConfig serverConfig,
       break;
   }
 }
+
+#endif

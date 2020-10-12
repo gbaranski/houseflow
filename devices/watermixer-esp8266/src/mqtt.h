@@ -1,3 +1,6 @@
+#ifndef MQTT_H
+#pragma once
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
@@ -5,9 +8,6 @@
 
 #include "config.h"
 #include "serverConfig.h"
-
-#ifndef MQTT_H
-#pragma once
 
 PubSubClient* pubSubClient;
 

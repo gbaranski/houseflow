@@ -1,8 +1,8 @@
-#include <Arduino.h>
-#include <EEPROM.h>
-
 #ifndef MEMORY_STORAGE_H
 #pragma once
+
+#include <Arduino.h>
+#include <EEPROM.h>
 
 #define UUID_LENGTH 36
 #define HOST_LENGTH 25
@@ -14,8 +14,6 @@ struct ServerConfig {
   char host[HOST_LENGTH + 1];
   char ota_path[OTA_PATH + 1];
 };
-
-char generateRandomLetter() { return random(65, 90); }
 
 ServerConfig readServerConfig() {
   ServerConfig serverConfig;
