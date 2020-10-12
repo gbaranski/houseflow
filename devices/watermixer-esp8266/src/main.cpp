@@ -73,7 +73,7 @@ void loop() {
   }
 
   arduinoOtaLoop();
-  if (now - lastTimePrintedHeap > 1000) {
+  if (now - lastTimePrintedHeap > 5000) {
     Serial.printf("Free heap: %u\n", ESP.getFreeHeap());
     lastTimePrintedHeap = millis();
   }
