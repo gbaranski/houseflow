@@ -22,7 +22,8 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkUpdates(ServerConfig serverConfig, BearSSL::WiFiClientSecure client) {
+void checkUpdates(ServerConfig serverConfig,
+                  BearSSL::WiFiClientSecure* client) {
   String credentialsJson = "{\"uid\": \"" + String(serverConfig.uid) +
                            "\",\"secret\":\"" + String(serverConfig.secret) +
                            "\"}";
@@ -37,7 +38,7 @@ void checkUpdates(ServerConfig serverConfig, BearSSL::WiFiClientSecure client) {
   ESPhttpUpdate.onProgress(update_progress);
   ESPhttpUpdate.onError(update_error);
 
-  ret = ESPhttpUpdate.update(client, ota_url, credentialsJson);
+  ret = ESPhttpUpdate.update(*client, ota_url, credentialsJson);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:

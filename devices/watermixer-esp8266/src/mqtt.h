@@ -4,7 +4,7 @@
 #include <PubSubClient.h>
 
 #include "config.h"
-#include "memoryStorage.h"
+#include "serverConfig.h"
 
 #ifndef MQTT_H
 #pragma once
@@ -90,12 +90,6 @@ void initializeMqtt(ServerConfig _serverConfig,
 
   pubSubClient =
       new PubSubClient(serverConfig.host, 8883, callback, *wifiClientSecure);
-  // while (true) {
-  //   if (!pubSubClient->connected()) {
-  //     reconnect();
-  //   }
-  //   pubSubClient->loop();
-  // }
 
   Serial.println("Initializing MQTT");
 }

@@ -7,9 +7,9 @@
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
 
 #include "gpio.h"
-#include "memoryStorage.h"
 #include "mqtt.h"
 #include "remoteUpdate.h"
+#include "serverConfig.h"
 
 BearSSL::WiFiClientSecure client;
 BearSSL::X509List x509(letsencryptauthorityx3_der,
@@ -48,7 +48,7 @@ void setup() {
 
   configTime(3 * 3600, 0, "pool.ntp.org");
 
-  checkUpdates(serverConfig, client);
+  checkUpdates(serverConfig, &client);
 
   initializeMqtt(serverConfig, &client);
   fetchCertAuthority();
