@@ -1,4 +1,3 @@
-#ifndef GPIO_H
 #pragma once
 
 #include <Arduino.h>
@@ -14,5 +13,3 @@ void startMixing() {
   mixingStarted = true;
   lastMixingMillis = millis();
 }
-
-#endif

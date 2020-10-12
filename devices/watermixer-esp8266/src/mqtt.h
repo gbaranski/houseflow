@@ -1,4 +1,3 @@
-#ifndef MQTT_H
 #pragma once
 
 #include <Arduino.h>
@@ -93,5 +92,3 @@ void initializeMqtt(ServerConfig _serverConfig,
 
   Serial.println("Initializing MQTT");
 }
-
-#endif

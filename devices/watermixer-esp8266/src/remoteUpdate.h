@@ -1,4 +1,3 @@
-#ifndef REMOTE_UPDATE_H
 #pragma once
 
 #include <Arduino.h>
@@ -88,5 +87,3 @@ void startArduinoOta(ServerConfig serverConfig) {
 }
 
 void arduinoOtaLoop() { ArduinoOTA.handle(); }
-
-#endif

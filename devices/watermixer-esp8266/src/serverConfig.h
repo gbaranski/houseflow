@@ -1,4 +1,3 @@
-#ifndef MEMORY_STORAGE_H
 #pragma once
 
 #include <Arduino.h>
@@ -29,5 +28,3 @@ void writeServerConfig(ServerConfig serverConfig) {
   EEPROM.put(0, serverConfig);
   EEPROM.commit();
 }
-
-#endif
