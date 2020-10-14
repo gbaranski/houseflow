@@ -3,8 +3,6 @@
 #include <Arduino.h>
 #include <string.h>
 
-#define RELAY_PIN 4
-
 size_t letsencryptauthorityx3_der_len = 1425;
 const uint8_t letsencryptauthorityx3_der[] = {
     0x30, 0x82, 0x05, 0x8d, 0x30, 0x82, 0x03, 0x75, 0xa0, 0x03, 0x02, 0x01,

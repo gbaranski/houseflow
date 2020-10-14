@@ -7,8 +7,6 @@
 #include <WiFiClientSecure.h>
 #include <WiFiUdp.h>
 
-#include "config.h"
-
 void update_started() {
   Serial.println("CALLBACK:  HTTP update process started");
 }
@@ -26,13 +24,13 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkHttpUpdates(ServerConfig serverConfig,
+void checkHttpUpdates(ServerConfig* serverConfig,
                       BearSSL::WiFiClientSecure* client) {
-  String credentialsJson = "{\"uid\": \"" + String(serverConfig.uid) +
-                           "\",\"secret\":\"" + String(serverConfig.secret) +
+  String credentialsJson = "{\"uid\": \"" + String(*serverConfig->uid) +
+                           "\",\"secret\":\"" + String(*serverConfig->secret) +
                            "\"}";
   String ota_url =
-      "https://" + String(serverConfig.host) + String(serverConfig.ota_path);
+      "https://" + String(*serverConfig->host) + String(*serverConfig->otaPath);
   Serial.println("Will attempt OTA to: " + ota_url);
   Serial.println("Will publish credentials: " + credentialsJson);
   t_httpUpdate_return ret;
@@ -61,9 +59,10 @@ void checkHttpUpdates(ServerConfig serverConfig,
   }
 }
 
-void startArduinoOta(ServerConfig serverConfig) {
-  ArduinoOTA.setHostname("ESP8266_WATERMIXER");
-  ArduinoOTA.setPassword(serverConfig.uid);
+void startArduinoOta(ServerConfig* serverConfig) {
+  ArduinoOTA.setHostname(
+      String(String("ESP8266_") + String(serverConfig->deviceType)).c_str());
+  ArduinoOTA.setPassword(serverConfig->uid);
 
   ArduinoOTA.onStart([]() { Serial.println("Start"); });
   ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });

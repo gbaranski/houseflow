@@ -5,29 +5,28 @@
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <PubSubClient.h>
 
-#include "config.h"
 #include "serverConfig.h"
 
 PubSubClient* pubSubClient;
 
-ServerConfig serverConfig;
+ServerConfig* mqttServerConfig;
 
 long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
-struct StartMix {
+struct RelayTopic {
   String request;
   String response;
 };
 
 struct MqttTopic {
-  StartMix startMix;
+  RelayTopic relayTopic1;
 } mqttTopic;
 
 void subscribeTopics() {
-  pubSubClient->subscribe(mqttTopic.startMix.request.c_str());
+  pubSubClient->subscribe(mqttTopic.relayTopic1.request.c_str());
 }
 
 void callback(char* topic, byte* message, unsigned int length) {
@@ -41,18 +40,18 @@ void callback(char* topic, byte* message, unsigned int length) {
     messageTemp += (char)message[i];
   }
   Serial.println();
-  if (String(topic) == mqttTopic.startMix.request) {
-    startMixing();
+  if (String(topic) == mqttTopic.relayTopic1.request) {
+    triggerRelay();
     byte* p = (byte*)malloc(length);
     // Copy the payload to the new buffer
     memcpy(p, message, length);
-    pubSubClient->publish(mqttTopic.startMix.response.c_str(), p, length);
+    pubSubClient->publish(mqttTopic.relayTopic1.response.c_str(), p, length);
     // Free the memory
     free(p);
 
     return;
   } else {
-    Serial.printf("%s is not start mixing topic", topic);
+    Serial.printf("%s is not recognized topic", topic);
   }
 }
 
@@ -64,8 +63,8 @@ void reconnect() {
     String clientId = "device_";
     clientId += String(random(0xffff), HEX);
 
-    if (pubSubClient->connect(clientId.c_str(), serverConfig.uid,
-                              serverConfig.secret)) {
+    if (pubSubClient->connect(clientId.c_str(), mqttServerConfig->uid,
+                              mqttServerConfig->secret)) {
       Serial.println("connected");
       subscribeTopics();
     } else {
@@ -78,17 +77,17 @@ void reconnect() {
   }
 }
 
-void initializeMqtt(ServerConfig _serverConfig,
+void initializeMqtt(ServerConfig* _serverConfig,
                     BearSSL::WiFiClientSecure* wifiClientSecure) {
-  serverConfig = _serverConfig;
+  mqttServerConfig = _serverConfig;
 
-  mqttTopic.startMix = {
-      String(serverConfig.uid) + String("/event/startmix/request"),
-      String(serverConfig.uid) + String("/event/startmix/response"),
+  mqttTopic.relayTopic1 = {
+      String(mqttServerConfig->uid) + String("/event/relay1/request"),
+      String(mqttServerConfig->uid) + String("/event/relay1/response"),
   };
 
-  pubSubClient =
-      new PubSubClient(serverConfig.host, 8883, callback, *wifiClientSecure);
+  pubSubClient = new PubSubClient(mqttServerConfig->host, 8883, callback,
+                                  *wifiClientSecure);
 
   Serial.println("Initializing MQTT");
 }
