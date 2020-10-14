@@ -6,7 +6,7 @@ import { Client } from '@gbaranski/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
-import { getCurrentUser, getIdToken, getFirebaseUser } from '@/services/firebase';
+import { getCurrentUser, getIdToken, getFirebaseUser, firebaseAuth } from '@/services/firebase';
 import { MqttClient } from 'mqtt';
 import defaultSettings from '../config/defaultSettings';
 import { connectMqtt } from './services/mqtt';
@@ -39,8 +39,15 @@ export async function getInitialState(): Promise<{
       }
 
       const token = await getIdToken();
-      if (!token) throw new Error('ID Token is invalid');
+      if(!token) throw new Error("Token is not defined");
       const mqtt = await connectMqtt(token, currentUser.uid);
+
+      firebaseAuth.onIdTokenChanged(async(user) => {
+        if(user) {
+          console.log("Updating token for MQTT");
+          mqtt.options.password = await user.getIdToken();
+        }
+      })
 
       return {
         mqtt,
