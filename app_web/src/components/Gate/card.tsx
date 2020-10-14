@@ -30,7 +30,7 @@ const GateCard: React.FC<GateCardProps> = ({ device }) => {
     >
       <Statistic
         title="Last open"
-        value={1602671111826}
+        value={device.data.lastOpenTimestamp}
         formatter={(value, config) => moment(value).fromNow()}
       />
     </Card>
