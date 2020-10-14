@@ -26,27 +26,38 @@ interface SendRequest {
   request: Device.Request;
   topic: Topic;
   mqttClient: MqttClient;
-  onSuccess: () => any;
 }
 
-export const sendRequest = ({ request, topic, mqttClient, onSuccess }: SendRequest) => {
+export const sendRequest = ({ request, topic, mqttClient }: SendRequest) => {
   mqttClient.subscribe(topic.response);
 
-  const createListener = () =>
-    mqttClient.once('message', (msgTopic, payload, packet) => {
-      console.log('Received message', { topic, payload, packet });
-      const responseRequest = JSON.parse(payload.toString()) as Device.Request;
+  return new Promise<void>((resolve, reject) => {
+    const createListener = () =>
+      mqttClient.once('message', (msgTopic, payload, packet) => {
+        console.log('Received message', { topic, payload, packet });
+        const responseRequest = JSON.parse(payload.toString()) as Device.Request;
 
-      if (request.correlationData === responseRequest.correlationData) {
-        console.log('That was response for previous request');
-        mqttClient.unsubscribe(topic.response);
-        onSuccess();
-        return;
-      }
-      createListener();
+        if (request.correlationData === responseRequest.correlationData) {
+          console.log('Received response for previous request');
+          mqttClient.unsubscribe(topic.response);
+          resolve();
+          return;
+        }
+        createListener();
+      });
+
+    mqttClient.once('error', (e) => {
+      console.log(new Error(`Rejected send message promise due to ${e.message}`));
+      reject(e.message);
     });
 
-  createListener();
+    createListener();
 
-  mqttClient.publish(topic.request, JSON.stringify(request));
+    mqttClient.publish(topic.request, JSON.stringify(request));
+
+    setTimeout(() => {
+      mqttClient.unsubscribe(topic.response);
+      reject(new Error('Timed out! Device might be offline.'));
+    }, 3000);
+  });
 };
