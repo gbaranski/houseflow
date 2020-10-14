@@ -10,7 +10,7 @@ export namespace Gate {
   };
 
   export const getOpenGateTopic = (uid: string): Topic => ({
-    request: `${uid}/event/gate/open/request`,
-    response: `${uid}/event/gate/open/response`,
+    request: `${uid}/event/relay1/request`,
+    response: `${uid}/event/relay1/response`,
   });
 }
