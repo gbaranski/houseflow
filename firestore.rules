@@ -5,8 +5,7 @@ service cloud.firestore {
     	return get(/databases/$(database)/documents/users/$(request.auth.uid)); 
 		}
     function isDeviceAllowed() {
-    return {"uid": resource.id, "notification": true} in getUser().data.devices 
-        || {"uid": resource.id, "notification": false} in getUser().data.devices;
+      return {"uid": resource.id,} in getUser().data.devices;
     }
 
   	match /users/{userId} {
