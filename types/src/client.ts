@@ -5,7 +5,6 @@ export namespace Client {
   export type UserRole = 'admin' | 'moderator' | 'user';
 
   export interface FirebaseUserDevice {
-    notification: boolean;
     name: string;
     uid: Uid;
   }
