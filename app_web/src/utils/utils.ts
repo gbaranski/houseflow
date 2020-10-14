@@ -44,30 +44,6 @@ export function capitalizeFirst(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function parseSeconds(seconds: number) {
-  return `${Math.floor((seconds / 60) % 60)}m ${seconds % 60}s`;
-}
-
-export function parseToTotalSeconds(dateTime: DateTime): number {
-  return dateTime.hour * 3600 + dateTime.minute * 60 + dateTime.second;
-}
-
-export function parseWaterBoolean(state: boolean): string {
-  return state ? 'Mixing!' : 'Idle';
-}
-
-export function parseAlarmclockBoolean(state: State): string {
-  return state ? '/ON' : '/OFF';
-}
-
-export function parseDateTime(alarmTime: DateTime): string {
-  return `${String(alarmTime.hour).padStart(2, '0')}:${String(alarmTime.minute).padStart(2, '0')}`;
-}
-
-export function getOnFinishTime(onFinish: DateTime): Moment {
-  return moment(`${onFinish.hour}:${onFinish.minute}:${onFinish.second}`, 'HH:mm:ss');
-}
-
 export const getRandomShortUid = () => {
   return Math.random().toString(16).substr(2, 8);
 };
