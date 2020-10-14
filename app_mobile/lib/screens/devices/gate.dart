@@ -1,5 +1,5 @@
 import 'package:homeflow/models/device.dart';
-import 'package:homeflow/models/devices/watermixer.dart';
+import 'package:homeflow/models/devices/gate.dart';
 import 'package:flutter/material.dart';
 import 'package:homeflow/screens/devices/deviceCard.dart';
 import 'package:homeflow/services/firebase.dart';
@@ -11,28 +11,28 @@ import 'dart:async';
 
 const tenMinutesInMillis = 1000 * 10 * 60;
 
-class Watermixer extends StatefulWidget {
+class Gate extends StatefulWidget {
   final FirebaseDevice firebaseDevice;
 
-  Watermixer({@required this.firebaseDevice});
+  Gate({@required this.firebaseDevice});
 
   @override
-  _WatermixerState createState() => _WatermixerState();
+  _GateState createState() => _GateState();
 }
 
-class _WatermixerState extends State<Watermixer> {
+class _GateState extends State<Gate> {
   Timer _countdownTimer;
-  String mixingTimeString = "";
+  String lastOpenString = "";
 
-  void startCounting(int finishMixTimestamp) {
+  void startCounting(int lastOpenTimestamp) {
     final callback = (Timer timer) {
       if (!this.mounted) {
         timer.cancel();
         return;
       }
       setState(() {
-        mixingTimeString =
-            durationToString(getEpochDiffDuration(finishMixTimestamp));
+        lastOpenString =
+            durationToString(getEpochDiffDuration(lastOpenTimestamp));
       });
     };
 
@@ -49,15 +49,14 @@ class _WatermixerState extends State<Watermixer> {
 
   @override
   Widget build(BuildContext context) {
-    final WatermixerData data =
-        WatermixerData.fromJson(widget.firebaseDevice.data);
-    startCounting(data.finishMixTimestamp);
+    final GateData data = GateData.fromJson(widget.firebaseDevice.data);
+    startCounting(data.lastOpenTimestamp);
 
-    final startMixing = () async {
+    final openGate = () async {
       print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
       final String uid = widget.firebaseDevice.uid;
-      final DeviceTopic topic = WatermixerData.getStartMixingTopic(uid);
 
+      final DeviceTopic topic = GateData.getOpenGateTopic(uid);
       bool hasCompleted = false;
       final Future req = MqttService.sendMessage(
           topic: topic, qos: MqttQos.atMostOnce, data: null);
@@ -65,13 +64,12 @@ class _WatermixerState extends State<Watermixer> {
       req.whenComplete(() {
         hasCompleted = true;
         const snackbar = SnackBar(
-          content: Text("Success mixing water!"),
+          content: Text("Success opening gate!"),
           duration: Duration(milliseconds: 500),
         );
         Scaffold.of(context).showSnackBar(snackbar);
-        final WatermixerData newDeviceData = WatermixerData(
-            finishMixTimestamp:
-                DateTime.now().millisecondsSinceEpoch + tenMinutesInMillis);
+        final GateData newDeviceData =
+            GateData(lastOpenTimestamp: DateTime.now().millisecondsSinceEpoch);
         FirebaseService.updateFirebaseDeviceData(uid, newDeviceData.toJson());
       });
       Future.delayed(Duration(seconds: 2), () {
@@ -86,7 +84,7 @@ class _WatermixerState extends State<Watermixer> {
       SizedBox(
         height: 5,
       ),
-      Text("Watermixer", style: TextStyle(fontSize: 24)),
+      Text("Gate", style: TextStyle(fontSize: 24)),
       Divider(
         indent: 20,
         endIndent: 20,
@@ -95,27 +93,13 @@ class _WatermixerState extends State<Watermixer> {
       Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
         Column(children: [
           Text(
-            "Mixing state",
+            "Last time open",
             style: TextStyle(
                 fontWeight: FontWeight.w300,
                 fontSize: 14,
                 color: Colors.black.withOpacity(0.6)),
           ),
-          Text(
-              data.finishMixTimestamp > DateTime.now().millisecondsSinceEpoch
-                  ? "Mixing!"
-                  : "Idle",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
-        ]),
-        Column(children: [
-          Text(
-            "Mixing time",
-            style: TextStyle(
-                fontWeight: FontWeight.w300,
-                fontSize: 14,
-                color: Colors.black.withOpacity(0.6)),
-          ),
-          Text(mixingTimeString,
+          Text(lastOpenString,
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
         ]),
       ]),
@@ -130,9 +114,9 @@ class _WatermixerState extends State<Watermixer> {
                     color: LayoutBlueColor1.withAlpha(100), width: 0.5),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
-                child: const Text('START MIXING'),
+                child: const Text('OPEN GATE'),
                 onPressed: () {
-                  startMixing();
+                  openGate();
                 },
               ),
             ],

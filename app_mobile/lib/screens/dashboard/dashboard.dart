@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:homeflow/models/device.dart';
+import 'package:homeflow/screens/devices/gate.dart';
 import 'package:homeflow/screens/devices/inactive.dart';
 import 'package:homeflow/services/auth.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,12 @@ class _DashboardState extends State<Dashboard> {
               );
             }
             break;
+          case 'GATE':
+            {
+              return Gate(
+                firebaseDevice: firebaseDevice,
+              );
+            }
           default:
             {
               return const Text("Some error occured");
