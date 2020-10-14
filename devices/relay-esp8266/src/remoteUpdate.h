@@ -62,7 +62,7 @@ void checkHttpUpdates(ServerConfig* serverConfig,
 void startArduinoOta(ServerConfig* serverConfig) {
   ArduinoOTA.setHostname(
       String(String("ESP8266_") + String(serverConfig->deviceType)).c_str());
-  ArduinoOTA.setPassword(serverConfig->uid);
+  ArduinoOTA.setPassword(serverConfig->secret);
 
   ArduinoOTA.onStart([]() { Serial.println("Start"); });
   ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
