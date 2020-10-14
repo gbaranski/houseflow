@@ -1,7 +1,8 @@
 import { Alarmclock, Watermixer } from '.';
-import { DateTime, State, Uid } from './misc';
+import { Gate } from './gate';
+import { Uid } from './misc';
 
-export type AnyDeviceData = Alarmclock.Data | Watermixer.Data;
+export type AnyDeviceData = Alarmclock.Data | Watermixer.Data | Gate.Data;
 
 export namespace Device {
   export type DeviceType = 'ALARMCLOCK' | 'WATERMIXER' | 'GATE' | 'GARAGE';
