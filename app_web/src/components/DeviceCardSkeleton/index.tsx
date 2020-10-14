@@ -4,7 +4,7 @@ import { Link } from 'umi';
 import { EnterOutlined } from '@ant-design/icons';
 import { capitalizeFirst } from '@/utils/utils';
 
-export default (props: { name: string }) => {
+export default (props: { name: string, description: string }) => {
   return (
     <Card
       title={capitalizeFirst(props.name.toLowerCase())}
@@ -16,7 +16,7 @@ export default (props: { name: string }) => {
         </Link>,
       ]}
     >
-      <Empty description="Device is offline" />
+      <Empty description={props.description} />
     </Card>
   );
 };
