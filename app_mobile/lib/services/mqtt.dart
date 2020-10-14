@@ -74,7 +74,7 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
   }
 
   static Future sendMessage(
-      {RequestTopic topic, MqttQos qos, Map<String, dynamic> data}) async {
+      {DeviceTopic topic, MqttQos qos, Map<String, dynamic> data}) async {
     final randomShortString = getRandomShortString();
     final completer = Completer();
 
