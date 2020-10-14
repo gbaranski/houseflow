@@ -3,7 +3,7 @@ import 'firebase/firestore';
 import 'firebase/analytics';
 import 'firebase/functions';
 import 'firebase/auth';
-import { Client, Device } from '@gbaranski/types';
+import { AnyDeviceData, Client, Device } from '@gbaranski/types';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDSUqpk5HAU4dTw9cNbIcvhz1lb4z9W4mQ',
@@ -86,8 +86,8 @@ export function getCurrentUser(): Promise<User | undefined> {
   });
 }
 
-export async function updateDevice(device: Device.FirebaseDevice) {
-  await deviceCollection.doc(device.uid).set(device);
+export async function updateDeviceData(uid: string, deviceData: AnyDeviceData) {
+  await deviceCollection.doc(uid).update({ data: deviceData });
 }
 
 export async function addNewDevice(firebaseDevice: Device.FirebaseDevice): Promise<void> {
