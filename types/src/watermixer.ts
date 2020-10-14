@@ -10,7 +10,7 @@ export namespace Watermixer {
   };
 
   export const getStartMixingTopic = (uid: string): Topic => ({
-    request: `${uid}/event/startmix/request`,
-    response: `${uid}/event/startmix/response`,
+    request: `${uid}/event/relay1/request`,
+    response: `${uid}/event/relay1/response`,
   });
 }
