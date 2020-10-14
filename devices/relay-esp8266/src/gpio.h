@@ -2,14 +2,24 @@
 
 #include <Arduino.h>
 
-#include "config.h"
+int8_t relayPin;
 
-boolean mixingStarted = false;
-unsigned long lastMixingMillis = 0;
+boolean relayTriggered = false;
+unsigned long lastRelayTriggeredMillis = 0;
 
-void startMixing() {
-  Serial.println("Starting mix");
-  digitalWrite(RELAY_PIN, 0);
-  mixingStarted = true;
-  lastMixingMillis = millis();
+void setupGpio() {
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, HIGH);
+}
+
+void onTimeoutElapsed() {
+  relayTriggered = false;
+  digitalWrite(relayPin, HIGH);
+}
+
+void triggerRelay() {
+  Serial.println("Triggering relay");
+  digitalWrite(relayPin, LOW);
+  relayTriggered = true;
+  lastRelayTriggeredMillis = millis();
 }
