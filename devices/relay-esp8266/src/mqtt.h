@@ -9,7 +9,7 @@
 
 PubSubClient* pubSubClient;
 
-ServerConfig* mqttServerConfig;
+ServerConfig mqttServerConfig;
 
 long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
@@ -55,38 +55,32 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
 }
 
-void reconnect() {
-  // Loop until we're reconnected
-  while (!pubSubClient->connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    String clientId = "device_";
-    clientId += String(random(0xffff), HEX);
+boolean reconnect() {
+  Serial.println("Attempting MQTT connection...");
+  String clientId = "device_";
+  clientId += String(random(0xffff), HEX);
 
-    if (pubSubClient->connect(clientId.c_str(), mqttServerConfig->uid,
-                              mqttServerConfig->secret)) {
-      Serial.println("connected");
-      subscribeTopics();
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(pubSubClient->state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
+  if (pubSubClient->connect(clientId.c_str(), mqttServerConfig.uid,
+                            mqttServerConfig.secret)) {
+    Serial.println("Success connecting to MQTT");
+    subscribeTopics();
+  } else {
+    Serial.print("failed, rc=");
+    Serial.println(pubSubClient->state());
   }
+  return pubSubClient->connected();
 }
 
-void initializeMqtt(ServerConfig* _serverConfig,
+void initializeMqtt(ServerConfig _serverConfig,
                     BearSSL::WiFiClientSecure* wifiClientSecure) {
   mqttServerConfig = _serverConfig;
 
   mqttTopic.relayTopic1 = {
-      String(mqttServerConfig->uid) + String("/event/relay1/request"),
-      String(mqttServerConfig->uid) + String("/event/relay1/response"),
+      String(mqttServerConfig.uid) + String("/event/relay1/request"),
+      String(mqttServerConfig.uid) + String("/event/relay1/response"),
   };
 
-  pubSubClient = new PubSubClient(mqttServerConfig->host, 8883, callback,
+  pubSubClient = new PubSubClient(mqttServerConfig.host, 8883, callback,
                                   *wifiClientSecure);
 
   Serial.println("Initializing MQTT");

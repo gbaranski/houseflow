@@ -5,6 +5,7 @@
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
+#include <time.h>
 
 #include "config.h"
 #include "gpio.h"
@@ -16,10 +17,7 @@ BearSSL::WiFiClientSecure client;
 BearSSL::X509List x509(letsencryptauthorityx3_der,
                        letsencryptauthorityx3_der_len);
 
-void fetchCertAuthority() {
-  client.setTrustAnchors(&x509);
-  reconnect();
-}
+long lastReconnectAttempt = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -42,30 +40,37 @@ void setup() {
   wifiManager.autoConnect();
   Serial.println("Connected to WiFi");
 
-  configTime(3 * 3600, 0, "pool.ntp.org");
+  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+  Serial.println("\nWaiting for time");
+  while (!time(nullptr)) {
+    Serial.print(".");
+    delay(1000);
+  }
+  time(nullptr);
+  Serial.println("Got time!");
+  client.setTrustAnchors(&x509);
 
   startArduinoOta(&serverConfig);
-  checkHttpUpdates(&serverConfig, &client);
-  initializeMqtt(&serverConfig, &client);
-  fetchCertAuthority();
+  initializeMqtt(serverConfig, &client);
 }
 
 unsigned long lastTimePrintedHeap = 0;
 
 void loop() {
-  if (WiFi.status() == WL_CONNECTED) {
-    if (!pubSubClient->connected()) {
-      fetchCertAuthority();
-    } else {
-      pubSubClient->loop();
-    }
-  }
-
+  arduinoOtaLoop();
   unsigned long now = millis();
   if (relayTriggered)
     if (now - lastRelayTriggeredMillis > 1000) onTimeoutElapsed();
 
-  arduinoOtaLoop();
+  if (!pubSubClient->connected()) {
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      if (reconnect()) lastReconnectAttempt = 0;
+    }
+  } else {
+    pubSubClient->loop();
+  }
+
   if (now - lastTimePrintedHeap > 5000) {
     Serial.printf("Free heap: %u\n", ESP.getFreeHeap());
     lastTimePrintedHeap = millis();
