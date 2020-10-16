@@ -13,12 +13,10 @@ import (
 )
 
 func handleConnected(e *types.ConnectedEvent, client *services.FirebaseClient) {
-	log.Printf("Client connected: %s\n", e.ClientID)
 	services.UpdateDeviceStatus(context.Background(), client, e.Username, true)
 }
 
 func handleDisconnected(e *types.DisconnectedEvent, client *services.FirebaseClient) {
-	log.Printf("Client disconnected: %s\n", e.ClientID)
 	services.UpdateDeviceStatus(context.Background(), client, e.Username, false)
 }
 
@@ -37,10 +35,7 @@ func OnEvent(w http.ResponseWriter, req *http.Request, client *services.Firebase
 		return
 	}
 
-	log.Printf("Received request at /event, action: %s\n", e.Action)
-
 	if strings.HasPrefix(e.ClientID, "device_") == false {
-		log.Printf("Cancelling %s because it isn't device", e.ClientID)
 		return
 	}
 
