@@ -3,6 +3,7 @@ services:
   emqx:
     image: 'emqx/emqx'
     container_name: 'emqx'
+    restart: 'unless-stopped'
     env_file:
       - .env
     environment:
