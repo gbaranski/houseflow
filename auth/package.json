@@ -25,7 +25,7 @@
     "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "@houseflow/types": "^4.0.43",
+    "@houseflow/types": "^1.0.0",
     "@types/cors": "^2.8.7",
     "@types/express": "^4.17.8",
     "@types/morgan": "^1.9.1",

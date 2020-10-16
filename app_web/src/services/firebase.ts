@@ -6,14 +6,14 @@ import 'firebase/auth';
 import { AnyDeviceData, Client, Device } from '@houseflow/types';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyDSUqpk5HAU4dTw9cNbIcvhz1lb4z9W4mQ',
+  apiKey: 'AIzaSyBmMGXmxzcPLQMFm6BIPXcKg7iqcUJIiks',
   authDomain: 'houseflow-ece2e.firebaseapp.com',
   databaseURL: 'https://houseflow-ece2e.firebaseio.com',
   projectId: 'houseflow-ece2e',
   storageBucket: 'houseflow-ece2e.appspot.com',
-  messagingSenderId: '123295801335',
-  appId: '1:123295801335:web:b8d0cf2c304f7db4d258f2',
-  measurementId: 'G-WWKC11TVQ6',
+  messagingSenderId: '537708599015',
+  appId: '1:537708599015:web:62373ac534686c48347442',
+  measurementId: 'G-KDBWTHE717',
 };
 firebase.initializeApp(firebaseConfig);
 firebase.analytics();
