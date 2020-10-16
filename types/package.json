@@ -1,7 +1,7 @@
 {
   "name": "@homeflow/types",
   "version": "1.0.0",
-  "description": "Types for homeflow app",
+  "description": "Types for houseflow app",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -13,12 +13,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gbaranski/homeflow.git"
+    "url": "git+https://github.com/gbaranski/houseflow.git"
   },
   "author": "gbaranski",
   "license": "MIT",
   "devDependencies": {
     "typescript": "^3.9.5"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "bugs": {
+    "url": "https://github.com/gbaranski/houseflow/issues"
+  },
+  "homepage": "https://github.com/gbaranski/houseflow#readme",
+  "keywords": [
+    "houseflow"
+  ]
 }
