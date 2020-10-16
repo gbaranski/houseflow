@@ -60,6 +60,7 @@ class _HomeState extends State<Home> {
       builder: (BuildContext context, authModel, child) {
         return Scaffold(
             appBar: AppBar(
+                elevation: 25,
                 shape: const RoundedRectangleBorder(
                     borderRadius: const BorderRadius.vertical(
                         bottom: const Radius.circular(4))),
@@ -76,13 +77,15 @@ class _HomeState extends State<Home> {
                       imageUrl: authModel.currentUser.photoURL,
                     ),
                   ),
+                  SizedBox(
+                    width: 10,
+                  ),
                 ],
                 titleSpacing: 0,
                 title: Text("Houseflow"),
                 leading: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: CircleAvatar(
-                    radius: 2,
+                  child: const CircleAvatar(
                     backgroundColor: Colors.transparent,
                     backgroundImage: AssetImage(LOGO_DIR_192),
                   ),
