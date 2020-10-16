@@ -1,5 +1,5 @@
 import 'package:houseflow/models/device.dart';
-import 'package:houseflow/models/devices/watermixer.dart';
+import 'package:houseflow/models/devices/relay.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/screens/devices/deviceCard.dart';
 import 'package:houseflow/services/firebase.dart';
@@ -22,17 +22,17 @@ class Watermixer extends StatefulWidget {
 
 class _WatermixerState extends State<Watermixer> {
   Timer _countdownTimer;
-  String mixingTimeString = "";
+  String lastSignalString = "";
 
-  void startCounting(int finishMixTimestamp) {
+  void startCounting(int lastSignalTimestamp) {
     final callback = (Timer timer) {
       if (!this.mounted) {
         timer.cancel();
         return;
       }
       setState(() {
-        mixingTimeString =
-            durationToString(getEpochDiffDuration(finishMixTimestamp));
+        lastSignalString =
+            durationToString(getEpochDiffDuration(lastSignalTimestamp));
       });
     };
 
@@ -49,14 +49,13 @@ class _WatermixerState extends State<Watermixer> {
 
   @override
   Widget build(BuildContext context) {
-    final WatermixerData data =
-        WatermixerData.fromJson(widget.firebaseDevice.data);
-    startCounting(data.finishMixTimestamp);
+    final RelayData data = RelayData.fromJson(widget.firebaseDevice.data);
+    startCounting(data.lastSignalTimestamp);
 
     final startMixing = () async {
       print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
       final String uid = widget.firebaseDevice.uid;
-      final DeviceTopic topic = WatermixerData.getStartMixingTopic(uid);
+      final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
 
       bool hasCompleted = false;
       final Future req = MqttService.sendMessage(
@@ -69,8 +68,8 @@ class _WatermixerState extends State<Watermixer> {
           duration: Duration(milliseconds: 500),
         );
         Scaffold.of(context).showSnackBar(snackbar);
-        final WatermixerData newDeviceData = WatermixerData(
-            finishMixTimestamp:
+        final RelayData newDeviceData = RelayData(
+            lastSignalTimestamp:
                 DateTime.now().millisecondsSinceEpoch + tenMinutesInMillis);
         FirebaseService.updateFirebaseDeviceData(uid, newDeviceData.toJson());
       });
@@ -102,7 +101,7 @@ class _WatermixerState extends State<Watermixer> {
                 color: Colors.black.withOpacity(0.6)),
           ),
           Text(
-              data.finishMixTimestamp > DateTime.now().millisecondsSinceEpoch
+              data.lastSignalTimestamp > DateTime.now().millisecondsSinceEpoch
                   ? "Mixing!"
                   : "Idle",
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
@@ -115,7 +114,7 @@ class _WatermixerState extends State<Watermixer> {
                 fontSize: 14,
                 color: Colors.black.withOpacity(0.6)),
           ),
-          Text(mixingTimeString,
+          Text(lastSignalString,
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
         ]),
       ]),

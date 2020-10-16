@@ -1,6 +1,6 @@
 import 'package:houseflow/models/device.dart';
-import 'package:houseflow/models/devices/gate.dart';
 import 'package:flutter/material.dart';
+import 'package:houseflow/models/devices/relay.dart';
 import 'package:houseflow/screens/devices/deviceCard.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:mqtt_client/mqtt_client.dart';
@@ -8,8 +8,6 @@ import 'package:houseflow/services/mqtt.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:houseflow/shared/constants.dart';
 import 'dart:async';
-
-const tenMinutesInMillis = 1000 * 10 * 60;
 
 class Gate extends StatefulWidget {
   final FirebaseDevice firebaseDevice;
@@ -22,17 +20,17 @@ class Gate extends StatefulWidget {
 
 class _GateState extends State<Gate> {
   Timer _countdownTimer;
-  String lastOpenString = "";
+  String lastSignalString = "";
 
-  void startCounting(int lastOpenTimestamp) {
+  void startCounting(int lastSignalTimestamp) {
     final callback = (Timer timer) {
       if (!this.mounted) {
         timer.cancel();
         return;
       }
       setState(() {
-        lastOpenString =
-            durationToString(getEpochDiffDuration(lastOpenTimestamp));
+        lastSignalString =
+            durationToString(getEpochDiffDuration(lastSignalTimestamp));
       });
     };
 
@@ -49,14 +47,14 @@ class _GateState extends State<Gate> {
 
   @override
   Widget build(BuildContext context) {
-    final GateData data = GateData.fromJson(widget.firebaseDevice.data);
-    startCounting(data.lastOpenTimestamp);
+    final RelayData data = RelayData.fromJson(widget.firebaseDevice.data);
+    startCounting(data.lastSignalTimestamp);
 
     final openGate = () async {
       print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
       final String uid = widget.firebaseDevice.uid;
 
-      final DeviceTopic topic = GateData.getOpenGateTopic(uid);
+      final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
       bool hasCompleted = false;
       final Future req = MqttService.sendMessage(
           topic: topic, qos: MqttQos.atMostOnce, data: null);
@@ -68,8 +66,8 @@ class _GateState extends State<Gate> {
           duration: Duration(milliseconds: 500),
         );
         Scaffold.of(context).showSnackBar(snackbar);
-        final GateData newDeviceData =
-            GateData(lastOpenTimestamp: DateTime.now().millisecondsSinceEpoch);
+        final RelayData newDeviceData = RelayData(
+            lastSignalTimestamp: DateTime.now().millisecondsSinceEpoch);
         FirebaseService.updateFirebaseDeviceData(uid, newDeviceData.toJson());
       });
       Future.delayed(Duration(seconds: 2), () {
@@ -99,7 +97,7 @@ class _GateState extends State<Gate> {
                 fontSize: 14,
                 color: Colors.black.withOpacity(0.6)),
           ),
-          Text(lastOpenString,
+          Text(lastSignalString,
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
         ]),
       ]),
