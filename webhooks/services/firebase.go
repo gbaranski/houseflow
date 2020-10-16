@@ -37,5 +37,5 @@ func UpdateDeviceStatus(ctx context.Context, client *FirebaseClient, uid string,
 		log.Printf("Error ocurred when updating status %s\n", err)
 		return
 	}
-	log.Printf("Success updating device %s status\n", uid)
+	log.Printf("Success updating device %s status to %t \n", uid, status)
 }
