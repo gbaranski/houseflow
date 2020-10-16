@@ -1,7 +1,7 @@
 {
-  "name": "@gbaranski/types",
-  "version": "4.0.51",
-  "description": "Types for controlhome app and website",
+  "name": "@homeflow/types",
+  "version": "1.0.0",
+  "description": "Types for homeflow app",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gbaranski/Control-Home.git"
+    "url": "git+https://github.com/gbaranski/homeflow.git"
   },
   "author": "gbaranski",
   "license": "MIT",

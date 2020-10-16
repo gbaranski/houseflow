@@ -1,15 +1,15 @@
 import { Topic } from '.';
 
-export namespace Gate {
+export namespace Relay {
   export interface Data {
-    lastOpenTimestamp: number;
+    lastSignalTimestamp: number;
   }
 
   export const SAMPLE: Data = {
-    lastOpenTimestamp: 0,
+    lastSignalTimestamp: 0,
   };
 
-  export const getOpenGateTopic = (uid: string): Topic => ({
+  export const getSendSignalTopic = (uid: string): Topic => ({
     request: `${uid}/event/relay1/request`,
     response: `${uid}/event/relay1/response`,
   });

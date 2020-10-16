@@ -1,8 +1,6 @@
-import { Alarmclock, Watermixer } from '.';
-import { Gate } from './gate';
-import { Uid } from './misc';
+import { Alarmclock, Relay } from '.';
 
-export type AnyDeviceData = Alarmclock.Data | Watermixer.Data | Gate.Data;
+export type AnyDeviceData = Alarmclock.Data | Relay.Data;
 
 export namespace Device {
   export type DeviceType = 'ALARMCLOCK' | 'WATERMIXER' | 'GATE' | 'GARAGE';
@@ -14,10 +12,10 @@ export namespace Device {
   export interface FirebaseDevice<
     DeviceData extends
       | Alarmclock.Data
-      | Watermixer.Data
+      | Relay.Data
       | AnyDeviceData = AnyDeviceData
   > {
-    uid: Uid;
+    uid: string;
     secret?: string;
     type: DeviceType;
 
