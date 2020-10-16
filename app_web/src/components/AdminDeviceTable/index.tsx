@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Table, Popconfirm } from 'antd';
 import { deleteDevice } from '@/services/firebase';
-import { Device } from '@gbaranski/types';
+import { Device } from '@houseflow/types';
 import { useModel } from 'umi';
 
 export default () => {

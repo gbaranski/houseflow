@@ -1,5 +1,5 @@
 // src/access.ts
-import { Client } from '@gbaranski/types';
+import { Client } from '@houseflow/types';
 
 export default function access(initialState: { firebaseUser?: Client.FirebaseUser }) {
   const { firebaseUser } = initialState || {};

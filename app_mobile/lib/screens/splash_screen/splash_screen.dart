@@ -1,4 +1,4 @@
-import 'package:homeflow/shared/constants.dart';
+import 'package:houseflow/shared/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -24,7 +24,7 @@ class SplashScreen extends StatelessWidget {
               height: 10,
             ),
             const Text(
-              "Homeflow",
+              "Houseflow",
               style: const TextStyle(
                 fontSize: 32,
               ),

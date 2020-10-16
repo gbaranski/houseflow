@@ -1,6 +1,6 @@
 {
-  "name": "Homeflow",
-  "short_name": "Homeflow",
+  "name": "Houseflow",
+  "short_name": "Houseflow",
   "display": "standalone",
   "start_url": "./?utm_source=homescreen",
   "theme_color": "#002140",

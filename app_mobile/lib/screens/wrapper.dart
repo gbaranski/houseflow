@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homeflow/models/user.dart';
-import 'package:homeflow/screens/auth/init_user.dart';
-import 'package:homeflow/screens/auth/sign_in.dart';
-import 'package:homeflow/screens/home/home.dart';
-import 'package:homeflow/screens/splash_screen/splash_screen.dart';
-import 'package:homeflow/services/auth.dart';
+import 'package:houseflow/models/user.dart';
+import 'package:houseflow/screens/auth/init_user.dart';
+import 'package:houseflow/screens/auth/sign_in.dart';
+import 'package:houseflow/screens/home/home.dart';
+import 'package:houseflow/screens/splash_screen/splash_screen.dart';
+import 'package:houseflow/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
-import 'package:homeflow/services/firebase.dart';
-import 'package:homeflow/services/mqtt.dart';
+import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/services/mqtt.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:provider/provider.dart';
 

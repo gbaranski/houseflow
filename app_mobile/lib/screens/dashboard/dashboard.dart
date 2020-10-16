@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homeflow/models/device.dart';
-import 'package:homeflow/screens/devices/gate.dart';
-import 'package:homeflow/screens/devices/inactive.dart';
-import 'package:homeflow/services/auth.dart';
+import 'package:houseflow/models/device.dart';
+import 'package:houseflow/screens/devices/gate.dart';
+import 'package:houseflow/screens/devices/inactive.dart';
+import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
-import 'package:homeflow/services/firebase.dart';
+import 'package:houseflow/services/firebase.dart';
 import 'package:provider/provider.dart';
-import 'package:homeflow/screens/devices/watermixer.dart';
+import 'package:houseflow/screens/devices/watermixer.dart';
 
 class Dashboard extends StatefulWidget {
   @override

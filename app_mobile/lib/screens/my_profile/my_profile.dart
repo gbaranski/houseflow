@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
-import 'package:homeflow/models/user.dart';
-import 'package:homeflow/shared/constants.dart';
-import 'package:homeflow/shared/profile_image.dart';
+import 'package:houseflow/models/user.dart';
+import 'package:houseflow/shared/constants.dart';
+import 'package:houseflow/shared/profile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

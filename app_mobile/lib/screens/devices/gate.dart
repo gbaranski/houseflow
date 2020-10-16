@@ -1,12 +1,12 @@
-import 'package:homeflow/models/device.dart';
-import 'package:homeflow/models/devices/gate.dart';
+import 'package:houseflow/models/device.dart';
+import 'package:houseflow/models/devices/gate.dart';
 import 'package:flutter/material.dart';
-import 'package:homeflow/screens/devices/deviceCard.dart';
-import 'package:homeflow/services/firebase.dart';
+import 'package:houseflow/screens/devices/deviceCard.dart';
+import 'package:houseflow/services/firebase.dart';
 import 'package:mqtt_client/mqtt_client.dart';
-import 'package:homeflow/services/mqtt.dart';
-import 'package:homeflow/utils/misc.dart';
-import 'package:homeflow/shared/constants.dart';
+import 'package:houseflow/services/mqtt.dart';
+import 'package:houseflow/utils/misc.dart';
+import 'package:houseflow/shared/constants.dart';
 import 'dart:async';
 
 const tenMinutesInMillis = 1000 * 10 * 60;

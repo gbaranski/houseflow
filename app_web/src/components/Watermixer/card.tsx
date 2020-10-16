@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Statistic, Row, Col, Tooltip } from 'antd';
 import { CoffeeOutlined } from '@ant-design/icons';
-import { Device, Watermixer } from '@gbaranski/types';
+import { Device, Watermixer } from '@houseflow/types';
 import { useModel } from 'umi';
 import PageLoading from '../PageLoading';
 

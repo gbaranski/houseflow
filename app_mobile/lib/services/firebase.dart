@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homeflow/models/device.dart';
-import 'package:homeflow/models/user.dart';
+import 'package:houseflow/models/device.dart';
+import 'package:houseflow/models/user.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;

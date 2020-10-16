@@ -1,9 +1,9 @@
-import 'package:homeflow/models/device.dart';
-import 'package:homeflow/screens/devices/deviceCard.dart';
-import 'package:homeflow/utils/misc.dart';
-import 'package:homeflow/shared/help_screen.dart';
+import 'package:houseflow/models/device.dart';
+import 'package:houseflow/screens/devices/deviceCard.dart';
+import 'package:houseflow/utils/misc.dart';
+import 'package:houseflow/shared/help_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:homeflow/shared/constants.dart';
+import 'package:houseflow/shared/constants.dart';
 
 class InactiveDevice extends StatelessWidget {
   final FirebaseDevice firebaseDevice;

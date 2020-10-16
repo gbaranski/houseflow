@@ -3,14 +3,14 @@ import 'firebase/firestore';
 import 'firebase/analytics';
 import 'firebase/functions';
 import 'firebase/auth';
-import { AnyDeviceData, Client, Device } from '@gbaranski/types';
+import { AnyDeviceData, Client, Device } from '@houseflow/types';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDSUqpk5HAU4dTw9cNbIcvhz1lb4z9W4mQ',
-  authDomain: 'homeflow-ece2e.firebaseapp.com',
-  databaseURL: 'https://homeflow-ece2e.firebaseio.com',
-  projectId: 'homeflow-ece2e',
-  storageBucket: 'homeflow-ece2e.appspot.com',
+  authDomain: 'houseflow-ece2e.firebaseapp.com',
+  databaseURL: 'https://houseflow-ece2e.firebaseio.com',
+  projectId: 'houseflow-ece2e',
+  storageBucket: 'houseflow-ece2e.appspot.com',
   messagingSenderId: '123295801335',
   appId: '1:123295801335:web:b8d0cf2c304f7db4d258f2',
   measurementId: 'G-WWKC11TVQ6',

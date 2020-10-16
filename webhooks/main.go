@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	server "github.com/gbaranski/homeflow/webhooks/server"
-	services "github.com/gbaranski/homeflow/webhooks/services"
+	server "github.com/gbaranski/houseflow/webhooks/server"
+	services "github.com/gbaranski/houseflow/webhooks/services"
 )
 
 func main() {

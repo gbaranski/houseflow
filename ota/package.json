@@ -1,5 +1,5 @@
 {
-  "name": "homeflow-ota",
+  "name": "houseflow-ota",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gbaranski/homeflow.git"
+    "url": "git+https://github.com/gbaranski/houseflow.git"
   },
   "author": "gbaranski",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gbaranski/homeflow/issues"
+    "url": "https://github.com/gbaranski/houseflow/issues"
   },
-  "homepage": "https://github.com/gbaranski/homeflow#readme",
+  "homepage": "https://github.com/gbaranski/houseflow#readme",
   "dependencies": {
     "chalk": "^4.1.0",
     "cors": "^2.8.5",
@@ -27,7 +27,7 @@
     "morgan": "^1.10.0"
   },
   "devDependencies": {
-    "@gbaranski/types": "^4.0.43",
+    "@houseflow/types": "^4.0.43",
     "@types/cors": "^2.8.7",
     "@types/express": "^4.17.8",
     "@types/fs-extra": "^9.0.1",

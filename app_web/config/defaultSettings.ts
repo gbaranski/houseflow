@@ -13,7 +13,7 @@ export default {
   menu: {
     locale: true,
   },
-  title: 'Homeflow',
+  title: 'Houseflow',
   pwa: false,
   iconfontUrl: '',
 } as LayoutSettings & {

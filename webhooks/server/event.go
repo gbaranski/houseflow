@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	services "github.com/gbaranski/homeflow/webhooks/services"
-	types "github.com/gbaranski/homeflow/webhooks/types"
-	utils "github.com/gbaranski/homeflow/webhooks/utils"
+	services "github.com/gbaranski/houseflow/webhooks/services"
+	types "github.com/gbaranski/houseflow/webhooks/types"
+	utils "github.com/gbaranski/houseflow/webhooks/utils"
 )
 
 func handleConnected(e *types.ConnectedEvent, client *services.FirebaseClient) {

@@ -1,4 +1,4 @@
-# Homeflow
+# Houseflow
 
 ![status](https://img.shields.io/badge/status-OK-GREEN)
 [![build-status](https://img.shields.io/github/workflow/status/gbaranski/Control-Home/Docker)](https://github.com/gbaranski/Control-Home/actions)
@@ -6,7 +6,7 @@
 [![server-status](https://img.shields.io/website?down_color=red&down_message=down&label=server&up_color=gree&up_message=up&url=https%3A%2F%2Fapi.gbaranski.com)](https://api.gbaranski.com)
 ![github-stars](https://img.shields.io/github/stars/gbaranski/Control-Home?style=social)
 
-Set up, manage, and control your Homeflow devices, that includes connected home products like lights, cameras, thermostats, relays and more – all from the Homeflow app.
+Set up, manage, and control your Houseflow devices, that includes connected home products like lights, cameras, thermostats, relays and more – all from the Houseflow app.
 
 The documentation is divided into several sections:
 
@@ -25,7 +25,7 @@ The documentation is divided into several sections:
 
 ### Backend infrastructure
 
-Server and infrastructure recently had a huge refactor. It will soon move from monolythic to microservices, [here](https://github.com/gbaranski/homeflow/issues/78)
+Server and infrastructure recently had a huge refactor. It will soon move from monolythic to microservices, [here](https://github.com/gbaranski//issues/78)
 
 1. [MQTT Broker](#mqtt-broker)
 2. [Device service](#device-service)
@@ -52,13 +52,13 @@ Handle updates over the air for embedded devices
 
 Web app made using [React](https://github.com/facebook/react) front-end framework, whole code is in Typescript. App has moved from [Material-UI](https://github.com/mui-org/material-ui), to [antd](https://github.com/ant-design/ant-design)
 
-<img src="https://github.com/gbaranski/Control-Home/blob/master/docs/web_app.png" width="450">
+<img src="https://github.com/gbaranski/houseflow/blob/master/docs/web_app.png" width="450">
 
 ### Mobile App
 
 Mobile app made using [Flutter](https://github.com/flutter/flutter), I picked it over React Native.
 
-<img src="https://github.com/gbaranski/homeflow/blob/master/docs/mobile_app.png" width="150">
+<img src="https://github.com/gbaranski/houseflow/blob/master/docs/mobile_app.png" width="150">
 
 ### Embedded devices
 
@@ -72,7 +72,7 @@ Devices I made
 
 #### Alarmclock
 
-<img src="https://github.com/gbaranski/homeflow/blob/master/docs/alarmclock.jpg" width="150">
+<img src="https://github.com/gbaranski/houseflow/blob/master/docs/alarmclock.jpg" width="150">
 
 ### Firestore database
 

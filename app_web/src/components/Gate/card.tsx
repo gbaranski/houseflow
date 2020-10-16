@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Statistic, Tooltip } from 'antd';
 import { CarOutlined } from '@ant-design/icons';
-import { Device, Gate } from '@gbaranski/types';
+import { Device, Gate } from '@houseflow/types';
 import { useModel } from 'umi';
 import PageLoading from '../PageLoading';
 import moment from 'moment';

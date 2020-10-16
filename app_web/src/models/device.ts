@@ -1,5 +1,5 @@
 import { useCallback, useReducer } from 'react';
-import { Client, Device } from '@gbaranski/types';
+import { Client, Device } from '@houseflow/types';
 import { subscribeAllowedDevices } from '@/services/firebase';
 
 type FirebaseDevicesAction = { type: 'UPDATE' | 'DELETE'; firebaseDevice: Device.FirebaseDevice };

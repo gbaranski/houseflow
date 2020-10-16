@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homeflow/services/firebase.dart';
+import 'package:houseflow/services/firebase.dart';
 
 class InitUser extends StatefulWidget {
   @override

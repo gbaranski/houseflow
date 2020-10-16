@@ -1,7 +1,7 @@
 import { updateDeviceData } from '@/services/firebase';
 import { sendRequest } from '@/services/mqtt';
 import { getRandomShortUid } from '@/utils/utils';
-import { Watermixer, Device } from '@gbaranski/types';
+import { Watermixer, Device } from '@houseflow/types';
 import { message } from 'antd';
 import { MqttClient } from 'mqtt';
 

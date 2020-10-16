@@ -1,11 +1,11 @@
 import 'package:flutter_svg/svg.dart';
-import 'package:homeflow/screens/dashboard/dashboard.dart';
-import 'package:homeflow/screens/my_profile/my_profile.dart';
-import 'package:homeflow/screens/settings/settings.dart';
-import 'package:homeflow/services/auth.dart';
-import 'package:homeflow/shared/constants.dart';
+import 'package:houseflow/screens/dashboard/dashboard.dart';
+import 'package:houseflow/screens/my_profile/my_profile.dart';
+import 'package:houseflow/screens/settings/settings.dart';
+import 'package:houseflow/services/auth.dart';
+import 'package:houseflow/shared/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:homeflow/shared/profile_image.dart';
+import 'package:houseflow/shared/profile_image.dart';
 import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
@@ -78,7 +78,7 @@ class _HomeState extends State<Home> {
                   ),
                 ],
                 titleSpacing: 0,
-                title: Text("Homeflow"),
+                title: Text("Houseflow"),
                 leading: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: CircleAvatar(

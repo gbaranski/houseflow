@@ -1,5 +1,5 @@
 {
-  "name": "homeflow-web",
+  "name": "houseflow-web",
   "version": "5.0.0-alpha.0",
   "private": true,
   "description": "An out-of-box UI solution for enterprise applications",
@@ -51,7 +51,7 @@
     "@ant-design/icons": "^4.2.2",
     "@ant-design/pro-layout": "^6.4.3",
     "@ant-design/pro-table": "^2.5.6",
-    "@gbaranski/types": "^4.0.51",
+    "@houseflow/types": "^4.0.51",
     "@mdi/js": "^5.5.55",
     "@mdi/react": "^1.4.0",
     "@types/socket.io-client": "^1.4.33",

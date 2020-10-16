@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import { Card, Table } from 'antd';
 import { useModel } from 'umi';
-import { Device, Client } from '@gbaranski/types';
+import { Device, Client } from '@houseflow/types';
 
 const DeviceTable = (props: {
   online: Device.ActiveDevice[];

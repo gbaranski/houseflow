@@ -1,5 +1,5 @@
-import 'package:homeflow/services/auth.dart';
-import 'package:homeflow/shared/login_form.dart';
+import 'package:houseflow/services/auth.dart';
+import 'package:houseflow/shared/login_form.dart';
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {

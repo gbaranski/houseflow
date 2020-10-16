@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homeflow/shared/constants.dart';
+import 'package:houseflow/shared/constants.dart';
 
 class DeviceCard extends StatelessWidget {
   final List<Widget> children;

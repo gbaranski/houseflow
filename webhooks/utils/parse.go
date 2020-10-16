@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	types "github.com/gbaranski/homeflow/webhooks/types"
+	types "github.com/gbaranski/houseflow/webhooks/types"
 )
 
 // BodyToBytes parses request body to bytes array

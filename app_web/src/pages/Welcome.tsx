@@ -9,7 +9,7 @@ export default (): React.ReactNode => (
         <span role="img" aria-label="icon">
           🚧
         </span>
-        Homeflow - Alpha
+        Houseflow - Alpha
         <span role="img" aria-label="icon">
           {' '}
           🚧

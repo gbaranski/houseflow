@@ -1,4 +1,4 @@
-module github.com/gbaranski/homeflow/webhooks
+module github.com/gbaranski/houseflow/webhooks
 
 go 1.15
 

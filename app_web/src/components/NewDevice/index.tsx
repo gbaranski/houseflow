@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Modal, Form, Input, message } from 'antd';
-import { Device } from '@gbaranski/types';
+import { Device } from '@houseflow/types';
 import { addNewDevice } from '@/services/firebase';
 import { useModel } from 'umi';
 

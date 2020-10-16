@@ -1,5 +1,5 @@
 import { getRandomShortUid } from '@/utils/utils';
-import { Device, Topic } from '@gbaranski/types';
+import { Device, Topic } from '@houseflow/types';
 import mqtt, { MqttClient } from 'mqtt';
 
 const BROKER_DEV_URL = 'wss://localhost:8084/mqtt';

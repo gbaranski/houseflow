@@ -37,7 +37,7 @@ const LOGO_DIR_192 = 'assets/images/logo-192x192.png';
 const SUPPORT_EMAIL = 'gbaranski19@gmail.com';
 const SUPPORT_EMAIL_URL = 'mailto:$SUPPORT_EMAIL';
 const SUPPORT_EMAIL_URL_ISSUE = "$SUPPORT_EMAIL_URL?subject=Issue";
-const GITHUB_URL = "https://github.com/gbaranski/homeflow";
+const GITHUB_URL = "https://github.com/gbaranski/houseflow";
 const GITHUB_URL_ISSUES = "$GITHUB_URL/issues";
 
 const MQTT_HOST = 'api.gbaranski.com';

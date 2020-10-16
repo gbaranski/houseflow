@@ -1,5 +1,5 @@
 import { parse } from 'querystring';
-import { DateTime, State } from '@gbaranski/types';
+import { DateTime, State } from '@houseflow/types';
 import { Moment } from 'moment';
 import moment from 'moment';
 

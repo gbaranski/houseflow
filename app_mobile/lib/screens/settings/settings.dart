@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:homeflow/models/device.dart';
-import 'package:homeflow/models/user.dart';
-import 'package:homeflow/services/auth.dart';
-import 'package:homeflow/services/firebase.dart';
-import 'package:homeflow/shared/device_icon.dart';
-import 'package:homeflow/utils/misc.dart';
+import 'package:houseflow/models/device.dart';
+import 'package:houseflow/models/user.dart';
+import 'package:houseflow/services/auth.dart';
+import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/shared/device_icon.dart';
+import 'package:houseflow/utils/misc.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -1,5 +1,5 @@
 import { MqttClient } from 'mqtt';
-import { Watermixer } from '@gbaranski/types';
+import { Watermixer } from '@houseflow/types';
 import { startMixing } from './services/relay';
 
 export const onConnection = (mqtt: MqttClient) => {

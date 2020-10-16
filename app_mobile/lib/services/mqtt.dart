@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:core';
-import 'package:homeflow/models/device.dart';
+import 'package:houseflow/models/device.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'package:homeflow/shared/constants.dart';
+import 'package:houseflow/shared/constants.dart';
 import 'dart:async';
 
 import 'package:provider/provider.dart';

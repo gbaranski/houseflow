@@ -2,7 +2,7 @@ import React from 'react';
 import { BasicLayoutProps, Settings as LayoutSettings } from '@ant-design/pro-layout';
 import { notification } from 'antd';
 import { history, RequestConfig } from 'umi';
-import { Client } from '@gbaranski/types';
+import { Client } from '@houseflow/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
@@ -39,15 +39,15 @@ export async function getInitialState(): Promise<{
       }
 
       const token = await getIdToken();
-      if(!token) throw new Error("Token is not defined");
+      if (!token) throw new Error('Token is not defined');
       const mqtt = await connectMqtt(token, currentUser.uid);
 
-      firebaseAuth.onIdTokenChanged(async(user) => {
-        if(user) {
-          console.log("Updating token for MQTT");
+      firebaseAuth.onIdTokenChanged(async (user) => {
+        if (user) {
+          console.log('Updating token for MQTT');
           mqtt.options.password = await user.getIdToken();
         }
-      })
+      });
 
       return {
         mqtt,

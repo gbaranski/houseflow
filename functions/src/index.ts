@@ -1,4 +1,4 @@
-import { Client } from '@gbaranski/types';
+import { Client } from '@houseflow/types';
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import WatermixerCard from '@/components/Watermixer/card';
 import DeviceCardSkeleton from '@/components/DeviceCardSkeleton';
-import { Device, Watermixer, Alarmclock, Gate } from '@gbaranski/types';
+import { Device, Watermixer, Alarmclock, Gate } from '@houseflow/types';
 import { Col } from 'antd';
 import GateCard from '../Gate/card';
 
@@ -15,7 +15,11 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices }) => {
         if (!device.status)
           return (
             <Col key={device.uid}>
-              <DeviceCardSkeleton key={device.uid} name={device.type} description="Device is offline" />
+              <DeviceCardSkeleton
+                key={device.uid}
+                name={device.type}
+                description="Device is offline"
+              />
             </Col>
           );
         switch (device.type) {
@@ -29,17 +33,20 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices }) => {
               </Col>
             );
           case 'GATE': {
-            return ( 
+            return (
               <Col key={device.uid}>
-                <GateCard
-                  key={device.uid}
-                  device={device as Device.FirebaseDevice<Gate.Data>}
-                />
+                <GateCard key={device.uid} device={device as Device.FirebaseDevice<Gate.Data>} />
               </Col>
-            )
+            );
           }
           default:
-            return <DeviceCardSkeleton key={device.uid} name="Error" description={"Unrecognized device!"} />;
+            return (
+              <DeviceCardSkeleton
+                key={device.uid}
+                name="Error"
+                description={'Unrecognized device!'}
+              />
+            );
         }
       })}
     </>
