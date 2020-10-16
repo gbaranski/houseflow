@@ -5,7 +5,6 @@ import 'package:houseflow/screens/auth/sign_in.dart';
 import 'package:houseflow/screens/home/home.dart';
 import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/services/auth.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/mqtt.dart';
@@ -49,6 +48,13 @@ class Wrapper extends StatelessWidget {
           print("Firebase user ${authModel.firebaseUser}");
 
           FirebaseService.initFcm(context);
+
+          if (MqttService.mqttClient != null &&
+              MqttService.mqttClient.connectionStatus.state ==
+                  MqttConnectionState.connected) {
+            return Home();
+          }
+
           final MqttService mqttService = MqttService(
               getToken: authModel.currentUser.getIdToken,
               userUid: authModel.currentUser.uid);
