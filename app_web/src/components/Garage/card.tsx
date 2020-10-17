@@ -4,13 +4,13 @@ import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
 import moment from 'moment';
 import Icon from '@mdi/react';
-import { mdiGate } from '@mdi/js';
+import { mdiGarageVariant } from '@mdi/js';
 import PageLoading from '../PageLoading';
 
-interface GateCardProps {
+interface GarageCardProps {
   device: Device.FirebaseDevice<Relay.Data>;
 }
-const GateCard: React.FC<GateCardProps> = ({ device }) => {
+const GarageCard: React.FC<GarageCardProps> = ({ device }) => {
   const { initialState } = useModel('@@initialState');
   const { mqtt } = initialState || {};
 
@@ -24,9 +24,9 @@ const GateCard: React.FC<GateCardProps> = ({ device }) => {
       style={{ width: 300 }}
       bodyStyle={{ minHeight: 180 }}
       actions={[
-        <Tooltip title="Open gate">
+        <Tooltip title="Open garage">
           <a onClick={() => sendRelaySignal(device, mqtt, () => Date.now())}>
-            <Icon path={mdiGate} size={1} />
+            <Icon path={mdiGarageVariant} size={1} />
           </a>
         </Tooltip>,
       ]}
@@ -40,4 +40,4 @@ const GateCard: React.FC<GateCardProps> = ({ device }) => {
   );
 };
 
-export default GateCard;
+export default GarageCard;

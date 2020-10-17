@@ -5,12 +5,14 @@ import { Relay, Device } from '@houseflow/types';
 import { message } from 'antd';
 import { MqttClient } from 'mqtt';
 
-const MILLIS_IN_SECOND = 1000;
-const SECOND_IN_MINUTE = 60;
-const MIX_MINUTES = 10;
+export type TimestampFunc = () => number;
 
 export default () => {
-  const mixWater = async (device: Device.FirebaseDevice, mqttClient: MqttClient) => {
+  const sendRelaySignal = async (
+    device: Device.FirebaseDevice,
+    mqttClient: MqttClient,
+    getTimestampFunc: TimestampFunc,
+  ) => {
     const request: Device.Request = {
       correlationData: getRandomShortUid(),
     };
@@ -22,9 +24,9 @@ export default () => {
         topic: Relay.getSendSignalTopic(device.uid),
         mqttClient,
       });
-      const lastSignalTimestamp = Date.now() + MILLIS_IN_SECOND * SECOND_IN_MINUTE * MIX_MINUTES;
+
       updateDeviceData(device.uid, {
-        lastSignalTimestamp,
+        lastSignalTimestamp: getTimestampFunc(),
       });
     } catch (e) {
       console.log(`Error when sending request ${e}`);
@@ -33,6 +35,6 @@ export default () => {
   };
 
   return {
-    mixWater,
+    sendRelaySignal,
   };
 };

@@ -1,9 +1,10 @@
 import React from 'react';
 import WatermixerCard from '@/components/Watermixer/card';
+import GateCard from '@/components/Gate/card';
+import GarageCard from '@/components/Garage/card';
 import DeviceCardSkeleton from '@/components/DeviceCardSkeleton';
 import { Device, Relay } from '@houseflow/types';
 import { Col } from 'antd';
-import GateCard from '../Gate/card';
 
 interface DeviceListProps {
   firebaseDevices: Device.FirebaseDevice[];
@@ -36,6 +37,13 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices }) => {
             return (
               <Col key={device.uid}>
                 <GateCard key={device.uid} device={device as Device.FirebaseDevice<Relay.Data>} />
+              </Col>
+            );
+          }
+          case 'GARAGE': {
+            return (
+              <Col key={device.uid}>
+                <GarageCard key={device.uid} device={device as Device.FirebaseDevice<Relay.Data>} />
               </Col>
             );
           }

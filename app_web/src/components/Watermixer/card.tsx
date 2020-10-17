@@ -4,7 +4,15 @@ import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
 import Icon from '@mdi/react';
 import { mdiShowerHead } from '@mdi/js';
+import { TimestampFunc } from '@/models/relay';
 import PageLoading from '../PageLoading';
+
+const MILLIS_IN_SECOND = 1000;
+const SECOND_IN_MINUTE = 60;
+const MIX_MINUTES = 10;
+
+const mixingTimestampFunc: TimestampFunc = () =>
+  Date.now() + MILLIS_IN_SECOND * SECOND_IN_MINUTE * MIX_MINUTES;
 
 interface WatermixerCardProps {
   device: Device.FirebaseDevice<Relay.Data>;
@@ -13,7 +21,7 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
   const { initialState } = useModel('@@initialState');
   const { mqtt } = initialState || {};
 
-  const { mixWater } = useModel('watermixer');
+  const { sendRelaySignal } = useModel('relay');
 
   const hasElapsed = (timestamp: number) => Date.now() > timestamp;
   // TODO: fix later
@@ -26,7 +34,7 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
       bodyStyle={{ minHeight: 180 }}
       actions={[
         <Tooltip title="Start mixing">
-          <a onClick={() => mixWater(device, mqtt)}>
+          <a onClick={() => sendRelaySignal(device, mqtt, mixingTimestampFunc)}>
             <Icon path={mdiShowerHead} size={1} />
           </a>
         </Tooltip>,
