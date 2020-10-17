@@ -1,7 +1,7 @@
 import React from 'react';
 import WatermixerCard from '@/components/Watermixer/card';
 import DeviceCardSkeleton from '@/components/DeviceCardSkeleton';
-import { Device, Watermixer, Alarmclock, Gate } from '@houseflow/types';
+import { Device, Relay } from '@houseflow/types';
 import { Col } from 'antd';
 import GateCard from '../Gate/card';
 
@@ -28,14 +28,14 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices }) => {
               <Col key={device.uid}>
                 <WatermixerCard
                   key={device.uid}
-                  device={device as Device.FirebaseDevice<Watermixer.Data>}
+                  device={device as Device.FirebaseDevice<Relay.Data>}
                 />
               </Col>
             );
           case 'GATE': {
             return (
               <Col key={device.uid}>
-                <GateCard key={device.uid} device={device as Device.FirebaseDevice<Gate.Data>} />
+                <GateCard key={device.uid} device={device as Device.FirebaseDevice<Relay.Data>} />
               </Col>
             );
           }
@@ -44,7 +44,7 @@ const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices }) => {
               <DeviceCardSkeleton
                 key={device.uid}
                 name="Error"
-                description={'Unrecognized device!'}
+                description="Unrecognized device!"
               />
             );
         }

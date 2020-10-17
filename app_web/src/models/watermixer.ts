@@ -1,7 +1,7 @@
 import { updateDeviceData } from '@/services/firebase';
 import { sendRequest } from '@/services/mqtt';
 import { getRandomShortUid } from '@/utils/utils';
-import { Watermixer, Device } from '@houseflow/types';
+import { Relay, Device } from '@houseflow/types';
 import { message } from 'antd';
 import { MqttClient } from 'mqtt';
 
@@ -19,12 +19,12 @@ export default () => {
       message.info('Sending!');
       await sendRequest({
         request,
-        topic: Watermixer.getStartMixingTopic(device.uid),
+        topic: Relay.getSendSignalTopic(device.uid),
         mqttClient,
       });
-      const finishMixTimestamp = Date.now() + MILLIS_IN_SECOND * SECOND_IN_MINUTE * MIX_MINUTES;
+      const lastSignalTimestamp = Date.now() + MILLIS_IN_SECOND * SECOND_IN_MINUTE * MIX_MINUTES;
       updateDeviceData(device.uid, {
-        finishMixTimestamp,
+        lastSignalTimestamp,
       });
     } catch (e) {
       console.log(`Error when sending request ${e}`);

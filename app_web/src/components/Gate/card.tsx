@@ -1,13 +1,13 @@
 import React from 'react';
 import { Card, Statistic, Tooltip } from 'antd';
 import { CarOutlined } from '@ant-design/icons';
-import { Device, Gate } from '@houseflow/types';
+import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
-import PageLoading from '../PageLoading';
 import moment from 'moment';
+import PageLoading from '../PageLoading';
 
 interface GateCardProps {
-  device: Device.FirebaseDevice<Gate.Data>;
+  device: Device.FirebaseDevice<Relay.Data>;
 }
 const GateCard: React.FC<GateCardProps> = ({ device }) => {
   const { initialState } = useModel('@@initialState');
@@ -30,8 +30,8 @@ const GateCard: React.FC<GateCardProps> = ({ device }) => {
     >
       <Statistic
         title="Last open"
-        value={device.data.lastOpenTimestamp}
-        formatter={(value, config) => moment(value).fromNow()}
+        value={device.data.lastSignalTimestamp}
+        formatter={(value) => moment(value).fromNow()}
       />
     </Card>
   );

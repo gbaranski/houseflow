@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, Statistic, Row, Col, Tooltip } from 'antd';
 import { CoffeeOutlined } from '@ant-design/icons';
-import { Device, Watermixer } from '@houseflow/types';
+import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
 import PageLoading from '../PageLoading';
 
 interface WatermixerCardProps {
-  device: Device.FirebaseDevice<Watermixer.Data>;
+  device: Device.FirebaseDevice<Relay.Data>;
 }
 const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
   const { initialState } = useModel('@@initialState');
@@ -33,13 +33,13 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
         <Col span={10} style={{ textAlign: 'left' }}>
           <Statistic
             title="Mixing state"
-            value={hasElapsed(device.data.finishMixTimestamp) ? 'Idle' : 'Mixing!'}
+            value={hasElapsed(device.data.lastSignalTimestamp) ? 'Idle' : 'Mixing!'}
           />
         </Col>
         <Col span={10} style={{ textAlign: 'right' }}>
           <Statistic.Countdown
             title="Time left"
-            value={device.data.finishMixTimestamp}
+            value={device.data.lastSignalTimestamp}
             format="mm:ss"
           />
         </Col>
