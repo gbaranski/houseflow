@@ -1,12 +1,12 @@
 import React from 'react';
-import { Card, Statistic, Tooltip } from 'antd';
+import { Card, Statistic } from 'antd';
 import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
 import moment from 'moment';
-import Icon from '@mdi/react';
 import { mdiGarageVariant } from '@mdi/js';
 import { CARD_MIN_HEIGHT, CARD_MIN_WIDTH } from '@/utils/constants';
-import PageLoading from '../PageLoading';
+import PageLoading from '@/components/PageLoading';
+import DeviceAction from '@/components/DeviceAction';
 
 interface GarageCardProps {
   device: Device.FirebaseDevice<Relay.Data>;
@@ -19,17 +19,19 @@ const GarageCard: React.FC<GarageCardProps> = ({ device }) => {
 
   if (!mqtt) return <PageLoading />;
 
+  const openGarage = () => sendRelaySignal(device, mqtt, () => Date.now());
+
   return (
     <Card
       title="Garage"
       style={{ minWidth: CARD_MIN_WIDTH }}
       bodyStyle={{ minHeight: CARD_MIN_HEIGHT }}
       actions={[
-        <Tooltip title="Open garage">
-          <a onClick={() => sendRelaySignal(device, mqtt, () => Date.now())}>
-            <Icon path={mdiGarageVariant} size={1} />
-          </a>
-        </Tooltip>,
+        <DeviceAction
+          mdiIconPath={mdiGarageVariant}
+          toolTipTitle="Open garage"
+          onSubmit={openGarage}
+        />,
       ]}
     >
       <Statistic

@@ -1,12 +1,12 @@
 import React from 'react';
-import { Card, Statistic, Row, Col, Tooltip } from 'antd';
+import { Card, Statistic, Row, Col } from 'antd';
 import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
-import Icon from '@mdi/react';
-import { mdiShowerHead } from '@mdi/js';
 import { TimestampFunc } from '@/models/relay';
 import { CARD_MIN_HEIGHT, CARD_MIN_WIDTH } from '@/utils/constants';
-import PageLoading from '../PageLoading';
+import PageLoading from '@/components/PageLoading';
+import { mdiShowerHead } from '@mdi/js';
+import DeviceAction from '@/components/DeviceAction';
 
 const MILLIS_IN_SECOND = 1000;
 const SECOND_IN_MINUTE = 60;
@@ -28,17 +28,19 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
   // TODO: fix later
   if (!mqtt) return <PageLoading />;
 
+  const startMixing = () => sendRelaySignal(device, mqtt, mixingTimestampFunc);
+
   return (
     <Card
       title="Watermixer"
       style={{ minWidth: CARD_MIN_WIDTH }}
       bodyStyle={{ minHeight: CARD_MIN_HEIGHT }}
       actions={[
-        <Tooltip title="Start mixing">
-          <a onClick={() => sendRelaySignal(device, mqtt, mixingTimestampFunc)}>
-            <Icon path={mdiShowerHead} size={1} />
-          </a>
-        </Tooltip>,
+        <DeviceAction
+          mdiIconPath={mdiShowerHead}
+          toolTipTitle="Mix water"
+          onSubmit={startMixing}
+        />,
       ]}
     >
       <Row justify="space-around">
