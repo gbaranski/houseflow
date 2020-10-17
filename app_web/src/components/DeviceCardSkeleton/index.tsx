@@ -7,7 +7,7 @@ import { mdiHelp } from '@mdi/js';
 import { GithubOutlined, MailOutlined } from '@ant-design/icons';
 
 export default (props: { name: string; description: string }) => {
-  const [helpModalVisible, setHelpModalVisible] = useState(true);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
 
   return (
     <>
