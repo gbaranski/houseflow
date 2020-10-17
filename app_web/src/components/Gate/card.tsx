@@ -1,9 +1,10 @@
 import React from 'react';
 import { Card, Statistic, Tooltip } from 'antd';
-import { CarOutlined } from '@ant-design/icons';
 import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
 import moment from 'moment';
+import Icon from '@mdi/react';
+import { mdiGate } from '@mdi/js';
 import PageLoading from '../PageLoading';
 
 interface GateCardProps {
@@ -24,7 +25,9 @@ const GateCard: React.FC<GateCardProps> = ({ device }) => {
       bodyStyle={{ minHeight: 180 }}
       actions={[
         <Tooltip title="Open gate">
-          <CarOutlined key="OpenGate" onClick={() => openGate(device, mqtt)} />
+          <a onClick={() => openGate(device, mqtt)}>
+            <Icon path={mdiGate} size={1} />
+          </a>
         </Tooltip>,
       ]}
     >
