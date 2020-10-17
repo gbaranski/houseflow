@@ -5,6 +5,7 @@ import { useModel } from 'umi';
 import moment from 'moment';
 import Icon from '@mdi/react';
 import { mdiGarageVariant } from '@mdi/js';
+import { CARD_MIN_HEIGHT, CARD_MIN_WIDTH } from '@/utils/constants';
 import PageLoading from '../PageLoading';
 
 interface GarageCardProps {
@@ -20,9 +21,9 @@ const GarageCard: React.FC<GarageCardProps> = ({ device }) => {
 
   return (
     <Card
-      title="Gate"
-      style={{ width: 300 }}
-      bodyStyle={{ minHeight: 180 }}
+      title="Garage"
+      style={{ minWidth: CARD_MIN_WIDTH }}
+      bodyStyle={{ minHeight: CARD_MIN_HEIGHT }}
       actions={[
         <Tooltip title="Open garage">
           <a onClick={() => sendRelaySignal(device, mqtt, () => Date.now())}>

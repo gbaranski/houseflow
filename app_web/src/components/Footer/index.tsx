@@ -1,6 +1,7 @@
 import React from 'react';
 import { GithubOutlined } from '@ant-design/icons';
 import { DefaultFooter } from '@ant-design/pro-layout';
+import { GITHUB_URL } from '@/utils/constants';
 
 export default () => (
   <DefaultFooter
@@ -15,7 +16,7 @@ export default () => (
       {
         key: 'github',
         title: <GithubOutlined />,
-        href: 'https://github.com/gbaranski/houseflow',
+        href: GITHUB_URL,
         blankTarget: true,
       },
     ]}

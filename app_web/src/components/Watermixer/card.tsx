@@ -5,6 +5,7 @@ import { useModel } from 'umi';
 import Icon from '@mdi/react';
 import { mdiShowerHead } from '@mdi/js';
 import { TimestampFunc } from '@/models/relay';
+import { CARD_MIN_HEIGHT, CARD_MIN_WIDTH } from '@/utils/constants';
 import PageLoading from '../PageLoading';
 
 const MILLIS_IN_SECOND = 1000;
@@ -30,8 +31,8 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
   return (
     <Card
       title="Watermixer"
-      style={{ width: 300 }}
-      bodyStyle={{ minHeight: 180 }}
+      style={{ minWidth: CARD_MIN_WIDTH }}
+      bodyStyle={{ minHeight: CARD_MIN_HEIGHT }}
       actions={[
         <Tooltip title="Start mixing">
           <a onClick={() => sendRelaySignal(device, mqtt, mixingTimestampFunc)}>
