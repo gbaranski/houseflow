@@ -12,51 +12,56 @@ interface DeviceListProps {
 const DeviceList: React.FC<DeviceListProps> = ({ firebaseDevices }) => {
   return (
     <>
-      {firebaseDevices.map((device) => {
-        if (!device.status)
-          return (
-            <Col key={device.uid}>
-              <DeviceCardSkeleton
-                key={device.uid}
-                name={device.type}
-                description="Device is offline"
-              />
-            </Col>
-          );
-        switch (device.type) {
-          case 'WATERMIXER':
+      {firebaseDevices
+        .sort((deviceA, deviceB) => (deviceA.status ? deviceA.uid.localeCompare(deviceB.uid) : 1))
+        .map((device) => {
+          if (!device.status)
             return (
               <Col key={device.uid}>
-                <WatermixerCard
+                <DeviceCardSkeleton
                   key={device.uid}
-                  device={device as Device.FirebaseDevice<Relay.Data>}
+                  name={device.type}
+                  description="Device is offline"
                 />
               </Col>
             );
-          case 'GATE': {
-            return (
-              <Col key={device.uid}>
-                <GateCard key={device.uid} device={device as Device.FirebaseDevice<Relay.Data>} />
-              </Col>
-            );
+          switch (device.type) {
+            case 'WATERMIXER':
+              return (
+                <Col key={device.uid}>
+                  <WatermixerCard
+                    key={device.uid}
+                    device={device as Device.FirebaseDevice<Relay.Data>}
+                  />
+                </Col>
+              );
+            case 'GATE': {
+              return (
+                <Col key={device.uid}>
+                  <GateCard key={device.uid} device={device as Device.FirebaseDevice<Relay.Data>} />
+                </Col>
+              );
+            }
+            case 'GARAGE': {
+              return (
+                <Col key={device.uid}>
+                  <GarageCard
+                    key={device.uid}
+                    device={device as Device.FirebaseDevice<Relay.Data>}
+                  />
+                </Col>
+              );
+            }
+            default:
+              return (
+                <DeviceCardSkeleton
+                  key={device.uid}
+                  name="Error"
+                  description="Unrecognized device!"
+                />
+              );
           }
-          case 'GARAGE': {
-            return (
-              <Col key={device.uid}>
-                <GarageCard key={device.uid} device={device as Device.FirebaseDevice<Relay.Data>} />
-              </Col>
-            );
-          }
-          default:
-            return (
-              <DeviceCardSkeleton
-                key={device.uid}
-                name="Error"
-                description="Unrecognized device!"
-              />
-            );
-        }
-      })}
+        })}
     </>
   );
 };
