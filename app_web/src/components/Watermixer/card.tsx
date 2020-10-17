@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, Statistic, Row, Col, Tooltip } from 'antd';
-import { CoffeeOutlined } from '@ant-design/icons';
 import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
+import Icon from '@mdi/react';
+import { mdiShowerHead } from '@mdi/js';
 import PageLoading from '../PageLoading';
 
 interface WatermixerCardProps {
@@ -25,7 +26,9 @@ const WatermixerCard: React.FC<WatermixerCardProps> = ({ device }) => {
       bodyStyle={{ minHeight: 180 }}
       actions={[
         <Tooltip title="Start mixing">
-          <CoffeeOutlined key="Mix" onClick={() => mixWater(device, mqtt)} />
+          <a onClick={() => mixWater(device, mqtt)}>
+            <Icon path={mdiShowerHead} size={1} />
+          </a>
         </Tooltip>,
       ]}
     >
