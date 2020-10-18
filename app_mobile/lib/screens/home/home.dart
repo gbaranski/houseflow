@@ -42,15 +42,24 @@ class _HomeState extends State<Home> {
     });
   }
 
-  BottomNavigationBar navigation(BuildContext context) {
-    return BottomNavigationBar(
-      selectedFontSize: 14,
-      type: BottomNavigationBarType.shifting,
-      items: _navItems,
-      currentIndex: _currentIndex,
-      selectedItemColor: LayoutBlueColor1,
-      unselectedItemColor: NavigationUnselectedItemColor,
-      onTap: onNavItemTap,
+  Widget navigation(BuildContext context) {
+    const BorderRadius borderRadius = BorderRadius.only(
+        topLeft: Radius.circular(30), topRight: Radius.circular(30));
+    return Container(
+      decoration: const BoxDecoration(borderRadius: borderRadius),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          selectedFontSize: 14,
+          type: BottomNavigationBarType.shifting,
+          items: _navItems,
+          currentIndex: _currentIndex,
+          selectedItemColor: LayoutBlueColor1,
+          unselectedItemColor: NavigationUnselectedItemColor,
+          onTap: onNavItemTap,
+        ),
+      ),
     );
   }
 
@@ -59,37 +68,41 @@ class _HomeState extends State<Home> {
     return Consumer<AuthService>(
       builder: (BuildContext context, authModel, child) {
         return Scaffold(
-            appBar: AppBar(
-                elevation: 25,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: const BorderRadius.vertical(
-                        bottom: const Radius.circular(4))),
-                actions: [
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => MyProfile(
-                                firebaseUser: authModel.firebaseUser,
-                                currentUser: authModel.currentUser,
-                                signOut: authModel.signOut))),
-                    child: ProfileImage(
-                      imageUrl: authModel.currentUser.photoURL,
+            backgroundColor: Colors.white,
+            appBar: PreferredSize(
+              preferredSize: Size.fromHeight(80),
+              child: Container(
+                margin: EdgeInsets.only(top: 15),
+                child: AppBar(
+                  backgroundColor: Colors.white,
+                  elevation: 0,
+                  actions: [
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MyProfile(
+                                  firebaseUser: authModel.firebaseUser,
+                                  currentUser: authModel.currentUser,
+                                  signOut: authModel.signOut))),
+                      child: ProfileImage(
+                        imageUrl: authModel.currentUser.photoURL,
+                      ),
                     ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                  ],
+                  title: Text(
+                    "Hi, ${authModel.currentUser.displayName.split(' ')[0]}!",
+                    style: TextStyle(
+                        color: Colors.black.withAlpha(160),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                ],
-                titleSpacing: 0,
-                title: Text("Houseflow"),
-                leading: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: const CircleAvatar(
-                    backgroundColor: Colors.transparent,
-                    backgroundImage: AssetImage(LOGO_DIR_192),
-                  ),
-                )),
+                ),
+              ),
+            ),
             bottomNavigationBar: navigation(context),
             body: _navPages.elementAt(_currentIndex));
       },

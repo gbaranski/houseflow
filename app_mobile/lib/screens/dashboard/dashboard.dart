@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/screens/devices/gate.dart';
 import 'package:houseflow/screens/devices/inactive.dart';
+import 'package:houseflow/screens/devices/relayCard.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:houseflow/screens/devices/watermixer.dart';
 
@@ -24,22 +26,28 @@ class _DashboardState extends State<Dashboard> {
           return Container();
         final Map<String, dynamic> data = snapshot.data.data();
         final FirebaseDevice firebaseDevice = FirebaseDevice.fromMap(data);
-        if (!firebaseDevice.status) return InactiveDevice(firebaseDevice);
+        // if (!firebaseDevice.status) return InactiveDevice(firebaseDevice);
 
         switch (firebaseDevice.type) {
           case 'WATERMIXER':
-            {
-              return Watermixer(
-                firebaseDevice: firebaseDevice,
-              );
-            }
-            break;
+            return RelayCard(
+              cardColor: Color.fromRGBO(79, 119, 149, 1),
+              firebaseDevice: firebaseDevice,
+              iconData: Icons.hot_tub,
+            );
           case 'GATE':
-            {
-              return Gate(
-                firebaseDevice: firebaseDevice,
-              );
-            }
+            return RelayCard(
+              cardColor: Color.fromRGBO(103, 151, 109, 1),
+              firebaseDevice: firebaseDevice,
+              iconData: MdiIcons.garage,
+            );
+          case 'GARAGE':
+            return RelayCard(
+              cardColor: Color.fromRGBO(183, 111, 110, 1),
+              firebaseDevice: firebaseDevice,
+              iconData: MdiIcons.gate,
+            );
+
           default:
             {
               return const Text("Some error occured");
@@ -61,18 +69,13 @@ class _DashboardState extends State<Dashboard> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   child: const Text(
                       "You don't have any devices, if you feel thats an issue, contact us"))),
-            Expanded(
-              child: ListView.builder(
-                  itemCount: authModel.firebaseUser.devices.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 15),
-                      child: device(
-                          context, authModel.firebaseUser.devices[index].uid),
-                    );
-                  }),
-            )
+            Wrap(
+                children: authModel.firebaseUser.devices.map((firebaseDevice) {
+              return device(
+                context,
+                firebaseDevice.uid,
+              );
+            }).toList())
           ]),
         );
       },
