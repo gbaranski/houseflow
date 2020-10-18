@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/screens/single_device/single_device.dart';
 import 'package:houseflow/utils/misc.dart';
 
 class RelayCard extends StatefulWidget {
@@ -35,6 +36,11 @@ class _RelayCardState extends State<RelayCard>
       color: widget.cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
       child: InkWell(
+        onLongPress: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    SingleDevice(firebaseDevice: widget.firebaseDevice))),
         splashColor: Colors.white.withAlpha(100),
         onTap: triggerAnimation,
         child: Container(
