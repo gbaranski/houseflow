@@ -34,6 +34,9 @@ const double CardMinHeight = 170;
 const logoDirectory = 'assets/images/logo.svg';
 const LOGO_DIR_192 = 'assets/images/logo-192x192.png';
 
+const ACTION_ICON_COLOR = const Color.fromRGBO(120, 120, 120, 1);
+const double ACTION_ICON_SIZE = 30;
+
 const SUPPORT_EMAIL = 'gbaranski19@gmail.com';
 const SUPPORT_EMAIL_URL = 'mailto:$SUPPORT_EMAIL';
 const SUPPORT_EMAIL_URL_ISSUE = "$SUPPORT_EMAIL_URL?subject=Issue";

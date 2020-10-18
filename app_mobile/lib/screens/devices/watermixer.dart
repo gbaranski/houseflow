@@ -3,6 +3,8 @@ import 'package:houseflow/models/devices/relay.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/screens/devices/deviceCard.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/shared/device_actions.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:houseflow/services/mqtt.dart';
 import 'package:houseflow/utils/misc.dart';
@@ -81,6 +83,15 @@ class _WatermixerState extends State<Watermixer> {
       });
     };
 
+    final DeviceAction startMixAction = DeviceAction(
+        onSubmit: startMixing,
+        actionText: "Start mixing",
+        icon: Icon(
+          MdiIcons.showerHead,
+          color: ACTION_ICON_COLOR,
+          size: ACTION_ICON_SIZE,
+        ));
+
     return DeviceCard(children: [
       SizedBox(
         height: 5,
@@ -118,26 +129,7 @@ class _WatermixerState extends State<Watermixer> {
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300)),
         ]),
       ]),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ButtonBar(
-            alignment: MainAxisAlignment.center,
-            children: <Widget>[
-              OutlineButton(
-                borderSide: BorderSide(
-                    color: LayoutBlueColor1.withAlpha(100), width: 0.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: const Text('START MIXING'),
-                onPressed: () {
-                  startMixing();
-                },
-              ),
-            ],
-          ),
-        ],
-      )
+      DeviceActions(deviceActions: [startMixAction]),
     ]);
   }
 }
