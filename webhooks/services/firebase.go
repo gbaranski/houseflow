@@ -66,7 +66,11 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 		return "error", errors.New("firebase: FirebaseUser snapshot does not exist")
 	}
 	firebaseUser := new(FirebaseUser)
-	dsnap.DataTo(&firebaseUser)
+	err = dsnap.DataTo(&firebaseUser)
+	if err != nil {
+		fmt.Printf("Error occured while reading %s", err)
+		return "error", nil
+	}
 	fmt.Printf("FBUSER: %+v\n", firebaseUser)
 	return firebaseUser.username, nil
 }
