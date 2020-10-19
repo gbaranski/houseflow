@@ -12,7 +12,8 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        theme: ThemeData(fontFamily: 'OpenSans'),
+        theme:
+            ThemeData(fontFamily: 'OpenSans', accentColor: Color(0xFF0096c7)),
         home: FutureBuilder(
           future: Firebase.initializeApp(),
           builder: (context, snapshot) {

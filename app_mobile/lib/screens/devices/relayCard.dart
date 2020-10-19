@@ -111,7 +111,7 @@ class _RelayCardState extends State<RelayCard>
         child: ClipRRect(
           child: offlineCardBanner(
             child: Container(
-              margin: EdgeInsets.all(10),
+              margin: const EdgeInsets.all(10),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
