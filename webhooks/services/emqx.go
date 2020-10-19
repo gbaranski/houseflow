@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -23,5 +24,6 @@ func GetClientData(clientID string) (*types.GetClientResponse, error) {
 		return nil, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(body))
 	return utils.BytesToClientData(body)
 }

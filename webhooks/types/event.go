@@ -37,6 +37,14 @@ type MessageEvent struct {
 	Timestamp    int    `json:"ts"`
 }
 
+// DeviceRequest refers to database device history
+type DeviceRequest struct {
+	Request   string
+	Username  string
+	IPAddress string
+	Timestamp int
+}
+
 // MqttClientData Clent data received from API
 type MqttClientData struct {
 	ConnectedNode          string `json:"node"`
@@ -65,15 +73,15 @@ type MqttClientData struct {
 	AwaitingRel            int    `json:"awaiting_rel"`
 	MaxAwaitingRel         int    `json:"max_awaiting_rel"`
 	BytesReceived          int    `json:"recv_oct"`
-	MqttPacketsReceived    string `json:"recv_pkt"`
-	PublishPacketsRecieved string `json:"recv_msg"`
-	BytesSent              string `json:"send_oct"`
-	TCPPacketsSent         string `json:"send_cnt"`
-	MqttPacketsSent        string `json:"send_pkt"`
-	PublishPacketsSent     string `json:"send_msg"`
-	MailboxLength          string `json:"mailbox_len"`
-	HeapSize               string `json:"heap_size"`
-	Reductions             string `json:"reductions"`
+	MqttPacketsReceived    int    `json:"recv_pkt"`
+	PublishPacketsRecieved int    `json:"recv_msg"`
+	BytesSent              int    `json:"send_oct"`
+	TCPPacketsSent         int    `json:"send_cnt"`
+	MqttPacketsSent        int    `json:"send_pkt"`
+	PublishPacketsSent     int    `json:"send_msg"`
+	MailboxLength          int    `json:"mailbox_len"`
+	HeapSize               int    `json:"heap_size"`
+	Reductions             int    `json:"reductions"`
 }
 
 // MqttMeta received with API requested

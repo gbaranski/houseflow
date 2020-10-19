@@ -2,15 +2,30 @@ package services
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	types "github.com/gbaranski/houseflow/webhooks/types"
 )
 
 // FirebaseClient firebaseClient type
 type FirebaseClient struct {
 	db *firestore.Client
+}
+
+// FirebaseUserDevices refers to user devices in database
+type FirebaseUserDevices struct {
+	uid string
+}
+
+// FirebaseUser refers to user in database
+type FirebaseUser struct {
+	devices  []FirebaseUserDevices
+	role     string
+	uid      string
+	username string
 }
 
 // InitFirebase firebase initialization
@@ -40,4 +55,27 @@ func UpdateDeviceStatus(ctx context.Context, client *FirebaseClient, uid string,
 	log.Printf("Success updating device %s status to %t \n", uid, status)
 }
 
-func AddHistoryEntry()
+// GetUserUsername retreives user username from firestore
+func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (string, error) {
+	dsnap, err := client.db.Collection("users").Doc(uid).Get(ctx)
+	if err != nil {
+		return "", err
+	}
+	if dsnap.Exists() == false {
+		return "", errors.New("firebase: FirebaseUser snapshot does not exist")
+	}
+	firebaseUser := new(FirebaseUser)
+	dsnap.DataTo(&firebaseUser)
+	return firebaseUser.username, nil
+}
+
+// AddDeviceHistory adds history for a device
+func AddDeviceHistory(ctx context.Context, client *FirebaseClient, deviceUID string, deviceRequest *types.DeviceRequest) error {
+	_, _, err := client.db.Collection("devices").Doc(deviceUID).Collection("history").Add(ctx, map[string]interface{}{
+		"request":   deviceRequest.Request,
+		"username":  deviceRequest.Username,
+		"IPAddress": deviceRequest.IPAddress,
+		"timestamp": deviceRequest.Timestamp,
+	})
+	return err
+}
