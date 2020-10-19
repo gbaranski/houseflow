@@ -75,3 +75,35 @@ class DeviceTopic {
 
   DeviceTopic({@required this.request, @required this.response});
 }
+
+class DeviceRequest {
+  String ipAddress;
+  String request;
+  String username;
+  int timestamp;
+
+  String stringifyRequest(String deviceType) {
+    switch (request) {
+      case 'relay1':
+        switch (deviceType) {
+          case 'WATERMIXER':
+            return 'Mix water';
+          case 'GATE':
+            return 'Open the gate';
+          case 'GARAGE':
+            return 'Open the garage';
+          default:
+            return "Some error occured";
+        }
+        break;
+      default:
+        return 'Some error occured';
+    }
+  }
+
+  DeviceRequest(
+      {@required this.ipAddress,
+      @required this.request,
+      @required this.username,
+      @required this.timestamp});
+}
