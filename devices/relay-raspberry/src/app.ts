@@ -1,11 +1,11 @@
 import { MqttClient } from 'mqtt';
-import { Watermixer } from '@houseflow/types';
+import { Relay } from '@houseflow/types';
 import { startMixing } from './services/relay';
 
 export const onConnection = (mqtt: MqttClient) => {
   console.log('Initialized connection with MQTT');
 
-  const startMixTopic = Watermixer.getStartMixingTopic(
+  const startMixTopic = Relay.getSendSignalTopic(
     process.env.DEVICE_UID as string,
   );
 
