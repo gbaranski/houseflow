@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/models/devices/relay.dart';
 import 'package:houseflow/screens/single_device/single_device.dart';
+import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/services/mqtt.dart';
 import 'package:houseflow/utils/misc.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 
 class RelayCard extends StatefulWidget {
   final FirebaseDevice firebaseDevice;
   final Color cardColor;
   final IconData iconData;
+  final int Function() getNewDeviceData;
 
-  RelayCard(
-      {@required this.firebaseDevice,
-      @required this.cardColor,
-      @required this.iconData});
+  RelayCard({
+    @required this.firebaseDevice,
+    @required this.cardColor,
+    @required this.iconData,
+    @required this.getNewDeviceData,
+  });
 
   @override
   _RelayCardState createState() => _RelayCardState();
@@ -24,11 +31,67 @@ class _RelayCardState extends State<RelayCard>
   Animation<double> _animation;
   AnimationStatus _animationStatus = AnimationStatus.dismissed;
 
+  void sendRelaySignal() {
+    print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
+    const snackbar = SnackBar(
+      content: Text("Sending!"),
+      duration: Duration(milliseconds: 500),
+    );
+    Scaffold.of(context).hideCurrentSnackBar();
+    Scaffold.of(context).showSnackBar(snackbar);
+
+    final String uid = widget.firebaseDevice.uid;
+    final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
+
+    bool hasCompleted = false;
+    final Future req = MqttService.sendMessage(
+        topic: topic, qos: MqttQos.atMostOnce, data: null);
+
+    req.whenComplete(() {
+      hasCompleted = true;
+      const snackbar = SnackBar(
+        content: Text("Success!"),
+        duration: Duration(milliseconds: 500),
+      );
+      Scaffold.of(context).hideCurrentSnackBar();
+      Scaffold.of(context).showSnackBar(snackbar);
+      final RelayData newDeviceData =
+          RelayData(lastSignalTimestamp: widget.getNewDeviceData());
+      FirebaseService.updateFirebaseDeviceData(uid, newDeviceData.toJson());
+    });
+    Future.delayed(Duration(seconds: 2), () {
+      if (!hasCompleted) {
+        const snackbar = SnackBar(content: Text("No response from device!"));
+        Scaffold.of(context).showSnackBar(snackbar);
+      }
+    });
+  }
+
   void triggerAnimation() {
     if (_animationStatus == AnimationStatus.dismissed)
       _animationController.forward();
     else
       _animationController.reverse();
+  }
+
+  void showDeviceOfflineSnackbar() {
+    const snackbar = SnackBar(
+      content: Text("Device is offline!"),
+      duration: Duration(milliseconds: 600),
+    );
+    Scaffold.of(context).showSnackBar(snackbar);
+  }
+
+  Widget offlineCardBanner({@required Widget child}) {
+    if (widget.firebaseDevice.status) {
+      return child;
+    } else {
+      return Banner(
+        location: BannerLocation.topStart,
+        message: "OFFLINE",
+        child: child,
+      );
+    }
   }
 
   Widget basicCard() {
@@ -42,25 +105,31 @@ class _RelayCardState extends State<RelayCard>
                 builder: (context) =>
                     SingleDevice(firebaseDevice: widget.firebaseDevice))),
         splashColor: Colors.white.withAlpha(100),
-        onTap: triggerAnimation,
-        child: Container(
-          margin: EdgeInsets.all(10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                widget.iconData,
-                color: Colors.white.withAlpha(180),
-                size: 72,
+        onTap: widget.firebaseDevice.status
+            ? triggerAnimation
+            : showDeviceOfflineSnackbar,
+        child: ClipRRect(
+          child: offlineCardBanner(
+            child: Container(
+              margin: EdgeInsets.all(10),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(
+                    widget.iconData,
+                    color: Colors.white.withAlpha(180),
+                    size: 72,
+                  ),
+                  Text(
+                    upperFirstCharacter(widget.firebaseDevice.type),
+                    style: TextStyle(
+                        color: Colors.white.withAlpha(190),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w100),
+                  ),
+                ],
               ),
-              Text(
-                upperFirstCharacter(widget.firebaseDevice.type),
-                style: TextStyle(
-                    color: Colors.white.withAlpha(190),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w100),
-              )
-            ],
+            ),
           ),
         ),
       ),
@@ -86,7 +155,10 @@ class _RelayCardState extends State<RelayCard>
                       BorderRadius.horizontal(left: Radius.circular(20)),
                 ),
                 child: IconButton(
-                    onPressed: triggerAnimation,
+                    onPressed: () {
+                      sendRelaySignal();
+                      triggerAnimation();
+                    },
                     splashRadius: 100,
                     splashColor: Colors.green,
                     highlightColor: Colors.green.withAlpha(100),
