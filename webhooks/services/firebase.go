@@ -69,12 +69,12 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 }
 
 // AddDeviceHistory adds history for a device
-func AddDeviceHistory(ctx context.Context, client *FirebaseClient, deviceUID string, deviceRequest *types.DeviceRequest) error {
-	_, _, err := client.db.Collection("devices").Doc(deviceUID).Collection("history").Add(ctx, map[string]interface{}{
+func AddDeviceHistory(ctx context.Context, client *FirebaseClient, deviceUID string, deviceRequest *types.DeviceRequest) (string, error) {
+	ref, _, err := client.db.Collection("devices").Doc(deviceUID).Collection("history").Add(ctx, map[string]interface{}{
 		"request":   deviceRequest.Request,
 		"username":  deviceRequest.Username,
 		"IPAddress": deviceRequest.IPAddress,
 		"timestamp": deviceRequest.Timestamp,
 	})
-	return err
+	return ref.ID, err
 }
