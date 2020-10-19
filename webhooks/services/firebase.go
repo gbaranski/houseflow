@@ -59,10 +59,10 @@ func UpdateDeviceStatus(ctx context.Context, client *FirebaseClient, uid string,
 func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (string, error) {
 	dsnap, err := client.db.Collection("users").Doc(uid).Get(ctx)
 	if err != nil {
-		return "", err
+		return "error", err
 	}
 	if dsnap.Exists() == false {
-		return "", errors.New("firebase: FirebaseUser snapshot does not exist")
+		return "error", errors.New("firebase: FirebaseUser snapshot does not exist")
 	}
 	firebaseUser := new(FirebaseUser)
 	dsnap.DataTo(&firebaseUser)

@@ -47,7 +47,7 @@ func handleMessagePublish(e *types.MessageEvent, client *services.FirebaseClient
 		log.Printf("Error occured when adding device history %s", err)
 		return
 	}
-	log.Printf("This request was about %s", requestDeviceUID)
+	log.Printf("Sucessfully added request history")
 }
 
 // OnEvent handles /event request
