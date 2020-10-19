@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/screens/devices/relayCard.dart';
+import 'package:houseflow/screens/requests_history/requests_history.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/utils/misc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -27,12 +29,13 @@ class _DashboardState extends State<Dashboard> {
         final FirebaseDevice firebaseDevice = FirebaseDevice.fromMap(data);
         // if (!firebaseDevice.status) return InactiveDevice(firebaseDevice);
 
+        final iconData = getDeviceIcon(firebaseDevice.type);
         switch (firebaseDevice.type) {
           case 'WATERMIXER':
             return RelayCard(
               cardColor: Color.fromRGBO(79, 119, 149, 1),
               firebaseDevice: firebaseDevice,
-              iconData: Icons.hot_tub,
+              iconData: iconData,
               getNewDeviceData: () =>
                   DateTime.now().millisecondsSinceEpoch + tenMinutesInMillis,
             );
@@ -40,14 +43,14 @@ class _DashboardState extends State<Dashboard> {
             return RelayCard(
               cardColor: Color.fromRGBO(103, 151, 109, 1),
               firebaseDevice: firebaseDevice,
-              iconData: MdiIcons.garage,
+              iconData: iconData,
               getNewDeviceData: () => DateTime.now().millisecondsSinceEpoch,
             );
           case 'GARAGE':
             return RelayCard(
               cardColor: Color.fromRGBO(183, 111, 110, 1),
               firebaseDevice: firebaseDevice,
-              iconData: MdiIcons.gate,
+              iconData: iconData,
               getNewDeviceData: () => DateTime.now().millisecondsSinceEpoch,
             );
 
@@ -78,7 +81,8 @@ class _DashboardState extends State<Dashboard> {
                 context,
                 firebaseDevice.uid,
               );
-            }).toList())
+            }).toList()),
+            RequestsHistory(),
           ]),
         );
       },
