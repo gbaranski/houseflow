@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"cloud.google.com/go/firestore"
@@ -65,11 +64,8 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 	if dsnap.Exists() == false {
 		return "error", errors.New("firebase: FirebaseUser snapshot does not exist")
 	}
-	var username string
-	fmt.Printf("DATA: %#v\n", map[string]interface{}{
-		"username": username,
-	})
-	return username, nil
+	data := dsnap.Data()
+	return data["username"].(string), nil
 }
 
 // AddDeviceHistory adds history for a device
