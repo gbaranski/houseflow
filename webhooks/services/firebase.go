@@ -67,7 +67,7 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 	}
 	var username string
 	fmt.Printf("DATA: %#v\n", map[string]interface{}{
-		"username": &username,
+		"username": username,
 	})
 	return username, nil
 }

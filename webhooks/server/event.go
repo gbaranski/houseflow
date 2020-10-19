@@ -40,6 +40,7 @@ func handleMessagePublish(e *types.MessageEvent, client *services.FirebaseClient
 		log.Printf("Error occured when retreiving firebase user username %s\n", err)
 		return
 	}
+	fmt.Printf("USERNAME: %s\n", firebaseUserUsername)
 	deviceRequest := types.DeviceRequest{IPAddress: requestClientData.IPAddress, Request: trimmedRequest, Timestamp: e.Timestamp, Username: firebaseUserUsername}
 	err = services.AddDeviceHistory(context.Background(), client, requestDeviceUID, &deviceRequest)
 
