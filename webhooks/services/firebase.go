@@ -65,13 +65,11 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 	if dsnap.Exists() == false {
 		return "error", errors.New("firebase: FirebaseUser snapshot does not exist")
 	}
-	data := dsnap.Data()
-	fmt.Printf("DATA: %#v\n", data)
-	fmt.Printf("DOCUID: %s\n", dsnap.Ref.ID)
-	var firebaseUser FirebaseUser
-	dsnap.DataTo(&firebaseUser)
-	fmt.Printf("FBUSER: %#v\n", firebaseUser)
-	return firebaseUser.username, nil
+	var username string
+	fmt.Printf("DATA: %#v\n", map[string]interface{}{
+		"username": &username,
+	})
+	return username, nil
 }
 
 // AddDeviceHistory adds history for a device
