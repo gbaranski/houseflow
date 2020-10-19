@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"cloud.google.com/go/firestore"
@@ -65,6 +66,7 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 		return "error", errors.New("firebase: FirebaseUser snapshot does not exist")
 	}
 	firebaseUser := new(FirebaseUser)
+	fmt.Printf("FBUSER: %+v\n", firebaseUser)
 	dsnap.DataTo(&firebaseUser)
 	return firebaseUser.username, nil
 }
