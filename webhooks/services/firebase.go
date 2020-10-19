@@ -75,6 +75,7 @@ func AddDeviceHistory(ctx context.Context, client *FirebaseClient, deviceUID str
 		"username":  deviceRequest.Username,
 		"ipAddress": deviceRequest.IPAddress,
 		"timestamp": deviceRequest.Timestamp,
+		"deviceUid": deviceUID,
 	})
 	return ref.ID, err
 }
