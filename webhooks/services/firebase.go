@@ -1,4 +1,4 @@
-package firebaseservice
+package services
 
 import (
 	"context"
@@ -39,3 +39,5 @@ func UpdateDeviceStatus(ctx context.Context, client *FirebaseClient, uid string,
 	}
 	log.Printf("Success updating device %s status to %t \n", uid, status)
 }
+
+func AddHistoryEntry()
