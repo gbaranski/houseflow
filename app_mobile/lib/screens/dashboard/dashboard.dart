@@ -69,10 +69,12 @@ class _DashboardState extends State<Dashboard> {
         return LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) =>
               SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics()
+                .applyTo(BouncingScrollPhysics()),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                   minWidth: constraints.minWidth,
-                  minHeight: constraints.minHeight),
+                  minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Container(
                   alignment: Alignment.center,
