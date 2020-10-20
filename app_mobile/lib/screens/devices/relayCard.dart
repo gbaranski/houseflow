@@ -33,6 +33,15 @@ class _RelayCardState extends State<RelayCard>
 
   void sendRelaySignal() {
     print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
+    if (MqttService.mqttClient.connectionStatus.state !=
+        MqttConnectionState.connected) {
+      const snackbar = SnackBar(
+        content: Text("Error! Not connected to the server, please restart app"),
+        duration: Duration(milliseconds: 1500),
+      );
+      Scaffold.of(context).showSnackBar(snackbar);
+      return;
+    }
     final String uid = widget.firebaseDevice.uid;
     final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
 
