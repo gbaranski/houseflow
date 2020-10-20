@@ -77,10 +77,24 @@ class DeviceTopic {
 }
 
 class DeviceRequest {
-  String ipAddress;
-  String request;
-  String username;
-  int timestamp;
+  final String ipAddress;
+  final String request;
+  final String username;
+  final String deviceUid;
+  final String deviceType;
+  final int timestamp;
+  final String docUid;
+
+  factory DeviceRequest.fromJson(Map<String, dynamic> json, String docUid) =>
+      DeviceRequest(
+        ipAddress: json['ipAddress'],
+        request: json['request'],
+        username: json['username'],
+        timestamp: json['timestamp'],
+        deviceUid: json['deviceUid'],
+        deviceType: json['deviceType'],
+        docUid: docUid,
+      );
 
   String stringifyRequest(String deviceType) {
     switch (request) {
@@ -101,9 +115,13 @@ class DeviceRequest {
     }
   }
 
-  DeviceRequest(
-      {@required this.ipAddress,
-      @required this.request,
-      @required this.username,
-      @required this.timestamp});
+  DeviceRequest({
+    @required this.ipAddress,
+    @required this.request,
+    @required this.username,
+    @required this.timestamp,
+    @required this.deviceUid,
+    @required this.deviceType,
+    @required this.docUid,
+  });
 }

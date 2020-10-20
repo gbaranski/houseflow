@@ -33,6 +33,7 @@ String parseTimeAgo(int timestamp) {
   if (diff.inHours > 12) return "${diff.inHours}h ago";
   if (diff.inHours > 1)
     return "${diff.inHours}h ${diff.inMinutes % 60 - diff.inHours}m ago";
+  if (diff.inMinutes > 1) return "few seconds ago";
   return '${diff.inMinutes}m ago';
 }
 
