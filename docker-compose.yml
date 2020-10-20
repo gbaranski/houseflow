@@ -8,7 +8,7 @@ services:
       - .env
     environment:
       - EMQX_NAME=emqx
-      - EMQX_LOG__LEVEL=info
+      # - EMQX_LOG__LEVEL=info
       - EMQX_ALLOW_ANONYMOUS=false
 
       - EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=etc/certs/emqx.key
@@ -68,7 +68,8 @@ services:
   ota:
     tty: true
     container_name: 'ota'
-    command: npm run start
+    # command: npm run start
+    entrypoint: ['echo', 'Service ota is disabled']
     env_file:
       - .env
     build:

@@ -26,7 +26,9 @@ router.post('/user', async (req, res) => {
     } else {
       throw new Error('unrecognized client');
     }
-    console.log(`Authorized user ${userRequest.username}`);
+    console.log(
+      `Authorized user ${userRequest.clientid} with username ${userRequest.username}`,
+    );
     res.sendStatus(200);
   } catch (e) {
     console.log(
@@ -37,7 +39,6 @@ router.post('/user', async (req, res) => {
 });
 
 router.post('/acl', (req, res) => {
-  console.log('ACL: ', req.body);
   const aclRequest: AclRequest = req.body;
   try {
     if (aclRequest.clientid.startsWith('device_')) {
@@ -59,6 +60,10 @@ router.post('/acl', (req, res) => {
       )
         throw new Error('not allowed device topic');
     }
+    console.log(
+      `Successfully authenticated ${aclRequest.clientid} with username ${aclRequest.username}`,
+    );
+    res.sendStatus(200);
   } catch (e) {
     console.log(
       `ACL Auth failed due ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
@@ -66,8 +71,6 @@ router.post('/acl', (req, res) => {
     res.sendStatus(400);
     return;
   }
-
-  res.sendStatus(200);
 });
 
 export default router;
