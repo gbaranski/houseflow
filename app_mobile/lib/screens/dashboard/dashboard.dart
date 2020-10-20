@@ -6,7 +6,6 @@ import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/utils/misc.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
 class Dashboard extends StatefulWidget {
@@ -82,7 +81,13 @@ class _DashboardState extends State<Dashboard> {
                 firebaseDevice.uid,
               );
             }).toList()),
-            RequestsHistory(),
+            Expanded(
+              child: RequestsHistory(
+                snapshotsStreams: FirebaseService.firebaseDevicesHistoryStream(
+                    authModel.firebaseUser.devices),
+                firebaseUserDevices: authModel.firebaseUser.devices,
+              ),
+            ),
           ]),
         );
       },

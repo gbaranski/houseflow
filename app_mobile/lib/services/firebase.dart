@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:houseflow/models/device.dart';
 import 'package:houseflow/models/user.dart';
 
 class FirebaseService {
@@ -69,6 +69,16 @@ class FirebaseService {
 
     print("Firebase data about user: $data");
     return FirebaseUser.fromMap(data);
+  }
+
+  static List<Stream<QuerySnapshot>> firebaseDevicesHistoryStream(
+      List<FirebaseUserDevice> firebaseDevices) {
+    return firebaseDevices
+        .map((device) => _devicesCollection
+            .doc(device.uid)
+            .collection('history')
+            .snapshots())
+        .toList();
   }
 
   static Stream<DocumentSnapshot> getFirebaseDeviceSnapshot(String uid) {
