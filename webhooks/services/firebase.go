@@ -78,7 +78,7 @@ func GetUserUsername(ctx context.Context, client *FirebaseClient, uid string) (s
 
 // GetFirebaseDevice retreives firebase device from firestore
 func GetFirebaseDevice(ctx context.Context, client *FirebaseClient, uid string) (*FirebaseDevice, error) {
-	dsnap, err := client.db.Collection("users").Doc(uid).Get(ctx)
+	dsnap, err := client.db.Collection("devices").Doc(uid).Get(ctx)
 	if err != nil {
 		return nil, err
 	}
