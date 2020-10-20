@@ -1,3 +1,4 @@
+import 'package:timeago/timeago.dart' as timeago;
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -28,13 +29,7 @@ String durationToString(Duration duration) {
 
 String parseTimeAgo(int timestamp) {
   DateTime time = DateTime.fromMillisecondsSinceEpoch(timestamp);
-  Duration diff = time.difference(DateTime.now()).abs();
-  if (diff.inDays > 7) return "${diff.inDays} days ago";
-  if (diff.inHours > 12) return "${diff.inHours}h ago";
-  if (diff.inHours > 1)
-    return "${diff.inHours}h ${diff.inMinutes % 60 - diff.inHours}m ago";
-  if (diff.inMinutes > 1) return "few seconds ago";
-  return '${diff.inMinutes}m ago';
+  return timeago.format(time);
 }
 
 IconData getDeviceIcon(String deviceType) {
