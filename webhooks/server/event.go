@@ -41,7 +41,13 @@ func handleMessagePublish(e *types.MessageEvent, client *services.FirebaseClient
 		return
 	}
 	deviceRequest := types.DeviceRequest{IPAddress: requestClientData.IPAddress, Request: trimmedRequest, Timestamp: e.Timestamp, Username: firebaseUserUsername}
-	id, err := services.AddDeviceHistory(context.Background(), client, requestDeviceUID, &deviceRequest)
+	firebaseDevice, err := services.GetFirebaseDevice(context.Background(), client, requestDeviceUID)
+	if err != nil {
+		log.Printf("Error occured when retreiving firebase device %s\n", err)
+		return
+	}
+
+	id, err := services.AddDeviceHistory(context.Background(), client, firebaseDevice, &deviceRequest)
 
 	if err != nil {
 		log.Printf("Error occured when adding device history %s\n", err)
