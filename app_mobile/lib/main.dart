@@ -1,3 +1,4 @@
+import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/screens/wrapper.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,7 +32,7 @@ class App extends StatelessWidget {
                       value: authService, child: Wrapper()));
             }
 
-            return const CircularProgressIndicator();
+            return SplashScreen();
           },
         ));
   }

@@ -33,13 +33,6 @@ class _RelayCardState extends State<RelayCard>
 
   void sendRelaySignal() {
     print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
-    const snackbar = SnackBar(
-      content: Text("Sending!"),
-      duration: Duration(milliseconds: 500),
-    );
-    Scaffold.of(context).hideCurrentSnackBar();
-    Scaffold.of(context).showSnackBar(snackbar);
-
     final String uid = widget.firebaseDevice.uid;
     final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
 
@@ -50,7 +43,7 @@ class _RelayCardState extends State<RelayCard>
     req.whenComplete(() {
       hasCompleted = true;
       const snackbar = SnackBar(
-        content: Text("Success!"),
+        content: Text("Success sending!"),
         duration: Duration(milliseconds: 500),
       );
       Scaffold.of(context).hideCurrentSnackBar();
