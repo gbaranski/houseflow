@@ -66,29 +66,43 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     return Consumer<AuthService>(
       builder: (context, authModel, child) {
-        return Container(
-          alignment: Alignment.center,
-          child: Column(children: [
-            if (authModel.firebaseUser.devices.length < 1)
-              (Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Text(
-                      "You don't have any devices, if you feel thats an issue, contact us"))),
-            Wrap(
-                children: authModel.firebaseUser.devices.map((firebaseDevice) {
-              return device(
-                context,
-                firebaseDevice.uid,
-              );
-            }).toList()),
-            Expanded(
-              child: RequestsHistory(
-                snapshotsStreams: FirebaseService.firebaseDevicesHistoryStream(
-                    authModel.firebaseUser.devices),
-                firebaseUserDevices: authModel.firebaseUser.devices,
+        return LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) =>
+              SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                  minWidth: constraints.minWidth,
+                  minHeight: constraints.minHeight),
+              child: IntrinsicHeight(
+                child: Container(
+                  alignment: Alignment.center,
+                  child: Column(children: [
+                    if (authModel.firebaseUser.devices.length < 1)
+                      (Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const Text(
+                              "You don't have any devices, if you feel thats an issue, contact us"))),
+                    Wrap(
+                        children: authModel.firebaseUser.devices
+                            .map((firebaseDevice) {
+                      return device(
+                        context,
+                        firebaseDevice.uid,
+                      );
+                    }).toList()),
+                    Expanded(
+                      child: RequestsHistory(
+                        snapshotsStreams:
+                            FirebaseService.firebaseDevicesHistoryStream(
+                                authModel.firebaseUser.devices),
+                        firebaseUserDevices: authModel.firebaseUser.devices,
+                      ),
+                    ),
+                  ]),
+                ),
               ),
             ),
-          ]),
+          ),
         );
       },
     );

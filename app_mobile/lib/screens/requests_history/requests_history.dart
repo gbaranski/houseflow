@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/models/user.dart';
@@ -17,6 +19,8 @@ class RequestsHistory extends StatefulWidget {
 
 class _RequestsHistoryState extends State<RequestsHistory> {
   final List<DeviceRequest> deviceRequests = [];
+  static DateFormat formatter = DateFormat('d MMMM y');
+  var pickedDate = DateTime.now();
 
   @override
   void initState() {
@@ -26,24 +30,74 @@ class _RequestsHistoryState extends State<RequestsHistory> {
             if (!deviceRequests.any((req) => req.docUid == doc.id)) {
               final DeviceRequest deviceRequest =
                   DeviceRequest.fromJson(doc.data(), doc.id);
-              setState(() {
-                deviceRequests.add(deviceRequest);
-              });
+              if (this.mounted) {
+                setState(() {
+                  deviceRequests.add(deviceRequest);
+                  deviceRequests.sort((a, b) => b.timestamp - a.timestamp);
+                });
+              }
             }
           })
         }));
   }
 
+  void setNextDay() {
+    DateTime newDate = pickedDate.add(Duration(days: 1));
+    setState(() {
+      pickedDate = newDate;
+    });
+  }
+
+  void setPreviousDay() {
+    DateTime newDate = pickedDate.subtract(Duration(days: 1));
+    setState(() {
+      pickedDate = newDate;
+    });
+  }
+
+  bool isAtSameDay(DateTime date) {
+    final now = DateTime.now();
+    return now.day == date.day &&
+        now.month == date.month &&
+        now.year == date.year;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: deviceRequests.length,
-      itemBuilder: (context, index) {
-        return SingleDeviceHistory(
-          deviceRequest: deviceRequests[index],
-        );
-      },
-    );
+    return Column(children: [
+      SizedBox(
+        height: 20,
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          IconButton(
+              onPressed: setPreviousDay, icon: Icon(Icons.arrow_back_ios)),
+          Text(formatter.format(pickedDate)),
+          IconButton(
+              onPressed: isAtSameDay(pickedDate) ? null : setNextDay,
+              icon: Icon(Icons.arrow_forward_ios))
+        ],
+      ),
+      SizedBox(
+        height: 20,
+      ),
+      Column(
+        children: deviceRequests.map((deviceRequest) {
+          final DateTime rqDate =
+              DateTime.fromMillisecondsSinceEpoch(deviceRequest.timestamp);
+          if (rqDate.day == pickedDate.day &&
+              rqDate.month == pickedDate.month &&
+              rqDate.year == pickedDate.year) {
+            return SingleDeviceHistory(
+              deviceRequest: deviceRequest,
+            );
+          } else {
+            return SizedBox();
+          }
+        }).toList(),
+      )
+    ]);
   }
 }
 
@@ -55,51 +109,71 @@ class SingleDeviceHistory extends StatelessWidget {
     @required this.deviceRequest,
   }) : super(key: key);
 
+  void copyDocUid(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: deviceRequest.docUid)).then((_) {
+      HapticFeedback.vibrate();
+      final snackBar = SnackBar(
+        content: Text("${deviceRequest.docUid} copied to clipboard"),
+        duration: Duration(milliseconds: 500),
+      );
+      Scaffold.of(context).showSnackBar(snackBar);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        margin: EdgeInsets.all(20),
-        height: 40,
-        child: Row(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5),
+      child: Card(
+        elevation: 0.05,
+        margin: EdgeInsets.symmetric(horizontal: 20),
+        child: InkWell(
+          onTap: () {},
+          onLongPress: () => copyDocUid(context),
+          child: Container(
+            margin: EdgeInsets.all(20),
+            height: 40,
+            child: Row(
               children: [
-                Icon(
-                  Icons.sms,
-                  color: Colors.blueGrey,
-                  size: 40,
-                ),
-              ],
-            ),
-            SizedBox(
-              width: 20,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "${parseTimeAgo(deviceRequest.timestamp)} ·",
-                      style: TextStyle(color: Colors.black45, fontSize: 12),
+                    Icon(
+                      getDeviceIcon(deviceRequest.deviceType),
+                      size: 40,
+                      color: Colors.blueGrey,
                     )
                   ],
                 ),
-                Row(
+                SizedBox(
+                  width: 20,
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      deviceRequest.stringifyRequest(deviceRequest.deviceType),
-                      style: TextStyle(
-                          fontSize: 15, color: Colors.blueGrey.shade800),
+                    Row(
+                      children: [
+                        Text(
+                          "${parseTimeAgo(deviceRequest.timestamp)} · ${upperFirstCharacter(deviceRequest.deviceType)} · ${deviceRequest.ipAddress}",
+                          style: TextStyle(color: Colors.black45, fontSize: 12),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          deviceRequest
+                              .stringifyRequest(deviceRequest.deviceType),
+                          style: TextStyle(
+                              fontSize: 15, color: Colors.blueGrey.shade800),
+                        )
+                      ],
                     )
                   ],
                 )
               ],
-            )
-          ],
+            ),
+          ),
         ),
       ),
     );
