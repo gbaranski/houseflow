@@ -79,6 +79,8 @@ class _SignInState extends State<SignIn> {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
+                                        settings:
+                                            RouteSettings(name: 'Register'),
                                         builder: (context) => Register()));
                               },
                               child: Row(children: [

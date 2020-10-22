@@ -40,8 +40,11 @@ class InactiveDevice extends StatelessWidget {
                 ),
                 onTap: () {
                   print("Tap need help");
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => HelpScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          settings: RouteSettings(name: 'Help screen'),
+                          builder: (context) => HelpScreen()));
                 },
               )
             ]),

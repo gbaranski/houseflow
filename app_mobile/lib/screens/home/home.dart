@@ -24,6 +24,7 @@ class Home extends StatelessWidget {
                       onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
+                              settings: const RouteSettings(name: 'My profile'),
                               builder: (context) => MyProfile(
                                   firebaseUser: authModel.firebaseUser,
                                   currentUser: authModel.currentUser,

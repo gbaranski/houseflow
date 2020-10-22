@@ -60,11 +60,10 @@ class AuthService extends ChangeNotifier {
 
     final credentials =
         await auth.FirebaseAuth.instance.signInWithCredential(credential);
-    if (credentials.additionalUserInfo.isNewUser) {
+    if (credentials.additionalUserInfo.isNewUser)
       FirebaseService.analytics.logSignUp(signUpMethod: 'Google');
-    } else {
+    else
       FirebaseService.analytics.logLogin(loginMethod: 'Google');
-    }
     // Once signed in, return the UserCredential
     return credentials;
   }
@@ -104,7 +103,13 @@ class AuthService extends ChangeNotifier {
 
   Future<auth.UserCredential> signInWithApple() async {
     final oauthCred = await _createAppleOAuthCred();
-    return _auth.signInWithCredential(oauthCred);
+    final credentials = await _auth.signInWithCredential(oauthCred);
+    if (credentials.additionalUserInfo.isNewUser)
+      FirebaseService.analytics.logSignUp(signUpMethod: 'Apple');
+    else
+      FirebaseService.analytics.logLogin(loginMethod: 'Apple');
+
+    return credentials;
   }
 
   Future signInWithEmailAndPassword(String email, String password) async {

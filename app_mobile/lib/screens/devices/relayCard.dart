@@ -114,6 +114,7 @@ class _RelayCardState extends State<RelayCard>
         onLongPress: () => Navigator.push(
             context,
             MaterialPageRoute(
+                settings: RouteSettings(name: 'Device info'),
                 builder: (context) =>
                     SingleDevice(firebaseDevice: widget.firebaseDevice))),
         splashColor: Colors.white.withAlpha(100),
