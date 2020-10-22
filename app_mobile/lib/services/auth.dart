@@ -6,7 +6,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService extends ChangeNotifier {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
-  final List<String> _subscribedTopics = [];
   auth.User currentUser;
   FirebaseUser firebaseUser;
 
@@ -31,6 +30,7 @@ class AuthService extends ChangeNotifier {
     try {
       auth.UserCredential result = await _auth.signInAnonymously();
       auth.User user = result.user;
+      FirebaseService.analytics.logSignUp(signUpMethod: 'Anonymous');
       return await FirebaseService.convertToFirebaseUser(user);
     } catch (e) {
       print(e.toString());
@@ -53,14 +53,22 @@ class AuthService extends ChangeNotifier {
       idToken: googleAuth.idToken,
     );
 
+    final credentials =
+        await auth.FirebaseAuth.instance.signInWithCredential(credential);
+    if (credentials.additionalUserInfo.isNewUser) {
+      FirebaseService.analytics.logSignUp(signUpMethod: 'Google');
+    } else {
+      FirebaseService.analytics.logLogin(loginMethod: 'Google');
+    }
     // Once signed in, return the UserCredential
-    return await auth.FirebaseAuth.instance.signInWithCredential(credential);
+    return credentials;
   }
 
   Future signInWithEmailAndPassword(String email, String password) async {
     auth.UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email, password: password);
     auth.User user = result.user;
+    FirebaseService.analytics.logLogin(loginMethod: 'Email & Password');
     return user;
   }
 
@@ -68,6 +76,7 @@ class AuthService extends ChangeNotifier {
     auth.UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
     auth.User user = result.user;
+    FirebaseService.analytics.logSignUp(signUpMethod: 'Email & Password');
     return user;
   }
 

@@ -36,9 +36,7 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
       return false;
     };
 
-    final token = getToken();
     Completer<MqttClient> completer = Completer<MqttClient>();
-//    mqttClient.logging(on: true);
     mqttClient.onConnected = () {
       print("Connected to MQTT");
       completer.complete(mqttClient);
@@ -52,9 +50,12 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
 
     final connMessage = MqttConnectMessage()
         .withClientIdentifier(clientShortId)
-        .authenticateAs(userUid, await token)
+        .authenticateAs(userUid, await getToken())
         .keepAliveFor(60)
         .startClean();
+    mqttClient.onAutoReconnect = () async {
+      mqttClient.connectionMessage.authenticateAs(userUid, await getToken());
+    };
     mqttClient.connectionMessage = connMessage;
 
     mqttClient.connect().catchError((e) {
