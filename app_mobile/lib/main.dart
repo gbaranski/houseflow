@@ -17,6 +17,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        debugShowCheckedModeBanner: false,
         navigatorObservers: [FirebaseService.observer],
         theme:
             ThemeData(fontFamily: 'OpenSans', accentColor: Color(0xFF0096c7)),

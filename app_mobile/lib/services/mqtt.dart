@@ -24,7 +24,9 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
 
     mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
     mqttClient.autoReconnect = true;
+    mqttClient.resubscribeOnAutoReconnect = false;
     mqttClient.secure = true;
+    mqttClient.logging(on: true);
 
     // Security context
     final context = new SecurityContext();
@@ -53,7 +55,9 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
         .authenticateAs(userUid, await getToken())
         .keepAliveFor(60)
         .startClean();
+
     mqttClient.onAutoReconnect = () async {
+      print("Auto reconnecting!");
       mqttClient.connectionMessage.authenticateAs(userUid, await getToken());
     };
     mqttClient.connectionMessage = connMessage;
