@@ -217,7 +217,7 @@ class _RelayCardState extends State<RelayCard>
         ..rotateX(pi * _animation.value),
       child: Container(
         height: 140,
-        width: 200,
+        width: 180,
         child: _animation.value <= 0.5 ? basicCard() : confirmationCard(),
       ),
     );

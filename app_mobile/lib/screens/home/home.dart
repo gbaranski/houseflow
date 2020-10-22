@@ -37,7 +37,7 @@ class Home extends StatelessWidget {
                     ),
                   ],
                   title: Text(
-                    "Hi, ${authModel.currentUser.displayName.split(' ')[0]}!",
+                    "Hi, ${authModel.firebaseUser.username.split(' ')[0]}!",
                     style: TextStyle(
                         color: Colors.black.withAlpha(160),
                         fontSize: 20,
