@@ -3,13 +3,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class ProfileImage extends StatelessWidget {
   final String imageUrl;
+  final double size;
 
-  ProfileImage({@required this.imageUrl});
+  ProfileImage({@required this.imageUrl, this.size = 24});
 
   @override
   Widget build(BuildContext context) {
     return imageUrl == null
-        ? const Icon(Icons.person_outline)
+        ? Icon(
+            Icons.account_circle,
+            color: Colors.black.withAlpha(180),
+            size: size,
+          )
         : CachedNetworkImage(
             imageUrl: imageUrl,
             imageBuilder: (context, imageProvider) => CircleAvatar(

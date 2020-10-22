@@ -28,6 +28,7 @@ class MyProfile extends StatelessWidget {
             children: [
               ProfileImage(
                 imageUrl: currentUser.photoURL,
+                size: 100,
               ),
               const SizedBox(
                 height: 10,

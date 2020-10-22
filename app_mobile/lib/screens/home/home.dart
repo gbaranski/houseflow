@@ -29,6 +29,7 @@ class Home extends StatelessWidget {
                                   currentUser: authModel.currentUser,
                                   signOut: authModel.signOut))),
                       child: ProfileImage(
+                        size: 38,
                         imageUrl: authModel.currentUser.photoURL,
                       ),
                     ),
