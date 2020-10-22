@@ -39,9 +39,19 @@ class _RelayCardState extends State<RelayCard>
         content: Text("Error! Not connected to the server, please restart app"),
         duration: Duration(milliseconds: 1500),
       );
+      FirebaseService.analytics.logEvent(name: 'Exception', parameters: {
+        'reason': 'Not connected to server while sending request',
+        'connectionState': MqttService.mqttClient.connectionStatus.state,
+      });
       Scaffold.of(context).showSnackBar(snackbar);
       return;
     }
+
+    FirebaseService.analytics.logEvent(name: 'Device action', parameters: {
+      'type': upperFirstCharacter(widget.firebaseDevice.type),
+      'uid': widget.firebaseDevice.uid,
+      'request': 'sendSignal',
+    });
     final String uid = widget.firebaseDevice.uid;
     final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
 
