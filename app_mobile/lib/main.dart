@@ -23,6 +23,7 @@ class App extends StatelessWidget {
         home: FutureBuilder(
           future: Firebase.initializeApp(),
           builder: (context, snapshot) {
+            // return SplashScreen();
             if (snapshot.hasError) {
               print(snapshot.error);
               return const Text("Error");
