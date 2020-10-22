@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -43,4 +45,27 @@ IconData getDeviceIcon(String deviceType) {
     default:
       return Icons.error;
   }
+}
+
+String createNonce(int length) {
+  final random = Random();
+  final charCodes = List<int>.generate(length, (_) {
+    int codeUnit;
+
+    switch (random.nextInt(3)) {
+      case 0:
+        codeUnit = random.nextInt(10) + 48;
+        break;
+      case 1:
+        codeUnit = random.nextInt(26) + 65;
+        break;
+      case 2:
+        codeUnit = random.nextInt(26) + 97;
+        break;
+    }
+
+    return codeUnit;
+  });
+
+  return String.fromCharCodes(charCodes);
 }

@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import 'package:houseflow/services/firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:houseflow/utils/misc.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService extends ChangeNotifier {
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
@@ -62,6 +67,44 @@ class AuthService extends ChangeNotifier {
     }
     // Once signed in, return the UserCredential
     return credentials;
+  }
+
+  Future<auth.OAuthCredential> _createAppleOAuthCred() async {
+    final nonce = createNonce(32);
+    final nativeAppleCred = Platform.isIOS
+        ? await SignInWithApple.getAppleIDCredential(
+            scopes: [
+              AppleIDAuthorizationScopes.email,
+              AppleIDAuthorizationScopes.fullName,
+            ],
+            nonce: sha256.convert(utf8.encode(nonce)).toString(),
+          )
+        : await SignInWithApple.getAppleIDCredential(
+            scopes: [
+              AppleIDAuthorizationScopes.email,
+              AppleIDAuthorizationScopes.fullName,
+            ],
+            webAuthenticationOptions: WebAuthenticationOptions(
+              redirectUri: Uri.parse(
+                  'https://pool-airy-nurse.glitch.me/callbacks/sign_in_with_apple'),
+              clientId: 'com.gbaranski.houseflow.service',
+            ),
+            nonce: sha256.convert(utf8.encode(nonce)).toString(),
+          );
+
+    return new auth.OAuthCredential(
+      providerId: "apple.com", // MUST be "apple.com"
+      signInMethod: "oauth", // MUST be "oauth"
+      accessToken: nativeAppleCred
+          .identityToken, // propagate Apple ID token to BOTH accessToken and idToken parameters
+      idToken: nativeAppleCred.identityToken,
+      rawNonce: nonce,
+    );
+  }
+
+  Future<auth.UserCredential> signInWithApple() async {
+    final oauthCred = await _createAppleOAuthCred();
+    return _auth.signInWithCredential(oauthCred);
   }
 
   Future signInWithEmailAndPassword(String email, String password) async {

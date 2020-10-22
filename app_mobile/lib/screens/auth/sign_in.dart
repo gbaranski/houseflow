@@ -136,6 +136,30 @@ class _SignInState extends State<SignIn> {
                             const SizedBox(
                               width: 10,
                             ),
+                            CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.black,
+                              child: IconButton(
+                                icon: const Icon(
+                                  MdiIcons.apple,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () async {
+                                  try {
+                                    await _authService.signInWithApple();
+                                  } catch (e) {
+                                    print(e.toString());
+                                    final snackBar = SnackBar(
+                                      content: Text(e.toString()),
+                                    );
+                                    Scaffold.of(context).showSnackBar(snackBar);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
                             const CircleAvatar(
                               radius: 25,
                               backgroundColor: Colors.black45,
