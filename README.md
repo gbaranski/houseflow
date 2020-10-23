@@ -1,10 +1,8 @@
 # Houseflow
 
 ![status](https://img.shields.io/badge/status-OK-GREEN)
-[![build-status](https://img.shields.io/github/workflow/status/gbaranski/Control-Home/Docker)](https://github.com/gbaranski/Control-Home/actions)
-[![website-status](https://img.shields.io/website?down_color=red&down_message=down&up_color=gree&up_message=up&url=https%3A%2F%2Fcontrol.gbaranski.com)](https://control.gbaranski.com)
-[![server-status](https://img.shields.io/website?down_color=red&down_message=down&label=server&up_color=gree&up_message=up&url=https%3A%2F%2Fapi.gbaranski.com)](https://api.gbaranski.com)
-![github-stars](https://img.shields.io/github/stars/gbaranski/Control-Home?style=social)
+[![website-status](https://img.shields.io/website?down_color=red&down_message=down&up_color=gree&up_message=up&url=https%3A%2F%2Fhouseflow.gbaranski.com)](https://houseflow.gbaranski.com)
+![github-stars](https://img.shields.io/github/stars/gbaranski/houseflow?style=social)
 
 Set up, manage, and control your Houseflow devices, that includes connected home products like lights, cameras, thermostats, relays and more – all from the Houseflow app.
 
