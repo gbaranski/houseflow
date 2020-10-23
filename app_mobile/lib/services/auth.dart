@@ -145,9 +145,4 @@ class AuthService extends ChangeNotifier {
   Future<String> getIdToken() {
     return currentUser.getIdToken(true);
   }
-
-  void subscribeToAllDevicesTopic(List<FirebaseUserDevice> userDevices) {
-    userDevices
-        .forEach((element) => FirebaseService.subscribeTopic(element.uid));
-  }
 }

@@ -100,6 +100,7 @@ class FirebaseService {
   }
 
   static Future<void> subscribeTopic(String topic) {
+    _fcm.requestNotificationPermissions();
     return _fcm.subscribeToTopic(topic);
   }
 
