@@ -19,10 +19,24 @@ BearSSL::X509List x509(letsencryptauthorityx3_der,
 
 long lastReconnectAttempt = 0;
 
+void configModeCallback(WiFiManager *myWiFiManager) {
+  Serial.println("Entered config mode");
+  Serial.println(WiFi.softAPIP());
+
+  Serial.println(myWiFiManager->getConfigPortalSSID());
+}
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting!");
   EEPROM.begin(512);
+  WiFiManager wifiManager;
+
+  wifiManager.setDebugOutput(false);
+  wifiManager.setAPCallback(configModeCallback);
+  Serial.println("Initializing WiFi");
+  wifiManager.autoConnect();
+  Serial.println("Connected to WiFi");
 
 #if SET_CREDENTIALS == true
   ServerConfig newServerConfig = {DEVICE_UID,  DEVICE_SECRET,
@@ -35,10 +49,6 @@ void setup() {
   ServerConfig serverConfig = readServerConfig();
   relayPin = serverConfig.relayPin;
   setupGpio();
-  Serial.println("Initializing WiFi");
-  WiFiManager wifiManager;
-  wifiManager.autoConnect();
-  Serial.println("Connected to WiFi");
 
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
   Serial.println("\nWaiting for time");
