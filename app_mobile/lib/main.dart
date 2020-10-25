@@ -1,15 +1,18 @@
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/screens/wrapper.dart';
-import 'package:houseflow/services/auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
-import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(App());
+  return runApp(App());
+  runApp(DevicePreview(
+    enabled: !kReleaseMode,
+    builder: (context) => App(),
+  ));
 }
 
 class App extends StatelessWidget {
@@ -27,17 +30,11 @@ class App extends StatelessWidget {
             // return SplashScreen();
             if (snapshot.hasError) {
               print(snapshot.error);
+              // TODO: Add error page
               return const Text("Error");
             }
-            if (snapshot.connectionState == ConnectionState.done) {
-              final AuthService authService = AuthService();
-
-              return StreamProvider<User>.value(
-                  value: authService.user,
-                  initialData: null,
-                  child: ChangeNotifierProvider<AuthService>.value(
-                      value: authService, child: Wrapper()));
-            }
+            if (snapshot.connectionState == ConnectionState.done)
+              return Wrapper();
 
             return SplashScreen();
           },

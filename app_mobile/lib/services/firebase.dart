@@ -77,14 +77,18 @@ class FirebaseService {
     return FirebaseUser.fromMap(data);
   }
 
-  static List<Stream<QuerySnapshot>> firebaseDevicesHistoryStream(
-      List<FirebaseUserDevice> firebaseDevices) {
-    return firebaseDevices
-        .map((device) => _devicesCollection
-            .doc(device.uid)
-            .collection('history')
-            .snapshots())
-        .toList();
+  static Future<QuerySnapshot> getFirebaseDeviceHistory(
+      List<FirebaseUserDevice> firebaseDevices,
+      [DocumentSnapshot lastVisibleDocument]) async {
+    final Query query = _firestore
+        .collectionGroup('history')
+        .where('deviceUid',
+            whereIn: firebaseDevices.map((device) => device.uid).toList())
+        .orderBy('timestamp', descending: true)
+        .limit(10);
+    if (lastVisibleDocument != null)
+      query.startAfterDocument(lastVisibleDocument);
+    return query.get();
   }
 
   static Stream<DocumentSnapshot> getFirebaseDeviceSnapshot(String uid) {

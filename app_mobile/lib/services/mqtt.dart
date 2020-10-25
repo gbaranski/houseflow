@@ -9,10 +9,9 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:houseflow/shared/constants.dart';
 import 'dart:async';
-
 import 'package:provider/provider.dart';
 
-class MqttService extends ChangeNotifier implements ReassembleHandler {
+class MqttService implements ReassembleHandler {
   static MqttServerClient mqttClient;
 
   final String userUid;
@@ -118,8 +117,8 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     if (mqttClient != null) {
       mqttClient.disconnect();
       mqttClient.autoReconnect = false;
+      print("Disconnected from MQTT due to sign out");
     }
-    print("Disconnected from MQTT due to sign out");
   }
 
   @override

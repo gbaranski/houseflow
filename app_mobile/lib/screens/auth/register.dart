@@ -29,7 +29,7 @@ class _RegisterState extends State<Register> {
                 children: [
                   const SizedBox(height: 10),
                   LoginForm(
-                    onSubmit: _authService.registerWithEmailAndPassword,
+                    onSubmit: AuthService.registerWithEmailAndPassword,
                     submitMessage: 'REGISTER',
                     onSuccess: () => Navigator.pop(context),
                   ),

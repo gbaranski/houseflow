@@ -76,7 +76,7 @@ class DeviceTopic {
   DeviceTopic({@required this.request, @required this.response});
 }
 
-class DeviceRequest {
+class DeviceHistory {
   final String ipAddress;
   final String request;
   final String username;
@@ -85,8 +85,8 @@ class DeviceRequest {
   final int timestamp;
   final String docUid;
 
-  factory DeviceRequest.fromJson(Map<String, dynamic> json, String docUid) =>
-      DeviceRequest(
+  factory DeviceHistory.fromJson(Map<String, dynamic> json, String docUid) =>
+      DeviceHistory(
         ipAddress: json['ipAddress'],
         request: json['request'],
         username: json['username'],
@@ -115,7 +115,7 @@ class DeviceRequest {
     }
   }
 
-  DeviceRequest({
+  DeviceHistory({
     @required this.ipAddress,
     @required this.request,
     @required this.username,

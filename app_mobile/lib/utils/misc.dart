@@ -69,3 +69,16 @@ String createNonce(int length) {
 
   return String.fromCharCodes(charCodes);
 }
+
+bool isAtSameDay(DateTime date, [DateTime secondDate]) {
+  if (secondDate != null) {
+    return date.day == secondDate.day &&
+        date.month == secondDate.month &&
+        date.year == secondDate.year;
+  }
+
+  final now = DateTime.now();
+  return now.day == date.day &&
+      now.month == date.month &&
+      now.year == date.year;
+}

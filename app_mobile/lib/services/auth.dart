@@ -9,29 +9,19 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-class AuthService extends ChangeNotifier {
-  final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
-  auth.User currentUser;
-  FirebaseUser firebaseUser;
+class AuthService {
+  static final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
+  static auth.User currentUser;
+  static FirebaseUser firebaseUser;
 
-  AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
+  static AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
 
   // auth change user stream
-  Stream<auth.User> get user {
-    _auth.authStateChanges().listen((event) async {
-      if (event == null) {
-        authStatus = AuthStatus.NOT_LOGGED_IN;
-      } else {
-        authStatus = AuthStatus.NOT_RETREIVED_FIRESTORE;
-        currentUser = event;
-      }
-      print("Initialized");
-      notifyListeners();
-    });
+  static Stream<auth.User> get user {
     return _auth.authStateChanges();
   }
 
-  Future signInAnon() async {
+  static Future signInAnon() async {
     try {
       auth.UserCredential result = await _auth.signInAnonymously();
       auth.User user = result.user;
@@ -43,7 +33,7 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<auth.UserCredential> signInWithGoogle() async {
+  static Future<auth.UserCredential> signInWithGoogle() async {
     // Trigger the authentication flow
     final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
 
@@ -68,7 +58,7 @@ class AuthService extends ChangeNotifier {
     return credentials;
   }
 
-  Future<auth.OAuthCredential> _createAppleOAuthCred() async {
+  static Future<auth.OAuthCredential> _createAppleOAuthCred() async {
     final nonce = createNonce(32);
     final nativeAppleCred = Platform.isIOS
         ? await SignInWithApple.getAppleIDCredential(
@@ -101,7 +91,7 @@ class AuthService extends ChangeNotifier {
     );
   }
 
-  Future<auth.UserCredential> signInWithApple() async {
+  static Future<auth.UserCredential> signInWithApple() async {
     final oauthCred = await _createAppleOAuthCred();
     final credentials = await _auth.signInWithCredential(oauthCred);
     if (credentials.additionalUserInfo.isNewUser)
@@ -112,7 +102,8 @@ class AuthService extends ChangeNotifier {
     return credentials;
   }
 
-  Future signInWithEmailAndPassword(String email, String password) async {
+  static Future signInWithEmailAndPassword(
+      String email, String password) async {
     auth.UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email, password: password);
     auth.User user = result.user;
@@ -120,7 +111,8 @@ class AuthService extends ChangeNotifier {
     return user;
   }
 
-  Future registerWithEmailAndPassword(String email, String password) async {
+  static Future registerWithEmailAndPassword(
+      String email, String password) async {
     auth.UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
     auth.User user = result.user;
@@ -128,11 +120,12 @@ class AuthService extends ChangeNotifier {
     return user;
   }
 
-  Future signOut() async {
+  static Future signOut() async {
     try {
-      firebaseUser.devices.forEach((element) {
-        FirebaseService.unsubscribeTopic(element.uid);
-      });
+      if (firebaseUser.devices != null)
+        firebaseUser.devices.forEach((element) {
+          FirebaseService.unsubscribeTopic(element.uid);
+        });
       firebaseUser = null;
       currentUser = null;
       return await _auth.signOut();
@@ -142,7 +135,7 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<String> getIdToken() {
+  static Future<String> getIdToken() {
     return currentUser.getIdToken(true);
   }
 }

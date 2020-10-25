@@ -45,7 +45,7 @@ class _SignInState extends State<SignIn> {
                     ),
                     const SizedBox(height: 10),
                     LoginForm(
-                      onSubmit: _authService.signInWithEmailAndPassword,
+                      onSubmit: AuthService.signInWithEmailAndPassword,
                       submitMessage: 'LOG IN',
                     ),
                     const SizedBox(
@@ -124,7 +124,7 @@ class _SignInState extends State<SignIn> {
                                 ),
                                 onPressed: () async {
                                   try {
-                                    await _authService.signInWithGoogle();
+                                    await AuthService.signInWithGoogle();
                                   } catch (e) {
                                     print(e.toString());
                                     final snackBar = SnackBar(
@@ -148,7 +148,7 @@ class _SignInState extends State<SignIn> {
                                 ),
                                 onPressed: () async {
                                   try {
-                                    await _authService.signInWithApple();
+                                    await AuthService.signInWithApple();
                                   } catch (e) {
                                     print(e.toString());
                                     final snackBar = SnackBar(

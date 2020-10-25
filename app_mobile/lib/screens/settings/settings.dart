@@ -13,10 +13,10 @@ class Settings extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthService>(builder: (context, authModel, child) {
       return ListView.builder(
-          itemCount: authModel.firebaseUser.devices.length,
+          itemCount: AuthService.firebaseUser.devices.length,
           itemBuilder: (context, index) {
             final FirebaseUserDevice firebaseUserDevice =
-                authModel.firebaseUser.devices[index];
+                AuthService.firebaseUser.devices[index];
 
             return StreamBuilder(
                 stream: FirebaseService.getFirebaseDeviceSnapshot(

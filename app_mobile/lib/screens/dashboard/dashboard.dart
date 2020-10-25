@@ -6,7 +6,6 @@ import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/utils/misc.dart';
-import 'package:provider/provider.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -62,51 +61,48 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  final List<DeviceHistory> _deviceHistory = [];
+
+  Future<void> updateDeviceHistory() async {
+    final snapshot = await FirebaseService.getFirebaseDeviceHistory(
+        AuthService.firebaseUser.devices);
+    final deviceHistory = snapshot.docs
+        .map((doc) => DeviceHistory.fromJson(doc.data(), doc.id))
+        .toList();
+    setState(() {
+      _deviceHistory.addAll(deviceHistory);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    updateDeviceHistory();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthService>(
-      builder: (context, authModel, child) {
-        return LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) =>
-              SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics()
-                .applyTo(BouncingScrollPhysics()),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                  minWidth: constraints.minWidth,
-                  minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Container(
-                  alignment: Alignment.center,
-                  child: Column(children: [
-                    if (authModel.firebaseUser.devices.length < 1)
-                      (Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          child: const Text(
-                              "You don't have any devices, if you feel thats an issue, contact us"))),
-                    Wrap(
-                        children: authModel.firebaseUser.devices
-                            .map((firebaseDevice) {
-                      return device(
-                        context,
-                        firebaseDevice.uid,
-                      );
-                    }).toList()),
-                    Expanded(
-                      child: RequestsHistory(
-                        snapshotsStreams:
-                            FirebaseService.firebaseDevicesHistoryStream(
-                                authModel.firebaseUser.devices),
-                        firebaseUserDevices: authModel.firebaseUser.devices,
-                      ),
-                    ),
-                  ]),
-                ),
-              ),
-            ),
+    return CustomScrollView(
+        physics:
+            AlwaysScrollableScrollPhysics().applyTo(BouncingScrollPhysics()),
+        slivers: [
+          SliverAppBar(
+            title: Text("Title"),
           ),
-        );
-      },
-    );
+          SliverGrid(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                childAspectRatio: 1.2, maxCrossAxisExtent: 250),
+            delegate: SliverChildListDelegate(AuthService.firebaseUser.devices
+                .map((firebaseDevice) => device(context, firebaseDevice.uid))
+                .toList()),
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate(_deviceHistory
+                .map((deviceRequest) => SingleDeviceHistory(
+                      deviceRequest: deviceRequest,
+                    ))
+                .toList()),
+          )
+        ]);
   }
 }

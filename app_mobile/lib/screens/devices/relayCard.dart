@@ -125,22 +125,24 @@ class _RelayCardState extends State<RelayCard>
           child: offlineCardBanner(
             child: Container(
               margin: const EdgeInsets.all(10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(
-                    widget.iconData,
-                    color: Colors.white.withAlpha(180),
-                    size: 72,
-                  ),
-                  Text(
-                    upperFirstCharacter(widget.firebaseDevice.type),
-                    style: TextStyle(
-                        color: Colors.white.withAlpha(190),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w100),
-                  ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraint) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Icon(widget.iconData,
+                          color: Colors.white.withAlpha(180),
+                          size: constraint.biggest.width / 2),
+                      Text(
+                        upperFirstCharacter(widget.firebaseDevice.type),
+                        style: TextStyle(
+                            color: Colors.white.withAlpha(190),
+                            fontSize: constraint.biggest.width / 8,
+                            fontWeight: FontWeight.w100),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
