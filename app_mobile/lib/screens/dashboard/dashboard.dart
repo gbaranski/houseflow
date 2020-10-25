@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:houseflow/models/device.dart';
-import 'package:houseflow/screens/devices/relayCard.dart';
-import 'package:houseflow/screens/requests_history/requests_history.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/utils/misc.dart';
+import 'package:houseflow/widgets/device_single_history.dart';
+import 'package:houseflow/widgets/devices/relayCard.dart';
 
 class Dashboard extends StatefulWidget {
   @override
