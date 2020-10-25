@@ -55,7 +55,13 @@ class _RequestsHistoryState extends State<RequestsHistory> {
     });
   }
 
-  bool isAtSameDay(DateTime date) {
+  bool isAtSameDay(DateTime date, [DateTime secondDate]) {
+    if (secondDate != null) {
+      return date.day == secondDate.day &&
+          date.month == secondDate.month &&
+          date.year == secondDate.year;
+    }
+
     final now = DateTime.now();
     return now.day == date.day &&
         now.month == date.month &&
@@ -83,19 +89,21 @@ class _RequestsHistoryState extends State<RequestsHistory> {
         height: 20,
       ),
       Column(
-        children: deviceRequests.map((deviceRequest) {
-          final DateTime rqDate =
-              DateTime.fromMillisecondsSinceEpoch(deviceRequest.timestamp);
-          if (rqDate.day == pickedDate.day &&
-              rqDate.month == pickedDate.month &&
-              rqDate.year == pickedDate.year) {
-            return SingleDeviceHistory(
-              deviceRequest: deviceRequest,
-            );
-          } else {
-            return SizedBox();
-          }
-        }).toList(),
+        children: !deviceRequests.any((deviceRequest) => isAtSameDay(
+                DateTime.fromMillisecondsSinceEpoch(deviceRequest.timestamp),
+                pickedDate))
+            ? [Text("Nothing happened that day")]
+            : deviceRequests.map((deviceRequest) {
+                final DateTime rqDate = DateTime.fromMillisecondsSinceEpoch(
+                    deviceRequest.timestamp);
+                if (isAtSameDay(rqDate, pickedDate)) {
+                  return SingleDeviceHistory(
+                    deviceRequest: deviceRequest,
+                  );
+                } else {
+                  return SizedBox();
+                }
+              }).toList(),
       )
     ]);
   }
