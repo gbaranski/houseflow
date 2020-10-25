@@ -26,7 +26,6 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     mqttClient.autoReconnect = true;
     mqttClient.resubscribeOnAutoReconnect = false;
     mqttClient.secure = true;
-    mqttClient.logging(on: true);
 
     // Security context
     final context = new SecurityContext();
@@ -121,14 +120,6 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
       mqttClient.autoReconnect = false;
     }
     print("Disconnected from MQTT due to sign out");
-  }
-
-  @override
-  void dispose() {
-    mqttClient.disconnect();
-    mqttClient.autoReconnect = false;
-    print("Disconnected from MQTT due to dispose");
-    super.dispose();
   }
 
   @override

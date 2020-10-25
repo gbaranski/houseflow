@@ -41,8 +41,6 @@ class Wrapper extends StatelessWidget {
             print("Received, redirecting to init user");
             return InitUser();
           }
-          print(snapshot.data);
-
           authModel.firebaseUser = FirebaseUser.fromMap(snapshot.data.data());
 
           print("Firebase user ${authModel.firebaseUser}");
@@ -52,6 +50,7 @@ class Wrapper extends StatelessWidget {
           if (MqttService.mqttClient != null &&
               MqttService.mqttClient.connectionStatus.state ==
                   MqttConnectionState.connected) {
+            print("Skipping creating new MQTT servie bcs its already created");
             return Home();
           }
 
@@ -59,14 +58,13 @@ class Wrapper extends StatelessWidget {
               getToken: authModel.currentUser.getIdToken,
               userUid: authModel.currentUser.uid);
 
-          return FutureBuilder<MqttClient>(
+          return new FutureBuilder<MqttClient>(
             future: mqttService.connect(),
             builder:
                 (BuildContext context, AsyncSnapshot<MqttClient> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasData) {
-                  return Home();
-                }
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData) {
+                return Home();
               }
               return SplashScreen();
             },

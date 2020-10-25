@@ -71,7 +71,7 @@ class _RelayCardState extends State<RelayCard>
           RelayData(lastSignalTimestamp: widget.getNewDeviceData());
       FirebaseService.updateFirebaseDeviceData(uid, newDeviceData.toJson());
     });
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(Duration(seconds: 3), () {
       if (!hasCompleted) {
         const snackbar = SnackBar(content: Text("No response from device!"));
         Scaffold.of(context).showSnackBar(snackbar);
