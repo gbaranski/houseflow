@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
+
+import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/models/devices/relay.dart';
 import 'package:houseflow/screens/single_device/single_device.dart';
@@ -36,7 +37,8 @@ class _RelayCardState extends State<RelayCard>
     if (MqttService.mqttClient.connectionStatus.state !=
         MqttConnectionState.connected) {
       const snackbar = SnackBar(
-        content: Text("Error! Not connected to the server, please restart app"),
+        content: Text(
+            "Error! Not connected to the server, please try restarting app"),
         duration: Duration(milliseconds: 1500),
       );
       FirebaseService.analytics.logEvent(name: 'Exception', parameters: {
@@ -62,7 +64,7 @@ class _RelayCardState extends State<RelayCard>
     req.whenComplete(() {
       hasCompleted = true;
       const snackbar = SnackBar(
-        content: Text("Success sending!"),
+        content: Text("Success!"),
         duration: Duration(milliseconds: 500),
       );
       Scaffold.of(context).hideCurrentSnackBar();
