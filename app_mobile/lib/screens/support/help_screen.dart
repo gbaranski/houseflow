@@ -1,5 +1,6 @@
 import 'package:houseflow/shared/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:houseflow/widgets/additional_view.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,11 +17,7 @@ class HelpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Help"),
-        backgroundColor: LayoutBlueColor1,
-      ),
+    return AdditionalView(
       body: Container(
         margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         alignment: Alignment.topCenter,
@@ -35,22 +32,26 @@ class HelpScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              GestureDetector(
-                child: const Icon(
-                  Icons.email,
+              IconButton(
+                icon: const Icon(
+                  Icons.email_outlined,
                   size: 48,
+                  color: Colors.black87,
                 ),
-                onTap: () => launchUrl(context, SUPPORT_EMAIL_URL_ISSUE),
+                onPressed: () => launchUrl(context, SUPPORT_EMAIL_URL_ISSUE),
+                tooltip: SUPPORT_EMAIL,
               ),
               const SizedBox(
                 width: 20,
               ),
-              GestureDetector(
-                child: const Icon(
+              IconButton(
+                icon: const Icon(
                   MdiIcons.github,
                   size: 48,
+                  color: Colors.black87,
                 ),
-                onTap: () => launchUrl(context, GITHUB_URL_ISSUES),
+                tooltip: GITHUB_URL,
+                onPressed: () => launchUrl(context, GITHUB_URL_ISSUES),
               ),
             ],
           )
