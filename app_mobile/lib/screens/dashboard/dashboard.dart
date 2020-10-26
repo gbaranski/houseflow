@@ -4,14 +4,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/screens/my_profile/my_profile.dart';
+import 'package:houseflow/screens/support/help_screen.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/shared/profile_image.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:houseflow/widgets/device_single_history.dart';
 import 'package:houseflow/widgets/devices/relayCard.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -124,8 +127,9 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAnyDevices = AuthService.firebaseUser.devices.length > 1;
     return RefreshIndicator(
-      onRefresh: onRefresh,
+      onRefresh: hasAnyDevices ? onRefresh : () async {},
       color: Colors.blue,
       backgroundColor: Colors.black54,
       child: CustomScrollView(
@@ -169,22 +173,68 @@ class _DashboardState extends State<Dashboard> {
                 ),
               ),
             ),
-            SliverGrid(
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  childAspectRatio: 1.2, maxCrossAxisExtent: 250),
-              delegate: SliverChildListDelegate(AuthService.firebaseUser.devices
-                  .map((firebaseDevice) => device(context, firebaseDevice.uid))
-                  .toList()),
-            ),
-            PagedSliverList<int, DocumentSnapshot>(
-              key: Key('deviceHistoryList'),
-              pagingController: _pagingController,
-              builderDelegate: PagedChildBuilderDelegate<DocumentSnapshot>(
-                  itemBuilder: (context, item, index) => SingleDeviceHistory(
-                        deviceRequest:
-                            DeviceHistory.fromJson(item.data(), item.id),
-                      )),
-            )
+            if (hasAnyDevices) ...[
+              SliverGrid(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    childAspectRatio: 1.2, maxCrossAxisExtent: 250),
+                delegate: SliverChildListDelegate(AuthService
+                    .firebaseUser.devices
+                    .map(
+                        (firebaseDevice) => device(context, firebaseDevice.uid))
+                    .toList()),
+              ),
+              PagedSliverList<int, DocumentSnapshot>(
+                key: Key('deviceHistoryList'),
+                pagingController: _pagingController,
+                builderDelegate: PagedChildBuilderDelegate<DocumentSnapshot>(
+                    itemBuilder: (context, item, index) => SingleDeviceHistory(
+                          deviceRequest:
+                              DeviceHistory.fromJson(item.data(), item.id),
+                        )),
+              )
+            ] else
+              (SliverToBoxAdapter(
+                  child: Container(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.warning,
+                        color: Colors.red,
+                        size: 72,
+                      ),
+                      Text(
+                        "Nothing found!",
+                        style: TextStyle(fontSize: 24),
+                      ),
+                      Text(
+                        "Sorry, we couldn't any device that belongs to you.",
+                        style: TextStyle(fontSize: 13, color: Colors.black45),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                settings: const RouteSettings(name: 'Support'),
+                                builder: (context) => HelpScreen())),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "If you need help ",
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.black45),
+                            ),
+                            Text(
+                              "contact us",
+                              style: TextStyle(
+                                  fontSize: 13, color: LayoutBlueColor1),
+                            ),
+                          ],
+                        ),
+                      )
+                    ]),
+              )))
           ]),
     );
   }

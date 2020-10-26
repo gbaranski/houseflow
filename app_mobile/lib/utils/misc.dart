@@ -82,3 +82,7 @@ bool isAtSameDay(DateTime date, [DateTime secondDate]) {
       now.month == date.month &&
       now.year == date.year;
 }
+
+String removeEmailSuffix(String email) {
+  return email.split('@')[0];
+}

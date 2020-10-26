@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/utils/misc.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 
 class InitUser extends StatefulWidget {
@@ -58,7 +59,9 @@ class _InitUserState extends State<InitUser> {
                 child: Column(
                   children: [
                     TextFormField(
-                      initialValue: widget.currentUser.displayName,
+                      initialValue: widget.currentUser.displayName != null
+                          ? widget.currentUser.displayName
+                          : removeEmailSuffix(widget.currentUser.email),
                       keyboardType: TextInputType.name,
                       onSaved: (String value) {
                         username = value;
