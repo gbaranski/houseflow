@@ -13,7 +13,8 @@ class InDepthDeviceHistory extends StatelessWidget {
 
   InDepthDeviceHistory({@required this.deviceHistory});
 
-  final DateFormat formatter = DateFormat('yyyy-MM-dd');
+  final DateFormat dateFormatter1 = DateFormat('dd MMMM y');
+  final DateFormat dateFormatter2 = DateFormat('H:m:s');
 
   void copyDocumentUidToClipboard(BuildContext context) {
     Clipboard.setData(ClipboardData(text: deviceHistory.docUid)).then((_) {
@@ -64,12 +65,25 @@ class InDepthDeviceHistory extends StatelessWidget {
               ),
               Row(
                 children: [
+                  Icon(Icons.today),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(
+                    dateFormatter1.format(DateTime.fromMillisecondsSinceEpoch(
+                        deviceHistory.timestamp)),
+                    style: _dataTextStyle,
+                  ),
+                ],
+              ),
+              Row(
+                children: [
                   Icon(Icons.schedule),
                   SizedBox(
                     width: 10,
                   ),
                   Text(
-                    formatter.format(DateTime.fromMillisecondsSinceEpoch(
+                    dateFormatter2.format(DateTime.fromMillisecondsSinceEpoch(
                         deviceHistory.timestamp)),
                     style: _dataTextStyle,
                   ),
