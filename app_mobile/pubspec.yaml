@@ -42,6 +42,7 @@ dependencies:
   sign_in_with_apple: '^2.5.4'
   device_preview: '^0.4.8'
   infinite_scroll_pagination: '^2.2.1'
+  rounded_loading_button: '^1.0.15'
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

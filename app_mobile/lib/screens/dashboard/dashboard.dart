@@ -110,30 +110,36 @@ class _DashboardState extends State<Dashboard> {
             elevation: 0,
             expandedHeight: 80,
             actions: [
-              GestureDetector(
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        settings: const RouteSettings(name: 'My profile'),
-                        builder: (context) => MyProfile(
-                            firebaseUser: AuthService.firebaseUser,
-                            currentUser: AuthService.currentUser,
-                            signOut: AuthService.signOut))),
-                child: ProfileImage(
-                  size: 38,
-                  imageUrl: AuthService.currentUser.photoURL,
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: GestureDetector(
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          settings: const RouteSettings(name: 'My profile'),
+                          builder: (context) => MyProfile(
+                              firebaseUser: AuthService.firebaseUser,
+                              currentUser: AuthService.currentUser,
+                              signOut: AuthService.signOut))),
+                  child: ProfileImage(
+                    size: 38,
+                    imageUrl: AuthService.currentUser.photoURL,
+                  ),
                 ),
               ),
               SizedBox(
                 width: 10,
               ),
             ],
-            title: Text(
-              "Hi, ${AuthService.firebaseUser.username.split(' ')[0]}!",
-              style: TextStyle(
-                  color: Colors.black.withAlpha(160),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600),
+            title: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Text(
+                "Hi, ${AuthService.firebaseUser.username.split(' ')[0]}!",
+                style: TextStyle(
+                    color: Colors.black.withAlpha(160),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           SliverGrid(

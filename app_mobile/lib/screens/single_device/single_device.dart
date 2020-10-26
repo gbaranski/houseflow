@@ -4,6 +4,7 @@ import 'package:houseflow/models/device.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/utils/misc.dart';
+import 'package:houseflow/widgets/additional_view.dart';
 
 class SingleDevice extends StatelessWidget {
   final FirebaseDevice firebaseDevice;
@@ -38,27 +39,7 @@ class SingleDevice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80),
-        child: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          flexibleSpace: Container(
-            margin: const EdgeInsets.only(left: 15),
-            alignment: Alignment.bottomLeft,
-            child: IconButton(
-              onPressed: () => Navigator.pop(context),
-              tooltip: "Back",
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: ACTION_ICON_COLOR,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return AdditionalView(
       body: Builder(builder: (context) {
         return Container(
           margin: const EdgeInsets.only(left: 20, top: 40),

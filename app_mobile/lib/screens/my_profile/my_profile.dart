@@ -4,6 +4,7 @@ import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/shared/profile_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:houseflow/widgets/additional_view.dart';
 
 class MyProfile extends StatelessWidget {
   final FirebaseUser firebaseUser;
@@ -18,51 +19,49 @@ class MyProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Builder(
-        builder: (BuildContext context) => Container(
-          padding: const EdgeInsets.only(top: 20),
-          alignment: Alignment.topCenter,
-          child: Column(
-            children: [
-              ProfileImage(
-                imageUrl: currentUser.photoURL,
-                size: 100,
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              GestureDetector(
-                onLongPress: () {
-                  Clipboard.setData(ClipboardData(text: currentUser.uid))
-                      .then((_) {
-                    HapticFeedback.vibrate();
-                    const snackBar = SnackBar(
-                      content: Text("UID copied to clipboard"),
-                    );
-                    Scaffold.of(context).showSnackBar(snackBar);
-                  });
-                },
-                child: Text(
-                  firebaseUser.username,
-                  style: const TextStyle(
-                    fontSize: 26,
+    return AdditionalView(
+        body: Builder(
+            builder: (BuildContext context) => Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(top: 20),
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    children: [
+                      ProfileImage(
+                        imageUrl: currentUser.photoURL,
+                        size: 100,
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      GestureDetector(
+                        onLongPress: () {
+                          Clipboard.setData(
+                                  ClipboardData(text: currentUser.uid))
+                              .then((_) {
+                            HapticFeedback.vibrate();
+                            const snackBar = SnackBar(
+                              content: Text("UID copied to clipboard"),
+                            );
+                            Scaffold.of(context).showSnackBar(snackBar);
+                          });
+                        },
+                        child: Text(
+                          firebaseUser.username,
+                          style: const TextStyle(
+                              fontSize: 28, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      RaisedButton(
+                        color: Colors.indigo,
+                        textColor: Colors.white,
+                        child: Text("Log out"),
+                        onPressed: () {
+                          signOut().then((value) => Navigator.pop(context));
+                        },
+                      )
+                    ],
                   ),
-                ),
-              ),
-              RaisedButton(
-                color: LayoutBlueColor1,
-                textColor: Colors.white,
-                child: Text("Log out"),
-                onPressed: () {
-                  signOut().then((value) => Navigator.pop(context));
-                },
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+                )));
   }
 }

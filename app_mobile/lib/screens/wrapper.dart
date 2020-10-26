@@ -17,35 +17,36 @@ class Wrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder(
         stream: AuthService.user,
-        builder: (context, AsyncSnapshot<auth.User> snapshot) {
-          print("New snapshot data: ${snapshot.data}");
-          if (snapshot.connectionState != ConnectionState.active)
+        builder: (context, AsyncSnapshot<auth.User> currentUserSnapshot) {
+          print("New snapshot data: ${currentUserSnapshot.data}");
+          if (currentUserSnapshot.connectionState != ConnectionState.active)
             return SplashScreen();
 
-          if (snapshot == null) {
+          if (currentUserSnapshot.data == null) {
             AuthService.authStatus = AuthStatus.NOT_LOGGED_IN;
             MqttService.disconnectDueToSignOut();
             return SignIn();
           } else {
             AuthService.authStatus = AuthStatus.NOT_RETREIVED_FIRESTORE;
-            AuthService.currentUser = snapshot.data;
+            AuthService.currentUser = currentUserSnapshot.data;
           }
-
           print("AuthState: ${AuthService.authStatus}");
 
           return StreamBuilder(
             stream: FirebaseService.firebaseUserStream(AuthService.currentUser),
             builder: (BuildContext context,
-                AsyncSnapshot<DocumentSnapshot> snapshot) {
-              if (!snapshot.hasData) {
+                AsyncSnapshot<DocumentSnapshot> firebaseUserSnapshot) {
+              if (!firebaseUserSnapshot.hasData) {
                 return SplashScreen();
               }
-              if (snapshot.data.data() == null) {
+              if (firebaseUserSnapshot.data.data() == null) {
                 print("Received, redirecting to init user");
-                return InitUser();
+                return InitUser(
+                  currentUser: currentUserSnapshot.data,
+                );
               }
               AuthService.firebaseUser =
-                  FirebaseUser.fromMap(snapshot.data.data());
+                  FirebaseUser.fromMap(firebaseUserSnapshot.data.data());
 
               print("Firebase user ${AuthService.firebaseUser}");
 

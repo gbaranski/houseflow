@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:houseflow/models/device.dart';
-import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:intl/intl.dart';
+
+import 'additional_view.dart';
 
 class InDepthDeviceHistory extends StatelessWidget {
   final DeviceHistory deviceHistory;
@@ -10,32 +12,22 @@ class InDepthDeviceHistory extends StatelessWidget {
 
   final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
+  void copyDocumentUidToClipboard(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: deviceHistory.docUid)).then((_) {
+      HapticFeedback.vibrate();
+      const snackBar = SnackBar(
+        content: Text("Document UID copied to clipboard"),
+      );
+      Scaffold.of(context).showSnackBar(snackBar);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80),
-        child: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          flexibleSpace: Container(
-            margin: const EdgeInsets.only(left: 15),
-            alignment: Alignment.bottomLeft,
-            child: IconButton(
-              onPressed: () => Navigator.pop(context),
-              tooltip: "Back",
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: ACTION_ICON_COLOR,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return AdditionalView(
       body: Builder(builder: (context) {
         return Container(
-          margin: const EdgeInsets.only(left: 20, top: 40),
+          margin: const EdgeInsets.only(left: 20, top: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -54,7 +46,7 @@ class InDepthDeviceHistory extends StatelessWidget {
                   ),
                   Text(
                     deviceHistory.username,
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: 18),
                   ),
                 ],
               ),
@@ -64,8 +56,10 @@ class InDepthDeviceHistory extends StatelessWidget {
                   SizedBox(
                     width: 10,
                   ),
-                  Text(formatter.format(DateTime.fromMillisecondsSinceEpoch(
-                      deviceHistory.timestamp))),
+                  Text(
+                    formatter.format(DateTime.fromMillisecondsSinceEpoch(
+                        deviceHistory.timestamp)),
+                  ),
                 ],
               ),
               Row(
@@ -77,14 +71,17 @@ class InDepthDeviceHistory extends StatelessWidget {
                   Text(deviceHistory.ipAddress),
                 ],
               ),
-              Row(
-                children: [
-                  Icon(Icons.source),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(deviceHistory.docUid),
-                ],
+              GestureDetector(
+                onLongPress: () => copyDocumentUidToClipboard(context),
+                child: Row(
+                  children: [
+                    Icon(Icons.source),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(deviceHistory.docUid),
+                  ],
+                ),
               ),
             ],
           ),
@@ -106,6 +103,7 @@ class SingleDeviceHistory extends StatelessWidget {
     Navigator.push(
         context,
         MaterialPageRoute(
+            settings: RouteSettings(name: 'InDepthDeviceHistory'),
             builder: (context) => InDepthDeviceHistory(
                   deviceHistory: deviceRequest,
                 )));

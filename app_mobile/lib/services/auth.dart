@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:houseflow/services/firebase.dart';
-import 'package:flutter/material.dart';
 import 'package:houseflow/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
