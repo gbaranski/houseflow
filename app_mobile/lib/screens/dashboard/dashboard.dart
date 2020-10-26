@@ -6,6 +6,7 @@ import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:houseflow/widgets/device_single_history.dart';
 import 'package:houseflow/widgets/devices/relayCard.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -61,23 +62,39 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  final List<DeviceHistory> _deviceHistory = [];
+  final PagingController<int, DocumentSnapshot> _pagingController =
+      PagingController(firstPageKey: 0);
 
-  Future<void> updateDeviceHistory() async {
-    final snapshot = await FirebaseService.getFirebaseDeviceHistory(
-        AuthService.firebaseUser.devices);
-    final deviceHistory = snapshot.docs
-        .map((doc) => DeviceHistory.fromJson(doc.data(), doc.id))
-        .toList();
-    setState(() {
-      _deviceHistory.addAll(deviceHistory);
-    });
+  Future<void> updateDeviceHistory(int pageKey) async {
+    try {
+      final lastDocument = _pagingController.itemList == null
+          ? null
+          : _pagingController.itemList[pageKey - 1];
+
+      print(
+          "Fetching device history i: $pageKey, last visible doc ${lastDocument?.id}");
+      QuerySnapshot snapshot;
+      if (lastDocument != null) {
+        snapshot = await FirebaseService.getFirebaseDeviceHistory(
+            AuthService.firebaseUser.devices, lastDocument);
+      } else
+        snapshot = await FirebaseService.getFirebaseDeviceHistory(
+            AuthService.firebaseUser.devices);
+
+      _pagingController.appendPage(
+          snapshot.docs, pageKey + snapshot.docs.length);
+    } catch (e) {
+      print("Error occured when fetching device history $e");
+      _pagingController.error = e;
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    updateDeviceHistory();
+    _pagingController.addPageRequestListener((pageKey) {
+      updateDeviceHistory(pageKey);
+    });
   }
 
   @override
@@ -96,13 +113,21 @@ class _DashboardState extends State<Dashboard> {
                 .map((firebaseDevice) => device(context, firebaseDevice.uid))
                 .toList()),
           ),
-          SliverList(
-            delegate: SliverChildListDelegate(_deviceHistory
-                .map((deviceRequest) => SingleDeviceHistory(
-                      deviceRequest: deviceRequest,
-                    ))
-                .toList()),
+          PagedSliverList<int, DocumentSnapshot>(
+            key: Key('deviceHistoryList'),
+            pagingController: _pagingController,
+            builderDelegate: PagedChildBuilderDelegate<DocumentSnapshot>(
+                itemBuilder: (context, item, index) => SingleDeviceHistory(
+                      deviceRequest:
+                          DeviceHistory.fromJson(item.data(), item.id),
+                    )),
           )
         ]);
+  }
+
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
   }
 }

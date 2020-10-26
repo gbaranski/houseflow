@@ -80,14 +80,23 @@ class FirebaseService {
   static Future<QuerySnapshot> getFirebaseDeviceHistory(
       List<FirebaseUserDevice> firebaseDevices,
       [DocumentSnapshot lastVisibleDocument]) async {
-    final Query query = _firestore
-        .collectionGroup('history')
-        .where('deviceUid',
-            whereIn: firebaseDevices.map((device) => device.uid).toList())
-        .orderBy('timestamp', descending: true)
-        .limit(10);
+    Query query;
     if (lastVisibleDocument != null)
-      query.startAfterDocument(lastVisibleDocument);
+      query = _firestore
+          .collectionGroup('history')
+          .where('deviceUid',
+              whereIn: firebaseDevices.map((device) => device.uid).toList())
+          .orderBy('timestamp', descending: true)
+          .startAfterDocument(lastVisibleDocument)
+          .limit(5);
+    else
+      query = _firestore
+          .collectionGroup('history')
+          .where('deviceUid',
+              whereIn: firebaseDevices.map((device) => device.uid).toList())
+          .orderBy('timestamp', descending: true)
+          .limit(5);
+
     return query.get();
   }
 

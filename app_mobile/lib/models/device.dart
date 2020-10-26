@@ -96,7 +96,7 @@ class DeviceHistory {
         docUid: docUid,
       );
 
-  String stringifyRequest(String deviceType) {
+  String stringifyRequest() {
     switch (request) {
       case 'relay1':
         switch (deviceType) {
