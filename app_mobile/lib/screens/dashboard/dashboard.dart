@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/screens/my_profile/my_profile.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/shared/profile_image.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:houseflow/widgets/device_single_history.dart';
 import 'package:houseflow/widgets/devices/relayCard.dart';
@@ -104,7 +106,35 @@ class _DashboardState extends State<Dashboard> {
             AlwaysScrollableScrollPhysics().applyTo(BouncingScrollPhysics()),
         slivers: [
           SliverAppBar(
-            title: Text("Title"),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            expandedHeight: 80,
+            actions: [
+              GestureDetector(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        settings: const RouteSettings(name: 'My profile'),
+                        builder: (context) => MyProfile(
+                            firebaseUser: AuthService.firebaseUser,
+                            currentUser: AuthService.currentUser,
+                            signOut: AuthService.signOut))),
+                child: ProfileImage(
+                  size: 38,
+                  imageUrl: AuthService.currentUser.photoURL,
+                ),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+            ],
+            title: Text(
+              "Hi, ${AuthService.firebaseUser.username.split(' ')[0]}!",
+              style: TextStyle(
+                  color: Colors.black.withAlpha(160),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
           SliverGrid(
             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
