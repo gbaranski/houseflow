@@ -42,7 +42,7 @@ class SingleDevice extends StatelessWidget {
     return AdditionalView(
       body: Builder(builder: (context) {
         return Container(
-          margin: const EdgeInsets.only(left: 20, top: 40),
+          margin: const EdgeInsets.only(left: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

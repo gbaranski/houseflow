@@ -27,13 +27,10 @@ class InDepthDeviceHistory extends StatelessWidget {
     return AdditionalView(
       body: Builder(builder: (context) {
         return Container(
-          margin: const EdgeInsets.only(left: 20, top: 20),
+          margin: const EdgeInsets.only(left: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 20,
-              ),
               Text(
                 deviceHistory.stringifyRequest(),
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600),

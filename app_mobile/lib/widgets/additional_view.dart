@@ -9,14 +9,13 @@ class AdditionalView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(70),
-        child: AppBar(
+      body: CustomScrollView(slivers: [
+        SliverAppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          flexibleSpace: Container(
-            margin: const EdgeInsets.only(left: 15),
-            alignment: Alignment.bottomLeft,
+          expandedHeight: 100,
+          leading: Padding(
+            padding: const EdgeInsets.only(top: 25, left: 15),
             child: IconButton(
               onPressed: () => Navigator.pop(context),
               tooltip: "Back",
@@ -27,8 +26,11 @@ class AdditionalView extends StatelessWidget {
             ),
           ),
         ),
+        SliverToBoxAdapter(child: body)
+      ],
+        physics:
+        AlwaysScrollableScrollPhysics().applyTo(BouncingScrollPhysics()),
       ),
-      body: body,
     );
   }
 }

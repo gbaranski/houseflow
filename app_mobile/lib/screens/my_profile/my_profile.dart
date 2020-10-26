@@ -21,47 +21,42 @@ class MyProfile extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdditionalView(
         body: Builder(
-            builder: (BuildContext context) => Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.only(top: 20),
-                  alignment: Alignment.topCenter,
-                  child: Column(
-                    children: [
-                      ProfileImage(
-                        imageUrl: currentUser.photoURL,
-                        size: 100,
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      GestureDetector(
-                        onLongPress: () {
-                          Clipboard.setData(
-                                  ClipboardData(text: currentUser.uid))
-                              .then((_) {
-                            HapticFeedback.vibrate();
-                            const snackBar = SnackBar(
-                              content: Text("UID copied to clipboard"),
-                            );
-                            Scaffold.of(context).showSnackBar(snackBar);
-                          });
-                        },
-                        child: Text(
-                          firebaseUser.username,
-                          style: const TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                      RaisedButton(
-                        color: Colors.indigo,
-                        textColor: Colors.white,
-                        child: Text("Log out"),
-                        onPressed: () {
-                          signOut().then((value) => Navigator.pop(context));
-                        },
-                      )
-                    ],
+            builder: (BuildContext context) => Column(
+              children: [
+                ProfileImage(
+                  imageUrl: currentUser.photoURL,
+                  size: 100,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                GestureDetector(
+                  onLongPress: () {
+                    Clipboard.setData(
+                            ClipboardData(text: currentUser.uid))
+                        .then((_) {
+                      HapticFeedback.vibrate();
+                      const snackBar = SnackBar(
+                        content: Text("UID copied to clipboard"),
+                      );
+                      Scaffold.of(context).showSnackBar(snackBar);
+                    });
+                  },
+                  child: Text(
+                    firebaseUser.username,
+                    style: const TextStyle(
+                        fontSize: 28, fontWeight: FontWeight.w500),
                   ),
-                )));
+                ),
+                RaisedButton(
+                  color: Colors.indigo,
+                  textColor: Colors.white,
+                  child: Text("Log out"),
+                  onPressed: () {
+                    signOut().then((value) => Navigator.pop(context));
+                  },
+                )
+              ],
+            )));
   }
 }
