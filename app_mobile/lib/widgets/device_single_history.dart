@@ -8,6 +8,9 @@ import 'additional_view.dart';
 
 class InDepthDeviceHistory extends StatelessWidget {
   final DeviceHistory deviceHistory;
+  static final TextStyle _dataTextStyle =
+      TextStyle(fontSize: 15, color: Colors.black.withAlpha(180));
+
   InDepthDeviceHistory({@required this.deviceHistory});
 
   final DateFormat formatter = DateFormat('yyyy-MM-dd');
@@ -43,7 +46,19 @@ class InDepthDeviceHistory extends StatelessWidget {
                   ),
                   Text(
                     deviceHistory.username,
-                    style: TextStyle(fontSize: 18),
+                    style: _dataTextStyle,
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(Icons.device_hub),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(
+                    upperFirstCharacter(deviceHistory.deviceType),
+                    style: _dataTextStyle,
                   ),
                 ],
               ),
@@ -56,6 +71,7 @@ class InDepthDeviceHistory extends StatelessWidget {
                   Text(
                     formatter.format(DateTime.fromMillisecondsSinceEpoch(
                         deviceHistory.timestamp)),
+                    style: _dataTextStyle,
                   ),
                 ],
               ),
@@ -65,7 +81,10 @@ class InDepthDeviceHistory extends StatelessWidget {
                   SizedBox(
                     width: 10,
                   ),
-                  Text(deviceHistory.ipAddress),
+                  Text(
+                    deviceHistory.ipAddress,
+                    style: _dataTextStyle,
+                  ),
                 ],
               ),
               GestureDetector(
@@ -76,7 +95,10 @@ class InDepthDeviceHistory extends StatelessWidget {
                     SizedBox(
                       width: 10,
                     ),
-                    Text(deviceHistory.docUid),
+                    Text(
+                      deviceHistory.docUid,
+                      style: _dataTextStyle,
+                    ),
                   ],
                 ),
               ),
