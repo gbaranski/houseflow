@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/screens/my_profile/my_profile.dart';
 import 'package:houseflow/services/auth.dart';
@@ -65,7 +68,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   final PagingController<int, DocumentSnapshot> _pagingController =
-      PagingController(firstPageKey: 0);
+      PagingController(firstPageKey: 0, invisibleItemsThreshold: 1);
 
   Future<void> updateDeviceHistory(int pageKey) async {
     try {
@@ -99,66 +102,91 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
+  Future<void> onRefresh() async {
+    HapticFeedback.vibrate();
+    print("Refreshing");
+
+    Completer completer = Completer();
+
+    void Function(PagingStatus) listener;
+    listener = (PagingStatus pagingStatus) {
+      print(pagingStatus);
+      if (pagingStatus == PagingStatus.ongoing) {
+        _pagingController.removeStatusListener(listener);
+        completer.complete();
+      }
+    };
+    _pagingController.addStatusListener(listener);
+    _pagingController.refresh();
+
+    return completer.future;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-        physics:
-            AlwaysScrollableScrollPhysics().applyTo(BouncingScrollPhysics()),
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            expandedHeight: 80,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: GestureDetector(
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          settings: const RouteSettings(name: 'My profile'),
-                          builder: (context) => MyProfile(
-                              firebaseUser: AuthService.firebaseUser,
-                              currentUser: AuthService.currentUser,
-                              signOut: AuthService.signOut))),
-                  child: ProfileImage(
-                    size: 38,
-                    imageUrl: AuthService.currentUser.photoURL,
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: Colors.blue,
+      backgroundColor: Colors.black54,
+      child: CustomScrollView(
+          physics:
+              AlwaysScrollableScrollPhysics().applyTo(BouncingScrollPhysics()),
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              expandedHeight: 80,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            settings: const RouteSettings(name: 'My profile'),
+                            builder: (context) => MyProfile(
+                                firebaseUser: AuthService.firebaseUser,
+                                currentUser: AuthService.currentUser,
+                                signOut: AuthService.signOut))),
+                    child: ProfileImage(
+                      size: 38,
+                      imageUrl: AuthService.currentUser.photoURL,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-            ],
-            title: Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Text(
-                "Hi, ${AuthService.firebaseUser.username.split(' ')[0]}!",
-                style: TextStyle(
-                    color: Colors.black.withAlpha(160),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600),
+                SizedBox(
+                  width: 10,
+                ),
+              ],
+              title: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Text(
+                  "Hi, ${AuthService.firebaseUser.username.split(' ')[0]}!",
+                  style: TextStyle(
+                      color: Colors.black.withAlpha(160),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-          ),
-          SliverGrid(
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                childAspectRatio: 1.2, maxCrossAxisExtent: 250),
-            delegate: SliverChildListDelegate(AuthService.firebaseUser.devices
-                .map((firebaseDevice) => device(context, firebaseDevice.uid))
-                .toList()),
-          ),
-          PagedSliverList<int, DocumentSnapshot>(
-            key: Key('deviceHistoryList'),
-            pagingController: _pagingController,
-            builderDelegate: PagedChildBuilderDelegate<DocumentSnapshot>(
-                itemBuilder: (context, item, index) => SingleDeviceHistory(
-                      deviceRequest:
-                          DeviceHistory.fromJson(item.data(), item.id),
-                    )),
-          )
-        ]);
+            SliverGrid(
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  childAspectRatio: 1.2, maxCrossAxisExtent: 250),
+              delegate: SliverChildListDelegate(AuthService.firebaseUser.devices
+                  .map((firebaseDevice) => device(context, firebaseDevice.uid))
+                  .toList()),
+            ),
+            PagedSliverList<int, DocumentSnapshot>(
+              key: Key('deviceHistoryList'),
+              pagingController: _pagingController,
+              builderDelegate: PagedChildBuilderDelegate<DocumentSnapshot>(
+                  itemBuilder: (context, item, index) => SingleDeviceHistory(
+                        deviceRequest:
+                            DeviceHistory.fromJson(item.data(), item.id),
+                      )),
+            )
+          ]),
+    );
   }
 
   @override
