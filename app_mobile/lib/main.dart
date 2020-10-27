@@ -1,5 +1,6 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
+import 'package:houseflow/screens/error_screen/error_screen.dart';
 import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/screens/wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,13 +11,12 @@ import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  FlutterError.onError = FirebaseService.crashlytics.recordFlutterError;
   return runApp(App());
 
-  runApp(DevicePreview(
-    enabled: kDebugMode,
-    builder: (context) => App(),
-  ));
+  // runApp(DevicePreview(
+  //   enabled: kDebugMode,
+  //   builder: (context) => App(),
+  // ));
 }
 
 class App extends StatelessWidget {
@@ -31,13 +31,17 @@ class App extends StatelessWidget {
         home: FutureBuilder(
           future: Firebase.initializeApp(),
           builder: (context, snapshot) {
-            // return SplashScreen();
             if (snapshot.hasError) {
               print(snapshot.error);
-              // TODO: Add error page
-              return const Text("Error");
+              FirebaseService.crashlytics
+                  .recordError(snapshot.error, StackTrace.current);
+              return ErrorScreen(
+                reason: 'Could not initialize Firebase',
+              );
             }
             if (snapshot.connectionState == ConnectionState.done) {
+              FlutterError.onError =
+                  FirebaseService.crashlytics.recordFlutterError;
               return ChangeNotifierProvider<MqttService>(
                   create: (_) => new MqttService(), child: Wrapper());
             }
