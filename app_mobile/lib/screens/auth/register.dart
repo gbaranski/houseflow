@@ -2,18 +2,7 @@ import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/shared/login_form.dart';
 import 'package:flutter/material.dart';
 
-class Register extends StatefulWidget {
-  @override
-  _RegisterState createState() => _RegisterState();
-}
-
-class _RegisterState extends State<Register> {
-  final AuthService _authService = AuthService();
-  final _formKey = GlobalKey<FormState>();
-
-  String email = '';
-  String password = '';
-
+class Register extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

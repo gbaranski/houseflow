@@ -64,7 +64,8 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     };
     mqttClient.onDisconnected = () {
       print("Disconnected from MQTT");
-      streamController.add(ConnectionStatus.disconnected);
+      if (!streamController.isClosed)
+        streamController.add(ConnectionStatus.disconnected);
     };
     mqttClient.onSubscribeFail = (topic) {
       print("Failed subscribe to $topic");

@@ -54,6 +54,7 @@ class AuthService {
     else
       FirebaseService.analytics.logLogin(loginMethod: 'Google');
     // Once signed in, return the UserCredential
+    FirebaseService.crashlytics.setUserIdentifier(credentials.user.uid);
     return credentials;
   }
 
@@ -98,6 +99,7 @@ class AuthService {
     else
       FirebaseService.analytics.logLogin(loginMethod: 'Apple');
 
+    FirebaseService.crashlytics.setUserIdentifier(credentials.user.uid);
     return credentials;
   }
 
@@ -107,6 +109,7 @@ class AuthService {
         email: email, password: password);
     auth.User user = result.user;
     FirebaseService.analytics.logLogin(loginMethod: 'Email & Password');
+    FirebaseService.crashlytics.setUserIdentifier(user.uid);
     return user;
   }
 
@@ -116,6 +119,7 @@ class AuthService {
         email: email, password: password);
     auth.User user = result.user;
     FirebaseService.analytics.logSignUp(signUpMethod: 'Email & Password');
+    FirebaseService.crashlytics.setUserIdentifier(user.uid);
     return user;
   }
 

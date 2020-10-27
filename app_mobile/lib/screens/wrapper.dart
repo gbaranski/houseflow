@@ -37,7 +37,7 @@ class Wrapper extends StatelessWidget {
           }
           print("AuthState: ${AuthService.authStatus}");
 
-          return StreamBuilder(
+          return StreamBuilder<DocumentSnapshot>(
             stream: FirebaseService.firebaseUserStream(AuthService.currentUser),
             builder: (BuildContext context,
                 AsyncSnapshot<DocumentSnapshot> firebaseUserSnapshot) {
