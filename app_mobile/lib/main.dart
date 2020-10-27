@@ -10,9 +10,11 @@ import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = FirebaseService.crashlytics.recordFlutterError;
   return runApp(App());
+
   runApp(DevicePreview(
-    enabled: !kReleaseMode,
+    enabled: kDebugMode,
     builder: (context) => App(),
   ));
 }

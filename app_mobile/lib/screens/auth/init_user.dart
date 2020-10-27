@@ -32,6 +32,12 @@ class _InitUserState extends State<InitUser> {
       Scaffold.of(context)
           .showSnackBar(SnackBar(content: Text('Error occured! $e')));
       print("Error occured when intializing user $e");
+      FirebaseService.crashlytics.recordError(
+          'failed_initializing_user', StackTrace.current,
+          information: [
+            DiagnosticsNode.message('UID: ${widget.currentUser.uid}'),
+            DiagnosticsNode.message('USERNAME: $username')
+          ]);
       _btnController.error();
     }
   }

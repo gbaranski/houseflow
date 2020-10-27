@@ -43,6 +43,7 @@ dependencies:
   device_preview: '^0.4.8'
   infinite_scroll_pagination: '^2.2.1'
   rounded_loading_button: '^1.0.15'
+  firebase_crashlytics: '^0.2.1+1'
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

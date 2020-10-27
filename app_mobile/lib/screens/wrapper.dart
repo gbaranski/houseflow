@@ -73,11 +73,15 @@ class Wrapper extends StatelessWidget {
                         reason: "Disconnected",
                       );
                     case ConnectionStatus.failed:
+                      FirebaseService.crashlytics.recordError(
+                          "mqtt_connection_failed", StackTrace.current);
                       connect();
                       return ErrorScreen(
                         reason: "Could not connect",
                       );
                     case ConnectionStatus.attempts_exceeded:
+                      FirebaseService.crashlytics.recordError(
+                          "mqtt_attempt_exceeded", StackTrace.current);
                       return ErrorScreen(
                         reason: "Attempts exceeded",
                       );
