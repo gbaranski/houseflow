@@ -1,15 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:flutter/material.dart';
 import 'package:houseflow/models/user.dart';
 import 'package:houseflow/screens/auth/init_user.dart';
 import 'package:houseflow/screens/auth/sign_in.dart';
+import 'package:houseflow/screens/error_screen/error_screen.dart';
 import 'package:houseflow/screens/home/home.dart';
 import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/services/auth.dart';
-import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/mqtt.dart';
-import 'package:mqtt_client/mqtt_client.dart';
+import 'package:provider/provider.dart';
+
 import 'splash_screen/splash_screen.dart';
 
 class Wrapper extends StatelessWidget {
@@ -19,12 +21,15 @@ class Wrapper extends StatelessWidget {
         stream: AuthService.user,
         builder: (context, AsyncSnapshot<auth.User> currentUserSnapshot) {
           print("New snapshot data: ${currentUserSnapshot.data}");
+
+          final MqttService mqttService =
+              Provider.of<MqttService>(context, listen: false);
           if (currentUserSnapshot.connectionState != ConnectionState.active)
             return SplashScreen();
 
           if (currentUserSnapshot.data == null) {
             AuthService.authStatus = AuthStatus.NOT_LOGGED_IN;
-            MqttService.disconnectDueToSignOut();
+            mqttService.disconnect("sign out");
             return SignIn();
           } else {
             AuthService.authStatus = AuthStatus.NOT_RETREIVED_FIRESTORE;
@@ -51,29 +56,50 @@ class Wrapper extends StatelessWidget {
               print("Firebase user ${AuthService.firebaseUser}");
 
               FirebaseService.initFcm(context);
+              final connect = () => mqttService.connect(
+                  userUid: AuthService.currentUser.uid,
+                  token: AuthService.currentUser.getIdToken());
 
-              if (MqttService.mqttClient != null &&
-                  MqttService.mqttClient.connectionStatus.state ==
-                      MqttConnectionState.connected) {
-                print(
-                    "Skipping creating new MQTT servie bcs its already created");
-                return Home();
-              }
-
-              final MqttService mqttService = MqttService(
-                  getToken: AuthService.currentUser.getIdToken,
-                  userUid: AuthService.currentUser.uid);
-
-              return new FutureBuilder<MqttClient>(
-                future: mqttService.connect(),
-                builder:
-                    (BuildContext context, AsyncSnapshot<MqttClient> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      snapshot.hasData) {
-                    return Home();
+              return StreamBuilder<ConnectionStatus>(
+                stream: mqttService.streamController.stream,
+                initialData: ConnectionStatus.not_attempted,
+                builder: (BuildContext context, stream) {
+                  switch (stream.data) {
+                    case ConnectionStatus.connected:
+                      return Home();
+                    case ConnectionStatus.disconnected:
+                      connect();
+                      return ErrorScreen(
+                        reason: "Disconnected",
+                      );
+                    case ConnectionStatus.failed:
+                      connect();
+                      return ErrorScreen(
+                        reason: "Could not connect",
+                      );
+                    case ConnectionStatus.attempts_exceeded:
+                      return ErrorScreen(
+                        reason: "Attempts exceeded",
+                      );
+                    case ConnectionStatus.not_attempted:
+                      connect();
+                      return SplashScreen();
                   }
-                  return SplashScreen();
+
+                  return Home();
                 },
+                // builder: (BuildContext context,
+                //     AsyncSnapshot<MqttClientConnectionStatus> snapshot) {
+                //   if (snapshot.hasData) {
+                //     if (snapshot.data.state == MqttConnectionState.connected) {
+                //       return Home();
+                //     } else {
+                //       return ErrorScreen(
+                //           reason: "Could not connect to our servers");
+                //     }
+                //   }
+                //   return SplashScreen();
+                // },
               );
             },
           );

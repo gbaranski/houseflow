@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:timeago/timeago.dart' as timeago;
@@ -85,4 +86,11 @@ bool isAtSameDay(DateTime date, [DateTime secondDate]) {
 
 String removeEmailSuffix(String email) {
   return email.split('@')[0];
+}
+
+String getRandomShortString() {
+  final randomNum = Random();
+  final List<int> randomInts =
+      List<int>.generate(8, (i) => randomNum.nextInt(256));
+  return base64UrlEncode(randomInts);
 }

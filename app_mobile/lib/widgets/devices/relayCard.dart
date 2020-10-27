@@ -8,6 +8,7 @@ import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/mqtt.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:mqtt_client/mqtt_client.dart';
+import 'package:provider/provider.dart';
 
 class RelayCard extends StatefulWidget {
   final FirebaseDevice firebaseDevice;
@@ -32,24 +33,26 @@ class _RelayCardState extends State<RelayCard>
   Animation<double> _animation;
   AnimationStatus _animationStatus = AnimationStatus.dismissed;
 
-  void sendRelaySignal() {
-    print("MQTT CONN STAT: ${MqttService.mqttClient.connectionStatus}");
-    if (MqttService.mqttClient.connectionStatus.state !=
+  void sendRelaySignal(BuildContext context) {
+    final MqttService mqttService =
+        Provider.of<MqttService>(context, listen: false);
+    print("MQTT CONN STAT: ${mqttService.mqttClient.connectionStatus}");
+    if (mqttService.mqttClient.connectionStatus.state !=
         MqttConnectionState.connected) {
       const snackbar = SnackBar(
         content: Text(
             "Error! Not connected to the server, please try restarting app"),
         duration: Duration(milliseconds: 1500),
       );
-      FirebaseService.analytics.logEvent(name: 'Exception', parameters: {
+      FirebaseService.analytics.logEvent(name: 'exception', parameters: {
         'reason': 'Not connected to server while sending request',
-        'connectionState': MqttService.mqttClient.connectionStatus.state,
+        'connectionState': mqttService.mqttClient.connectionStatus.state,
       });
       Scaffold.of(context).showSnackBar(snackbar);
       return;
     }
 
-    FirebaseService.analytics.logEvent(name: 'Device action', parameters: {
+    FirebaseService.analytics.logEvent(name: 'device_action', parameters: {
       'type': upperFirstCharacter(widget.firebaseDevice.type),
       'uid': widget.firebaseDevice.uid,
       'request': 'sendSignal',
@@ -58,7 +61,7 @@ class _RelayCardState extends State<RelayCard>
     final DeviceTopic topic = RelayData.getSendSignalTopic(uid);
 
     bool hasCompleted = false;
-    final Future req = MqttService.sendMessage(
+    final Future req = mqttService.sendMessage(
         topic: topic, qos: MqttQos.atMostOnce, data: null);
 
     req.whenComplete(() {
@@ -173,7 +176,7 @@ class _RelayCardState extends State<RelayCard>
                 ),
                 child: IconButton(
                     onPressed: () {
-                      sendRelaySignal();
+                      sendRelaySignal(context);
                       triggerAnimation();
                     },
                     splashRadius: 100,

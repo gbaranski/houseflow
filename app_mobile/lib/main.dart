@@ -5,6 +5,8 @@ import 'package:houseflow/screens/wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/services/mqtt.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +35,10 @@ class App extends StatelessWidget {
               // TODO: Add error page
               return const Text("Error");
             }
-            if (snapshot.connectionState == ConnectionState.done)
-              return Wrapper();
+            if (snapshot.connectionState == ConnectionState.done) {
+              return ChangeNotifierProvider<MqttService>(
+                  create: (_) => new MqttService(), child: Wrapper());
+            }
 
             return SplashScreen();
           },

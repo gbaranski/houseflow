@@ -1,30 +1,53 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
 import 'dart:core';
-import 'package:houseflow/models/device.dart';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:houseflow/models/device.dart';
+import 'package:houseflow/shared/constants.dart';
+import 'package:houseflow/utils/misc.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'package:houseflow/shared/constants.dart';
-import 'dart:async';
 import 'package:provider/provider.dart';
 
-class MqttService implements ReassembleHandler {
-  static MqttServerClient mqttClient;
+enum ConnectionStatus {
+  connected,
+  disconnected,
+  failed,
+  attempts_exceeded,
+  not_attempted,
+}
 
-  final String userUid;
+const int maxConnectionAttempts = 5;
 
-  final Future<String> Function([bool]) getToken;
+class MqttService extends ChangeNotifier implements ReassembleHandler {
+  MqttServerClient mqttClient;
+  int connectionAttempts = 0;
 
-  Future<MqttClient> connect() async {
+  final StreamController<ConnectionStatus> streamController =
+      StreamController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    print("Disposing MQTT Service class");
+    streamController.close();
+    disconnect("dispose");
+  }
+
+  Future<void> connect(
+      {@required String userUid, @required Future<String> token}) async {
+    if (connectionAttempts > maxConnectionAttempts)
+      return streamController.add(ConnectionStatus.attempts_exceeded);
+
     final clientShortId = "mobile_${getRandomShortString()}";
-
     mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
-    mqttClient.autoReconnect = true;
+    mqttClient.autoReconnect = false;
     mqttClient.resubscribeOnAutoReconnect = false;
     mqttClient.secure = true;
+    // mqttClient.logging(on: true);
 
     // Security context
     final context = new SecurityContext();
@@ -36,13 +59,12 @@ class MqttService implements ReassembleHandler {
       return false;
     };
 
-    Completer<MqttClient> completer = Completer<MqttClient>();
     mqttClient.onConnected = () {
       print("Connected to MQTT");
-      completer.complete(mqttClient);
     };
     mqttClient.onDisconnected = () {
       print("Disconnected from MQTT");
+      streamController.add(ConnectionStatus.disconnected);
     };
     mqttClient.onSubscribeFail = (topic) {
       print("Failed subscribe to $topic");
@@ -50,33 +72,21 @@ class MqttService implements ReassembleHandler {
 
     final connMessage = MqttConnectMessage()
         .withClientIdentifier(clientShortId)
-        .authenticateAs(userUid, await getToken())
+        .authenticateAs(userUid, await token)
         .keepAliveFor(60)
         .startClean();
 
-    mqttClient.onAutoReconnect = () async {
-      print("Auto reconnecting!");
-      mqttClient.connectionMessage.authenticateAs(userUid, await getToken());
-    };
     mqttClient.connectionMessage = connMessage;
+    final result = await mqttClient.connect();
+    connectionAttempts += 1;
 
-    mqttClient.connect().catchError((e) {
-      print("MQTT Exception $e");
-      mqttClient.disconnect();
-    });
-    return await completer.future;
+    if (result.state == MqttConnectionState.connected)
+      streamController.add(ConnectionStatus.connected);
+    else
+      streamController.add(ConnectionStatus.failed);
   }
 
-  MqttService({@required this.userUid, @required this.getToken});
-
-  static String getRandomShortString() {
-    final randomNum = Random();
-    final List<int> randomInts =
-        List<int>.generate(8, (i) => randomNum.nextInt(256));
-    return base64UrlEncode(randomInts);
-  }
-
-  static Future sendMessage(
+  Future sendMessage(
       {DeviceTopic topic, MqttQos qos, Map<String, dynamic> data}) async {
     final randomShortString = getRandomShortString();
     final completer = Completer();
@@ -113,18 +123,13 @@ class MqttService implements ReassembleHandler {
     return await completer.future;
   }
 
-  static void disconnectDueToSignOut() {
-    if (mqttClient != null) {
-      mqttClient.disconnect();
-      mqttClient.autoReconnect = false;
-      print("Disconnected from MQTT due to sign out");
-    }
+  void disconnect(String reason) {
+    mqttClient?.disconnect();
+    print("Disconnected due to $reason");
   }
 
   @override
   void reassemble() {
-    mqttClient.disconnect();
-    mqttClient.autoReconnect = false;
-    print("Disconnected from MQTT due to reassemble");
+    disconnect("ressemble");
   }
 }
