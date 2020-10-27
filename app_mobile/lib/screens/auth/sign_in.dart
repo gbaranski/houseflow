@@ -5,10 +5,13 @@ import 'package:houseflow/shared/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
 
 class SignIn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final AuthService authService =
+        Provider.of<AuthService>(context, listen: false);
     return Scaffold(body: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints viewportConstraints) {
       return SingleChildScrollView(
@@ -35,7 +38,7 @@ class SignIn extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     LoginForm(
-                      onSubmit: AuthService.signInWithEmailAndPassword,
+                      onSubmit: authService.signInWithEmailAndPassword,
                       submitMessage: 'LOG IN',
                     ),
                     const SizedBox(
@@ -114,7 +117,7 @@ class SignIn extends StatelessWidget {
                                 ),
                                 onPressed: () async {
                                   try {
-                                    await AuthService.signInWithGoogle();
+                                    await authService.signInWithGoogle();
                                   } catch (e) {
                                     print(e.toString());
                                     final snackBar = SnackBar(
@@ -138,7 +141,7 @@ class SignIn extends StatelessWidget {
                                 ),
                                 onPressed: () async {
                                   try {
-                                    await AuthService.signInWithApple();
+                                    await authService.signInWithApple();
                                   } catch (e) {
                                     print(e.toString());
                                     final snackBar = SnackBar(

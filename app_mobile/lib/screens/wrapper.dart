@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/user.dart';
 import 'package:houseflow/screens/auth/init_user.dart';
@@ -17,96 +16,72 @@ import 'splash_screen/splash_screen.dart';
 class Wrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: AuthService.user,
-        builder: (context, AsyncSnapshot<auth.User> currentUserSnapshot) {
-          print("New snapshot data: ${currentUserSnapshot.data}");
+    return Consumer<AuthService>(builder: (context, authService, child) {
+      final MqttService mqttService =
+          Provider.of<MqttService>(context, listen: false);
 
-          final MqttService mqttService =
-              Provider.of<MqttService>(context, listen: false);
-          if (currentUserSnapshot.connectionState != ConnectionState.active)
-            return SplashScreen();
+      if (authService.authStatus == AuthStatus.NOT_DETERMINED) {
+        mqttService.resetConnectionStatus();
+        return SplashScreen();
+      }
 
-          if (currentUserSnapshot.data == null) {
-            AuthService.authStatus = AuthStatus.NOT_LOGGED_IN;
-            mqttService.disconnect("sign out");
-            return SignIn();
-          } else {
-            AuthService.authStatus = AuthStatus.NOT_RETREIVED_FIRESTORE;
-            AuthService.currentUser = currentUserSnapshot.data;
+      if (authService.authStatus == AuthStatus.NOT_LOGGED_IN) {
+        mqttService.resetConnectionStatus();
+        mqttService.disconnect('not logged in');
+        return SignIn();
+      }
+      print(authService.authStatus);
+      print(authService.currentUser);
+
+      return StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseService.firebaseUserStream(authService.currentUser),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return SplashScreen();
+          if (!snapshot.data.exists) {
+            return InitUser(
+              currentUser: authService.currentUser,
+            );
           }
-          print("AuthState: ${AuthService.authStatus}");
 
-          return StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseService.firebaseUserStream(AuthService.currentUser),
-            builder: (BuildContext context,
-                AsyncSnapshot<DocumentSnapshot> firebaseUserSnapshot) {
-              if (!firebaseUserSnapshot.hasData) {
-                return SplashScreen();
-              }
-              if (firebaseUserSnapshot.data.data() == null) {
-                print("Received, redirecting to init user");
-                return InitUser(
-                  currentUser: currentUserSnapshot.data,
-                );
-              }
-              AuthService.firebaseUser =
-                  FirebaseUser.fromMap(firebaseUserSnapshot.data.data());
+          authService.firebaseUser = FirebaseUser.fromMap(snapshot.data.data());
 
-              print("Firebase user ${AuthService.firebaseUser}");
-
-              FirebaseService.initFcm(context);
+          return Consumer<MqttService>(
+            builder: (context, mqttService, child) {
               final connect = () => mqttService.connect(
-                  userUid: AuthService.currentUser.uid,
-                  token: AuthService.currentUser.getIdToken());
+                  userUid: authService.currentUser.uid,
+                  token: authService.currentUser.getIdToken());
 
-              return StreamBuilder<ConnectionStatus>(
-                stream: mqttService.streamController.stream,
-                initialData: ConnectionStatus.not_attempted,
-                builder: (BuildContext context, stream) {
-                  switch (stream.data) {
-                    case ConnectionStatus.connected:
-                      return Home();
-                    case ConnectionStatus.disconnected:
-                      connect();
-                      return ErrorScreen(
-                        reason: "Disconnected",
-                      );
-                    case ConnectionStatus.failed:
-                      FirebaseService.crashlytics.recordError(
-                          "mqtt_connection_failed", StackTrace.current);
-                      connect();
-                      return ErrorScreen(
-                        reason: "Could not connect",
-                      );
-                    case ConnectionStatus.attempts_exceeded:
-                      FirebaseService.crashlytics.recordError(
-                          "mqtt_attempt_exceeded", StackTrace.current);
-                      return ErrorScreen(
-                        reason: "Attempts exceeded",
-                      );
-                    case ConnectionStatus.not_attempted:
-                      connect();
-                      return SplashScreen();
-                  }
-
+              switch (mqttService.connectionStatus) {
+                case ConnectionStatus.connected:
                   return Home();
-                },
-                // builder: (BuildContext context,
-                //     AsyncSnapshot<MqttClientConnectionStatus> snapshot) {
-                //   if (snapshot.hasData) {
-                //     if (snapshot.data.state == MqttConnectionState.connected) {
-                //       return Home();
-                //     } else {
-                //       return ErrorScreen(
-                //           reason: "Could not connect to our servers");
-                //     }
-                //   }
-                //   return SplashScreen();
-                // },
-              );
+                case ConnectionStatus.disconnected:
+                  connect();
+                  return SplashScreen();
+                  break;
+                case ConnectionStatus.failed:
+                  connect();
+                  return ErrorScreen(
+                    reason: "Could not connect",
+                  );
+                  break;
+                case ConnectionStatus.attempts_exceeded:
+                  return ErrorScreen(
+                    reason: "Attempts exceeded",
+                  );
+                  break;
+                case ConnectionStatus.not_attempted:
+                  connect();
+                  return SplashScreen();
+                  break;
+                default:
+                  return ErrorScreen(
+                    reason: "ConnectionStatus is in unexpected state",
+                  );
+              }
             },
           );
-        });
+        },
+      );
+    });
   }
 }

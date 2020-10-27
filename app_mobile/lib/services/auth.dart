@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/models/user.dart';
@@ -8,19 +9,39 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-class AuthService {
+class AuthService extends ChangeNotifier {
   static final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
-  static auth.User currentUser;
-  static FirebaseUser firebaseUser;
+  auth.User _currentUser;
+  FirebaseUser _firebaseUser;
 
-  static AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
+  AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
 
-  // auth change user stream
-  static Stream<auth.User> get user {
-    return _auth.authStateChanges();
+  auth.User get currentUser => _currentUser;
+
+  set firebaseUser(FirebaseUser firebaseUser) {
+    _firebaseUser = firebaseUser;
+    if (firebaseUser == null) throw "Firebase user cannot be null";
+    if (_currentUser == null)
+      throw "Attempted to update firebaseUser, but currentUser is not defined";
+    authStatus = AuthStatus.LOGGED_IN;
   }
 
-  static Future signInAnon() async {
+  FirebaseUser get firebaseUser => _firebaseUser;
+
+  AuthService() {
+    _auth.authStateChanges().listen((event) {
+      if (event == null)
+        authStatus = AuthStatus.NOT_LOGGED_IN;
+      else {
+        authStatus = AuthStatus.NOT_RETREIVED_FIRESTORE;
+        _currentUser = event;
+      }
+      notifyListeners();
+      print("Auth state changed!");
+    });
+  }
+
+  Future signInAnon() async {
     try {
       auth.UserCredential result = await _auth.signInAnonymously();
       auth.User user = result.user;
@@ -32,7 +53,7 @@ class AuthService {
     }
   }
 
-  static Future<auth.UserCredential> signInWithGoogle() async {
+  Future signInWithGoogle() async {
     // Trigger the authentication flow
     final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
 
@@ -91,7 +112,7 @@ class AuthService {
     );
   }
 
-  static Future<auth.UserCredential> signInWithApple() async {
+  Future signInWithApple() async {
     final oauthCred = await _createAppleOAuthCred();
     final credentials = await _auth.signInWithCredential(oauthCred);
     if (credentials.additionalUserInfo.isNewUser)
@@ -103,8 +124,7 @@ class AuthService {
     return credentials;
   }
 
-  static Future signInWithEmailAndPassword(
-      String email, String password) async {
+  Future signInWithEmailAndPassword(String email, String password) async {
     auth.UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email, password: password);
     auth.User user = result.user;
@@ -113,8 +133,7 @@ class AuthService {
     return user;
   }
 
-  static Future registerWithEmailAndPassword(
-      String email, String password) async {
+  Future registerWithEmailAndPassword(String email, String password) async {
     auth.UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email, password: password);
     auth.User user = result.user;
@@ -123,14 +142,14 @@ class AuthService {
     return user;
   }
 
-  static Future signOut() async {
+  Future signOut() async {
     try {
-      if (firebaseUser.devices != null)
-        firebaseUser.devices.forEach((element) {
+      if (_firebaseUser.devices != null)
+        _firebaseUser.devices.forEach((element) {
           FirebaseService.unsubscribeTopic(element.uid);
         });
-      firebaseUser = null;
-      currentUser = null;
+      _firebaseUser = null;
+      _currentUser = null;
       return await _auth.signOut();
     } catch (e) {
       print(e.toString());
@@ -138,7 +157,7 @@ class AuthService {
     }
   }
 
-  static Future<String> getIdToken() {
-    return currentUser.getIdToken(true);
+  Future<String> getIdToken() {
+    return _currentUser.getIdToken(true);
   }
 }

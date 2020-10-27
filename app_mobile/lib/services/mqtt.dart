@@ -6,11 +6,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'package:provider/provider.dart';
 
 enum ConnectionStatus {
   connected,
@@ -22,25 +22,26 @@ enum ConnectionStatus {
 
 const int maxConnectionAttempts = 5;
 
-class MqttService extends ChangeNotifier implements ReassembleHandler {
+class MqttService extends ChangeNotifier {
   MqttServerClient mqttClient;
   int connectionAttempts = 0;
 
-  final StreamController<ConnectionStatus> streamController =
-      StreamController();
+  ConnectionStatus _connectionStatus = ConnectionStatus.not_attempted;
 
-  @override
-  void dispose() {
-    super.dispose();
-    print("Disposing MQTT Service class");
-    streamController.close();
-    disconnect("dispose");
+  ConnectionStatus get connectionStatus => _connectionStatus;
+
+  void resetConnectionStatus() {
+    _connectionStatus = ConnectionStatus.not_attempted;
   }
 
   Future<void> connect(
       {@required String userUid, @required Future<String> token}) async {
-    if (connectionAttempts > maxConnectionAttempts)
-      return streamController.add(ConnectionStatus.attempts_exceeded);
+    if (connectionAttempts > maxConnectionAttempts) {
+      _connectionStatus = ConnectionStatus.attempts_exceeded;
+      FirebaseService.crashlytics
+          .recordError("mqtt_attempt_exceeded", StackTrace.current);
+      return notifyListeners();
+    }
 
     final clientShortId = "mobile_${getRandomShortString()}";
     mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
@@ -64,8 +65,7 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     };
     mqttClient.onDisconnected = () {
       print("Disconnected from MQTT");
-      if (!streamController.isClosed)
-        streamController.add(ConnectionStatus.disconnected);
+      _connectionStatus = ConnectionStatus.disconnected;
     };
     mqttClient.onSubscribeFail = (topic) {
       print("Failed subscribe to $topic");
@@ -82,9 +82,18 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     connectionAttempts += 1;
 
     if (result.state == MqttConnectionState.connected)
-      streamController.add(ConnectionStatus.connected);
-    else
-      streamController.add(ConnectionStatus.failed);
+      _connectionStatus = ConnectionStatus.connected;
+    else {
+      _connectionStatus = ConnectionStatus.failed;
+      FirebaseService.crashlytics.recordError(
+          "mqtt_connection_failed", StackTrace.current, information: [
+        DiagnosticsNode.message('return_code: ${result.returnCode.toString()}')
+      ]);
+      print(
+          "Connection failed with MQTT, return code: ${result.disconnectionOrigin}");
+    }
+
+    notifyListeners();
   }
 
   Future sendMessage(
@@ -124,13 +133,16 @@ class MqttService extends ChangeNotifier implements ReassembleHandler {
     return await completer.future;
   }
 
-  void disconnect(String reason) {
-    mqttClient?.disconnect();
-    print("Disconnected due to $reason");
+  @override
+  void dispose() {
+    super.dispose();
+    print("Disposing MQTT Service class");
+    disconnect("dispose");
   }
 
-  @override
-  void reassemble() {
-    disconnect("ressemble");
+  void disconnect(String reason) {
+    mqttClient?.disconnect();
+    _connectionStatus = ConnectionStatus.disconnected;
+    print("Disconnected due to $reason");
   }
 }

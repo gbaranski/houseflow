@@ -1,10 +1,10 @@
-import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:houseflow/screens/error_screen/error_screen.dart';
 import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/screens/wrapper.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/mqtt.dart';
 import 'package:provider/provider.dart';
@@ -43,7 +43,9 @@ class App extends StatelessWidget {
               FlutterError.onError =
                   FirebaseService.crashlytics.recordFlutterError;
               return ChangeNotifierProvider<MqttService>(
-                  create: (_) => new MqttService(), child: Wrapper());
+                  create: (_) => new MqttService(),
+                  child: ChangeNotifierProvider<AuthService>(
+                      create: (_) => new AuthService(), child: Wrapper()));
             }
 
             return SplashScreen();
