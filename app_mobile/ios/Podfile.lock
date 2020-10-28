@@ -243,6 +243,9 @@ PODS:
     - FirebaseAnalytics (= 6.6.0)
   - Firebase/CoreOnly (6.26.0):
     - FirebaseCore (= 6.7.2)
+  - Firebase/Crashlytics (6.26.0):
+    - Firebase/CoreOnly
+    - FirebaseCrashlytics (~> 4.1.1)
   - Firebase/Firestore (6.26.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 1.15.0)
@@ -265,6 +268,10 @@ PODS:
   - firebase_core (0.5.0-1):
     - Firebase/CoreOnly (~> 6.26.0)
     - Flutter
+  - firebase_crashlytics (0.2.1-1):
+    - Firebase/CoreOnly (~> 6.26.0)
+    - Firebase/Crashlytics (~> 6.26.0)
+    - firebase_core
   - firebase_messaging (7.0.3):
     - Firebase/CoreOnly (~> 6.26.0)
     - Firebase/Messaging (~> 6.26.0)
@@ -299,6 +306,14 @@ PODS:
     - GoogleUtilities/Logger (~> 6.5)
     - nanopb (~> 1.30905.0)
   - FirebaseCoreDiagnosticsInterop (1.2.0)
+  - FirebaseCrashlytics (4.1.1):
+    - FirebaseAnalyticsInterop (~> 1.2)
+    - FirebaseCore (~> 6.6)
+    - FirebaseInstallations (~> 1.1)
+    - GoogleDataTransport (~> 6.1)
+    - GoogleDataTransportCCTSupport (~> 3.1)
+    - nanopb (~> 1.30905.0)
+    - PromisesObjC (~> 1.2)
   - FirebaseFirestore (1.15.0):
     - abseil/algorithm (= 0.20200225.0)
     - abseil/base (= 0.20200225.0)
@@ -417,6 +432,8 @@ PODS:
     - Flutter
   - PromisesObjC (1.2.9)
   - Protobuf (3.12.0)
+  - shared_preferences (0.0.1):
+    - Flutter
   - sign_in_with_apple (0.0.1):
     - Flutter
   - sqflite (0.0.1):
@@ -431,11 +448,13 @@ DEPENDENCIES:
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
+  - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - FirebaseFirestore (from `https://github.com/invertase/firestore-ios-sdk-frameworks.git`, tag `6.26.0`)
   - Flutter (from `Flutter`)
   - google_sign_in (from `.symlinks/plugins/google_sign_in/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
@@ -453,6 +472,7 @@ SPEC REPOS:
     - FirebaseCore
     - FirebaseCoreDiagnostics
     - FirebaseCoreDiagnosticsInterop
+    - FirebaseCrashlytics
     - FirebaseFirestore
     - FirebaseFunctions
     - FirebaseInstallations
@@ -484,6 +504,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_auth/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
+  firebase_crashlytics:
+    :path: ".symlinks/plugins/firebase_crashlytics/ios"
   firebase_messaging:
     :path: ".symlinks/plugins/firebase_messaging/ios"
   FirebaseFirestore:
@@ -495,6 +517,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_sign_in/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
+  shared_preferences:
+    :path: ".symlinks/plugins/shared_preferences/ios"
   sign_in_with_apple:
     :path: ".symlinks/plugins/sign_in_with_apple/ios"
   sqflite:
@@ -512,6 +536,7 @@ SPEC CHECKSUMS:
   firebase_analytics: 31b66f23a42fa62bdf6a134af1d3a3a50bf5ac3e
   firebase_auth: 8ae6798925da84bf8745668a73c936b148c1b04d
   firebase_core: 00e54a4744164a6b5a250b96dd1ad5afaba7a342
+  firebase_crashlytics: d98ee7212fc6a7102c0f775a7cc30cd3f7041f5a
   firebase_messaging: 666d9994651b1ecf8c582b52dd913f3fa58c17ef
   FirebaseAnalytics: 96634d356482d4f3af8fe459a0ebf19a99c71b75
   FirebaseAnalyticsInterop: 3f86269c38ae41f47afeb43ebf32a001f58fcdae
@@ -520,6 +545,7 @@ SPEC CHECKSUMS:
   FirebaseCore: f42e5e5f382cdcf6b617ed737bf6c871a6947b17
   FirebaseCoreDiagnostics: 4a773a47bd83bbd5a9b1ccf1ce7caa8b2d535e67
   FirebaseCoreDiagnosticsInterop: 296e2c5f5314500a850ad0b83e9e7c10b011a850
+  FirebaseCrashlytics: a87cce5746d3335995bd18b1b60d073cd05a6920
   FirebaseFirestore: 8c158bdde010fa397386333a74570eaef033e62d
   FirebaseFunctions: 5af7c35d1c5e41608fecbb667eb6c4e672e318d0
   FirebaseInstallations: 6f5f680e65dc374397a483c32d1799ba822a395b
@@ -542,6 +568,7 @@ SPEC CHECKSUMS:
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
   PromisesObjC: b48e0338dbbac2207e611750777895f7a5811b75
   Protobuf: 2793fcd0622a00b546c60e7cbbcc493e043e9bb9
+  shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
   sign_in_with_apple: 34f3f5456a45fd7ac5fb42905e2ad31dae061b4a
   sqflite: 4001a31ff81d210346b500c55b17f4d6c7589dd0
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
