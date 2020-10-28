@@ -90,7 +90,7 @@ export default function LoginEmail({ register }: { register?: boolean }) {
                 if (!value || getFieldValue('password') === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject('The two passwords that you entered do not match!');
+                return Promise.reject(Error('The two passwords that you entered do not match!'));
               },
             }),
           ]}

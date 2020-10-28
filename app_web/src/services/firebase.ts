@@ -26,6 +26,9 @@ const deviceCollection = database.collection('devices');
 export const firebaseAuth: firebase.auth.Auth = firebase.auth();
 
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+const appleProvider = new firebase.auth.OAuthProvider('apple.com');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
 
 export async function signInWithCredentials(
   email: string,
@@ -45,6 +48,11 @@ export async function signToGoogleWithPopup(): Promise<firebase.auth.UserCredent
   await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
   return firebaseAuth.signInWithPopup(googleProvider);
 }
+
+export const signInViaAppleWithPopup = async (): Promise<firebase.auth.UserCredential> => {
+  await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  return firebaseAuth.signInWithPopup(appleProvider);
+};
 
 export const getFirebaseUser = async (
   user: firebase.User,
