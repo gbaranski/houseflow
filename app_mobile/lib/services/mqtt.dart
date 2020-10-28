@@ -16,11 +16,10 @@ enum ConnectionStatus {
   connected,
   disconnected,
   failed,
-  attempts_exceeded,
   not_attempted,
 }
 
-const int maxConnectionAttempts = 5;
+const int maxConnectionAttempts = 4;
 
 class MqttService extends ChangeNotifier {
   MqttServerClient mqttClient;
@@ -36,13 +35,6 @@ class MqttService extends ChangeNotifier {
 
   Future<void> connect(
       {@required String userUid, @required Future<String> token}) async {
-    if (connectionAttempts > maxConnectionAttempts) {
-      _connectionStatus = ConnectionStatus.attempts_exceeded;
-      FirebaseService.crashlytics
-          .recordError("mqtt_attempt_exceeded", StackTrace.current);
-      return notifyListeners();
-    }
-
     final clientShortId = "mobile_${getRandomShortString()}";
     mqttClient = MqttServerClient.withPort(MQTT_HOST, clientShortId, MQTT_PORT);
     mqttClient.autoReconnect = false;
@@ -66,6 +58,7 @@ class MqttService extends ChangeNotifier {
     mqttClient.onDisconnected = () {
       print("Disconnected from MQTT");
       _connectionStatus = ConnectionStatus.disconnected;
+      notifyListeners();
     };
     mqttClient.onSubscribeFail = (topic) {
       print("Failed subscribe to $topic");

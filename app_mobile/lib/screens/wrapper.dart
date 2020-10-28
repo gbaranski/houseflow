@@ -55,6 +55,13 @@ class Wrapper extends StatelessWidget {
                 case ConnectionStatus.connected:
                   return Home();
                 case ConnectionStatus.disconnected:
+                  if (mqttService.connectionAttempts > maxConnectionAttempts) {
+                    FirebaseService.crashlytics.recordError(
+                        "mqtt_attempt_exceeded", StackTrace.current);
+                    return ErrorScreen(
+                      reason: "Attempts exeeded while connecting to ou servers",
+                    );
+                  }
                   connect();
                   return SplashScreen();
                   break;
@@ -62,11 +69,6 @@ class Wrapper extends StatelessWidget {
                   connect();
                   return ErrorScreen(
                     reason: "Could not connect",
-                  );
-                  break;
-                case ConnectionStatus.attempts_exceeded:
-                  return ErrorScreen(
-                    reason: "Attempts exceeded",
                   );
                   break;
                 case ConnectionStatus.not_attempted:
