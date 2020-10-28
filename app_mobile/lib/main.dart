@@ -8,6 +8,7 @@ import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/mqtt.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,10 +25,13 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        title: 'Houseflow',
         debugShowCheckedModeBanner: false,
         navigatorObservers: [FirebaseService.observer],
-        theme:
-            ThemeData(fontFamily: 'OpenSans', accentColor: Color(0xFF0096c7)),
+        theme: ThemeData(
+            fontFamily: 'OpenSans',
+            accentColor: Color(0xFF0096c7),
+            appBarTheme: AppBarTheme(brightness: Brightness.light)),
         home: FutureBuilder(
           future: Firebase.initializeApp(),
           builder: (context, snapshot) {
