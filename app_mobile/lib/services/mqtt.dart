@@ -128,9 +128,9 @@ class MqttService extends ChangeNotifier {
 
   @override
   void dispose() {
-    super.dispose();
-    print("Disposing MQTT Service class");
     disconnect("dispose");
+    print("Disposing MQTT Service class");
+    super.dispose();
   }
 
   void disconnect(String reason) {
