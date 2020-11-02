@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/models/devices/relay.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/utils/misc.dart';
-import 'package:houseflow/widgets/devices/relayCard.dart';
+import 'package:houseflow/widgets/devices/device_card.dart';
+import 'package:houseflow/widgets/devices/device_card_wrapper.dart';
 
 const tenMinutesInMillis = 1000 * 10 * 60;
 
@@ -33,31 +35,62 @@ class Device extends StatelessWidget {
         final iconData = getDeviceIcon(firebaseDevice.type);
         switch (firebaseDevice.type) {
           case 'WATERMIXER':
-            return RelayCard(
-              cardColor: Color.fromRGBO(79, 119, 149, 1),
-              firebaseDevice: firebaseDevice,
-              iconData: iconData,
-              getNewDeviceData: () =>
-                  DateTime.now().millisecondsSinceEpoch + tenMinutesInMillis,
-            );
+            return DeviceCardWrapper(
+                color: Color.fromRGBO(79, 119, 149, 1),
+                firebaseDevice: firebaseDevice,
+                iconData: iconData,
+                getDeviceTopic: RelayData.getSendSignalTopic,
+                getNewDeviceData: () => RelayData(
+                        lastSignalTimestamp:
+                            DateTime.now().millisecondsSinceEpoch +
+                                tenMinutesInMillis)
+                    .toJson());
           case 'GATE':
-            return RelayCard(
-              cardColor: Color.fromRGBO(103, 151, 109, 1),
+            return DeviceCardWrapper(
+              color: Color.fromRGBO(103, 151, 109, 1),
               firebaseDevice: firebaseDevice,
               iconData: iconData,
-              getNewDeviceData: () => DateTime.now().millisecondsSinceEpoch,
+              getDeviceTopic: RelayData.getSendSignalTopic,
+              getNewDeviceData: () => RelayData(
+                      lastSignalTimestamp:
+                          DateTime.now().millisecondsSinceEpoch)
+                  .toJson(),
             );
           case 'GARAGE':
-            return RelayCard(
-              cardColor: Color.fromRGBO(183, 111, 110, 1),
+            return DeviceCardWrapper(
+              color: Color.fromRGBO(183, 111, 110, 1),
               firebaseDevice: firebaseDevice,
               iconData: iconData,
-              getNewDeviceData: () => DateTime.now().millisecondsSinceEpoch,
+              getDeviceTopic: RelayData.getSendSignalTopic,
+              getNewDeviceData: () => RelayData(
+                      lastSignalTimestamp:
+                          DateTime.now().millisecondsSinceEpoch)
+                  .toJson(),
             );
-
+          case 'LIGHT':
+            return DeviceCardWrapper(
+              color: Color(0xFFffa000),
+              firebaseDevice: firebaseDevice,
+              iconData: iconData,
+              getDeviceTopic: RelayData.getSendSignalTopic,
+              getNewDeviceData: () => RelayData(
+                      lastSignalTimestamp:
+                          DateTime.now().microsecondsSinceEpoch)
+                  .toJson(),
+            );
           default:
             {
-              return const Text("Some error occured");
+              return DeviceCard(
+                onValidTap: () {
+                  const snackbar = SnackBar(
+                      content: Text(
+                          "Could not perform action, unrecognized device, please update app"));
+                  Scaffold.of(context).showSnackBar(snackbar);
+                },
+                iconData: Icons.error,
+                color: Colors.red.shade300,
+                firebaseDevice: firebaseDevice,
+              );
             }
         }
       },

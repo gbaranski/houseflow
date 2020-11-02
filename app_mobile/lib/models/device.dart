@@ -106,12 +106,15 @@ class DeviceHistory {
             return 'Open the gate';
           case 'GARAGE':
             return 'Open the garage';
+          case 'LIGHT':
+            return 'Toggle lights';
+
           default:
-            return "Some error occured";
+            return "Unrecognized action";
         }
         break;
       default:
-        return 'Some error occured';
+        return 'Unrecognized action';
     }
   }
 

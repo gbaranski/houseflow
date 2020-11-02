@@ -18,6 +18,11 @@ enum ConnectionStatus {
   failed,
   not_attempted,
 }
+enum SendMessageStatus {
+  not_connected_to_mqtt,
+  timed_out,
+  success,
+}
 
 const int maxConnectionAttempts = 4;
 
@@ -89,10 +94,15 @@ class MqttService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future sendMessage(
+  Future<SendMessageStatus> sendMessage(
       {DeviceTopic topic, MqttQos qos, Map<String, dynamic> data}) async {
+    final completer = Completer<SendMessageStatus>();
+
+    if (mqttClient.connectionStatus.state != MqttConnectionState.connected) {
+      completer.complete(SendMessageStatus.not_connected_to_mqtt);
+    }
+
     final randomShortString = getRandomShortString();
-    final completer = Completer();
 
     StreamSubscription streamSubscription;
 
@@ -106,7 +116,7 @@ class MqttService extends ChangeNotifier {
       print('Received message:$payload from topic: ${c[0].topic}>');
       if (responseData['correlationData'] == randomShortString) {
         streamSubscription.cancel();
-        completer.complete();
+        completer.complete(SendMessageStatus.success);
       }
     });
 
@@ -122,6 +132,11 @@ class MqttService extends ChangeNotifier {
     mqttClient.publishMessage(topic.request, qos, builder.payload,
         retain: false);
     print("Published message");
+
+    Future.delayed(Duration(seconds: 3), () {
+      if (!completer.isCompleted)
+        return completer.complete(SendMessageStatus.timed_out);
+    });
 
     return await completer.future;
   }

@@ -43,6 +43,8 @@ IconData getDeviceIcon(String deviceType) {
       return MdiIcons.gate;
     case 'GARAGE':
       return MdiIcons.garage;
+    case 'LIGHT':
+      return MdiIcons.lamp;
     default:
       return Icons.error;
   }
