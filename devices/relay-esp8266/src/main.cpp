@@ -8,10 +8,10 @@
 #include <time.h>
 
 #include "config.h"
+#include "deviceConfig.h"
 #include "gpio.h"
 #include "mqtt.h"
 #include "remoteUpdate.h"
-#include "serverConfig.h"
 
 BearSSL::WiFiClientSecure client;
 BearSSL::X509List x509(letsencryptauthorityx3_der,
@@ -39,15 +39,14 @@ void setup() {
   Serial.println("Connected to WiFi");
 
 #if SET_CREDENTIALS == true
-  ServerConfig newServerConfig = {DEVICE_UID,  DEVICE_SECRET,
-                                  DEVICE_HOST, DEVICE_OTA_PATH,
-                                  DEVICE_TYPE, DEVICE_RELAY_PIN};
-  writeServerConfig(newServerConfig);
-  Serial.println("Success writing ServerConfig to EEPROM");
+  DeviceConfig newDeviceConfig = {DEVICE_UID, DEVICE_SECRET, DEVICE_HOST,
+                                  DEVICE_OTA_PATH, DEVICE_OUTPUT_PIN};
+  writeDeviceConfig(newDeviceConfig);
+  Serial.println("Success writing deviceConfig to EEPROM");
 #endif
 
-  ServerConfig serverConfig = readServerConfig();
-  relayPin = serverConfig.relayPin;
+  DeviceConfig deviceConfig = readDeviceConfig();
+  outputPin = deviceConfig.relayPin;
   setupGpio();
 
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -60,8 +59,8 @@ void setup() {
   Serial.println("Got time!");
   client.setTrustAnchors(&x509);
 
-  startArduinoOta(&serverConfig);
-  initializeMqtt(serverConfig, &client);
+  startArduinoOta(&deviceConfig);
+  initializeMqtt(deviceConfig, &client);
 }
 
 unsigned long lastTimePrintedHeap = 0;
@@ -69,8 +68,10 @@ unsigned long lastTimePrintedHeap = 0;
 void loop() {
   arduinoOtaLoop();
   unsigned long now = millis();
+#if DEVICE_TOGGLE == false
   if (relayTriggered)
     if (now - lastRelayTriggeredMillis > 1000) onTimeoutElapsed();
+#endif
 
   if (!pubSubClient->connected()) {
     if (now - lastReconnectAttempt > 5000) {

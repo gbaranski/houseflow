@@ -24,13 +24,13 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkHttpUpdates(ServerConfig* serverConfig,
+void checkHttpUpdates(DeviceConfig* deviceConfig,
                       BearSSL::WiFiClientSecure* client) {
-  String credentialsJson = "{\"uid\": \"" + String(*serverConfig->uid) +
-                           "\",\"secret\":\"" + String(*serverConfig->secret) +
+  String credentialsJson = "{\"uid\": \"" + String(*deviceConfig->uid) +
+                           "\",\"secret\":\"" + String(*deviceConfig->secret) +
                            "\"}";
   String ota_url =
-      "https://" + String(*serverConfig->host) + String(*serverConfig->otaPath);
+      "https://" + String(*deviceConfig->host) + String(*deviceConfig->otaPath);
   Serial.println("Will attempt OTA to: " + ota_url);
   Serial.println("Will publish credentials: " + credentialsJson);
   t_httpUpdate_return ret;
@@ -59,10 +59,9 @@ void checkHttpUpdates(ServerConfig* serverConfig,
   }
 }
 
-void startArduinoOta(ServerConfig* serverConfig) {
-  ArduinoOTA.setHostname(
-      String(String("ESP8266_") + String(serverConfig->deviceType)).c_str());
-  ArduinoOTA.setPassword(serverConfig->secret);
+void startArduinoOta(DeviceConfig* deviceConfig) {
+  ArduinoOTA.setHostname("ESP8266_" DEVICE_TYPE);
+  ArduinoOTA.setPassword(deviceConfig->secret);
 
   ArduinoOTA.onStart([]() { Serial.println("Start"); });
   ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });

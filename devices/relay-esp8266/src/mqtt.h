@@ -5,11 +5,11 @@
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <PubSubClient.h>
 
-#include "serverConfig.h"
+#include "deviceConfig.h"
 
 PubSubClient* pubSubClient;
 
-ServerConfig mqttServerConfig;
+DeviceConfig mqttDeviceConfig;
 
 long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
@@ -41,7 +41,7 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println();
   if (String(topic) == mqttTopic.relayTopic1.request) {
-    triggerRelay();
+    changeOutputState();
     byte* p = (byte*)malloc(length);
     // Copy the payload to the new buffer
     memcpy(p, message, length);
@@ -60,8 +60,8 @@ boolean reconnect() {
   String clientId = "device_";
   clientId += String(random(0xffff), HEX);
 
-  if (pubSubClient->connect(clientId.c_str(), mqttServerConfig.uid,
-                            mqttServerConfig.secret)) {
+  if (pubSubClient->connect(clientId.c_str(), mqttDeviceConfig.uid,
+                            mqttDeviceConfig.secret)) {
     Serial.println("Success connecting to MQTT");
     subscribeTopics();
   } else {
@@ -71,16 +71,16 @@ boolean reconnect() {
   return pubSubClient->connected();
 }
 
-void initializeMqtt(ServerConfig _serverConfig,
+void initializeMqtt(DeviceConfig _deviceConfig,
                     BearSSL::WiFiClientSecure* wifiClientSecure) {
-  mqttServerConfig = _serverConfig;
+  mqttDeviceConfig = _deviceConfig;
 
   mqttTopic.relayTopic1 = {
-      String(mqttServerConfig.uid) + String("/event/relay1/request"),
-      String(mqttServerConfig.uid) + String("/event/relay1/response"),
+      String(mqttDeviceConfig.uid) + String("/event/relay1/request"),
+      String(mqttDeviceConfig.uid) + String("/event/relay1/response"),
   };
 
-  pubSubClient = new PubSubClient(mqttServerConfig.host, 8883, callback,
+  pubSubClient = new PubSubClient(mqttDeviceConfig.host, 8883, callback,
                                   *wifiClientSecure);
 
   Serial.println("Initializing MQTT");
