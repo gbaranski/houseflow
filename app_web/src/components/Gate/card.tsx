@@ -5,7 +5,7 @@ import { useModel } from 'umi';
 import moment from 'moment';
 import { CARD_MIN_HEIGHT, CARD_MIN_WIDTH } from '@/utils/constants';
 import { mdiGate } from '@mdi/js';
-import PageLoading from '../PageLoading';
+import { sendDeviceRequest } from '@/services/device';
 import DeviceAction from '../DeviceAction';
 
 interface GateCardProps {
@@ -13,13 +13,17 @@ interface GateCardProps {
 }
 const GateCard: React.FC<GateCardProps> = ({ device }) => {
   const { initialState } = useModel('@@initialState');
-  const { mqtt } = initialState || {};
 
-  const { sendRelaySignal } = useModel('relay');
+  const { currentUser } = initialState || {};
+  if (!currentUser) throw new Error('Current user is not defined');
 
-  if (!mqtt) return <PageLoading />;
-
-  const openGate = () => sendRelaySignal(device, mqtt, () => Date.now());
+  const openGate = async () =>
+    sendDeviceRequest({
+      user: {
+        token: await currentUser.getIdToken(),
+      },
+      device: Relay.createRelayRequest({ uid: device.uid }),
+    });
 
   return (
     <Card

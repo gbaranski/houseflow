@@ -3,23 +3,27 @@ import { Card, Statistic } from 'antd';
 import { Device, Relay } from '@houseflow/types';
 import { useModel } from 'umi';
 import moment from 'moment';
-import { mdiGarageVariant } from '@mdi/js';
 import { CARD_MIN_HEIGHT, CARD_MIN_WIDTH } from '@/utils/constants';
-import PageLoading from '@/components/PageLoading';
-import DeviceAction from '@/components/DeviceAction';
+import { mdiGate } from '@mdi/js';
+import { sendDeviceRequest } from '@/services/device';
+import DeviceAction from '../DeviceAction';
 
 interface GarageCardProps {
   device: Device.FirebaseDevice<Relay.Data>;
 }
 const GarageCard: React.FC<GarageCardProps> = ({ device }) => {
   const { initialState } = useModel('@@initialState');
-  const { mqtt } = initialState || {};
 
-  const { sendRelaySignal } = useModel('relay');
+  const { currentUser } = initialState || {};
+  if (!currentUser) throw new Error('Current user is not defined');
 
-  if (!mqtt) return <PageLoading />;
-
-  const openGarage = () => sendRelaySignal(device, mqtt, () => Date.now());
+  const openGarage = async () =>
+    sendDeviceRequest({
+      user: {
+        token: await currentUser.getIdToken(),
+      },
+      device: Relay.createRelayRequest({ uid: device.uid }),
+    });
 
   return (
     <Card
@@ -27,11 +31,7 @@ const GarageCard: React.FC<GarageCardProps> = ({ device }) => {
       style={{ minWidth: CARD_MIN_WIDTH }}
       bodyStyle={{ minHeight: CARD_MIN_HEIGHT }}
       actions={[
-        <DeviceAction
-          mdiIconPath={mdiGarageVariant}
-          toolTipTitle="Open garage"
-          onSubmit={openGarage}
-        />,
+        <DeviceAction mdiIconPath={mdiGate} toolTipTitle="Open gate" onSubmit={openGarage} />,
       ]}
     >
       <Statistic

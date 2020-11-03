@@ -6,16 +6,13 @@ import { Client } from '@houseflow/types';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { ResponseError } from 'umi-request';
-import { getCurrentUser, getIdToken, getFirebaseUser, firebaseAuth } from '@/services/firebase';
-import { MqttClient } from 'mqtt';
+import { getCurrentUser, getFirebaseUser } from '@/services/firebase';
 import defaultSettings from '../config/defaultSettings';
-import { connectMqtt } from './services/mqtt';
 
 export async function getInitialState(): Promise<{
   firebaseUser?: Client.FirebaseUser;
   currentUser?: firebase.User;
   settings?: LayoutSettings;
-  mqtt?: MqttClient;
 }> {
   console.log('getInitalState', history.location.pathname);
   if (
@@ -38,19 +35,7 @@ export async function getInitialState(): Promise<{
         };
       }
 
-      const token = await getIdToken();
-      if (!token) throw new Error('Token is not defined');
-      const mqtt = await connectMqtt(token, currentUser.uid);
-
-      firebaseAuth.onIdTokenChanged(async (user) => {
-        if (user) {
-          console.log('Updating token for MQTT');
-          mqtt.options.password = await user.getIdToken();
-        }
-      });
-
       return {
-        mqtt,
         firebaseUser,
         currentUser,
         settings: defaultSettings,
