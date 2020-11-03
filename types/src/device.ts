@@ -1,9 +1,14 @@
-import { Alarmclock, Relay } from '.';
+import { Light, Relay } from '.';
 
-export type AnyDeviceData = Alarmclock.Data | Relay.Data;
+export type AnyDeviceData = Light.Data | Relay.Data;
 
 export namespace Device {
-  export type DeviceType = 'ALARMCLOCK' | 'WATERMIXER' | 'GATE' | 'GARAGE';
+  export type DeviceType =
+    | 'ALARMCLOCK'
+    | 'WATERMIXER'
+    | 'GATE'
+    | 'GARAGE'
+    | 'LIGHT';
 
   export interface Request {
     correlationData: string;
@@ -16,10 +21,7 @@ export namespace Device {
   }
 
   export interface FirebaseDevice<
-    DeviceData extends
-      | Alarmclock.Data
-      | Relay.Data
-      | AnyDeviceData = AnyDeviceData
+    DeviceData extends Light.Data | Relay.Data | AnyDeviceData = AnyDeviceData
   > {
     uid: string;
     secret?: string;
