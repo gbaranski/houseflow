@@ -11,7 +11,7 @@ if (!username || !password)
 const mqttClient = mqtt.connect('mqtt://emqx', {
   username,
   password,
-  clientId: `device_api-1`,
+  clientId: `server_device-1`,
 });
 
 mqttClient.on('connect', () => {
