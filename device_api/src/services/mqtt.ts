@@ -1,5 +1,6 @@
 import { getRandomShortUid } from '@/utils';
 import { Device, Topic, Client, Exceptions } from '@houseflow/types';
+import chalk from 'chalk';
 import mqtt from 'mqtt';
 
 const username = process.env.DEVICE_API_USERNAME;
@@ -36,36 +37,53 @@ export const sendDeviceMessage = (
 
   mqttClient.subscribe(topic.response);
 
-  const sendMessagePromise = new Promise<SendMessageStatus>((resolve) => {
-    const correlationData = getRandomShortUid();
-    const createListener = () =>
-      mqttClient.once('message', (msgTopic, payload, packet) => {
-        console.debug('Received message', { msgTopic, payload, packet });
+  const correlationData = getRandomShortUid();
+  const deviceRequest: Device.Request = {
+    correlationData,
+  };
 
-        const responseRequest = JSON.parse(
-          payload.toString(),
-        ) as Device.Response;
+  return new Promise<SendMessageStatus>((resolve, reject) => {
+    let completed = false;
 
-        if (
-          msgTopic === topic.response &&
-          correlationData === responseRequest.correlationData
-        ) {
-          mqttClient.unsubscribe(topic.response);
-          resolve(Exceptions.SUCCESS);
-          return;
-        }
-        createListener();
-      });
+    const listenerCallback = (
+      msgTopic: string,
+      payload: Buffer,
+      packet: mqtt.Packet,
+    ) => {
+      const responseRequest = JSON.parse(payload.toString()) as Device.Response;
 
-    createListener();
-    mqttClient.publish(topic.request, JSON.stringify(request));
+      if (
+        msgTopic === topic.response &&
+        correlationData === responseRequest.correlationData
+      ) {
+        mqttClient.unsubscribe(topic.response);
+        mqttClient.removeListener('message', listenerCallback);
+        console.info(
+          chalk.greenBright(
+            `Request to ${request.uid} with action ${request.action} completed successfully`,
+          ),
+        );
+        completed = true;
+        resolve(Exceptions.SUCCESS);
+        return;
+      }
+    };
+
+    mqttClient.on('message', listenerCallback);
+
+    mqttClient.publish(topic.request, JSON.stringify(deviceRequest));
+    setTimeout(() => {
+      if (completed) return;
+      console.info(
+        chalk.redBright(
+          `Request to ${request.uid} with action ${request.action} failed due to timeout`,
+        ),
+      );
+      mqttClient.unsubscribe(topic.response);
+      mqttClient.removeListener('message', listenerCallback);
+      resolve(Exceptions.DEVICE_TIMED_OUT);
+    }, 3000);
   });
-
-  const timeoutPromise = new Promise<SendMessageStatus>((resolve) => {
-    setTimeout(() => resolve(Exceptions.DEVICE_TIMED_OUT), 4000);
-  });
-
-  return Promise.race<SendMessageStatus>([timeoutPromise, sendMessagePromise]);
 };
 
 export default mqttClient;

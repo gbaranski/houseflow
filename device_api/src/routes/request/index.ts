@@ -7,8 +7,20 @@ import {
   logUnhandledError,
 } from '@/services/logging';
 import express from 'express';
-import { validateType } from '@/utils';
+import Joi from 'joi';
 import { Client, Exceptions } from '@houseflow/types';
+
+const deviceRequestSchema = Joi.object({
+  user: Joi.object({
+    token: Joi.string().required(),
+  }),
+  device: Joi.object({
+    uid: Joi.string().length(36).required(),
+    gpio: Joi.number().integer().min(0).required(),
+    action: Joi.string().equal('trigger', 'toggle').required(),
+    data: Joi.string(),
+  }),
+});
 
 const router = express();
 
@@ -20,9 +32,10 @@ router.use((req, res, next) => {
 router.post('/', async (req, res) => {
   const { body } = req;
   try {
-    const deviceRequest = JSON.parse(body);
-    if (!validateType<Client.DeviceRequest>(deviceRequest))
-      throw new Error(Exceptions.INVALID_DEVICE_REQUEST);
+    const { error } = deviceRequestSchema.validate(body);
+    if (error !== undefined) throw new Error(Exceptions.INVALID_ARGUMENTS);
+    const deviceRequest = body as Client.DeviceRequest;
+
     const decodedUser = await decodeToken(deviceRequest.user.token);
     checkUserDeviceAccess({
       userUid: decodedUser.uid,
