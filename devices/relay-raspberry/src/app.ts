@@ -1,13 +1,17 @@
 import { MqttClient } from 'mqtt';
-import { Relay } from '@houseflow/types';
+import { Topic } from '@houseflow/types';
 import { startMixing } from './services/relay';
+
+const { DEVICE_UID } = process.env;
 
 export const onConnection = (mqtt: MqttClient) => {
   console.log('Initialized connection with MQTT');
 
-  const startMixTopic = Relay.getSendSignalTopic(
-    process.env.DEVICE_UID as string,
-  );
+  const basicTopic = `${DEVICE_UID}/trigger1`;
+  const startMixTopic: Topic = {
+    request: `${basicTopic}/request`,
+    response: `${basicTopic}/response`,
+  };
 
   mqtt.subscribe(startMixTopic.request);
 

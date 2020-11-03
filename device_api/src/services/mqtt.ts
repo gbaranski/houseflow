@@ -1,7 +1,5 @@
-import { DeviceRequestDevice } from '@/routes/request/types';
-import { MqttDeviceResponse, SendMessageStatus } from '@/types';
 import { getRandomShortUid } from '@/utils';
-import { Topic } from '@houseflow/types';
+import { Device, Topic, Client, Exceptions } from '@houseflow/types';
 import mqtt from 'mqtt';
 
 const username = process.env.DEVICE_API_USERNAME;
@@ -15,14 +13,14 @@ const mqttClient = mqtt.connect('mqtt://emqx', {
   clientId: `device_api-1`,
 });
 
-mqttClient.on('connect', (cb) => {
+mqttClient.on('connect', () => {
   console.log('Successfully connected ');
 });
 mqttClient.on('error', (err) => {
   console.log(`MQTT error occured ${err}`);
 });
 
-const generateTopic = (request: DeviceRequestDevice): Topic => {
+const generateTopic = (request: Client.DeviceRequest['device']): Topic => {
   const basicTopic = `${request.uid}/${request.action}${request.gpio}`;
   return {
     request: `${basicTopic}/request`,
@@ -30,8 +28,9 @@ const generateTopic = (request: DeviceRequestDevice): Topic => {
   };
 };
 
+type SendMessageStatus = Exceptions.SUCCESS | Exceptions.DEVICE_TIMED_OUT;
 export const sendDeviceMessage = (
-  request: DeviceRequestDevice,
+  request: Client.DeviceRequest['device'],
 ): Promise<SendMessageStatus> => {
   const topic = generateTopic(request);
 
@@ -45,14 +44,14 @@ export const sendDeviceMessage = (
 
         const responseRequest = JSON.parse(
           payload.toString(),
-        ) as MqttDeviceResponse;
+        ) as Device.Response;
 
         if (
           msgTopic === topic.response &&
           correlationData === responseRequest.correlationData
         ) {
           mqttClient.unsubscribe(topic.response);
-          resolve(SendMessageStatus.SUCCESS);
+          resolve(Exceptions.SUCCESS);
           return;
         }
         createListener();
@@ -63,7 +62,7 @@ export const sendDeviceMessage = (
   });
 
   const timeoutPromise = new Promise<SendMessageStatus>((resolve) => {
-    setTimeout(() => resolve(SendMessageStatus.DEVICE_TIMED_OUT), 4000);
+    setTimeout(() => resolve(Exceptions.DEVICE_TIMED_OUT), 4000);
   });
 
   return Promise.race<SendMessageStatus>([timeoutPromise, sendMessagePromise]);

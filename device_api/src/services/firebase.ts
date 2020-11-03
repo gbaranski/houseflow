@@ -1,6 +1,5 @@
 import * as admin from 'firebase-admin';
-import { Client } from '@houseflow/types';
-import { Exceptions } from '@/types';
+import { Client, Exceptions } from '@houseflow/types';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
