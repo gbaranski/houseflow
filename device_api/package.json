@@ -1,7 +1,7 @@
 {
-  "name": "api_server",
+  "name": "device_api_server",
   "version": "1.0.0",
-  "description": "API Server for houseflow",
+  "description": "API Server for devices for houseflow",
   "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
