@@ -1,6 +1,7 @@
 import http from 'http';
 import app from './app';
 import chalk from 'chalk';
+import '@/services/mqtt';
 
 const PORT = 80;
 

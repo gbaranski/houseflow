@@ -3,35 +3,52 @@ services:
   emqx:
     image: 'emqx/emqx'
     container_name: 'emqx'
+    env_file:
+      - .env
     environment:
       - EMQX_NAME=emqx
-      # - EMQX_LOG__LEVEL=debug
+      - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=false
 
       - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
-    env_file:
-      - .env
     ports:
       - 1883:1883 # MQTT
-      - 8083:8083
-      - 8883:8883
-      - 8084:8084
-      - 18083:18083
+      - 8083:8083 # MQTT/WS
+      - 18083:18083 # Dashboard
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
     networks:
       - backend
 
-  webhooks:
+  # webhooks:
+  #   tty: true
+  #   container_name: 'webhooks'
+  #   environment:
+  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: ./webhooks
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./firebaseConfig.json:/app/firebaseConfig.json
+  #   networks:
+  #     - backend
+  device_api:
     tty: true
-    container_name: 'webhooks'
+    container_name: 'device_api'
+    command: npm run start:dev
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
     env_file:
       - .env
+    depends_on:
+      - 'emqx'
     build:
-      context: ./webhooks
+      context: ./device_api
       dockerfile: Dockerfile
-    restart: 'unless-stopped'
     volumes:
+      - ./device_api/src/:/app/src/
       - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
       - backend
@@ -39,32 +56,34 @@ services:
   auth:
     tty: true
     container_name: 'auth'
-    command: npm run start:dev
+    command: npm run start
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
     env_file:
       - .env
     build:
       context: ./auth
       dockerfile: Dockerfile
-    restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
-      - ./auth/src:/app/src
     networks:
       - backend
 
   ota:
     tty: true
     container_name: 'ota'
-    command: npm run start:dev
+    # command: npm run start
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+    entrypoint: ['echo', 'Service ota is disabled']
     env_file:
       - .env
     build:
       context: ./ota
       dockerfile: Dockerfile
-    restart: 'unless-stopped'
+    # restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
-      - ./ota/src:/app/src
     networks:
       - backend
 
@@ -73,15 +92,13 @@ services:
     container_name: 'nginx'
     build:
       context: ./nginx
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     env_file:
       - .env
     ports:
       - 80:80
       - 443:443
     restart: 'unless-stopped'
-    volumes:
-      - ./certs:/etc/ssl/nginx/certs
     networks:
       - backend
 
