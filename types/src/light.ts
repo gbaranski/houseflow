@@ -1,15 +1,15 @@
-import { Client } from './client';
+import { Client } from '.';
 
-export namespace Relay {
+export namespace Light {
   export interface Data {
-    lastSignalTimestamp: number;
+    currentState: boolean;
   }
 
   export const SAMPLE: Data = {
-    lastSignalTimestamp: 0,
+    currentState: false,
   };
 
-  export const createRelayRequest = ({
+  export const createLightRequest = ({
     uid,
   }: {
     uid: string;
@@ -17,7 +17,7 @@ export namespace Relay {
     return {
       uid,
       gpio: 1,
-      action: 'trigger',
+      action: 'toggle',
     };
   };
 }

@@ -1,6 +1,16 @@
 export namespace Client {
-  // TODO: Remove moderator
-  export type UserRole = 'admin' | 'moderator' | 'user';
+  export type UserRole = 'admin' | 'user';
+  export interface DeviceRequest {
+    user: {
+      token: string;
+    };
+    device: {
+      uid: string;
+      gpio: number;
+      action: 'trigger' | 'toggle';
+      data?: string;
+    };
+  }
 
   export interface FirebaseUserDevice {
     uid: string;
