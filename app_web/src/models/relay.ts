@@ -8,11 +8,7 @@ import { MqttClient } from 'mqtt';
 export type TimestampFunc = () => number;
 
 export default () => {
-  const sendRelaySignal = async (
-    device: Device.FirebaseDevice,
-    mqttClient: MqttClient,
-    getTimestampFunc: TimestampFunc,
-  ) => {
+  const sendRelaySignal = async (device: Device.FirebaseDevice, mqttClient: MqttClient) => {
     const request: Device.Request = {
       correlationData: getRandomShortUid(),
     };
@@ -23,10 +19,6 @@ export default () => {
         request,
         topic: Relay.getSendSignalTopic(device.uid),
         mqttClient,
-      });
-
-      updateDeviceData(device.uid, {
-        lastSignalTimestamp: getTimestampFunc(),
       });
     } catch (e) {
       console.log(`Error when sending request ${e}`);

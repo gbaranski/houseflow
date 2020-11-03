@@ -6,9 +6,9 @@ import {
   logServerError,
   logUnhandledError,
 } from '@/services/logging';
-import { Exceptions, SendMessageStatus } from '@/types';
 import express from 'express';
-import { isValidDeviceRequest } from './types';
+import { validateType } from '@/utils';
+import { Client, Exceptions } from '@houseflow/types';
 
 const router = express();
 
@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
   const { body } = req;
   try {
     const deviceRequest = JSON.parse(body);
-    if (!isValidDeviceRequest(deviceRequest))
+    if (!validateType<Client.DeviceRequest>(deviceRequest))
       throw new Error(Exceptions.INVALID_DEVICE_REQUEST);
     const decodedUser = await decodeToken(deviceRequest.user.token);
     checkUserDeviceAccess({
@@ -29,10 +29,10 @@ router.post('/', async (req, res) => {
       deviceUid: deviceRequest.device.uid,
     });
     const result = await sendDeviceMessage(deviceRequest.device);
-    if (result === SendMessageStatus.SUCCESS) {
-      res.status(200).send(SendMessageStatus.SUCCESS);
-    } else if (result === SendMessageStatus.DEVICE_TIMED_OUT) {
-      res.status(504).send(SendMessageStatus.DEVICE_TIMED_OUT);
+    if (result === Exceptions.SUCCESS) {
+      res.status(200).send(Exceptions.SUCCESS);
+    } else if (result === Exceptions.DEVICE_TIMED_OUT) {
+      res.status(504).send(Exceptions.DEVICE_TIMED_OUT);
     }
   } catch (e) {
     handleError(e, req, res);
