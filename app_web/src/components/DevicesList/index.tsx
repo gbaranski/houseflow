@@ -5,6 +5,7 @@ import DeviceCardSkeleton from '@/components/DeviceCardSkeleton';
 import { Device } from '@houseflow/types';
 import { Col } from 'antd';
 import GateCard from '../Gate/card';
+import LightCard from '../Light/card';
 
 interface UiDevice {
   type: Device.DeviceType;
@@ -23,6 +24,10 @@ const uiDevices: UiDevice[] = [
   {
     type: 'GARAGE',
     component: GarageCard,
+  },
+  {
+    type: 'LIGHT',
+    component: LightCard,
   },
 ];
 
