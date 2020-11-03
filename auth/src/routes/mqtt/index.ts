@@ -6,12 +6,29 @@ import {
 import express from 'express';
 import { AclRequest, UserRequest } from './types';
 
+const deviceApiUsername = process.env.DEVICE_API_USERNAME;
+const deviceApiPassword = process.env.DEVICE_API_PASSWORD;
+if (!deviceApiUsername || !deviceApiPassword)
+  throw new Error('Username or password is not defined in .env, read docs');
+
 const UUID_LENGTH = 36;
 
 const router = express.Router();
 
 router.post('/user', async (req, res) => {
   const userRequest: UserRequest = req.body;
+  if (userRequest.username === deviceApiUsername) {
+    if (userRequest.password === deviceApiPassword) {
+      res.sendStatus(200);
+      return;
+    } else {
+      console.log(
+        'Attempted to log in with restricted username or invalid password',
+      );
+      res.sendStatus(403);
+      return;
+    }
+  }
   try {
     if (userRequest.clientid.startsWith('device_')) {
       await validateDevice({
@@ -40,6 +57,10 @@ router.post('/user', async (req, res) => {
 
 router.post('/acl', (req, res) => {
   const aclRequest: AclRequest = req.body;
+  if (aclRequest.username === deviceApiUsername) {
+    res.sendStatus(200);
+    return;
+  }
   try {
     if (aclRequest.clientid.startsWith('device_')) {
       if (!aclRequest.topic.startsWith(`${aclRequest.username}/`))

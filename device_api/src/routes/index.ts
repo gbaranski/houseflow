@@ -7,6 +7,6 @@ router.get('/', (req, res): void => {
   res.send('Hello from Device API server');
 });
 
-router.use('/request');
+router.use('/request', deviceRequest);
 
 export default router;

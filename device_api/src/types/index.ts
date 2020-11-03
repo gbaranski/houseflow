@@ -1,0 +1,17 @@
+export enum Exceptions {
+  INVALID_DEVICE_REQUEST = 'INVALID_DEVICE_REQUEST',
+  NO_USER_IN_DB = 'NO_USER_IN_DB',
+  NO_DEVICE_ACCESS = 'NO_DEVICE_ACCESS',
+  MQTT_NOT_CONNECTED = 'MQTT_NOT_CONNECTED',
+  DEVICE_TIMED_OUT = 'DEVICE_TIMED_OUT',
+  INVALID_ARGUMENTS = 'INVALID_ARGUMENTS',
+}
+
+export enum SendMessageStatus {
+  SUCCESS = 'SUCCESS',
+  DEVICE_TIMED_OUT = 'DEVICE_TIMED_OUT',
+}
+
+export interface MqttDeviceResponse {
+  correlationData: string;
+}
