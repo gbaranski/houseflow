@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
-import { Popconfirm, Tooltip } from 'antd';
+import { message, Popconfirm, Tooltip } from 'antd';
 import Icon from '@mdi/react';
 
 interface DeviceAction {
   mdiIconPath: string;
   toolTipTitle: string;
-  onSubmit: () => any;
+  onSubmit: () => Promise<any>;
 }
 
 const DeviceAction: React.FC<DeviceAction> = ({ mdiIconPath, toolTipTitle, onSubmit }) => {
   const [tooltipVisible, setTooltipVisible] = useState(false);
-
-  const onPopconfirmVisiblityChange = (visiblity: boolean) => {
-    if (visiblity) setTooltipVisible(false);
-  };
+  const [popconfirmVisible, setPopconfirmVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   return (
     <Tooltip
@@ -24,10 +22,27 @@ const DeviceAction: React.FC<DeviceAction> = ({ mdiIconPath, toolTipTitle, onSub
     >
       <Popconfirm
         title={`Are you sure to ${toolTipTitle.toLowerCase()} now?`}
-        onVisibleChange={onPopconfirmVisiblityChange}
-        onConfirm={onSubmit}
+        visible={popconfirmVisible}
+        okButtonProps={{ loading }}
+        onCancel={() => {
+          setPopconfirmVisible(false);
+        }}
+        onConfirm={() => {
+          setLoading(true);
+          onSubmit()
+            .then(() => {
+              message.success('Success!');
+            })
+            .finally(() => {
+              setLoading(false);
+              setPopconfirmVisible(false);
+            })
+            .catch((e) => {
+              message.error(e.message);
+            });
+        }}
       >
-        <a>
+        <a onClick={() => setPopconfirmVisible(true)}>
           <Icon path={mdiIconPath} size={1} />
         </a>
       </Popconfirm>
