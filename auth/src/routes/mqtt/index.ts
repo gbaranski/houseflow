@@ -1,8 +1,5 @@
-import {
-  decodeToken,
-  firebaseUsers,
-  validateDevice,
-} from '@/services/firebase';
+import { validateDevice } from '@/services/firebase';
+import chalk from 'chalk';
 import express from 'express';
 import { AclRequest, UserRequest } from './types';
 
@@ -11,45 +8,38 @@ const deviceApiPassword = process.env.DEVICE_API_PASSWORD;
 if (!deviceApiUsername || !deviceApiPassword)
   throw new Error('Username or password is not defined in .env, read docs');
 
-const UUID_LENGTH = 36;
-
 const router = express.Router();
 
 router.post('/user', async (req, res) => {
   const userRequest: UserRequest = req.body;
-  if (userRequest.username === deviceApiUsername) {
-    if (userRequest.password === deviceApiPassword) {
-      res.sendStatus(200);
-      return;
-    } else {
-      console.log(
-        'Attempted to log in with restricted username or invalid password',
-      );
-      res.sendStatus(403);
-      return;
-    }
-  }
   try {
-    if (userRequest.clientid.startsWith('device_')) {
-      await validateDevice({
-        uid: userRequest.username,
-        secret: userRequest.password,
-      });
-    } else if (
-      userRequest.clientid.startsWith('mobile_') ||
-      userRequest.clientid.startsWith('web_')
-    ) {
-      await decodeToken(userRequest.password);
-    } else {
-      throw new Error('unrecognized client');
+    if (userRequest.username === deviceApiUsername) {
+      if (userRequest.password === deviceApiPassword) {
+        res.sendStatus(200);
+        return;
+      } else {
+        throw new Error(
+          'URGENT: attempt to log in with restricted username or invalid password',
+        );
+      }
     }
+    if (!userRequest.clientid.startsWith('device_'))
+      throw new Error('expected device_... clientid');
+    await validateDevice({
+      uid: userRequest.username,
+      secret: userRequest.password,
+    });
     console.log(
-      `Authorized user ${userRequest.clientid} with username ${userRequest.username}`,
+      chalk.greenBright(
+        `Authorized user ${userRequest.clientid} with username ${userRequest.username}`,
+      ),
     );
     res.sendStatus(200);
   } catch (e) {
     console.log(
-      `Failed user authorization with ${userRequest.username} ${e.message}`,
+      chalk.redBright(
+        `User auth failed due ${e.message} clientID: ${userRequest.clientid} username: ${userRequest.username}`,
+      ),
     );
     res.sendStatus(400);
   }
@@ -61,35 +51,44 @@ router.post('/acl', (req, res) => {
     res.sendStatus(200);
     return;
   }
+
   try {
-    if (aclRequest.clientid.startsWith('device_')) {
-      if (!aclRequest.topic.startsWith(`${aclRequest.username}/`))
-        throw new Error('not allowed topic');
-    } else if (
-      aclRequest.clientid.startsWith('web_') ||
-      aclRequest.clientid.startsWith('mobile_')
-    ) {
-      const firebaseUser = firebaseUsers.find(
-        (user) => user.uid === aclRequest.username,
+    const expectedClientIdPrefix = 'device_';
+    const expectedTopicPrefix = `${aclRequest.username}/`;
+    const expectedTopicSuffix =
+      aclRequest.access === '1' ? '/request' : '/response';
+
+    if (aclRequest.topic.includes('#'))
+      throw new Error('not allowed wildcard(#) in topic');
+    if (!aclRequest.clientid.startsWith(expectedClientIdPrefix))
+      throw new Error(
+        `not allowed clientid, expected prefix ${expectedClientIdPrefix}, recived ${aclRequest.clientid}`,
       );
-      if (!firebaseUser) throw new Error(' firebase user not found');
-      const toSubscribeDeviceUid = aclRequest.topic.substring(0, UUID_LENGTH);
-      if (
-        !firebaseUser.devices.find(
-          (device) => device.uid === toSubscribeDeviceUid,
-        )
-      )
-        throw new Error('not allowed device topic');
-    }
+    if (!aclRequest.topic.startsWith(expectedTopicPrefix))
+      throw new Error(
+        `not allowed topic, expected prefix ${expectedTopicPrefix}, received ${aclRequest.topic}`,
+      );
+
+    if (!aclRequest.topic.endsWith(expectedTopicSuffix))
+      throw new Error(
+        `not allowed topic, expected suffix ${expectedTopicSuffix}, received ${aclRequest.topic}`,
+      );
+
     console.log(
-      `Successfully authenticated ${aclRequest.clientid} with username ${aclRequest.username}`,
+      chalk.greenBright(
+        `Authorized ACL ${aclRequest.clientid} with username ${
+          aclRequest.username
+        } on topic ${aclRequest.topic.slice(36)}`,
+      ),
     );
     res.sendStatus(200);
   } catch (e) {
     console.log(
-      `ACL Auth failed due ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
+      chalk.redBright(
+        `ACL Auth failed due ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
+      ),
     );
-    res.sendStatus(400);
+    res.sendStatus(403);
     return;
   }
 });

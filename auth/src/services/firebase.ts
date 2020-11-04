@@ -7,20 +7,10 @@ admin.initializeApp();
 
 const db = admin.firestore();
 const auth = admin.auth();
-const usersCollection = db.collection('users');
 const deviceCollection = db.collection('devices');
 const devicePrivateCollection = db.collection('devices-private');
 
 export let firebaseUsers: Client.FirebaseUser[] = [];
-
-usersCollection.onSnapshot((snapshot) =>
-  snapshot.docs.forEach((doc) => {
-    const firebaseUser = doc.data() as Client.FirebaseUser;
-    firebaseUsers = firebaseUsers
-      .filter((user) => user.uid !== firebaseUser.uid)
-      .concat(firebaseUser);
-  }),
-);
 
 export const validateDevice = async ({
   uid,
@@ -32,8 +22,10 @@ export const validateDevice = async ({
   const deviceData = (await devicePrivateCollection.doc(uid).get()).data() as {
     secret: string;
   };
-  console.log({ fsS: deviceData.secret, secret });
-  if (deviceData.secret !== secret) throw new Error('secret missmatch');
+  if (deviceData.secret !== secret) {
+    console.log({ fsS: deviceData.secret, secret });
+    throw new Error('secret missmatch');
+  }
 };
 
 export const decodeToken = (token: string) => auth.verifyIdToken(token);
