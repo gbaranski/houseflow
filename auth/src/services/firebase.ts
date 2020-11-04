@@ -10,8 +10,6 @@ const auth = admin.auth();
 const deviceCollection = db.collection('devices');
 const devicePrivateCollection = db.collection('devices-private');
 
-export let firebaseUsers: Client.FirebaseUser[] = [];
-
 export const validateDevice = async ({
   uid,
   secret,
@@ -27,8 +25,6 @@ export const validateDevice = async ({
     throw new Error('secret missmatch');
   }
 };
-
-export const decodeToken = (token: string) => auth.verifyIdToken(token);
 
 export async function findDeviceInDatabase(uid: string) {
   const snapshot = await deviceCollection.doc(uid).get();
