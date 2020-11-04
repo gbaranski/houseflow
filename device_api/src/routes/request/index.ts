@@ -32,7 +32,6 @@ router.use((req, res, next) => {
 router.post('/', async (req, res) => {
   const { body } = req;
   try {
-    console.log(body);
     const { error } = deviceRequestSchema.validate(body);
     if (error !== undefined) throw new Error(Exceptions.INVALID_ARGUMENTS);
     const deviceRequest = body as Client.DeviceRequest;
