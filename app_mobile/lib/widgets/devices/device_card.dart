@@ -42,18 +42,20 @@ class DeviceCard extends StatelessWidget {
     return Card(
       color: color,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-      child: InkWell(
-        onLongPress: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                settings: const RouteSettings(name: 'Device info'),
-                builder: (context) =>
-                    SingleDevice(firebaseDevice: firebaseDevice))),
-        splashColor: Colors.white.withAlpha(100),
-        onTap: firebaseDevice.status
-            ? onValidTap
-            : () => showDeviceOfflineSnackbar(context),
-        child: ClipRRect(
+      child: ClipRRect(
+        child: InkWell(
+          customBorder:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          onLongPress: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  settings: const RouteSettings(name: 'Device info'),
+                  builder: (context) =>
+                      SingleDevice(firebaseDevice: firebaseDevice))),
+          splashColor: Colors.white.withAlpha(100),
+          onTap: firebaseDevice.status
+              ? onValidTap
+              : () => showDeviceOfflineSnackbar(context),
           child: verifyDeviceStatus(
               child: Container(
             margin: const EdgeInsets.all(10),
