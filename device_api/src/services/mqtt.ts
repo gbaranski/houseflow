@@ -2,24 +2,9 @@ import { getRandomShortUid } from '@/utils';
 import { Device, Topic, Client, Exceptions } from '@houseflow/types';
 import chalk from 'chalk';
 import mqtt from 'mqtt';
+import createMqttClient from './mqttClient';
 
-const username = process.env.DEVICE_API_USERNAME;
-const password = process.env.DEVICE_API_PASSWORD;
-if (!username || !password)
-  throw new Error('Username or password is not defined in .env, read docs');
-
-const mqttClient = mqtt.connect('mqtt://emqx', {
-  username,
-  password,
-  clientId: `server_device-1`,
-});
-
-mqttClient.on('connect', () => {
-  console.log('Successfully connected ');
-});
-mqttClient.on('error', (err) => {
-  console.log(`MQTT error occured ${err}`);
-});
+const mqttClient = createMqttClient();
 
 const generateTopic = (request: Client.DeviceRequest['device']): Topic => {
   const basicTopic = `${request.uid}/${request.action}${request.gpio}`;
