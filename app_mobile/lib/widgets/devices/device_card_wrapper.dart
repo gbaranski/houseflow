@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/services/auth.dart';
+import 'package:houseflow/services/device.dart';
 import 'package:houseflow/services/firebase.dart';
-import 'package:houseflow/services/mqtt.dart';
-import 'package:houseflow/widgets/devices/confirmation_card..dart';
-import 'package:mqtt_client/mqtt_client.dart';
+import 'package:houseflow/utils/misc.dart';
 import 'package:provider/provider.dart';
-
+import 'confirmation_card.dart';
 import 'device_card.dart';
 
 class DeviceCardWrapper extends StatefulWidget {
-  final IconData iconData;
   final Color color;
   final FirebaseDevice firebaseDevice;
-  final DeviceTopic Function(String uid) getDeviceTopic;
-  final Map<String, dynamic> Function() getNewDeviceData;
+  final DeviceRequestDevice deviceRequestDevice;
 
   DeviceCardWrapper(
-      {@required this.iconData,
-      @required this.color,
+      {@required this.color,
       @required this.firebaseDevice,
-      @required this.getDeviceTopic,
-      @required this.getNewDeviceData});
+      @required this.deviceRequestDevice});
 
   @override
   _DeviceCardWrapperState createState() => _DeviceCardWrapperState();
@@ -40,38 +36,17 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
       _animationController.reverse();
   }
 
-  void onNotConnectedToMqttWhenSending(
-      BuildContext context, MqttConnectionState mqttConnectionState) {
-    const snackbar = SnackBar(
-      content:
-          Text("Error! Not connected to the server, please try restarting app"),
-      duration: Duration(milliseconds: 1500),
-    );
-    FirebaseService.crashlytics.recordError(
-        "mqtt_not_connected_when_sending_request", StackTrace.current,
-        information: [
-          DiagnosticsNode.message(
-            "DEVICE_UID: ${widget.firebaseDevice.uid}",
-          ),
-          DiagnosticsNode.message("CONNSTATE: $mqttConnectionState"),
-        ]);
-    Scaffold.of(context).showSnackBar(snackbar);
-    return;
-  }
-
-  void onSucess(BuildContext context) {
+  void onSucess(BuildContext context, DeviceRequest deviceRequest) {
     const snackbar = SnackBar(
       content: Text("Success!"),
       duration: Duration(milliseconds: 500),
     );
     Scaffold.of(context).hideCurrentSnackBar();
     Scaffold.of(context).showSnackBar(snackbar);
-    FirebaseService.updateFirebaseDeviceData(
-        widget.firebaseDevice.uid, widget.getNewDeviceData());
     FirebaseService.analytics.logEvent(name: 'device_action', parameters: {
       'type': widget.firebaseDevice.type.toLowerCase(),
       'uid': widget.firebaseDevice.uid,
-      'request': 'sendSignal',
+      'request': deviceRequest.device.toString(),
     });
   }
 
@@ -82,27 +57,23 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
     Scaffold.of(context).showSnackBar(snackbar);
   }
 
-  void onSubmit(BuildContext context) {
+  void onSubmit(BuildContext context) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
     triggerAnimation();
-    final MqttService mqttService =
-        Provider.of<MqttService>(context, listen: false);
-
-    final DeviceTopic topic = widget.getDeviceTopic(widget.firebaseDevice.uid);
-
-    final req = mqttService.sendMessage(
-        topic: topic, qos: MqttQos.atMostOnce, data: null);
-
-    req.then((sendMessageStatus) {
-      switch (sendMessageStatus) {
-        case SendMessageStatus.not_connected_to_mqtt:
-          return onNotConnectedToMqttWhenSending(
-              context, mqttService.mqttClient.connectionStatus.state);
-        case SendMessageStatus.timed_out:
-          return onMessageTimedOut(context);
-        case SendMessageStatus.success:
-          return onSucess(context);
-      }
-    });
+    final token = await authService.getIdToken();
+    final DeviceRequest deviceRequest = DeviceRequest(
+      user: DeviceRequestUser(token: token),
+      device: widget.deviceRequestDevice,
+    );
+    try {
+      await sendDeviceRequest(deviceRequest);
+    } catch (e) {
+      print("$e while sending request");
+      final snackbar = SnackBar(
+        content: Text(e.toString()),
+      );
+      Scaffold.of(context).showSnackBar(snackbar);
+    } finally {}
   }
 
   @override
@@ -118,7 +89,7 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
         child: _animation.value <= 0.5
             ? DeviceCard(
                 color: widget.color,
-                iconData: widget.iconData,
+                iconData: getDeviceIcon(widget.firebaseDevice.type),
                 firebaseDevice: widget.firebaseDevice,
                 onValidTap: () {
                   triggerAnimation();

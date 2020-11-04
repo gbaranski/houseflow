@@ -33,49 +33,6 @@ class FirebaseDevice {
       @required this.uid});
 }
 
-class DeviceDateTime {
-  int hour;
-  int minute;
-  int second;
-
-  DeviceDateTime(
-      {@required this.hour, @required this.minute, @required this.second});
-
-  factory DeviceDateTime.fromJson(Map<String, dynamic> json) {
-    return DeviceDateTime(
-      hour: json['hour'],
-      minute: json['minute'],
-      second: json['second'],
-    );
-  }
-
-  DateTime getDateTimeObject() {
-    final now = new DateTime.now();
-    final isToday = now.hour < hour;
-    return new DateTime(
-        now.year, now.month, isToday ? now.day : now.day + 1, hour, minute);
-  }
-
-  String toReadableString() {
-    String hour = this.hour.toString().padLeft(2, "0");
-    String minute = this.minute.toString().padLeft(2, "0");
-    return "$hour:$minute";
-  }
-
-  String timeDiff() {
-    final now = new DateTime.now();
-    final timeDiff = getDateTimeObject().difference(now);
-    return "${timeDiff.inHours}h ${timeDiff.inMinutes % 60}m";
-  }
-}
-
-class DeviceTopic {
-  String request;
-  String response;
-
-  DeviceTopic({@required this.request, @required this.response});
-}
-
 class DeviceHistory {
   final String ipAddress;
   final String request;
@@ -127,4 +84,48 @@ class DeviceHistory {
     @required this.deviceType,
     @required this.docUid,
   });
+}
+
+class DeviceRequestUser {
+  final String token;
+  DeviceRequestUser({@required this.token});
+}
+
+class DeviceRequestDevice {
+  final String uid;
+  final int gpio;
+  final String action;
+  final String data;
+
+  @override
+  String toString() {
+    return "$uid/$action$gpio";
+  }
+
+  DeviceRequestDevice(
+      {@required this.uid,
+      @required this.gpio,
+      @required this.action,
+      this.data});
+}
+
+class DeviceRequest {
+  final DeviceRequestUser user;
+  final DeviceRequestDevice device;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'user': {
+        'token': user.token,
+      },
+      'device': {
+        'uid': device.uid,
+        'gpio': device.gpio,
+        'action': device.action,
+        if (device.data != null) 'data': device.data,
+      }
+    };
+  }
+
+  DeviceRequest({@required this.user, @required this.device});
 }

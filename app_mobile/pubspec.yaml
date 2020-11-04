@@ -33,7 +33,6 @@ dependencies:
   flutter_spinkit: '^4.1.2+1'
   flutter_svg: '^0.19.1'
   material_design_icons_flutter: '^4.0.5345'
-  mqtt_client: ^8.0.0
   url_launcher: '^5.7.2'
   cached_network_image: '^2.3.3'
   timeago: '^2.0.27'
@@ -44,6 +43,7 @@ dependencies:
   infinite_scroll_pagination: '^2.2.1'
   rounded_loading_button: '^1.0.15'
   firebase_crashlytics: '^0.2.1+1'
+  http: '^0.12.2'
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

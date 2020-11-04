@@ -106,10 +106,6 @@ class FirebaseService {
     return _devicesCollection.doc(uid).snapshots();
   }
 
-  static updateFirebaseDeviceData(String uid, Map<String, dynamic> deviceData) {
-    _devicesCollection.doc(uid).update({"data": deviceData});
-  }
-
   static Future<void> unsubscribeTopic(String topic) {
     return _fcm.unsubscribeFromTopic(topic);
   }
