@@ -1,6 +1,7 @@
 import { validateDevice } from '@/services/firebase';
 import chalk from 'chalk';
 import express from 'express';
+import Joi from 'joi';
 import { AclRequest, UserRequest } from './types';
 
 const deviceApiUsername = process.env.DEVICE_API_USERNAME;
@@ -10,9 +11,20 @@ if (!deviceApiUsername || !deviceApiPassword)
 
 const router = express.Router();
 
+const userRequestSchema = Joi.object({
+  clientid: Joi.string().required(),
+  ip: Joi.string().required(),
+  username: Joi.string().length(36).required(),
+  password: Joi.string().length(36).required(),
+});
+
 router.post('/user', async (req, res) => {
   const userRequest: UserRequest = req.body;
+
   try {
+    const { error } = userRequestSchema.validate(req.body);
+    if (error !== undefined) throw error;
+
     if (userRequest.username === deviceApiUsername) {
       if (userRequest.password === deviceApiPassword) {
         res.sendStatus(200);
@@ -38,7 +50,7 @@ router.post('/user', async (req, res) => {
   } catch (e) {
     console.log(
       chalk.redBright(
-        `User auth failed due ${e.message} clientID: ${userRequest.clientid} username: ${userRequest.username}`,
+        `User auth failed: ${e.message} clientID: ${userRequest.clientid} username: ${userRequest.username}`,
       ),
     );
     res.sendStatus(400);
@@ -60,6 +72,10 @@ router.post('/acl', (req, res) => {
 
     if (aclRequest.topic.includes('#'))
       throw new Error('not allowed wildcard(#) in topic');
+    if (aclRequest.topic.includes('+'))
+      throw new Error('not allowed wildcard(+) in topic');
+    if (aclRequest.topic.includes('$'))
+      throw new Error('not allowed SYS($) in topic');
     if (!aclRequest.clientid.startsWith(expectedClientIdPrefix))
       throw new Error(
         `not allowed clientid, expected prefix ${expectedClientIdPrefix}, recived ${aclRequest.clientid}`,
@@ -85,7 +101,7 @@ router.post('/acl', (req, res) => {
   } catch (e) {
     console.log(
       chalk.redBright(
-        `ACL Auth failed due ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
+        `ACL Auth failed: ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
       ),
     );
     res.sendStatus(403);
