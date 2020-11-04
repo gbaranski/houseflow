@@ -57,9 +57,10 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
     Scaffold.of(context).showSnackBar(snackbar);
   }
 
-  void onSubmit(BuildContext context) async {
+  void onSubmit(BuildContext context,
+      [bool shouldTriggerAnimation = true]) async {
+    if (shouldTriggerAnimation) triggerAnimation();
     final authService = Provider.of<AuthService>(context, listen: false);
-    triggerAnimation();
     final token = await authService.getIdToken();
     final DeviceRequest deviceRequest = DeviceRequest(
       user: DeviceRequestUser(token: token),
@@ -67,13 +68,21 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
     );
     try {
       await sendDeviceRequest(deviceRequest);
+      const successSnackbar = SnackBar(
+        content: Text("Success!"),
+      );
+      Scaffold.of(context).showSnackBar(successSnackbar);
     } catch (e) {
       print("$e while sending request");
-      final snackbar = SnackBar(
+      final errorSnackbar = SnackBar(
         content: Text(e.toString()),
+        action: SnackBarAction(
+          label: "Retry",
+          onPressed: () => onSubmit(context, false),
+        ),
       );
-      Scaffold.of(context).showSnackBar(snackbar);
-    } finally {}
+      Scaffold.of(context).showSnackBar(errorSnackbar);
+    }
   }
 
   @override
