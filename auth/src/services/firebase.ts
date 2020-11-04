@@ -1,14 +1,23 @@
 import * as admin from 'firebase-admin';
-import { Client, Device } from '@houseflow/types';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
-admin.initializeApp();
+if (typeof jest === 'undefined') admin.initializeApp();
+else {
+  // if that throws error while testing, please add firebaseConfig
+  const serviceAccount = require('@/__tests__/firebaseConfig.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://houseflow-dev.firebaseio.com',
+  });
+}
 
 const db = admin.firestore();
-const auth = admin.auth();
-const deviceCollection = db.collection('devices');
-const devicePrivateCollection = db.collection('devices-private');
+export const devicePrivateCollection = db.collection('devices-private');
+
+export interface PrivateDeviceData {
+  secret: string;
+}
 
 export const validateDevice = async ({
   uid,
@@ -17,22 +26,11 @@ export const validateDevice = async ({
   uid: string;
   secret: string;
 }) => {
-  const deviceData = (await devicePrivateCollection.doc(uid).get()).data() as {
-    secret: string;
-  };
-  if (deviceData.secret !== secret) {
-    console.log({ fsS: deviceData.secret, secret });
-    throw new Error('secret missmatch');
+  const snapshot = await devicePrivateCollection.doc(uid).get();
+  if (!snapshot.exists) throw new Error('device secret doc does not exist');
+  const data = snapshot.data() as PrivateDeviceData;
+  if (data.secret != secret) {
+    console.log({ expected: secret, found_firestore: data.secret });
+    throw new Error('secret mismatch');
   }
 };
-
-export async function findDeviceInDatabase(uid: string) {
-  const snapshot = await deviceCollection.doc(uid).get();
-  if (!snapshot.exists) throw new Error("Device doesn't exist");
-
-  const firebaseDevice = snapshot.data() as Device.FirebaseDevice;
-  if (!firebaseDevice.type || !firebaseDevice.uid) {
-    throw new Error('Invalid firebase device');
-  }
-  return firebaseDevice;
-}
