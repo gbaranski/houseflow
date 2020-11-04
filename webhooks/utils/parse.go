@@ -36,18 +36,3 @@ func BytesToDisconnectedEvent(byteArr []byte) (*types.DisconnectedEvent, error) 
 	jsonErr := json.Unmarshal(byteArr, e)
 	return e, jsonErr
 }
-
-// BytesToMessageEvent parses bytes array to MessageEvent
-func BytesToMessageEvent(byteArr []byte) (*types.MessageEvent, error) {
-	e := new(types.MessageEvent)
-	jsonErr := json.Unmarshal(byteArr, e)
-	return e, jsonErr
-}
-
-// BytesToClientData parses body to GetClientResponse
-func BytesToClientData(byteArr []byte) (*types.GetClientResponse, error) {
-	e := new(types.GetClientResponse)
-	jsonErr := json.Unmarshal(byteArr, e)
-	return e, jsonErr
-
-}
