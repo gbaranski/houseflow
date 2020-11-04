@@ -6,7 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/services/firebase.dart';
-import 'package:houseflow/services/mqtt.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 
@@ -46,10 +45,8 @@ class App extends StatelessWidget {
             if (snapshot.connectionState == ConnectionState.done) {
               FlutterError.onError =
                   FirebaseService.crashlytics.recordFlutterError;
-              return ChangeNotifierProvider<MqttService>(
-                  create: (_) => new MqttService(),
-                  child: ChangeNotifierProvider<AuthService>(
-                      create: (_) => new AuthService(), child: Wrapper()));
+              return ChangeNotifierProvider<AuthService>(
+                  create: (_) => new AuthService(), child: Wrapper());
             }
 
             return SplashScreen();

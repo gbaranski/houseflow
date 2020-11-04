@@ -43,8 +43,7 @@ const SUPPORT_EMAIL_URL_ISSUE = "$SUPPORT_EMAIL_URL?subject=Issue with app";
 const GITHUB_URL = "https://github.com/gbaranski/houseflow";
 const GITHUB_URL_ISSUES = "$GITHUB_URL/issues";
 
-const MQTT_HOST = 'api.gbaranski.com';
-const MQTT_PORT = 8883;
+const DEVICE_API_URL = 'http://192.168.1.10/device';
 
 const ROOT_CA = '''
 -----BEGIN CERTIFICATE-----

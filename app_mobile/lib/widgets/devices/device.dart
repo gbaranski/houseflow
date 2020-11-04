@@ -36,47 +36,31 @@ class Device extends StatelessWidget {
         switch (firebaseDevice.type) {
           case 'WATERMIXER':
             return DeviceCardWrapper(
-                color: Color.fromRGBO(79, 119, 149, 1),
-                firebaseDevice: firebaseDevice,
-                iconData: iconData,
-                getDeviceTopic: RelayData.getSendSignalTopic,
-                getNewDeviceData: () => RelayData(
-                        lastSignalTimestamp:
-                            DateTime.now().millisecondsSinceEpoch +
-                                tenMinutesInMillis)
-                    .toJson());
+              color: Color.fromRGBO(79, 119, 149, 1),
+              firebaseDevice: firebaseDevice,
+              deviceRequestDevice:
+                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
+            );
           case 'GATE':
             return DeviceCardWrapper(
               color: Color.fromRGBO(103, 151, 109, 1),
               firebaseDevice: firebaseDevice,
-              iconData: iconData,
-              getDeviceTopic: RelayData.getSendSignalTopic,
-              getNewDeviceData: () => RelayData(
-                      lastSignalTimestamp:
-                          DateTime.now().millisecondsSinceEpoch)
-                  .toJson(),
+              deviceRequestDevice:
+                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
             );
           case 'GARAGE':
             return DeviceCardWrapper(
               color: Color.fromRGBO(183, 111, 110, 1),
               firebaseDevice: firebaseDevice,
-              iconData: iconData,
-              getDeviceTopic: RelayData.getSendSignalTopic,
-              getNewDeviceData: () => RelayData(
-                      lastSignalTimestamp:
-                          DateTime.now().millisecondsSinceEpoch)
-                  .toJson(),
+              deviceRequestDevice:
+                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
             );
           case 'LIGHT':
             return DeviceCardWrapper(
               color: Color(0xFFffa000),
               firebaseDevice: firebaseDevice,
-              iconData: iconData,
-              getDeviceTopic: RelayData.getSendSignalTopic,
-              getNewDeviceData: () => RelayData(
-                      lastSignalTimestamp:
-                          DateTime.now().microsecondsSinceEpoch)
-                  .toJson(),
+              deviceRequestDevice:
+                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
             );
           default:
             {

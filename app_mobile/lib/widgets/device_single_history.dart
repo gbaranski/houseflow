@@ -162,45 +162,6 @@ class SingleDeviceHistory extends StatelessWidget {
             ]),
             title: Text(deviceRequest.stringifyRequest()),
             subtitle: Text("${parseTimeAgo(deviceRequest.timestamp)} "),
-            // child: Row(
-            //   children: [
-            //     Column(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: [
-            //         Icon(
-            //           getDeviceIcon(deviceRequest.deviceType),
-            //           size: 40,
-            //           color: Colors.blueGrey,
-            //         )
-            //       ],
-            //     ),
-            //     SizedBox(
-            //       width: 20,
-            //     ),
-            //     Column(
-            //       crossAxisAlignment: CrossAxisAlignment.start,
-            //       children: [
-            //         Row(
-            //           children: [
-            //             Text(
-            //               "${parseTimeAgo(deviceRequest.timestamp)} · ${deviceRequest.username}",
-            //               style: TextStyle(color: Colors.black45, fontSize: 12),
-            //             )
-            //           ],
-            //         ),
-            //         Row(
-            //           children: [
-            //             Text(
-            //               "${deviceRequest.stringifyRequest(deviceRequest.deviceType)}",
-            //               style: TextStyle(
-            //                   fontSize: 15, color: Colors.blueGrey.shade800),
-            //             )
-            //           ],
-            //         )
-            //       ],
-            //     )
-            // ],
-            // ),
           ),
         ),
       ),
