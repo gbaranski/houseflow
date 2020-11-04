@@ -6,8 +6,7 @@
   "scripts": {
     "start": "ts-node -r dotenv/config -r tsconfig-paths/register .",
     "start:dev": "ts-node-dev -r dotenv/config -r tsconfig-paths/register .",
-    "test": "jest",
-    "test:watch": "jest --watchAll --runInBand --detectOpenHandles"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
