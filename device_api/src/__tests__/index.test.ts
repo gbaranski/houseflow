@@ -3,13 +3,20 @@ import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import supertest from 'supertest';
 import { Client, Exceptions } from '@houseflow/types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const serviceAccount = require('./firebaseConfig.json');
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://houseflow-dev.firebaseio.com',
-});
+if (process.env.CI) {
+  admin.initializeApp({
+    credential: admin.credential.cert(process.env.FIREBASE_CERT as string),
+    databaseURL: 'https://houseflow-dev.firebaseio.com',
+  });
+} else {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const serviceAccount = require('./firebaseConfig.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://houseflow-dev.firebaseio.com',
+  });
+}
 
 process.env.DEVICE_API_USERNAME = uuidv4();
 process.env.DEVICE_API_PASSWORD = uuidv4();
