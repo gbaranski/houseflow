@@ -1,6 +1,6 @@
 {
   "name": "@houseflow/types",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Types for houseflow app",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,9 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@firebase/firestore-types": "^2.0.0"
+    "@firebase/app-types": "^0.6.1",
+    "@firebase/firestore-types": "^2.0.0",
+    "@firebase/logger": "^0.2.6"
   },
   "bugs": {
     "url": "https://github.com/gbaranski/houseflow/issues"
