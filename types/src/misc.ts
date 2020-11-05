@@ -16,6 +16,11 @@ export enum Exceptions {
   SUCCESS = 'SUCCESS',
 }
 
+export interface GeoPoint {
+  latitude: number;
+  longitude: number;
+}
+
 export interface RequestHistory {
   deviceType: Device.DeviceType;
   deviceUid: string;
