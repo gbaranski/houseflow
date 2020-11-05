@@ -1,4 +1,5 @@
-import { GeoPoint, Light, Relay } from '.';
+import { GeoPoint } from '@firebase/firestore-types';
+import { Light, Relay } from '.';
 
 export type AnyDeviceData = Light.Data | Relay.Data;
 

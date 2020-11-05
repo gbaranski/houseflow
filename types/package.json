@@ -20,7 +20,9 @@
   "devDependencies": {
     "typescript": "^3.9.5"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@firebase/firestore-types": "^2.0.0"
+  },
   "bugs": {
     "url": "https://github.com/gbaranski/houseflow/issues"
   },

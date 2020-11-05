@@ -16,11 +16,6 @@ export enum Exceptions {
   SUCCESS = 'SUCCESS',
 }
 
-export interface GeoPoint {
-  latitude: number;
-  longitude: number;
-}
-
 export interface RequestHistory {
   type: 'request';
   timestamp: number;

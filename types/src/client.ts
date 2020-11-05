@@ -1,4 +1,4 @@
-import { GeoPoint } from '.';
+import { GeoPoint } from '@firebase/firestore-types';
 import { ReadWriteExecuteAccess } from './misc';
 
 export namespace Client {
