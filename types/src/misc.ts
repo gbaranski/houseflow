@@ -25,3 +25,9 @@ export interface RequestHistory {
   userUid: string;
   username: string;
 }
+
+export interface ReadWriteExecuteAccess {
+  read: boolean;
+  write: boolean;
+  execute: boolean;
+}
