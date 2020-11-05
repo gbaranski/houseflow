@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
 import { Client, Device, Exceptions, RequestHistory } from '@houseflow/types';
+import chalk from 'chalk';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
@@ -68,10 +69,13 @@ export const addRequestHistory = async ({
     userUid,
     username: sourceFirebaseUser.username,
   };
-  await devicesCollection
+  const res = await devicesCollection
     .doc(deviceUid)
     .collection('history')
     .add(requestHistory);
+  console.log(
+    chalk.greenBright(`Successfully added request history ID: ${res.id}`),
+  );
 };
 
 export const decodeToken = (
