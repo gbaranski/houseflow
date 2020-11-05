@@ -1,4 +1,4 @@
-import { Light, Relay } from '.';
+import { GeoPoint, Light, Relay } from '.';
 
 export type AnyDeviceData = Light.Data | Relay.Data;
 
@@ -26,6 +26,7 @@ export namespace Device {
     uid: string;
     secret?: string;
     type: DeviceType;
+    geoPoint: GeoPoint;
 
     status: boolean;
     data: DeviceData;

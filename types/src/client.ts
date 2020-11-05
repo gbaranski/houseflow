@@ -1,3 +1,4 @@
+import { GeoPoint } from '.';
 import { ReadWriteExecuteAccess } from './misc';
 
 export namespace Client {
@@ -5,6 +6,7 @@ export namespace Client {
   export interface DeviceRequest {
     user: {
       token: string;
+      geoPoint: GeoPoint;
     };
     device: {
       uid: string;
