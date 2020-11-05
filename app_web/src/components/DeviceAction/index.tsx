@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { message, Popconfirm, Tooltip } from 'antd';
+import { Popconfirm, Tooltip } from 'antd';
 import Icon from '@mdi/react';
 
 interface DeviceAction {
@@ -29,17 +29,10 @@ const DeviceAction: React.FC<DeviceAction> = ({ mdiIconPath, toolTipTitle, onSub
         }}
         onConfirm={() => {
           setLoading(true);
-          onSubmit()
-            .then(() => {
-              message.success('Success!');
-            })
-            .finally(() => {
-              setLoading(false);
-              setPopconfirmVisible(false);
-            })
-            .catch((e) => {
-              message.error(e.message);
-            });
+          onSubmit().finally(() => {
+            setLoading(false);
+            setPopconfirmVisible(false);
+          });
         }}
       >
         <a onClick={() => setPopconfirmVisible(true)}>
