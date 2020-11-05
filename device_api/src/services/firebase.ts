@@ -11,7 +11,7 @@ const usersCollection = db.collection('users');
 
 export let firebaseUsers: Client.FirebaseUser[] = [];
 
-usersCollection.onSnapshot((snapshot) =>
+export const usersCollectionListener = usersCollection.onSnapshot((snapshot) =>
   snapshot.docs.forEach((doc) => {
     const firebaseUser = doc.data() as Client.FirebaseUser;
     firebaseUsers = firebaseUsers

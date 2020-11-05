@@ -1,4 +1,4 @@
-import mqtt from 'mqtt';
+import mqtt, { MqttClient } from 'mqtt';
 
 const username = process.env.DEVICE_API_USERNAME;
 const password = process.env.DEVICE_API_PASSWORD;
@@ -6,7 +6,7 @@ const password = process.env.DEVICE_API_PASSWORD;
 if (!username || !password)
   throw new Error('Username or password is not defined in .env, read docs');
 
-export const createMqttClient = () => {
+export const createMqttClient = (): MqttClient => {
   const mqttClient = mqtt.connect('mqtt://emqx', {
     username,
     password,
@@ -20,4 +20,3 @@ export const createMqttClient = () => {
   });
   return mqttClient;
 };
-export default createMqttClient;
