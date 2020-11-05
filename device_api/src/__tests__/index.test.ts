@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import supertest from 'supertest';
-import { Client, Exceptions } from '@houseflow/types';
+import { Client, Exceptions, GeoPoint } from '@houseflow/types';
 
 if (process.env.CI) {
   admin.initializeApp({
@@ -20,6 +20,11 @@ if (process.env.CI) {
 
 process.env.DEVICE_API_USERNAME = uuidv4();
 process.env.DEVICE_API_PASSWORD = uuidv4();
+
+const getRandomGeoPoint = (): GeoPoint => ({
+  latitude: Math.random(),
+  longitude: Math.random(),
+});
 
 describe('POST /request', () => {
   let adminStub: any;
@@ -91,6 +96,7 @@ describe('POST /request', () => {
   it('Attempting not existing user', async () => {
     const req: Client.DeviceRequest = {
       user: {
+        geoPoint: getRandomGeoPoint(),
         token: uuidv4(),
       },
       device: {
@@ -106,6 +112,7 @@ describe('POST /request', () => {
     firebaseFile.firebaseUsers = [firebaseUser];
     const req: Client.DeviceRequest = {
       user: {
+        geoPoint: getRandomGeoPoint(),
         token: 'itCanBeAnything',
       },
       device: {
@@ -129,6 +136,7 @@ describe('POST /request', () => {
     firebaseFile.firebaseUsers = [firebaseUser];
     const req: Client.DeviceRequest = {
       user: {
+        geoPoint: getRandomGeoPoint(),
         token: 'itCanBeAnything',
       },
       device: {
@@ -152,6 +160,7 @@ describe('POST /request', () => {
     firebaseFile.firebaseUsers = [firebaseUser];
     const req: Client.DeviceRequest = {
       user: {
+        geoPoint: getRandomGeoPoint(),
         token: 'itCanBeAnything',
       },
       device: {
