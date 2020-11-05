@@ -1,0 +1,30 @@
+name: Node CI
+
+on: [push]
+
+
+jobs:
+    device_api_test:
+        runs-on: ubuntu-latest
+        env:
+            FIREBASE_CERT: ${{ secrets.FIREBASE_CERT }}
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install modules
+            working-directory: './device_api'
+            run: npm install
+            - name: Run tests
+            run: npm test
+    auth_test:
+        runs-on: ubuntu-latest
+        env:
+            FIREBASE_CERT: ${{ secrets.FIREBASE_CERT }}
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install modules
+            working-directory: './auth'
+            run: npm install
+            - name: Run tests
+            run: npm test
+
+
