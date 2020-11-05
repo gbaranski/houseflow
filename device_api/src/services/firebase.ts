@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { Client, Device, Exceptions, RequestHistory } from '@houseflow/types';
 import chalk from 'chalk';
+import { firestore } from 'firebase-admin';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
@@ -83,7 +84,10 @@ export const addRequestHistory = async ({
       source: {
         userUid,
         username: sourceFirebaseUser.username,
-        geoPoint: request.user.geoPoint,
+        geoPoint: new firestore.GeoPoint(
+          request.user.geoPoint.latitude,
+          request.user.geoPoint.longitude,
+        ),
         ipAddress,
       },
       destination: {

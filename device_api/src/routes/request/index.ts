@@ -62,14 +62,17 @@ router.post('/', async (req, res) => {
     const result = await sendDeviceMessage(deviceRequest.device);
     if (result === Exceptions.SUCCESS) {
       res.status(200).send(Exceptions.SUCCESS);
+      await addRequestHistory({
+        request: deviceRequest,
+        ipAddress: req.ip,
+        userUid: userUid,
+      });
     } else if (result === Exceptions.DEVICE_TIMED_OUT) {
       res.status(504).send(Exceptions.DEVICE_TIMED_OUT);
+      return;
+    } else {
+      res.status(500).send('Unknown error');
     }
-    addRequestHistory({
-      request: deviceRequest,
-      ipAddress: req.ip,
-      userUid: userUid,
-    });
   } catch (e) {
     handleError(e, req, res, userUid);
   }
