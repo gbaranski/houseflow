@@ -1,16 +1,23 @@
 import chalk from 'chalk';
 
-export const logServerError = (err: Error): void => {
-  console.error(chalk.red(`Server error occured: ${err.message}`));
+export const logServerError = (err: Error, uid?: string): void => {
+  console.error(
+    chalk.redBright(
+      `Server error occured: ${err.message} ${uid ? `UID: ${uid}` : ''} `,
+    ),
+  );
 };
 export const logUnhandledError = (err: Error): void => {
-  console.debug(chalk.red(`Unhandled error: ${err}`));
-  console.log(chalk.red(`Stacktrace: ${err.stack}`));
+  console.log(chalk.redBright(`Error: ${err}`));
 };
-export const logClientAuthError = (err: Error): void => {
-  console.info(chalk.redBright(`Client authentication: ${err.message}`));
+export const logClientAuthError = (err: Error, uid?: string): void => {
+  console.log(
+    chalk.redBright(
+      `Client authentication: ${err.message} ${uid ? `UID: ${uid}` : ''} `,
+    ),
+  );
 };
 
 export const logClientError = (err: Error): void => {
-  console.info(chalk.yellow(`Client error: ${err.message}`));
+  console.log(chalk.yellow(`Client error: ${err.message}`));
 };
