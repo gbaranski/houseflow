@@ -22,13 +22,19 @@ export interface GeoPoint {
 }
 
 export interface RequestHistory {
-  deviceType: Device.DeviceType;
-  deviceUid: string;
-  ipAddress: string;
-  action: string;
   timestamp: number;
-  userUid: string;
-  username: string;
+  action: string;
+  source: {
+    userUid: string;
+    username: string;
+
+    geoPoint: GeoPoint;
+    ipAddress: string;
+  };
+  destination: {
+    deviceUid: string;
+    deviceType: Device.DeviceType;
+  };
 }
 
 export interface ReadWriteExecuteAccess {
