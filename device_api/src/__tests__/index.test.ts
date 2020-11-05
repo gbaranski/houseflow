@@ -117,7 +117,30 @@ describe('POST /request', () => {
     const res = await api.post('/request').send(req);
     expect(res.status).toEqual(403);
   });
-  it('Attempting with existing user, with permission to device', async () => {
+  it('Attempting with existing user, without execute access', async () => {
+    const firebaseUserDevice: Client.FirebaseUserDevice = {
+      uid: uuidv4(),
+      read: true,
+      write: true,
+      execute: false,
+    };
+    firebaseUser.devices = [firebaseUserDevice];
+
+    firebaseFile.firebaseUsers = [firebaseUser];
+    const req: Client.DeviceRequest = {
+      user: {
+        token: 'itCanBeAnything',
+      },
+      device: {
+        uid: firebaseUserDevice.uid,
+        gpio: 1,
+        action: 'toggle',
+      },
+    };
+    const res = await api.post('/request').send(req);
+    expect(res.status).toEqual(403);
+  });
+  it('Attempting with existing user, with execute access to device', async () => {
     const firebaseUserDevice: Client.FirebaseUserDevice = {
       uid: uuidv4(),
       read: false,
