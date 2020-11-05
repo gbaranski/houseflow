@@ -1,3 +1,5 @@
+import { ReadWriteExecuteAccess } from './misc';
+
 export namespace Client {
   export type UserRole = 'admin' | 'user';
   export interface DeviceRequest {
@@ -12,11 +14,8 @@ export namespace Client {
     };
   }
 
-  export interface FirebaseUserDevice {
+  export interface FirebaseUserDevice extends ReadWriteExecuteAccess {
     uid: string;
-    read: boolean;
-    write: boolean;
-    execute: boolean;
   }
 
   export interface FirebaseUser {
