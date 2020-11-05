@@ -1,4 +1,3 @@
-import { GeoPoint } from '@firebase/firestore-types';
 import { Device } from '.';
 
 export interface Topic {
@@ -15,6 +14,11 @@ export enum Exceptions {
   DEVICE_TIMED_OUT = 'DEVICE_TIMED_OUT',
   INVALID_ARGUMENTS = 'INVALID_ARGUMENTS',
   SUCCESS = 'SUCCESS',
+}
+
+export interface GeoPoint {
+  latitude: number;
+  longitude: number;
 }
 
 export interface RequestHistory {
