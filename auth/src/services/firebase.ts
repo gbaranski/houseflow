@@ -2,15 +2,7 @@ import * as admin from 'firebase-admin';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
-if (typeof jest === 'undefined') admin.initializeApp();
-else {
-  // if that throws error while testing, please add firebaseConfig
-  const serviceAccount = require('@/__tests__/firebaseConfig.json');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://houseflow-dev.firebaseio.com',
-  });
-}
+admin.initializeApp();
 
 const db = admin.firestore();
 export const devicePrivateCollection = db.collection('devices-private');
