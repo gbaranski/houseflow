@@ -1,3 +1,5 @@
+import { Device } from '.';
+
 export interface DateTime {
   hour: number;
   minute: number;
@@ -17,4 +19,13 @@ export enum Exceptions {
   DEVICE_TIMED_OUT = 'DEVICE_TIMED_OUT',
   INVALID_ARGUMENTS = 'INVALID_ARGUMENTS',
   SUCCESS = 'SUCCESS',
+}
+
+export interface RequestHistory {
+  deviceType: Device.DeviceType;
+  deviceUid: string;
+  ipAddress: string;
+  action: string;
+  timestamp: number;
+  username: string;
 }
