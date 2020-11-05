@@ -1,5 +1,9 @@
 import mqttClient, { sendDeviceMessage } from '@/services/mqtt';
-import { checkUserDeviceAccess, decodeToken } from '@/services/firebase';
+import {
+  addRequestHistory,
+  checkUserDeviceAccess,
+  decodeToken,
+} from '@/services/firebase';
 import {
   logClientAuthError,
   logClientError,
@@ -54,6 +58,13 @@ router.post('/', async (req, res) => {
     } else if (result === Exceptions.DEVICE_TIMED_OUT) {
       res.status(504).send(Exceptions.DEVICE_TIMED_OUT);
     }
+
+    addRequestHistory({
+      userUid: decodedUser.uid,
+      deviceUid: deviceRequest.device.uid,
+      action: `${deviceRequest.device.action}_${deviceRequest.device.gpio}`,
+      ipAddress: req.ip,
+    });
   } catch (e) {
     handleError(e, req, res, userUid);
   }

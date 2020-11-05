@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { Client, Exceptions } from '@houseflow/types';
+import { Client, Device, Exceptions, RequestHistory } from '@houseflow/types';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
@@ -8,6 +8,7 @@ admin.initializeApp();
 const db = admin.firestore();
 const auth = admin.auth();
 const usersCollection = db.collection('users');
+const devicesCollection = db.collection('devices');
 
 export let firebaseUsers: Client.FirebaseUser[] = [];
 
@@ -36,6 +37,41 @@ export const checkUserDeviceAccess = ({
   );
   if (!device) throw new Error(Exceptions.NO_DEVICE_ACCESS);
   return true;
+};
+
+export const addRequestHistory = async ({
+  userUid,
+  deviceUid,
+  action,
+  ipAddress,
+}: {
+  userUid: string;
+  deviceUid: string;
+  action: string;
+  ipAddress: string;
+}): Promise<void> => {
+  const targetFirebaseDevice = await devicesCollection.doc(deviceUid).get();
+  if (!targetFirebaseDevice.exists) throw new Error(Exceptions.NO_DEVICE_IN_DB);
+  const targetDeviceType = (targetFirebaseDevice.data() as Device.FirebaseDevice)
+    .type;
+  const sourceFirebaseUser = firebaseUsers.find(
+    (firebaseUser) => firebaseUser.uid === userUid,
+  );
+  if (!sourceFirebaseUser) throw new Error(Exceptions.NO_USER_IN_DB);
+
+  const requestHistory: RequestHistory = {
+    deviceType: targetDeviceType,
+    deviceUid,
+    ipAddress,
+    action,
+    timestamp: Date.now(),
+    userUid,
+    username: sourceFirebaseUser.username,
+  };
+  await devicesCollection
+    .doc(deviceUid)
+    .collection('history')
+    .add(requestHistory);
 };
 
 export const decodeToken = (
