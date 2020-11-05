@@ -45,6 +45,8 @@ describe('POST /request', () => {
       uid: firebaseUser.uid,
       aud: 'houseflow-dev',
     } as admin.auth.DecodedIdToken);
+    firebaseStub = sinon.stub(firebaseFile, 'addRequestHistory').resolves();
+
     usersCollectionListener = firebaseFile.usersCollectionListener;
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -118,6 +120,9 @@ describe('POST /request', () => {
   it('Attempting with existing user, with permission to device', async () => {
     const firebaseUserDevice: Client.FirebaseUserDevice = {
       uid: uuidv4(),
+      read: false,
+      write: false,
+      execute: true,
     };
     firebaseUser.devices = [firebaseUserDevice];
 
