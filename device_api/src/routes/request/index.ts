@@ -1,5 +1,6 @@
 import mqttClient, { sendDeviceMessage } from '@/services/mqtt';
 import {
+  Access,
   addRequestHistory,
   checkUserDeviceAccess,
   decodeToken,
@@ -51,14 +52,15 @@ router.post('/', async (req, res) => {
     checkUserDeviceAccess({
       userUid: decodedUser.uid,
       deviceUid: deviceRequest.device.uid,
+      access: Access.EXECUTE,
     });
+
     const result = await sendDeviceMessage(deviceRequest.device);
     if (result === Exceptions.SUCCESS) {
       res.status(200).send(Exceptions.SUCCESS);
     } else if (result === Exceptions.DEVICE_TIMED_OUT) {
       res.status(504).send(Exceptions.DEVICE_TIMED_OUT);
     }
-
     addRequestHistory({
       userUid: decodedUser.uid,
       deviceUid: deviceRequest.device.uid,

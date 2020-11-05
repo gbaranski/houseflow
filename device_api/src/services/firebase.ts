@@ -22,12 +22,19 @@ export const usersCollectionListener = usersCollection.onSnapshot((snapshot) =>
   }),
 );
 
+export enum Access {
+  READ,
+  WRITE,
+  EXECUTE,
+}
 export const checkUserDeviceAccess = ({
   userUid,
   deviceUid,
+  access,
 }: {
   userUid: string;
   deviceUid: string;
+  access: Access;
 }): boolean => {
   const firebaseUser = firebaseUsers.find(
     (_firebaseUser) => _firebaseUser.uid === userUid,
@@ -37,6 +44,13 @@ export const checkUserDeviceAccess = ({
     (device) => device.uid === deviceUid,
   );
   if (!device) throw new Error(Exceptions.NO_DEVICE_ACCESS);
+  if (access === Access.READ && !device.read)
+    throw new Error(Exceptions.NO_DEVICE_ACCESS);
+  if (access === Access.WRITE && !device.write)
+    throw new Error(Exceptions.NO_DEVICE_ACCESS);
+  if (access === Access.EXECUTE && !device.execute)
+    throw new Error(Exceptions.NO_DEVICE_ACCESS);
+
   return true;
 };
 
@@ -51,31 +65,40 @@ export const addRequestHistory = async ({
   action: string;
   ipAddress: string;
 }): Promise<void> => {
-  const targetFirebaseDevice = await devicesCollection.doc(deviceUid).get();
-  if (!targetFirebaseDevice.exists) throw new Error(Exceptions.NO_DEVICE_IN_DB);
-  const targetDeviceType = (targetFirebaseDevice.data() as Device.FirebaseDevice)
-    .type;
-  const sourceFirebaseUser = firebaseUsers.find(
-    (firebaseUser) => firebaseUser.uid === userUid,
-  );
-  if (!sourceFirebaseUser) throw new Error(Exceptions.NO_USER_IN_DB);
+  try {
+    const targetFirebaseDevice = await devicesCollection.doc(deviceUid).get();
+    if (!targetFirebaseDevice.exists)
+      throw new Error(Exceptions.NO_DEVICE_IN_DB);
+    const targetDeviceType = (targetFirebaseDevice.data() as Device.FirebaseDevice)
+      .type;
+    const sourceFirebaseUser = firebaseUsers.find(
+      (firebaseUser) => firebaseUser.uid === userUid,
+    );
+    if (!sourceFirebaseUser) throw new Error(Exceptions.NO_USER_IN_DB);
 
-  const requestHistory: RequestHistory = {
-    deviceType: targetDeviceType,
-    deviceUid,
-    ipAddress,
-    action,
-    timestamp: Date.now(),
-    userUid,
-    username: sourceFirebaseUser.username,
-  };
-  const res = await devicesCollection
-    .doc(deviceUid)
-    .collection('history')
-    .add(requestHistory);
-  console.log(
-    chalk.greenBright(`Successfully added request history ID: ${res.id}`),
-  );
+    const requestHistory: RequestHistory = {
+      deviceType: targetDeviceType,
+      deviceUid,
+      ipAddress,
+      action,
+      timestamp: Date.now(),
+      userUid,
+      username: sourceFirebaseUser.username,
+    };
+    const res = await devicesCollection
+      .doc(deviceUid)
+      .collection('history')
+      .add(requestHistory);
+    console.log(
+      chalk.greenBright(`Successfully added request history ID: ${res.id}`),
+    );
+  } catch (e) {
+    console.log(
+      chalk.redBright(
+        `Error occured while adding request history ${e.message}`,
+      ),
+    );
+  }
 };
 
 export const decodeToken = (
