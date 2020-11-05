@@ -27,5 +27,6 @@ export interface RequestHistory {
   ipAddress: string;
   action: string;
   timestamp: number;
+  userUid: string;
   username: string;
 }
