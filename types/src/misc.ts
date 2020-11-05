@@ -22,6 +22,7 @@ export interface GeoPoint {
 }
 
 export interface RequestHistory {
+  type: 'request';
   timestamp: number;
   action: string;
   source: {
