@@ -1,5 +1,4 @@
-import { GeoPoint } from '@firebase/firestore-types';
-import { ReadWriteExecuteAccess } from './misc';
+import { GeoPoint, ReadWriteExecuteAccess } from '.';
 
 export namespace Client {
   export type UserRole = 'admin' | 'user';
