@@ -55,21 +55,21 @@ export const checkUserDeviceAccess = ({
 };
 
 export const addRequestHistory = async ({
-  userUid,
-  deviceUid,
-  action,
+  request,
   ipAddress,
+  userUid,
 }: {
-  userUid: string;
-  deviceUid: string;
-  action: string;
+  request: Client.DeviceRequest;
   ipAddress: string;
+  userUid: string;
 }): Promise<void> => {
   try {
-    const targetFirebaseDevice = await devicesCollection.doc(deviceUid).get();
+    const targetFirebaseDevice = await devicesCollection
+      .doc(request.device.uid)
+      .get();
     if (!targetFirebaseDevice.exists)
       throw new Error(Exceptions.NO_DEVICE_IN_DB);
-    const targetDeviceType = (targetFirebaseDevice.data() as Device.FirebaseDevice)
+    const destinationDeviceType = (targetFirebaseDevice.data() as Device.FirebaseDevice)
       .type;
     const sourceFirebaseUser = firebaseUsers.find(
       (firebaseUser) => firebaseUser.uid === userUid,
@@ -77,16 +77,22 @@ export const addRequestHistory = async ({
     if (!sourceFirebaseUser) throw new Error(Exceptions.NO_USER_IN_DB);
 
     const requestHistory: RequestHistory = {
-      deviceType: targetDeviceType,
-      deviceUid,
-      ipAddress,
-      action,
+      type: 'request',
+      action: `${request.device.action}_${request.device.gpio}`,
       timestamp: Date.now(),
-      userUid,
-      username: sourceFirebaseUser.username,
+      source: {
+        userUid,
+        username: sourceFirebaseUser.username,
+        geoPoint: request.user.geoPoint,
+        ipAddress,
+      },
+      destination: {
+        deviceUid: request.device.uid,
+        deviceType: destinationDeviceType,
+      },
     };
     const res = await devicesCollection
-      .doc(deviceUid)
+      .doc(request.device.uid)
       .collection('history')
       .add(requestHistory);
     console.log(

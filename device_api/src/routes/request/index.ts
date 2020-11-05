@@ -18,6 +18,10 @@ import { Client, Exceptions } from '@houseflow/types';
 const deviceRequestSchema = Joi.object({
   user: Joi.object({
     token: Joi.string().required(),
+    geoPoint: Joi.object({
+      latitude: Joi.number().required(),
+      longitude: Joi.number().required(),
+    }).required(),
   }).required(),
   device: Joi.object({
     uid: Joi.string().length(36).required(),
@@ -62,10 +66,9 @@ router.post('/', async (req, res) => {
       res.status(504).send(Exceptions.DEVICE_TIMED_OUT);
     }
     addRequestHistory({
-      userUid: decodedUser.uid,
-      deviceUid: deviceRequest.device.uid,
-      action: `${deviceRequest.device.action}_${deviceRequest.device.gpio}`,
+      request: deviceRequest,
       ipAddress: req.ip,
+      userUid: userUid,
     });
   } catch (e) {
     handleError(e, req, res, userUid);
