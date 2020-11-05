@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import supertest from 'supertest';
-import { Client } from '@houseflow/types';
+import { Client, Exceptions } from '@houseflow/types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('./firebaseConfig.json');
 
@@ -18,6 +18,7 @@ describe('POST /request', () => {
   let adminStub: any;
   let firebaseStub: any;
   let mqttClientStub: any;
+  let mqttServiceStub: any;
   let api: any;
   let firebaseFile: any;
   const firebaseUser: Client.FirebaseUser = {
@@ -50,6 +51,12 @@ describe('POST /request', () => {
       .returns(fakeMqttClient);
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const mqttService = require('../services/mqtt');
+    mqttServiceStub = sinon
+      .stub(mqttService, 'sendDeviceMessage')
+      .resolves(Exceptions.SUCCESS);
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     api = supertest(require('../app').app);
     done();
@@ -59,8 +66,8 @@ describe('POST /request', () => {
     adminStub.restore();
     firebaseStub.restore();
     mqttClientStub.restore();
+    mqttServiceStub.restore();
     usersCollectionListener();
-    admin.firestore().collection('users').doc(firebaseUser.uid).delete();
   });
 
   beforeEach(() => {
