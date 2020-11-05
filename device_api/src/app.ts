@@ -9,7 +9,7 @@ const CORS_WHITELIST = [
   'http://localhost:8000',
 ];
 
-const app = express();
+export const app = express();
 app.use(cors({ origin: CORS_WHITELIST }));
 morgan.token('code', (req: express.Request, res: express.Response) => {
   const code = res.statusCode;

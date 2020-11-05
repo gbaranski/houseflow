@@ -2,7 +2,7 @@ import { getRandomShortUid } from '@/utils';
 import { Device, Topic, Client, Exceptions } from '@houseflow/types';
 import chalk from 'chalk';
 import mqtt from 'mqtt';
-import createMqttClient from './mqttClient';
+import { createMqttClient } from './mqttClient';
 
 const mqttClient = createMqttClient();
 
