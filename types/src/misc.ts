@@ -1,3 +1,4 @@
+import { GeoPoint } from '@firebase/firestore-types';
 import { Device } from '.';
 
 export interface Topic {
