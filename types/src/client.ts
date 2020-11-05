@@ -14,6 +14,9 @@ export namespace Client {
 
   export interface FirebaseUserDevice {
     uid: string;
+    read: boolean;
+    write: boolean;
+    execute: boolean;
   }
 
   export interface FirebaseUser {
