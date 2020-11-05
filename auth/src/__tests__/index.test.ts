@@ -7,12 +7,18 @@ import admin from 'firebase-admin';
 import sinon from 'sinon';
 import supertest from 'supertest';
 
-const serviceAccount = require('./firebaseConfig.json');
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://houseflow-dev.firebaseio.com',
-});
+if (process.env.CI) {
+  admin.initializeApp({
+    credential: admin.credential.cert(process.env.FIREBASE_CERT as string),
+    databaseURL: 'https://houseflow-dev.firebaseio.com',
+  });
+} else {
+  const serviceAccount = require('./firebaseConfig.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://houseflow-dev.firebaseio.com',
+  });
+}
 
 const randomId = () => Math.random().toString(16).substr(2, 8);
 
