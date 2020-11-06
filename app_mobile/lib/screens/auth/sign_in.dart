@@ -74,7 +74,10 @@ class SignIn extends StatelessWidget {
                                     MaterialPageRoute(
                                         settings:
                                             RouteSettings(name: 'Register'),
-                                        builder: (context) => Register()));
+                                        builder: (context) => Register(
+                                              onSubmit: authService
+                                                  .registerWithEmailAndPassword,
+                                            )));
                               },
                               child: Row(children: [
                                 const Text("New user? "),

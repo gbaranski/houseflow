@@ -86,7 +86,7 @@ class FirebaseService {
     if (lastVisibleDocument != null)
       query = _firestore
           .collectionGroup('history')
-          .where('deviceUid',
+          .where('destination.deviceUid',
               whereIn: firebaseDevices.map((device) => device.uid).toList())
           .orderBy('timestamp', descending: true)
           .startAfterDocument(lastVisibleDocument)
@@ -94,7 +94,7 @@ class FirebaseService {
     else
       query = _firestore
           .collectionGroup('history')
-          .where('deviceUid',
+          .where('destination.deviceUid',
               whereIn: firebaseDevices.map((device) => device.uid).toList())
           .orderBy('timestamp', descending: true)
           .limit(5);

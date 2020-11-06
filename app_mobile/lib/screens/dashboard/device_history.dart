@@ -57,7 +57,7 @@ class _DeviceHistoryListState extends State<DeviceHistoryList> {
       pagingController: widget.pagingController,
       builderDelegate: PagedChildBuilderDelegate<DocumentSnapshot>(
           itemBuilder: (context, item, index) => SingleDeviceHistory(
-                deviceRequest: DeviceHistory.fromJson(item.data(), item.id),
+                deviceRequest: DeviceHistory.fromMap(item.data(), item.id),
               )),
     );
   }

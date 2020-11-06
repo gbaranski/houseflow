@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:flutter/material.dart';
 
 class FirebaseDevice {
@@ -33,55 +34,71 @@ class FirebaseDevice {
       @required this.uid});
 }
 
-class DeviceHistory {
+class DeviceHistorySource {
+  final GeoPoint geoPoint;
   final String ipAddress;
-  final String request;
+  final String userUid;
   final String username;
-  final String deviceUid;
+  DeviceHistorySource(
+      {@required this.geoPoint,
+      @required this.ipAddress,
+      @required this.userUid,
+      @required this.username});
+}
+
+class DeviceHistoryDestination {
   final String deviceType;
+  final String deviceUid;
+  DeviceHistoryDestination(
+      {@required this.deviceUid, @required this.deviceType});
+}
+
+class DeviceHistory {
+  final DeviceHistorySource source;
+  final DeviceHistoryDestination destination;
+  final String action;
   final int timestamp;
+  final String type;
   final String docUid;
 
-  factory DeviceHistory.fromJson(Map<String, dynamic> json, String docUid) =>
+  factory DeviceHistory.fromMap(Map<String, dynamic> map, String docUid) =>
       DeviceHistory(
-        ipAddress: json['ipAddress'],
-        request: json['request'],
-        username: json['username'],
-        timestamp: json['timestamp'],
-        deviceUid: json['deviceUid'],
-        deviceType: json['deviceType'],
+        source: DeviceHistorySource(
+          geoPoint: GeoPoint.fromFirestoreGeoPoint(map['source']['geoPoint']),
+          ipAddress: map['source']['ipAddress'],
+          userUid: map['source']['userUid'],
+          username: map['source']['username'],
+        ),
+        destination: DeviceHistoryDestination(
+            deviceType: map['destination']['deviceType'],
+            deviceUid: map['destination']['deviceUid']),
+        action: map['action'],
+        type: map['type'],
+        timestamp: map['timestamp'],
         docUid: docUid,
       );
 
   String stringifyRequest() {
-    switch (request) {
-      case 'relay1':
-        switch (deviceType) {
-          case 'WATERMIXER':
-            return 'Mix water';
-          case 'GATE':
-            return 'Open the gate';
-          case 'GARAGE':
-            return 'Open the garage';
-          case 'LIGHT':
-            return 'Toggle lights';
-
-          default:
-            return "Unrecognized action";
-        }
-        break;
+    switch (destination.deviceType) {
+      case 'WATERMIXER':
+        return 'Mix water';
+      case 'GATE':
+        return 'Open the gate';
+      case 'GARAGE':
+        return 'Open the garage';
+      case 'LIGHT':
+        return 'Toggle lights';
       default:
         return 'Unrecognized action';
     }
   }
 
   DeviceHistory({
-    @required this.ipAddress,
-    @required this.request,
-    @required this.username,
+    @required this.action,
+    @required this.destination,
+    @required this.source,
     @required this.timestamp,
-    @required this.deviceUid,
-    @required this.deviceType,
+    @required this.type,
     @required this.docUid,
   });
 }
@@ -89,6 +106,10 @@ class DeviceHistory {
 class GeoPoint {
   final double latitude;
   final double longitude;
+
+  factory GeoPoint.fromFirestoreGeoPoint(firestore.GeoPoint geoPoint) =>
+      GeoPoint(latitude: geoPoint.latitude, longitude: geoPoint.longitude);
+
   GeoPoint({@required this.latitude, @required this.longitude});
 }
 

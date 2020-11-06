@@ -46,7 +46,7 @@ class InDepthDeviceHistory extends StatelessWidget {
                     width: 10,
                   ),
                   Text(
-                    deviceHistory.username,
+                    deviceHistory.source.username,
                     style: _dataTextStyle,
                   ),
                 ],
@@ -58,7 +58,7 @@ class InDepthDeviceHistory extends StatelessWidget {
                     width: 10,
                   ),
                   Text(
-                    upperFirstCharacter(deviceHistory.deviceType),
+                    upperFirstCharacter(deviceHistory.destination.deviceType),
                     style: _dataTextStyle,
                   ),
                 ],
@@ -96,7 +96,7 @@ class InDepthDeviceHistory extends StatelessWidget {
                     width: 10,
                   ),
                   Text(
-                    deviceHistory.ipAddress,
+                    deviceHistory.source.ipAddress,
                     style: _dataTextStyle,
                   ),
                 ],
@@ -155,7 +155,7 @@ class SingleDeviceHistory extends StatelessWidget {
             leading:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(
-                getDeviceIcon(deviceRequest.deviceType),
+                getDeviceIcon(deviceRequest.destination.deviceType),
                 color: Colors.blueGrey.shade500,
                 size: 36,
               )
