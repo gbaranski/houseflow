@@ -44,6 +44,8 @@ services:
     container_name: 'webhooks'
     env_file:
       - .env
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
     build:
       context: ./webhooks
       dockerfile: Dockerfile
@@ -57,6 +59,8 @@ services:
     tty: true
     container_name: 'auth'
     command: npm run start
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
     env_file:
       - .env
     build:
