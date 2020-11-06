@@ -2,7 +2,7 @@ import 'package:houseflow/shared/constants.dart';
 import 'package:flutter/material.dart';
 
 class LoginForm extends StatefulWidget {
-  final Function onSubmit;
+  final Function(String email, String password) onSubmit;
   final Function onSuccess;
   final String submitMessage;
 

@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class Register extends StatelessWidget {
+  final Function(String email, String password) onSubmit;
+  Register({@required this.onSubmit});
+
   @override
   Widget build(BuildContext context) {
-    final AuthService authService =
-        Provider.of<AuthService>(context, listen: false);
     return Scaffold(
         appBar: AppBar(
           title: const Text("Register"),
@@ -21,7 +22,7 @@ class Register extends StatelessWidget {
                 children: [
                   const SizedBox(height: 10),
                   LoginForm(
-                    onSubmit: authService.registerWithEmailAndPassword,
+                    onSubmit: onSubmit,
                     submitMessage: 'REGISTER',
                     onSuccess: () => Navigator.pop(context),
                   ),
