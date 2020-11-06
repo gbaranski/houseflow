@@ -68,17 +68,19 @@ services:
     networks:
       - backend
 
-  ota:
+  device_api:
     tty: true
-    container_name: 'ota'
-    # command: npm run start
-    entrypoint: ['echo', 'Service ota is disabled']
+    container_name: 'device_api'
+    command: npm run start
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
     env_file:
       - .env
+    depends_on:
+      - 'emqx'
     build:
-      context: ./ota
+      context: ./device_api
       dockerfile: Dockerfile
-    # restart: 'unless-stopped'
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
@@ -96,6 +98,8 @@ services:
       - 80:80
       - 443:443
     restart: 'unless-stopped'
+    depends_on:
+      - 'device_api'
     volumes:
       - /etc/letsencrypt/live/$DOMAIN/fullchain.pem:/etc/dockercerts/fullchain.pem
       - /etc/letsencrypt/live/$DOMAIN/privkey.pem:/etc/dockercerts/privkey.pem
