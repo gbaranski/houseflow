@@ -47,24 +47,24 @@ class SignIn extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  "Reset",
-                                  style: const TextStyle(
-                                    color: LayoutBlueColor1,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const Text(
-                                  " password!",
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
+                        // Column(
+                        //   children: [
+                        //     Row(
+                        //       children: [
+                        //         const Text(
+                        //           "Reset",
+                        //           style: const TextStyle(
+                        //             color: LayoutBlueColor1,
+                        //             fontWeight: FontWeight.w700,
+                        //           ),
+                        //         ),
+                        //         const Text(
+                        //           " password!",
+                        //         ),
+                        //       ],
+                        //     )
+                        //   ],
+                        // ),
                         Column(
                           children: [
                             GestureDetector(

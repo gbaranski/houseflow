@@ -1,7 +1,5 @@
-import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/shared/login_form.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class Register extends StatelessWidget {
   final Function(String email, String password) onSubmit;
