@@ -16,17 +16,17 @@ long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
 
-struct RelayTopic {
+struct Topic {
   String request;
   String response;
 };
 
 struct MqttTopic {
-  RelayTopic relayTopic1;
+  Topic topic1;
 } mqttTopic;
 
 void subscribeTopics() {
-  pubSubClient->subscribe(mqttTopic.relayTopic1.request.c_str());
+  pubSubClient->subscribe(mqttTopic.topic1.request.c_str());
 }
 
 void callback(char* topic, byte* message, unsigned int length) {
@@ -40,12 +40,12 @@ void callback(char* topic, byte* message, unsigned int length) {
     messageTemp += (char)message[i];
   }
   Serial.println();
-  if (String(topic) == mqttTopic.relayTopic1.request) {
+  if (String(topic) == mqttTopic.topic1.request) {
     changeOutputState();
     byte* p = (byte*)malloc(length);
     // Copy the payload to the new buffer
     memcpy(p, message, length);
-    pubSubClient->publish(mqttTopic.relayTopic1.response.c_str(), p, length);
+    pubSubClient->publish(mqttTopic.topic1.response.c_str(), p, length);
     // Free the memory
     free(p);
 
@@ -75,9 +75,11 @@ void initializeMqtt(DeviceConfig _deviceConfig,
                     BearSSL::WiFiClientSecure* wifiClientSecure) {
   mqttDeviceConfig = _deviceConfig;
 
-  mqttTopic.relayTopic1 = {
-      String(mqttDeviceConfig.uid) + String("/event/relay1/request"),
-      String(mqttDeviceConfig.uid) + String("/event/relay1/response"),
+  String basicTopic = DEVICE_TOGGLE ? "/toggle" : "/trigger";
+
+  mqttTopic.topic1 = {
+      String(mqttDeviceConfig.uid) + basicTopic + "1/request",
+      String(mqttDeviceConfig.uid) + basicTopic + "1/response",
   };
 
   pubSubClient = new PubSubClient(mqttDeviceConfig.host, 8883, callback,
