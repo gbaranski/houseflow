@@ -4,6 +4,9 @@ services:
     image: 'emqx/emqx'
     container_name: 'emqx'
     restart: 'unless-stopped'
+    depends_on:
+      - 'webhooks'
+      - 'auth'
     env_file:
       - .env
     environment:
