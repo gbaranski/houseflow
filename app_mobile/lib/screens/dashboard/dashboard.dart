@@ -32,7 +32,8 @@ class _DashboardState extends State<Dashboard> {
     void Function(PagingStatus) listener;
     listener = (PagingStatus pagingStatus) {
       print(pagingStatus);
-      if (pagingStatus == PagingStatus.ongoing) {
+      if (pagingStatus == PagingStatus.ongoing ||
+          pagingStatus == PagingStatus.noItemsFound) {
         _pagingController.removeStatusListener(listener);
         completer.complete();
       }

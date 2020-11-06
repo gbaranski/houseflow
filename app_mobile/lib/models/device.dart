@@ -86,9 +86,16 @@ class DeviceHistory {
   });
 }
 
+class GeoPoint {
+  final double latitude;
+  final double longitude;
+  GeoPoint({@required this.latitude, @required this.longitude});
+}
+
 class DeviceRequestUser {
   final String token;
-  DeviceRequestUser({@required this.token});
+  final GeoPoint geoPoint;
+  DeviceRequestUser({@required this.token, @required this.geoPoint});
 }
 
 class DeviceRequestDevice {
@@ -117,6 +124,10 @@ class DeviceRequest {
     return {
       'user': {
         'token': user.token,
+        'geoPoint': {
+          'latitude': user.geoPoint.latitude,
+          'longitude': user.geoPoint.longitude,
+        }
       },
       'device': {
         'uid': device.uid,
