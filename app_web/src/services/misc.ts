@@ -21,7 +21,7 @@ export const getGeoPoint = async (): Promise<GeoPoint | undefined> => {
     const e: PositionError = tempError;
     if (e.code === 1) {
       message.error(
-        'Please accepts location services, we use it only to guarantee devices security',
+        'Please accept location services, we use it only to guarantee devices security',
       );
     } else if (e.code === 2) {
       message.error('Error occured when trying to retreive location, please try different browser');
