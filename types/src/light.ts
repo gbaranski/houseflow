@@ -16,8 +16,7 @@ export namespace Light {
   }): Client.DeviceRequest['device'] => {
     return {
       uid,
-      gpio: 1,
-      action: 'toggle',
+      action: 1,
     };
   };
 }
