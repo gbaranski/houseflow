@@ -9,8 +9,7 @@ export namespace Client {
     };
     device: {
       uid: string;
-      gpio: number;
-      action: 'trigger' | 'toggle';
+      action: number;
       data?: string;
     };
   }
