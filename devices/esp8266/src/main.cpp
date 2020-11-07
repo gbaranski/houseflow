@@ -29,7 +29,6 @@ void configModeCallback(WiFiManager *myWiFiManager) {
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting!");
-  EEPROM.begin(512);
   WiFiManager wifiManager;
 
   wifiManager.setDebugOutput(false);
@@ -38,15 +37,6 @@ void setup() {
   wifiManager.autoConnect();
   Serial.println("Connected to WiFi");
 
-#if SET_CREDENTIALS == true
-  DeviceConfig newDeviceConfig = {DEVICE_UID, DEVICE_SECRET, DEVICE_HOST,
-                                  DEVICE_OTA_PATH, DEVICE_OUTPUT_PIN};
-  writeDeviceConfig(newDeviceConfig);
-  Serial.println("Success writing deviceConfig to EEPROM");
-#endif
-
-  DeviceConfig deviceConfig = readDeviceConfig();
-  outputPin = deviceConfig.relayPin;
   setupGpio();
 
   configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -59,8 +49,8 @@ void setup() {
   Serial.println("Got time!");
   client.setTrustAnchors(&x509);
 
-  startArduinoOta(&deviceConfig);
-  initializeMqtt(deviceConfig, &client);
+  startArduinoOta();
+  initializeMqtt(&client);
 }
 
 unsigned long lastTimePrintedHeap = 0;

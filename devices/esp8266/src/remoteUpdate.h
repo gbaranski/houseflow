@@ -24,44 +24,9 @@ void update_error(int err) {
   Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
-void checkHttpUpdates(DeviceConfig* deviceConfig,
-                      BearSSL::WiFiClientSecure* client) {
-  String credentialsJson = "{\"uid\": \"" + String(*deviceConfig->uid) +
-                           "\",\"secret\":\"" + String(*deviceConfig->secret) +
-                           "\"}";
-  String ota_url =
-      "https://" + String(*deviceConfig->host) + String(*deviceConfig->otaPath);
-  Serial.println("Will attempt OTA to: " + ota_url);
-  Serial.println("Will publish credentials: " + credentialsJson);
-  t_httpUpdate_return ret;
-
-  ESPhttpUpdate.onStart(update_started);
-  ESPhttpUpdate.onEnd(update_finished);
-  ESPhttpUpdate.onProgress(update_progress);
-  ESPhttpUpdate.onError(update_error);
-
-  ret = ESPhttpUpdate.update(*client, ota_url, credentialsJson);
-
-  switch (ret) {
-    case HTTP_UPDATE_FAILED:
-      Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n",
-                    ESPhttpUpdate.getLastError(),
-                    ESPhttpUpdate.getLastErrorString().c_str());
-      break;
-
-    case HTTP_UPDATE_NO_UPDATES:
-      Serial.println("HTTP_UPDATE_NO_UPDATES");
-      break;
-
-    case HTTP_UPDATE_OK:
-      Serial.println("HTTP_UPDATE_OK");
-      break;
-  }
-}
-
-void startArduinoOta(DeviceConfig* deviceConfig) {
+void startArduinoOta() {
   ArduinoOTA.setHostname("ESP8266_" DEVICE_TYPE);
-  ArduinoOTA.setPassword(deviceConfig->secret);
+  ArduinoOTA.setPassword(DEVICE_SECRET);
 
   ArduinoOTA.onStart([]() { Serial.println("Start"); });
   ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
@@ -85,3 +50,40 @@ void startArduinoOta(DeviceConfig* deviceConfig) {
 }
 
 void arduinoOtaLoop() { ArduinoOTA.handle(); }
+
+// void checkHttpUpdates(DeviceConfig* deviceConfig,
+//                       BearSSL::WiFiClientSecure* client) {
+//   String credentialsJson = "{\"uid\": \"" + String(*deviceConfig->uid) +
+//                            "\",\"secret\":\"" + String(*deviceConfig->secret)
+//                            +
+//                            "\"}";
+//   String ota_url =
+//       "https://" + String(*deviceConfig->host) +
+//       String(*deviceConfig->otaPath);
+//   Serial.println("Will attempt OTA to: " + ota_url);
+//   Serial.println("Will publish credentials: " + credentialsJson);
+//   t_httpUpdate_return ret;
+
+//   ESPhttpUpdate.onStart(update_started);
+//   ESPhttpUpdate.onEnd(update_finished);
+//   ESPhttpUpdate.onProgress(update_progress);
+//   ESPhttpUpdate.onError(update_error);
+
+//   ret = ESPhttpUpdate.update(*client, ota_url, credentialsJson);
+
+//   switch (ret) {
+//     case HTTP_UPDATE_FAILED:
+//       Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n",
+//                     ESPhttpUpdate.getLastError(),
+//                     ESPhttpUpdate.getLastErrorString().c_str());
+//       break;
+
+//     case HTTP_UPDATE_NO_UPDATES:
+//       Serial.println("HTTP_UPDATE_NO_UPDATES");
+//       break;
+
+//     case HTTP_UPDATE_OK:
+//       Serial.println("HTTP_UPDATE_OK");
+//       break;
+//   }
+// }

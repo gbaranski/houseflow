@@ -5,11 +5,7 @@
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
 #include <PubSubClient.h>
 
-#include "deviceConfig.h"
-
 PubSubClient* pubSubClient;
-
-DeviceConfig mqttDeviceConfig;
 
 long lastMsg = 0;
 #define MSG_BUFFER_SIZE (50)
@@ -60,8 +56,7 @@ boolean reconnect() {
   String clientId = "device_";
   clientId += String(random(0xffff), HEX);
 
-  if (pubSubClient->connect(clientId.c_str(), mqttDeviceConfig.uid,
-                            mqttDeviceConfig.secret)) {
+  if (pubSubClient->connect(clientId.c_str(), DEVICE_UID, DEVICE_SECRET)) {
     Serial.println("Success connecting to MQTT");
     subscribeTopics();
   } else {
@@ -71,19 +66,14 @@ boolean reconnect() {
   return pubSubClient->connected();
 }
 
-void initializeMqtt(DeviceConfig _deviceConfig,
-                    BearSSL::WiFiClientSecure* wifiClientSecure) {
-  mqttDeviceConfig = _deviceConfig;
-
-  String basicTopic = DEVICE_TOGGLE ? "/toggle" : "/trigger";
-
+void initializeMqtt(BearSSL::WiFiClientSecure* wifiClientSecure) {
   mqttTopic.topic1 = {
-      String(mqttDeviceConfig.uid) + basicTopic + "1/request",
-      String(mqttDeviceConfig.uid) + basicTopic + "1/response",
+      DEVICE_UID + String("/action1/request"),
+      DEVICE_UID + String("/action1/response"),
   };
 
-  pubSubClient = new PubSubClient(mqttDeviceConfig.host, 8883, callback,
-                                  *wifiClientSecure);
+  pubSubClient =
+      new PubSubClient(DEVICE_MQTT_HOST, 8883, callback, *wifiClientSecure);
 
   Serial.println("Initializing MQTT");
 }
