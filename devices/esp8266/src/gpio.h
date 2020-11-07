@@ -2,8 +2,6 @@
 
 #include <Arduino.h>
 
-int8_t outputPin;
-
 #if DEVICE_TOGGLE == true
 boolean currentState = false;
 
@@ -15,19 +13,19 @@ unsigned long lastRelayTriggeredMillis = 0;
 #endif
 
 void setupGpio() {
-  pinMode(outputPin, OUTPUT);
+  pinMode(DEVICE_OUTPUT_PIN, OUTPUT);
 
 #if DEVICE_TOGGLE == true
-  digitalWrite(outputPin, LOW);
+  digitalWrite(DEVICE_OUTPUT_PIN, LOW);
 #else
-  digitalWrite(outputPin, HIGH);
+  digitalWrite(DEVICE_OUTPUT_PIN, HIGH);
 #endif
 }
 
 void onTimeoutElapsed() {
 #if DEVICE_TOGGLE == false
   lastRelayTriggeredMillis = false;
-  digitalWrite(outputPin, HIGH);
+  digitalWrite(DEVICE_OUTPUT_PIN, HIGH);
 #endif
 }
 
@@ -35,10 +33,10 @@ void changeOutputState() {
   Serial.println("Changing output state");
 #if DEVICE_TOGGLE == true
   currentState = !currentState;
-  digitalWrite(outputPin, currentState);
+  digitalWrite(DEVICE_OUTPUT_PIN, currentState);
   Serial.println("Changed output state to" + String(currentState));
 #else
-  digitalWrite(outputPin, LOW);
+  digitalWrite(DEVICE_OUTPUT_PIN, LOW);
   relayTriggered = true;
   lastRelayTriggeredMillis = millis();
 #endif
