@@ -25,8 +25,7 @@ const deviceRequestSchema = Joi.object({
   }).required(),
   device: Joi.object({
     uid: Joi.string().length(36).required(),
-    gpio: Joi.number().integer().min(0).required(),
-    action: Joi.string().equal('trigger', 'toggle').required(),
+    action: Joi.number().integer().min(0).required(),
     data: Joi.string(),
   }).required(),
 });

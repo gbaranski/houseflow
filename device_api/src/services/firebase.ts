@@ -79,7 +79,7 @@ export const addRequestHistory = async ({
 
     const requestHistory: RequestHistory = {
       type: 'request',
-      action: `${request.device.action}_${request.device.gpio}`,
+      action: `action-${request.device.action}`,
       timestamp: Date.now(),
       source: {
         userUid,

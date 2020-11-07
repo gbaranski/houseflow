@@ -101,8 +101,7 @@ describe('POST /request', () => {
       },
       device: {
         uid: uuidv4(),
-        gpio: 1,
-        action: 'toggle',
+        action: 1,
       },
     };
     const res = await api.post('/request').send(req);
@@ -117,8 +116,7 @@ describe('POST /request', () => {
       },
       device: {
         uid: uuidv4(),
-        gpio: 1,
-        action: 'toggle',
+        action: 1,
       },
     };
     const res = await api.post('/request').send(req);
@@ -141,8 +139,7 @@ describe('POST /request', () => {
       },
       device: {
         uid: firebaseUserDevice.uid,
-        gpio: 1,
-        action: 'toggle',
+        action: 1,
       },
     };
     const res = await api.post('/request').send(req);
@@ -165,8 +162,7 @@ describe('POST /request', () => {
       },
       device: {
         uid: firebaseUserDevice.uid,
-        gpio: 1,
-        action: 'toggle',
+        action: 1,
       },
     };
     const res = await api.post('/request').send(req);

@@ -7,7 +7,7 @@ import { createMqttClient } from './mqttClient';
 const mqttClient = createMqttClient();
 
 const generateTopic = (request: Client.DeviceRequest['device']): Topic => {
-  const basicTopic = `${request.uid}/${request.action}${request.gpio}`;
+  const basicTopic = `${request.uid}/action${request.action}`;
   return {
     request: `${basicTopic}/request`,
     response: `${basicTopic}/response`,
