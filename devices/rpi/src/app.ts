@@ -7,10 +7,9 @@ const { DEVICE_UID } = process.env;
 export const onConnection = (mqtt: MqttClient) => {
   console.log('Initialized connection with MQTT');
 
-  const basicTopic = `${DEVICE_UID}/trigger1`;
   const startMixTopic: Topic = {
-    request: `${basicTopic}/request`,
-    response: `${basicTopic}/response`,
+    request: `${DEVICE_UID}/action1/request`,
+    response: `${DEVICE_UID}/action1/response`,
   };
 
   mqtt.subscribe(startMixTopic.request);

@@ -48,7 +48,7 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     final AuthService authService =
         Provider.of<AuthService>(context, listen: false);
-    final hasAnyDevices = authService.firebaseUser.devices.length > 1;
+    final hasAnyDevices = authService.firebaseUser.devices.length > 0;
 
     return RefreshIndicator(
       onRefresh: hasAnyDevices ? onRefresh : () async {},
