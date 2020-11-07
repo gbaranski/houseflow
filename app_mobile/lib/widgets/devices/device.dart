@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
+import 'package:houseflow/models/devices/light.dart';
 import 'package:houseflow/models/devices/relay.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/utils/misc.dart';
@@ -30,9 +31,7 @@ class Device extends StatelessWidget {
           return Container();
         final Map<String, dynamic> data = snapshot.data.data();
         final FirebaseDevice firebaseDevice = FirebaseDevice.fromMap(data);
-        // if (!firebaseDevice.status) return InactiveDevice(firebaseDevice);
 
-        final iconData = getDeviceIcon(firebaseDevice.type);
         switch (firebaseDevice.type) {
           case 'WATERMIXER':
             return DeviceCardWrapper(
@@ -60,7 +59,7 @@ class Device extends StatelessWidget {
               color: Color(0xFFffa000),
               firebaseDevice: firebaseDevice,
               deviceRequestDevice:
-                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
+                  LightData.getDeviceRequest(uid: firebaseDevice.uid),
             );
           default:
             {

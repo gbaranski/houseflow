@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:flutter/material.dart';
 
 class FirebaseDevice {
-  Map<String, dynamic> data;
   String ip;
   bool status;
   String type;
@@ -10,7 +9,6 @@ class FirebaseDevice {
 
   factory FirebaseDevice.fromMap(Map<String, dynamic> map) {
     return FirebaseDevice(
-        data: map['data'],
         ip: map['ip'],
         status: map['status'],
         type: map['type'],
@@ -18,7 +16,6 @@ class FirebaseDevice {
   }
   Map<String, dynamic> toJson() {
     return {
-      'data': data,
       'ip': ip,
       'status': status,
       'type': type,
@@ -27,8 +24,7 @@ class FirebaseDevice {
   }
 
   FirebaseDevice(
-      {@required this.data,
-      @required this.ip,
+      {@required this.ip,
       @required this.status,
       @required this.type,
       @required this.uid});

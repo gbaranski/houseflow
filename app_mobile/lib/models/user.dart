@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 class FirebaseUserDevice {
-  final bool notification;
   final String uid;
 
-  FirebaseUserDevice({@required this.notification, @required this.uid});
+  FirebaseUserDevice({@required this.uid});
 }
 
 class FirebaseUser {
@@ -18,8 +17,7 @@ class FirebaseUser {
 
   factory FirebaseUser.fromMap(Map<String, dynamic> map) {
     final userDevices = (map['devices'] as List<dynamic>)
-        .map((device) => FirebaseUserDevice(
-            notification: device['notification'], uid: device['uid']))
+        .map((device) => FirebaseUserDevice(uid: device['uid']))
         .toList();
 
     return FirebaseUser(

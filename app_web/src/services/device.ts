@@ -3,7 +3,7 @@ import { message } from 'antd';
 import axios from 'axios';
 import { getGeoPoint } from './misc';
 
-const DEVICE_API_URL = 'http://localhost/device';
+const DEVICE_API_URL = 'https://api.gbaranski.com/device';
 
 type Overwrite<T1, T2> = {
   [P in Exclude<keyof T1, keyof T2>]: T1[P];
