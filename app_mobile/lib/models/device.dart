@@ -117,20 +117,15 @@ class DeviceRequestUser {
 
 class DeviceRequestDevice {
   final String uid;
-  final int gpio;
-  final String action;
+  final int action;
   final String data;
 
   @override
   String toString() {
-    return "$uid/$action$gpio";
+    return "$uid/action-$action";
   }
 
-  DeviceRequestDevice(
-      {@required this.uid,
-      @required this.gpio,
-      @required this.action,
-      this.data});
+  DeviceRequestDevice({@required this.uid, @required this.action, this.data});
 }
 
 class DeviceRequest {
@@ -148,7 +143,6 @@ class DeviceRequest {
       },
       'device': {
         'uid': device.uid,
-        'gpio': device.gpio,
         'action': device.action,
         if (device.data != null) 'data': device.data,
       }
