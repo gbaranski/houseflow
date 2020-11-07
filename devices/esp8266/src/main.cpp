@@ -1,10 +1,5 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>  //https://github.com/esp8266/Arduino
-
-// needed for library
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
-#include <WiFiManager.h>  //https://github.com/tzapu/WiFiManager
 #include <time.h>
 
 #include "config.h"
@@ -19,23 +14,28 @@ BearSSL::X509List x509(letsencryptauthorityx3_der,
 
 long lastReconnectAttempt = 0;
 
-void configModeCallback(WiFiManager *myWiFiManager) {
-  Serial.println("Entered config mode");
-  Serial.println(WiFi.softAPIP());
-
-  Serial.println(myWiFiManager->getConfigPortalSSID());
-}
-
 void setup() {
   Serial.begin(9600);
-  Serial.println("Starting!");
-  WiFiManager wifiManager;
-
-  wifiManager.setDebugOutput(false);
-  wifiManager.setAPCallback(configModeCallback);
   Serial.println("Initializing WiFi");
-  wifiManager.autoConnect();
+
+  WiFi.begin(DEVICE_WIFI_SSID, DEVICE_WIFI_PASSWORD);  // Connect to the network
+
   Serial.println("Connected to WiFi");
+  Serial.print("Connecting to ");
+  Serial.print(DEVICE_WIFI_SSID);
+  Serial.println(" ...");
+
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) {  // Wait for the Wi-Fi to connect
+    delay(1000);
+    Serial.print(++i);
+    Serial.print(' ');
+  }
+
+  Serial.println('\n');
+  Serial.println("Connection established!");
+  Serial.print("IP address:\t");
+  Serial.println(WiFi.localIP());
 
   setupGpio();
 
