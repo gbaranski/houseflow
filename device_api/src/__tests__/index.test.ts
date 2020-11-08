@@ -6,7 +6,9 @@ import { Client, Exceptions, GeoPoint } from '@houseflow/types';
 
 if (process.env.CI) {
   admin.initializeApp({
-    credential: admin.credential.cert(process.env.FIREBASE_CERT as string),
+    credential: admin.credential.cert(
+      JSON.parse(process.env.FIREBASE_CERT as string),
+    ),
     databaseURL: 'https://houseflow-dev.firebaseio.com',
   });
 } else {
