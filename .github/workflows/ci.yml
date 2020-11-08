@@ -6,9 +6,9 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -23,5 +23,17 @@ jobs:
         working-directory: './auth'
         run: npm install
       - name: Test
+        working-directory: './auth'
         run: npm test
-       
+  device_api_test:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_CERT: ${{ secrets.FIREBASE_CERT }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install modules
+        working-directory: './device_api'
+        run: npm install
+      - name: Run tests
+        working-directory: './device_api'
+        run: npm test
