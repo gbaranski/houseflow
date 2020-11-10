@@ -52,8 +52,6 @@ export default function LoginEmail({ register }: { register?: boolean }) {
     } catch (e) {
       message.error(e.message);
       console.log(e);
-    } finally {
-      setButtonLoading(false);
     }
   };
 
