@@ -1,6 +1,4 @@
-import { GeoPoint, Light, Relay } from '.';
-
-export type AnyDeviceData = Light.Data | Relay.Data;
+import { GeoPoint } from '.';
 
 export namespace Device {
   export type DeviceType =
@@ -20,16 +18,14 @@ export namespace Device {
     data?: unknown | undefined;
   }
 
-  export interface FirebaseDevice<
-    DeviceData extends Light.Data | Relay.Data | AnyDeviceData = AnyDeviceData
-  > {
+  export interface FirebaseDevice<T = undefined> {
     uid: string;
     secret?: string;
     type: DeviceType;
     geoPoint: GeoPoint;
 
     status: boolean;
-    data: DeviceData;
+    data: T;
     ip: string;
   }
 }
