@@ -101,3 +101,5 @@ Embedded devices when they try to connect to MQTT broker, they send a secret and
 ##### Web/Mobile Client
 
 Web/Mobile clients are authenticated a little bit different, clients can log in via Google/Email and if they do, they can get authenticated by generating JWT token from Firebase and then sending it with websocket handshake.
+
+hello world
