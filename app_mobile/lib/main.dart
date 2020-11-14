@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:houseflow/screens/error_screen/error_screen.dart';
 import 'package:houseflow/screens/splash_screen/splash_screen.dart';
@@ -6,11 +7,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/services/notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Europe/Warsaw'));
   return runApp(App());
 
   // runApp(DevicePreview(
@@ -43,6 +49,10 @@ class App extends StatelessWidget {
               );
             }
             if (snapshot.connectionState == ConnectionState.done) {
+              Notifications.init(context).whenComplete(() => {
+                    Notifications.scheduleNotification(
+                        title: "Some title", body: "Some body")
+                  });
               FlutterError.onError =
                   FirebaseService.crashlytics.recordFlutterError;
               return ChangeNotifierProvider<AuthService>(
