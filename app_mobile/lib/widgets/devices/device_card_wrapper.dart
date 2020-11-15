@@ -14,11 +14,13 @@ class DeviceCardWrapper extends StatefulWidget {
   final Color color;
   final FirebaseDevice firebaseDevice;
   final DeviceRequestDevice deviceRequestDevice;
+  final Function onSuccessCallback;
 
   DeviceCardWrapper(
       {@required this.color,
       @required this.firebaseDevice,
-      @required this.deviceRequestDevice});
+      @required this.deviceRequestDevice,
+      this.onSuccessCallback});
 
   @override
   _DeviceCardWrapperState createState() => _DeviceCardWrapperState();
@@ -38,6 +40,7 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
   }
 
   void onSucess(BuildContext context, DeviceRequest deviceRequest) {
+    if (widget.onSuccessCallback != null) widget.onSuccessCallback();
     const snackbar = SnackBar(
       content: Text("Success!"),
       duration: Duration(milliseconds: 500),
@@ -107,10 +110,7 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
     );
     try {
       await sendDeviceRequest(deviceRequest);
-      const successSnackbar = SnackBar(
-        content: Text("Success!"),
-      );
-      Scaffold.of(context).showSnackBar(successSnackbar);
+      onSucess(context, deviceRequest);
     } catch (e) {
       print("$e while sending request");
       final errorSnackbar = SnackBar(

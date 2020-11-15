@@ -57,15 +57,15 @@ class Notifications {
         onSelectNotification: _selectNotification);
   }
 
-  static Future scheduleNotification({
-    @required String title,
-    @required String body,
-  }) async {
+  static Future scheduleNotification(
+      {@required String title,
+      @required String body,
+      @required Duration duration}) async {
     await _flutterLocalNotificationsPlugin.zonedSchedule(
         0,
         title,
         body,
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+        tz.TZDateTime.now(tz.local).add(duration),
         NotificationDetails(
             android: const AndroidNotificationDetails(
           DEVICE_NOTIFICATION_CHANNEL_ID,

@@ -4,7 +4,7 @@ import 'package:houseflow/models/device.dart';
 import 'package:houseflow/models/devices/light.dart';
 import 'package:houseflow/models/devices/relay.dart';
 import 'package:houseflow/services/firebase.dart';
-import 'package:houseflow/utils/misc.dart';
+import 'package:houseflow/services/notifications.dart';
 import 'package:houseflow/widgets/devices/device_card.dart';
 import 'package:houseflow/widgets/devices/device_card_wrapper.dart';
 
@@ -39,6 +39,10 @@ class Device extends StatelessWidget {
               firebaseDevice: firebaseDevice,
               deviceRequestDevice:
                   RelayData.getDeviceRequest(uid: firebaseDevice.uid),
+              onSuccessCallback: () => Notifications.scheduleNotification(
+                  title: "Water have been mixed!",
+                  body: "Water should be warm now, it's time to go",
+                  duration: const Duration(seconds: 5)),
             );
           case 'GATE':
             return DeviceCardWrapper(

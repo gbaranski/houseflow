@@ -49,14 +49,18 @@ class App extends StatelessWidget {
               );
             }
             if (snapshot.connectionState == ConnectionState.done) {
-              Notifications.init(context).whenComplete(() => {
-                    Notifications.scheduleNotification(
-                        title: "Some title", body: "Some body")
-                  });
               FlutterError.onError =
                   FirebaseService.crashlytics.recordFlutterError;
-              return ChangeNotifierProvider<AuthService>(
-                  create: (_) => new AuthService(), child: Wrapper());
+              return FutureBuilder(
+                future: Notifications.init(context),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return ChangeNotifierProvider<AuthService>(
+                        create: (_) => new AuthService(), child: Wrapper());
+                  }
+                  return SplashScreen();
+                },
+              );
             }
 
             return SplashScreen();
