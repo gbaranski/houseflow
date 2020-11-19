@@ -8,33 +8,23 @@ Set up, manage, and control your Houseflow devices, that includes connected home
 
 The documentation is divided into several sections:
 
-1. [Components of project](#components-of-project)
-2. [Communication and data transmission](#communication-and-data-transmission)
-
-## Components of project
-
 - [Houseflow](#houseflow)
-  - [Components of project](#components-of-project)
+  - [Get started](#get-started)
     - [Backend infrastructure](#backend-infrastructure)
         - [MQTT Broker](#mqtt-broker)
         - [Device service](#device-service)
+        - [Webhooks service](#webhooks-service)
         - [Auth service](#auth-service)
         - [OTA service](#ota-service)
-    - [Web App](#web-app)
     - [Mobile App](#mobile-app)
+    - [Web App](#web-app)
     - [Embedded devices](#embedded-devices)
-      - [Alarmclock](#alarmclock)
     - [Firestore database](#firestore-database)
-    - [Firebase FCM](#firebase-fcm)
-    - [Project types](#project-types)
-  - [Communication and data transmission](#communication-and-data-transmission)
-      - [Security](#security)
-        - [Embedded devices security](#embedded-devices-security)
-        - [Web/Mobile Client](#webmobile-client)
+
+## Get started
+There will be some steps added soon
 
 ### Backend infrastructure
-
-Server and infrastructure recently had a huge refactor. It will soon move from monolythic to microservices, [here](https://github.com/gbaranski//issues/78)
 
 1. [MQTT Broker](#mqtt-broker)
 2. [Device service](#device-service)
@@ -43,74 +33,60 @@ Server and infrastructure recently had a huge refactor. It will soon move from m
 
 ##### MQTT Broker
 
-Broker which I picked is [emqx](https://github.com/emqx/emqx) because it supports webhooks and authentication out of box
+Houseflow uses [emqx](https://github.com/emqx/emqx) as MQTT Broker. Devices connect to it aswell as [Device service](#device-service). For authorization [Auth service](#auth-service) is being used. It sends HTTP request to [Webhooks service](#webhooks-sevice) on every connect/disconnect
 
 ##### Device service
+Used to handle all requests from Web or Mobile app, communicates with them over HTTP, for authorization it is using [Firestore](#firestore-database). Redirects all HTTP requests directly to [MQTT Broker](#mqtt-broker) with specific topic, in conclusion embedded device trigger specific event
 
-It will help MQTT Broker as webhook service, it will change state of devices in firestore.
+<img src="https://img.shields.io/badge/Typescript---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=007ACC">
+
+##### Webhooks service
+Listens to EMQX connect/disconnect events, changes device state in [Firestore](#firestore-database)
+
+<img src="https://img.shields.io/badge/Golang---?logo=Go&logoColor=FFFFFF&style=for-the-badge&color=00ADD8">
 
 ##### Auth service
 
-Adds authentication on MQTT broker
+Adds device and ACL authorization for MQTT broker, prevents devices from subscribing to topic which isn't intended for them and also from connecting unknown devices.
+
+
+<img src="https://img.shields.io/badge/Typescript---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=007ACC">
 
 ##### OTA service
 
-Handle updates over the air for embedded devices
+~~Handle updates over the air for embedded devices~~. Currently not used. Updates are handled via ArduinoOTA, [related issue](https://github.com/gbaranski/houseflow/issues/128).
 
-### Web App
-
-Web app made using [React](https://github.com/facebook/react) front-end framework, whole code is in Typescript. App has moved from [Material-UI](https://github.com/mui-org/material-ui), to [antd](https://github.com/ant-design/ant-design)
-
-<img src="https://github.com/gbaranski/houseflow/blob/master/docs/web_app.png" width="450">
+<img src="https://img.shields.io/badge/Typescript---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=007ACC">
 
 ### Mobile App
 
 Mobile app made using [Flutter](https://github.com/flutter/flutter), I picked it over React Native.
 
+<img src="https://img.shields.io/badge/Dart---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=0175C2">
+
+<br>
 <img src="https://github.com/gbaranski/houseflow/blob/master/docs/android_pixel2_dashboard.png" width="150">
 <img src="https://github.com/gbaranski/houseflow/blob/master/docs/android_pixel2_device_view.png" width="150">
 
+### Web App
+
+Web app made using [React](https://github.com/facebook/react) front-end library with [Antd Pro v5](https://beta-pro.ant.design/).
+
+<img src="https://img.shields.io/badge/Typescript---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=007ACC">
+<br>
+<img src="https://github.com/gbaranski/houseflow/blob/master/docs/web_app.png" width="450">
+
+
 ### Embedded devices
 
-Embedded devices, microcontrollers i used were ESP8266 and ESP32, those are modules with WiFi. I was using Arduino framework, and C++ languague, thought about C and ESP-IDF but it would take me months.
+Currently supported devices are ESP8266, also there is a version in Node.JS. For ESP8266 I use Arduino framework and some kind of C++.
 
-Devices I made
 
-- Alarmclock on ESP32, just an alarmclock, but with LCD and loud siren to wake me up, also measures temperature and etc, not supported..
-- Watermixer on ESP8266, switches relay which activates mixing hot and cold water, currently the device which mostly I focus on.
-- Watermixer on Raspberry, made in Node.JS, just to test how it would look like, but its too expensive to make those, currently used for tests.
+<img src="https://img.shields.io/badge/C++---?logo=C%2B%2B&logoColor=FFFFFF&style=for-the-badge&color=00599C">
 
-#### Alarmclock
-
+<br>
 <img src="https://github.com/gbaranski/houseflow/blob/master/docs/alarmclock.jpg" width="150">
 
 ### Firestore database
 
 Project is using [Firestore database](https://firebase.google.com/docs/firestore) for storing devices, users and etc
-
-### Firebase FCM
-
-[Firebase cloud messaging](https://firebase.google.com/docs/cloud-messaging), currently used only for [mobile app](#mobile-app), but in future I expect to use it also for [Web App](#web-app)
-
-### Project types
-
-Types for Typescript, helps a lot with planning, and having cohesion between project components.
-
-## Communication and data transmission
-
-Communication is made on MQTT, clients connects to [MQTT Broker](#mqtt-broker) aswell as embedded devices, they send requests between them.
-
-#### Security
-
-- [Embedded devices](#embedded-devices-security)
-- [Web/Mobile Client](#webmobile-client)
-
-##### Embedded devices security
-
-Embedded devices when they try to connect to MQTT broker, they send a secret and their uid, [Auth service](#auth-service) checks if thats allowed to connect, if yes it passed.
-
-##### Web/Mobile Client
-
-Web/Mobile clients are authenticated a little bit different, clients can log in via Google/Email and if they do, they can get authenticated by generating JWT token from Firebase and then sending it with websocket handshake.
-
-hello world
