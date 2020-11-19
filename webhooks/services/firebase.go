@@ -47,3 +47,16 @@ func UpdateDeviceStatus(ctx context.Context, client *FirebaseClient, uid string,
 	}
 	log.Printf("Success updating device %s status to %t \n", uid, status)
 }
+
+// UpdateDeviceStatusWithIP same as UpdateDeviceStatus but also takes IP arg
+func UpdateDeviceStatusWithIP(ctx context.Context, client *FirebaseClient, uid string, status bool, ip string) {
+	_, err := client.db.Collection("devices").Doc(uid).Set(ctx, map[string]interface{}{
+		"status": status,
+		"ip":     ip,
+	}, firestore.MergeAll)
+	if err != nil {
+		log.Printf("Error ocurred when updating status %s\n", err)
+		return
+	}
+	log.Printf("Success updating device %s status to %t \n", uid, status)
+}

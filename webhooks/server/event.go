@@ -15,7 +15,7 @@ import (
 const uuidLength = 36
 
 func handleConnected(e *types.ConnectedEvent, client *services.FirebaseClient) {
-	services.UpdateDeviceStatus(context.Background(), client, e.Username, true)
+	services.UpdateDeviceStatusWithIP(context.Background(), client, e.Username, true, e.IPAddress)
 }
 
 func handleDisconnected(e *types.DisconnectedEvent, client *services.FirebaseClient) {
