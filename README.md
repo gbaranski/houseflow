@@ -92,6 +92,7 @@ Currently supported devices are ESP8266, also there is a version in Node.JS. For
 
 ##### Alarmclock
 Measures temperatures and wake me up.
+<br>
 <img src="/docs/alarmclock.jpg" width="150">
 
 ##### Gate
