@@ -31,6 +31,8 @@ There will be some steps added soon
 3. [Auth service](#auth-service)
 4. [OTA service](#ota-service)
 
+<img src="/docs/architecture.png">
+
 ##### MQTT Broker
 
 Houseflow uses [emqx](https://github.com/emqx/emqx) as MQTT Broker. Devices connect to it aswell as [Device service](#device-service). For authorization [Auth service](#auth-service) is being used. It sends HTTP request to [Webhooks service](#webhooks-sevice) on every connect/disconnect
