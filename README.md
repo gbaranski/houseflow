@@ -67,8 +67,8 @@ Mobile app made using [Flutter](https://github.com/flutter/flutter), I picked it
 <img src="https://img.shields.io/badge/Dart---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=0175C2">
 
 <br>
-<img src="https://github.com/gbaranski/houseflow/blob/master/docs/android_pixel2_dashboard.png" width="150">
-<img src="https://github.com/gbaranski/houseflow/blob/master/docs/android_pixel2_device_view.png" width="150">
+<img src="/docs/android_pixel2_dashboard.png" width="150">
+<img src="/docs/android_pixel2_device_view.png" width="150">
 
 ### Web App
 
@@ -76,7 +76,7 @@ Web app made using [React](https://github.com/facebook/react) front-end library 
 
 <img src="https://img.shields.io/badge/Typescript---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=007ACC">
 <br>
-<img src="https://github.com/gbaranski/houseflow/blob/master/docs/web_app.png" width="450">
+<img src="/docs/web_app.png" width="450">
 
 
 ### Embedded devices
@@ -87,7 +87,7 @@ Currently supported devices are ESP8266, also there is a version in Node.JS. For
 <img src="https://img.shields.io/badge/C++---?logo=C%2B%2B&logoColor=FFFFFF&style=for-the-badge&color=00599C">
 
 <br>
-<img src="https://github.com/gbaranski/houseflow/blob/master/docs/alarmclock.jpg" width="150">
+<img src="/docs/alarmclock.jpg" width="150">
 
 ### Firestore database
 
