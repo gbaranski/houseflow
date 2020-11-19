@@ -24,6 +24,7 @@ Set up, manage, and control your Houseflow devices, that includes connected home
         - [Lights](#lights)
         - [Currently supported device types](#currently-supported-device-types)
     - [Firestore database](#firestore-database)
+  - [Contributing](#contributing)
 
 ## Get started
 
@@ -167,3 +168,6 @@ ESP8266 Wemos D1 board, connected with a TIP31C transistor to turn on/off and ad
 ### Firestore database
 
 Project is using [Firestore database](https://firebase.google.com/docs/firestore) for storing devices, users and etc
+
+## Contributing
+Pull requests are welcome
