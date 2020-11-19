@@ -63,7 +63,8 @@ router.post('/', async (req, res) => {
       res.status(200).send(Exceptions.SUCCESS);
       await addRequestHistory({
         request: deviceRequest,
-        ipAddress: req.ip,
+        ipAddress: (req.headers['x-forwarded-for'] ||
+          req.connection.remoteAddress) as string,
         userUid: userUid,
       });
     } else if (result === Exceptions.DEVICE_TIMED_OUT) {

@@ -33,7 +33,7 @@ app.use(
   }),
 );
 app.use(express.json()); // for parsing application/json
-app.set('trust proxy', true);
+app.enable('trust proxy');
 
 app.use('/', routes);
 
