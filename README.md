@@ -49,7 +49,7 @@ Set up, manage, and control your Houseflow devices, that includes connected home
 | uid      | Replace it with uuidv4, IT MUST BE SAME AS DOCUMENT NAME                               | string   |
 
 <br>
-<img src="/docs/get_started_firestore1.png">
+<img src="/docs/get_started_firestore1.png" width=200>
 <br>
 
 Now create new document at `devices-private` collection with same document ID as previously generated uuidv4, now generate another UUID with this command `echo $(uuidgen) | awk '{print tolower($0)}'`
@@ -60,7 +60,7 @@ Now create new document at `devices-private` collection with same document ID as
 | secret | Set it to second generated UUID      | string |
 
 <br>
-<img src="/docs/get_started_firestore2.png">
+<img src="/docs/get_started_firestore2.png" width=200>
 
 6. Add service account from firebase, navigate to Project Settings -> Service Accounts -> Generate new private key. Name it as `firebaseConfig.json` at put at project root.
 7. Fill up .env, you can generate JWT_KEY by using `openssl rand -base64 1024`, and filling up with output
