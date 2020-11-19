@@ -19,6 +19,10 @@ The documentation is divided into several sections:
     - [Mobile App](#mobile-app)
     - [Web App](#web-app)
     - [Embedded devices](#embedded-devices)
+        - [Alarmclock](#alarmclock)
+        - [Gate](#gate)
+        - [Watermixer](#watermixer)
+        - [Lights](#lights)
     - [Firestore database](#firestore-database)
 
 ## Get started
@@ -86,8 +90,18 @@ Currently supported devices are ESP8266, also there is a version in Node.JS. For
 
 <img src="https://img.shields.io/badge/C++---?logo=C%2B%2B&logoColor=FFFFFF&style=for-the-badge&color=00599C">
 
-<br>
+##### Alarmclock
+Measures temperatures and wake me up.
 <img src="/docs/alarmclock.jpg" width="150">
+
+##### Gate
+ESP01 with relay used to open or close gate remotely
+
+##### Watermixer
+ESP8266 Development Board with relay to trigger mixing water
+
+##### Lights
+ESP8266 Wemos D1 board, connected with a TIP31C transistor to turn on/off and adjust intensity of lights
 
 ### Firestore database
 
