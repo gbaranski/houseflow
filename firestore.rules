@@ -4,10 +4,22 @@ service cloud.firestore {
     function getUser() {
     	return get(/databases/$(database)/documents/users/$(request.auth.uid)); 
 		}
-    function isDeviceAllowed() {
-      return {"uid": resource.id} in getUser().data.devices;
+  	function isDeviceReadAllowed(deviceUid) {
+    	return 
+      {"uid": deviceUid, "read": true, "write": true, "execute": true } in getUser().data.devices ||
+      {"uid": deviceUid, "read": true, "write": true, "execute": false } in getUser().data.devices ||
+      {"uid": deviceUid, "read": true, "write": false, "execute": true } in getUser().data.devices ||
+      {"uid": deviceUid, "read": true, "write": false, "execute": false } in getUser().data.devices;
+      
     }
-
+    function isDeviceWriteAllowed(deviceUid) {
+    	return 
+      {"uid": deviceUid, "read": true, "write": true, "execute": true } in getUser().data.devices ||
+      {"uid": deviceUid, "read": true, "write": true, "execute": false } in getUser().data.devices ||
+      {"uid": deviceUid, "read": false, "write": true, "execute": true } in getUser().data.devices ||
+      {"uid": deviceUid, "read": false, "write": true, "execute": false } in getUser().data.devices;
+    }
+    
   	match /users/{userId} {
 			allow read: 
       	if request.auth != null && request.auth.uid == userId;
@@ -16,26 +28,29 @@ service cloud.firestore {
       	if request.auth != null && getUser().data.role == "admin";
     }
     
-    match /devices/{deviceId} {
+    
+    match /devices/{deviceUid} {
 			allow read: 
       	if request.auth != null 
       	&& getUser().data.role == "admin" 
-        || isDeviceAllowed();
+        || isDeviceReadAllowed(deviceUid);
         
       allow write: 
       	if request.auth != null
         && getUser().data.role == "admin"
-        || isDeviceAllowed();
+        || isDeviceWriteAllowed(deviceUid);
         
-      allow create: 
-      	if request.auth != null 
-        && getUser().data.role == "admin";
-      
-			allow delete: 
-      	if request.auth != null 
-        && getUser().data.role == "admin";
-
     }
+  
+    
+    match /{path=**}/history/{history} {
+      allow read: 
+      	if request.auth != null 
+      	&& getUser().data.role == "admin" 
+        || isDeviceReadAllowed(resource.data.destination.deviceUid);
+    }
+    
+    
     match /devices-private/{deviceId} {
 			allow create: 
       	if request.auth != null 
