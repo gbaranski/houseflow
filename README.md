@@ -13,13 +13,24 @@ The documentation is divided into several sections:
 
 ## Components of project
 
-- [Backend infrastructure](#backend-infrastructure)
-- [Web App](#web-app)
-- [Mobile App](#mobile-app)
-- [Embedded devices](#embedded-devices)
-- [Firestore database](#firestore-database)
-- [Firebase FCM](#firestore-database)
-- [Project types](#project-types)
+- [Houseflow](#houseflow)
+  - [Components of project](#components-of-project)
+    - [Backend infrastructure](#backend-infrastructure)
+        - [MQTT Broker](#mqtt-broker)
+        - [Device service](#device-service)
+        - [Auth service](#auth-service)
+        - [OTA service](#ota-service)
+    - [Web App](#web-app)
+    - [Mobile App](#mobile-app)
+    - [Embedded devices](#embedded-devices)
+      - [Alarmclock](#alarmclock)
+    - [Firestore database](#firestore-database)
+    - [Firebase FCM](#firebase-fcm)
+    - [Project types](#project-types)
+  - [Communication and data transmission](#communication-and-data-transmission)
+      - [Security](#security)
+        - [Embedded devices security](#embedded-devices-security)
+        - [Web/Mobile Client](#webmobile-client)
 
 ### Backend infrastructure
 
