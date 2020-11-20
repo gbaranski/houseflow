@@ -123,7 +123,7 @@ Adds device and ACL authorization for MQTT broker, prevents devices from subscri
 
 Mobile app made using [Flutter](https://github.com/flutter/flutter), I picked it over React Native.
 
-<img src="https://img.shields.io/badge/Dart---?logo=typescript&logoColor=FFFFFF&style=for-the-badge&color=0175C2">
+<img src="https://img.shields.io/badge/Dart---?logo=dart&logoColor=FFFFFF&style=for-the-badge&color=0175C2">
 
 <br>
 <img src="/docs/android_pixel2_dashboard.png" width="150">
