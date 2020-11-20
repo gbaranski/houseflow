@@ -42,7 +42,7 @@ class Device extends StatelessWidget {
               onSuccessCallback: () => Notifications.scheduleNotification(
                   title: "Water have been mixed!",
                   body: "Water should be warm now, it's time to go",
-                  duration: const Duration(seconds: 5)),
+                  duration: const Duration(seconds: 1)),
             );
           case 'GATE':
             return DeviceCardWrapper(
