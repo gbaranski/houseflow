@@ -80,9 +80,6 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
 
   Future<GeoPoint> getCurrentGeoPoint(BuildContext context) async {
     try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.always &&
-          permission != LocationPermission.whileInUse) throw "NO_PERMISSION";
       Position position = await Geolocator.getLastKnownPosition();
       if (position == null)
         position = await Geolocator.getCurrentPosition(
