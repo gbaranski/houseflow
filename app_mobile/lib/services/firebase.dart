@@ -11,46 +11,36 @@ import 'package:firebase_analytics/observer.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static final FirebaseMessaging _fcm = FirebaseMessaging();
+  static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   static final FirebaseAnalytics analytics = FirebaseAnalytics();
   static final FirebaseCrashlytics crashlytics = FirebaseCrashlytics.instance;
   static FirebaseAnalyticsObserver observer =
       FirebaseAnalyticsObserver(analytics: analytics);
 
-  static final CloudFunctions functions =
-      CloudFunctions(region: 'europe-west1');
+  static final FirebaseFunctions functions =
+      FirebaseFunctions.instanceFor(region: 'europe-west1');
 
   static final _usersCollection = _firestore.collection('users');
   static final _devicesCollection = _firestore.collection('devices');
 
   static void initFcm(BuildContext context) async {
     print("Initializing FCM");
-    _fcm.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        print("onMessage: $message");
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            content: ListTile(
-              title: Text(message['notification']['title']),
-              subtitle: Text(message['notification']['body']),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        );
-      },
-      onLaunch: (Map<String, dynamic> message) async {
-        print("onLaunch: $message");
-      },
-      onResume: (Map<String, dynamic> message) async {
-        print("onResume: $message");
-      },
-    );
+    FirebaseMessaging.onMessage.listen((remoteMessage) => {
+          showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                    content: ListTile(
+                      title: Text(remoteMessage.notification.title),
+                      subtitle: Text(remoteMessage.notification.body),
+                    ),
+                    actions: [
+                      FlatButton(
+                        child: Text("OK"),
+                        onPressed: () => Navigator.of(context).pop(),
+                      )
+                    ],
+                  ))
+        });
     final String token = await _fcm.getToken();
     print("FCM TOKEN: $token");
   }
@@ -111,11 +101,11 @@ class FirebaseService {
   }
 
   static Future<void> subscribeTopic(String topic) {
-    _fcm.requestNotificationPermissions();
+    _fcm.requestPermission();
     return _fcm.subscribeToTopic(topic);
   }
 
   static HttpsCallable initializeNewUser() {
-    return functions.getHttpsCallable(functionName: 'initializeNewUser');
+    return functions.httpsCallable('initializeNewUser');
   }
 }
