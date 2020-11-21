@@ -3,8 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:intl/intl.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'additional_view.dart';
+
+Future<void> openGoogleMaps(double latitude, double longitude) async {
+  String googleUrl =
+      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+  if (await canLaunch(googleUrl)) {
+    await launch(googleUrl);
+  } else {
+    throw 'Could not open the map.';
+  }
+}
 
 class InDepthDeviceHistory extends StatelessWidget {
   final DeviceHistory deviceHistory;
@@ -116,6 +128,21 @@ class InDepthDeviceHistory extends StatelessWidget {
                   ],
                 ),
               ),
+              SizedBox(
+                height: 20,
+              ),
+              OutlineButton.icon(
+                onPressed: () async {
+                  try {
+                    await openGoogleMaps(deviceHistory.source.geoPoint.latitude,
+                        deviceHistory.source.geoPoint.longitude);
+                  } catch (e) {
+                    Scaffold.of(context).showSnackBar(e.message);
+                  }
+                },
+                icon: Icon(MdiIcons.googleMaps),
+                label: Text("View in Google Maps"),
+              )
             ],
           ),
         );
