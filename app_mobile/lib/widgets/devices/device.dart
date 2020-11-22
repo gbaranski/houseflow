@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
-import 'package:houseflow/models/devices/light.dart';
-import 'package:houseflow/models/devices/relay.dart';
+import 'package:houseflow/models/devices/index.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/notifications.dart';
 import 'package:houseflow/widgets/devices/device_card.dart';
@@ -37,8 +36,10 @@ class Device extends StatelessWidget {
             return DeviceCardWrapper(
               color: Color.fromRGBO(79, 119, 149, 1),
               firebaseDevice: firebaseDevice,
-              deviceRequestDevice:
-                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
+              deviceRequestDevice: DeviceRequestDevice(
+                  action:
+                      DeviceRequestAction(name: DeviceRequestActions.MixWater),
+                  uid: firebaseDevice.uid),
               onSuccessCallback: () => Notifications.scheduleNotification(
                   title: "Water have been mixed!",
                   body: "Water should be warm now, it's time to go",
@@ -48,22 +49,28 @@ class Device extends StatelessWidget {
             return DeviceCardWrapper(
               color: Color.fromRGBO(103, 151, 109, 1),
               firebaseDevice: firebaseDevice,
-              deviceRequestDevice:
-                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
+              deviceRequestDevice: DeviceRequestDevice(
+                  action:
+                      DeviceRequestAction(name: DeviceRequestActions.OpenGate),
+                  uid: firebaseDevice.uid),
             );
           case 'GARAGE':
             return DeviceCardWrapper(
               color: Color.fromRGBO(183, 111, 110, 1),
               firebaseDevice: firebaseDevice,
-              deviceRequestDevice:
-                  RelayData.getDeviceRequest(uid: firebaseDevice.uid),
+              deviceRequestDevice: DeviceRequestDevice(
+                  action: DeviceRequestAction(
+                      name: DeviceRequestActions.OpenGarage),
+                  uid: firebaseDevice.uid),
             );
           case 'LIGHT':
             return DeviceCardWrapper(
               color: Color(0xFFffa000),
               firebaseDevice: firebaseDevice,
-              deviceRequestDevice:
-                  LightData.getDeviceRequest(uid: firebaseDevice.uid),
+              deviceRequestDevice: DeviceRequestDevice(
+                  action: DeviceRequestAction(
+                      name: DeviceRequestActions.SwitchLights),
+                  uid: firebaseDevice.uid),
             );
           default:
             {
