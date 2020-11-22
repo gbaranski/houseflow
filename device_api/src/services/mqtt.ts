@@ -1,24 +1,27 @@
 import { getRandomShortUid } from '@/utils';
-import { Device, Topic, Client, Exceptions } from '@houseflow/types';
+import { Device, Topic, Exceptions } from '@houseflow/types';
 import chalk from 'chalk';
 import mqtt from 'mqtt';
 import { createMqttClient } from './mqttClient';
 
 const mqttClient = createMqttClient();
 
-const generateTopic = (request: Client.DeviceRequest['device']): Topic => {
-  const basicTopic = `${request.uid}/action${request.action}`;
+const generateTopic = (uid: string, action: Device.Action): Topic => {
+  const basicTopic = `${uid}/action${action.id}`;
   return {
     request: `${basicTopic}/request`,
     response: `${basicTopic}/response`,
   };
 };
 
-type SendMessageStatus = Exceptions.SUCCESS | Exceptions.DEVICE_TIMED_OUT;
+export type SendMessageStatus =
+  | Exceptions.SUCCESS
+  | Exceptions.DEVICE_TIMED_OUT;
 export const sendDeviceMessage = (
-  request: Client.DeviceRequest['device'],
+  uid: string,
+  action: Device.Action,
 ): Promise<SendMessageStatus> => {
-  const topic = generateTopic(request);
+  const topic = generateTopic(uid, action);
 
   mqttClient.subscribe(topic.response);
 
@@ -45,7 +48,7 @@ export const sendDeviceMessage = (
         mqttClient.removeListener('message', listenerCallback);
         console.info(
           chalk.greenBright(
-            `Request to ${request.uid} with action ${request.action} completed successfully`,
+            `Request to ${uid} with action ${action.name} completed successfully`,
           ),
         );
         completed = true;
@@ -61,7 +64,7 @@ export const sendDeviceMessage = (
       if (completed) return;
       console.info(
         chalk.redBright(
-          `Request to ${request.uid} with action ${request.action} failed due to timeout`,
+          `Request to ${uid} with action ${action.name} failed due to timeout`,
         ),
       );
       mqttClient.unsubscribe(topic.response);

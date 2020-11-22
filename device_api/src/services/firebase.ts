@@ -55,19 +55,43 @@ export const checkUserDeviceAccess = ({
   return true;
 };
 
+export const getFirebaseUserByUid = (
+  uid: string,
+): Client.FirebaseUser | undefined =>
+  firebaseUsers.find((user) => user.uid === uid);
+
+export const findDeviceByAction = async (
+  action: Device.Action,
+  firebaseUser: Client.FirebaseUser,
+): Promise<Device.FirebaseDevice> => {
+  const userDevicesUids: string[] = firebaseUser.devices
+    .filter((device) => device.execute)
+    .map((device) => device.uid);
+
+  const devices = await devicesCollection
+    .where('uid', 'in', userDevicesUids)
+    .where('actions', 'array-contains', action)
+    .get();
+
+  if (devices.empty) throw new Error(Exceptions.NO_DEVICE_IN_DB);
+
+  const firebaseDevice = devices.docs[0].data() as Device.FirebaseDevice;
+  return firebaseDevice;
+};
+
 export const addRequestHistory = async ({
   request,
   ipAddress,
   userUid,
+  deviceUid,
 }: {
   request: Client.DeviceRequest;
+  deviceUid: string;
   ipAddress: string;
   userUid: string;
 }): Promise<void> => {
   try {
-    const targetFirebaseDevice = await devicesCollection
-      .doc(request.device.uid)
-      .get();
+    const targetFirebaseDevice = await devicesCollection.doc(deviceUid).get();
     if (!targetFirebaseDevice.exists)
       throw new Error(Exceptions.NO_DEVICE_IN_DB);
     const destinationDeviceType = (targetFirebaseDevice.data() as Device.FirebaseDevice)
@@ -91,12 +115,12 @@ export const addRequestHistory = async ({
         ipAddress,
       },
       destination: {
-        deviceUid: request.device.uid,
+        deviceUid,
         deviceType: destinationDeviceType,
       },
     };
     const res = await devicesCollection
-      .doc(request.device.uid)
+      .doc(deviceUid)
       .collection('history')
       .add(requestHistory);
     console.log(

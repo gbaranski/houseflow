@@ -4,6 +4,8 @@ import {
   addRequestHistory,
   checkUserDeviceAccess,
   decodeToken,
+  findDeviceByAction,
+  getFirebaseUserByUid,
 } from '@/services/firebase';
 import {
   logClientAuthError,
@@ -13,7 +15,7 @@ import {
 } from '@/services/logging';
 import express from 'express';
 import Joi from 'joi';
-import { Client, Exceptions } from '@houseflow/types';
+import { Client, Device, Exceptions } from '@houseflow/types';
 
 const deviceRequestSchema = Joi.object({
   user: Joi.object({
@@ -24,8 +26,13 @@ const deviceRequestSchema = Joi.object({
     }).required(),
   }).required(),
   device: Joi.object({
-    uid: Joi.string().length(36).required(),
-    action: Joi.number().integer().min(0).required(),
+    action: Joi.object({
+      name: Joi.string()
+        .valid(...Object.values(Device.ActionName))
+        .required(),
+      id: Joi.number().required(),
+    }).required(),
+    uid: Joi.string().length(36),
     data: Joi.string(),
   }).required(),
 });
@@ -37,6 +44,32 @@ router.use((req, res, next) => {
   next();
 });
 
+const onUnknownUIDRequest = async (
+  req: Client.DeviceRequest,
+  userUID: string,
+): Promise<string> => {
+  const firebaseUser = getFirebaseUserByUid(userUID);
+  if (!firebaseUser) throw new Error(Exceptions.NO_USER_IN_DB);
+  const firebaseDevice = await findDeviceByAction(
+    req.device.action,
+    firebaseUser,
+  );
+  return firebaseDevice.uid;
+};
+
+const onKnownUIDRequest = (
+  req: Client.DeviceRequest,
+  userUID: string,
+): string => {
+  if (!req.device.uid) throw new Error('Expected device UID to be defined');
+  checkUserDeviceAccess({
+    userUid: userUID,
+    deviceUid: req.device.uid,
+    access: Access.EXECUTE,
+  });
+  return req.device.uid;
+};
+
 router.post('/', async (req, res) => {
   const { body } = req;
   let userUid = '';
@@ -47,18 +80,21 @@ router.post('/', async (req, res) => {
     } catch (e) {
       throw new Error(Exceptions.INVALID_ARGUMENTS);
     }
+
     const deviceRequest = body as Client.DeviceRequest;
 
     const decodedUser = await decodeToken(deviceRequest.user.token);
     userUid = decodedUser.uid;
 
-    checkUserDeviceAccess({
-      userUid: decodedUser.uid,
-      deviceUid: deviceRequest.device.uid,
-      access: Access.EXECUTE,
-    });
+    const deviceUid = deviceRequest.device.uid
+      ? onKnownUIDRequest(deviceRequest, userUid)
+      : await onUnknownUIDRequest(deviceRequest, userUid);
 
-    const result = await sendDeviceMessage(deviceRequest.device);
+    const result = await sendDeviceMessage(
+      deviceUid,
+      deviceRequest.device.action,
+    );
+
     if (result === Exceptions.SUCCESS) {
       res.status(200).send(Exceptions.SUCCESS);
       await addRequestHistory({
@@ -66,6 +102,7 @@ router.post('/', async (req, res) => {
         ipAddress: (req.headers['x-forwarded-for'] ||
           req.connection.remoteAddress) as string,
         userUid: userUid,
+        deviceUid: deviceUid,
       });
     } else if (result === Exceptions.DEVICE_TIMED_OUT) {
       res.status(504).send(Exceptions.DEVICE_TIMED_OUT);
