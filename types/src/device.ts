@@ -1,12 +1,12 @@
 import { GeoPoint } from '.';
 
 export namespace Device {
-  export type DeviceType =
-    | 'ALARMCLOCK'
-    | 'WATERMIXER'
-    | 'GATE'
-    | 'GARAGE'
-    | 'LIGHT';
+  export enum DeviceType {
+    WATERMIXER = 'WATERMIXER',
+    GATE = 'GATE',
+    GARAGE = 'GARAGE',
+    LIGHT = 'LIGHT',
+  }
 
   export interface Request {
     correlationData: string;
