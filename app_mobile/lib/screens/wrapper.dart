@@ -8,6 +8,7 @@ import 'package:houseflow/screens/splash_screen/splash_screen.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:provider/provider.dart';
+import 'package:houseflow/services/device_actions.dart';
 
 import 'splash_screen/splash_screen.dart';
 
@@ -19,6 +20,7 @@ class Wrapper extends StatelessWidget {
         return SplashScreen();
 
       if (authService.authStatus == AuthStatus.NOT_LOGGED_IN) return SignIn();
+      DeviceActions.initialize(authService.currentUser);
       print(authService.authStatus);
       print(authService.currentUser);
 
