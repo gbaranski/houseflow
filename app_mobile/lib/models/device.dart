@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:flutter/material.dart';
+import 'package:houseflow/models/devices/index.dart';
 
 class FirebaseDevice {
   String ip;
@@ -115,17 +116,24 @@ class DeviceRequestUser {
   DeviceRequestUser({@required this.token, @required this.geoPoint});
 }
 
+class DeviceRequestAction {
+  final DeviceRequestActions name;
+  final int id;
+
+  DeviceRequestAction({@required this.name, this.id = 1});
+}
+
 class DeviceRequestDevice {
   final String uid;
-  final int action;
+  final DeviceRequestAction action;
   final String data;
 
   @override
   String toString() {
-    return "$uid/action-$action";
+    return "$uid/action-${action.name}";
   }
 
-  DeviceRequestDevice({@required this.uid, @required this.action, this.data});
+  DeviceRequestDevice({@required this.action, this.data, this.uid});
 }
 
 class DeviceRequest {
@@ -142,8 +150,11 @@ class DeviceRequest {
         }
       },
       'device': {
-        'uid': device.uid,
-        'action': device.action,
+        'action': {
+          'name': device.action.name.stringify(),
+          'id': device.action.id,
+        },
+        if (device.uid != null) 'uid': device.uid,
         if (device.data != null) 'data': device.data,
       }
     };
