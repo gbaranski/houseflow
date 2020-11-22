@@ -1,12 +1,3 @@
-import 'package:flutter/material.dart';
+import 'index.dart';
 
-import '../device.dart';
-
-class LightData {
-  static DeviceRequestDevice getDeviceRequest({@required String uid}) {
-    return DeviceRequestDevice(
-      uid: uid,
-      action: 1,
-    );
-  }
-}
+class LightsData extends DeviceData {}
