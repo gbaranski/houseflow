@@ -1,6 +1,13 @@
 import { GeoPoint } from '.';
 
 export namespace Device {
+  export enum Action {
+    OpenGate = 'action_open_gate',
+    OpenGarage = 'action_open_garage',
+    SwitchLights = 'action_switch_lights',
+    MixWater = 'action_mix_water',
+  }
+
   export enum DeviceType {
     WATERMIXER = 'WATERMIXER',
     GATE = 'GATE',
@@ -23,6 +30,7 @@ export namespace Device {
     secret?: string;
     type: DeviceType;
     geoPoint: GeoPoint;
+    actions: Action[];
 
     status: boolean;
     data: T;

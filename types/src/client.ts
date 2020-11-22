@@ -1,13 +1,8 @@
 import { GeoPoint, ReadWriteExecuteAccess } from '.';
+import { Device } from './device';
 
 export namespace Client {
   export type UserRole = 'admin' | 'user';
-  export enum DeviceActionName {
-    OpenGate = 'action_open_gate',
-    OpenGarage = 'action_open_garage',
-    SwitchLights = 'action_switch_lights',
-    MixWater = 'action_mix_water',
-  }
 
   export interface DeviceRequestUser {
     token: string;
@@ -17,7 +12,7 @@ export namespace Client {
   export interface DeviceRequestByActionName {
     user: DeviceRequestUser;
     device: {
-      action: DeviceActionName;
+      action: Device.Action;
       data?: string;
     };
   }
