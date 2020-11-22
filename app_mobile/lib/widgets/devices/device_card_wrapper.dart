@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:math';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/services/auth.dart';
 import 'package:houseflow/services/device.dart';
 import 'package:houseflow/services/firebase.dart';
+import 'package:houseflow/services/misc.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:provider/provider.dart';
 import 'confirmation_card.dart';
@@ -59,38 +59,6 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
       content: Text("Could not connect to device"),
     );
     Scaffold.of(context).showSnackBar(snackbar);
-  }
-
-  static Widget alertDialog(BuildContext context) => AlertDialog(
-        title: const Text("Accept location services"),
-        content: const SingleChildScrollView(
-          child: Text(
-              "Please accept location services, we use them only to guarantee device security"),
-        ),
-        actions: [
-          TextButton(
-            child: Text("OK"),
-            onPressed: () {
-              Geolocator.requestPermission();
-              Navigator.of(context).pop();
-            },
-          )
-        ],
-      );
-
-  Future<GeoPoint> getCurrentGeoPoint(BuildContext context) async {
-    try {
-      Position position = await Geolocator.getLastKnownPosition();
-      if (position == null)
-        position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
-      return GeoPoint(
-          latitude: position.latitude, longitude: position.longitude);
-    } catch (e) {
-      print(e);
-      showDialog(context: context, builder: (context) => alertDialog(context));
-      return null;
-    }
   }
 
   void onSubmit(BuildContext context,
