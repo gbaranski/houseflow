@@ -1,5 +1,4 @@
-export * from './relay';
 export * from './misc';
 export * from './device';
 export * from './client';
-export * from './light';
+export * from './devices/index';

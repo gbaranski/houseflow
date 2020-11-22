@@ -1,7 +1,7 @@
 import { GeoPoint } from '.';
 
 export namespace Device {
-  export enum Action {
+  export enum ActionName {
     OpenGate = 'open_gate',
     OpenGarage = 'open_garage',
     SwitchLights = 'switch_lights',
@@ -13,6 +13,11 @@ export namespace Device {
     GATE = 'GATE',
     GARAGE = 'GARAGE',
     LIGHT = 'LIGHT',
+  }
+
+  export interface Action {
+    name: ActionName;
+    id: number;
   }
 
   export interface Request {

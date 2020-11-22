@@ -4,24 +4,14 @@ import { Device } from './device';
 export namespace Client {
   export type UserRole = 'admin' | 'user';
 
-  export interface DeviceRequestUser {
-    token: string;
-    geoPoint: GeoPoint;
-  }
-
-  export interface DeviceRequestByActionName {
-    user: DeviceRequestUser;
+  export interface DeviceRequest {
+    user: {
+      token: string;
+      geoPoint: GeoPoint;
+    };
     device: {
       action: Device.Action;
-      data?: string;
-    };
-  }
-
-  export interface DeviceRequestByUID {
-    user: DeviceRequestUser;
-    device: {
-      uid: string;
-      action: number;
+      uid?: string;
       data?: string;
     };
   }
