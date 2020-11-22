@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/shared/profile_image.dart';
-import 'package:houseflow/widgets/devices/device.dart';
+import 'package:houseflow/screens/devices/device.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:provider/provider.dart';
 

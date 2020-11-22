@@ -1,6 +1,6 @@
 import 'package:houseflow/shared/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:houseflow/widgets/additional_view.dart';
+import 'package:houseflow/screens/additional_view/index.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 

@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/utils/misc.dart';
+import 'package:houseflow/screens/additional_view/index.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import 'additional_view.dart';
 
 Future<void> openGoogleMaps(double latitude, double longitude) async {
   String googleUrl =

@@ -7,8 +7,8 @@ import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/misc.dart';
 import 'package:houseflow/utils/misc.dart';
 import 'package:provider/provider.dart';
-import 'confirmation_card.dart';
-import 'device_card.dart';
+import 'package:houseflow/screens/devices/card/confirmation.dart';
+import 'package:houseflow/screens/devices/card/device.dart';
 
 class DeviceCardWrapper extends StatefulWidget {
   final Color color;

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
-import 'package:houseflow/widgets/device_single_history.dart';
+import 'package:houseflow/screens/history/single_history_view.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class DeviceHistoryList extends StatefulWidget {

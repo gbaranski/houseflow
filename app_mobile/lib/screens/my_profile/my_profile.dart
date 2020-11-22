@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:houseflow/models/user.dart';
+import 'package:houseflow/screens/additional_view/index.dart';
 import 'package:houseflow/shared/profile_image.dart';
-import 'package:houseflow/widgets/additional_view.dart';
 
 class MyProfile extends StatelessWidget {
   final FirebaseUser firebaseUser;

@@ -4,7 +4,7 @@ import 'package:houseflow/models/device.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/shared/constants.dart';
 import 'package:houseflow/utils/misc.dart';
-import 'package:houseflow/widgets/additional_view.dart';
+import 'package:houseflow/screens/additional_view/index.dart';
 
 class SingleDevice extends StatelessWidget {
   final FirebaseDevice firebaseDevice;

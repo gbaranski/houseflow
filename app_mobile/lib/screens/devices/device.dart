@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:houseflow/models/device.dart';
 import 'package:houseflow/models/devices/index.dart';
+import 'package:houseflow/screens/devices/card/device.dart';
+import 'package:houseflow/screens/devices/device_cards_wrapper.dart';
 import 'package:houseflow/services/firebase.dart';
 import 'package:houseflow/services/notifications.dart';
-import 'package:houseflow/widgets/devices/device_card.dart';
-import 'package:houseflow/widgets/devices/device_card_wrapper.dart';
 
 const tenMinutesInMillis = 1000 * 10 * 60;
 
