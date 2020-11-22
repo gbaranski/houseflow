@@ -1,11 +1,11 @@
 import { Client } from '.';
 
 export namespace Light {
-  export const createLightRequest = ({
+  export const createLightRequestByUID = ({
     uid,
   }: {
     uid: string;
-  }): Client.DeviceRequest['device'] => {
+  }): Client.DeviceRequestByUID['device'] => {
     return {
       uid,
       action: 1,

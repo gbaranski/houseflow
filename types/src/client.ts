@@ -2,6 +2,11 @@ import { GeoPoint, ReadWriteExecuteAccess } from '.';
 
 export namespace Client {
   export type UserRole = 'admin' | 'user';
+  export type DeviceActionName =
+    | 'action_open_gate'
+    | 'action_mix_water'
+    | 'action_open_garage'
+    | 'action_turn_on_lights';
 
   export interface DeviceRequestUser {
     token: string;
@@ -11,7 +16,7 @@ export namespace Client {
   export interface DeviceRequestByActionName {
     user: DeviceRequestUser;
     device: {
-      action: number;
+      action: DeviceActionName;
       data?: string;
     };
   }

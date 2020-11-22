@@ -1,11 +1,11 @@
 import { Client } from './client';
 
 export namespace Relay {
-  export const createRelayRequest = ({
+  export const createRelayRequestByUID = ({
     uid,
   }: {
     uid: string;
-  }): Client.DeviceRequest['device'] => {
+  }): Client.DeviceRequestByUID['device'] => {
     return {
       uid,
       action: 1,
