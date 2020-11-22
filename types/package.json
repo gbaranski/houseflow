@@ -1,6 +1,6 @@
 {
   "name": "@houseflow/types",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Types for houseflow app",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
