@@ -41,6 +41,7 @@ dependencies:
   infinite_scroll_pagination: ^2.2.2
   material_design_icons_flutter: ^4.0.5755
   provider: ^4.3.2+2
+  quick_actions: ^0.4.0+10
   rounded_loading_button: ^1.0.15
   sign_in_with_apple: ^2.5.4
   timeago: ^2.0.28
