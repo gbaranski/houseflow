@@ -1,8 +1,8 @@
-import * as sinon from 'sinon';
+import Sinon, * as sinon from 'sinon';
 import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import supertest from 'supertest';
-import { Client, Exceptions, GeoPoint } from '@houseflow/types';
+import { Client, Device, Exceptions, GeoPoint } from '@houseflow/types';
 
 if (process.env.CI) {
   admin.initializeApp({
@@ -29,12 +29,31 @@ const getRandomGeoPoint = (): GeoPoint => ({
 });
 
 describe('POST /request', () => {
-  let adminStub: any;
-  let firebaseStub: any;
-  let mqttClientStub: any;
-  let mqttServiceStub: any;
-  let api: any;
-  let firebaseFile: any;
+  let adminStub: Sinon.SinonStub;
+  let firebaseStub: Sinon.SinonStub;
+  let mqttClientStub: Sinon.SinonStub;
+  let mqttServiceStub: Sinon.SinonStub;
+  let api: supertest.SuperTest<supertest.Test>;
+  let firebaseFile: {
+    decodeToken: (token: string) => Promise<admin.auth.DecodedIdToken>;
+    firebaseUsers: Client.FirebaseUser[];
+    usersCollectionListener: () => void;
+    findDeviceByAction: (
+      action: Device.Action,
+      firebaseUser: Client.FirebaseUser,
+    ) => Promise<Device.FirebaseDevice>;
+    addRequestHistory: ({
+      request,
+      deviceUid,
+      ipAddress,
+      userUid,
+    }: {
+      request: Client.DeviceRequest;
+      deviceUid: string;
+      ipAddress: string;
+      userUid: string;
+    }) => Promise<void>;
+  };
   const firebaseUser: Client.FirebaseUser = {
     devices: [],
     role: 'user',
@@ -58,7 +77,7 @@ describe('POST /request', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mqttClient = require('../services/mqttClient');
-    const fakeMqttClient: any = {
+    const fakeMqttClient: { connected: boolean } = {
       connected: true,
     };
 
@@ -103,7 +122,10 @@ describe('POST /request', () => {
       },
       device: {
         uid: uuidv4(),
-        action: 1,
+        action: {
+          name: Device.ActionName.MixWater, // anything
+          id: 1,
+        },
       },
     };
     const res = await api.post('/request').send(req);
@@ -118,7 +140,10 @@ describe('POST /request', () => {
       },
       device: {
         uid: uuidv4(),
-        action: 1,
+        action: {
+          name: Device.ActionName.MixWater, // anything
+          id: 1,
+        },
       },
     };
     const res = await api.post('/request').send(req);
@@ -141,7 +166,10 @@ describe('POST /request', () => {
       },
       device: {
         uid: firebaseUserDevice.uid,
-        action: 1,
+        action: {
+          name: Device.ActionName.MixWater, // anything
+          id: 1,
+        },
       },
     };
     const res = await api.post('/request').send(req);
@@ -164,7 +192,50 @@ describe('POST /request', () => {
       },
       device: {
         uid: firebaseUserDevice.uid,
-        action: 1,
+        action: {
+          name: Device.ActionName.MixWater, // anything
+          id: 1,
+        },
+      },
+    };
+    const res = await api.post('/request').send(req);
+    expect(res.status).toEqual(200);
+  });
+  it('Attempting with existing user, but without UID', async () => {
+    const firebaseUserDevice: Client.FirebaseUserDevice = {
+      uid: uuidv4(),
+      read: false,
+      write: false,
+      execute: true,
+    };
+    firebaseUser.devices = [firebaseUserDevice];
+    sinon.stub(firebaseFile, 'findDeviceByAction').resolves({
+      uid: firebaseUserDevice.uid,
+      geoPoint: getRandomGeoPoint(),
+      status: true,
+      ip: 'unknown',
+      data: undefined,
+
+      type: Device.DeviceType.WATERMIXER, // that must match with actions property
+      actions: [
+        {
+          name: Device.ActionName.MixWater,
+          id: 1,
+        },
+      ],
+    });
+
+    firebaseFile.firebaseUsers = [firebaseUser];
+    const req: Client.DeviceRequest = {
+      user: {
+        geoPoint: getRandomGeoPoint(),
+        token: 'itCanBeAnything',
+      },
+      device: {
+        action: {
+          name: Device.ActionName.MixWater, // anything
+          id: 1,
+        },
       },
     };
     const res = await api.post('/request').send(req);
