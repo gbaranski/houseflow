@@ -43,6 +43,7 @@ dependencies:
   provider: ^4.3.2+2
   quick_actions: ^0.4.0+10
   rounded_loading_button: ^1.0.15
+  shared_preferences: ^0.5.12+4
   sign_in_with_apple: ^2.5.4
   timeago: ^2.0.28
   url_launcher: ^5.7.10
