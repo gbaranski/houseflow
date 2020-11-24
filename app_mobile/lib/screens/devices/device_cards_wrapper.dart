@@ -74,7 +74,9 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
       device: widget.deviceRequestDevice,
     );
     try {
-      await sendDeviceRequest(deviceRequest);
+      final response = await sendDeviceRequest(deviceRequest);
+      if (response.statusCode != 200)
+        throw new Exception("Unexpected response: 200");
       onSucess(context, deviceRequest);
     } catch (e) {
       print("$e while sending request");

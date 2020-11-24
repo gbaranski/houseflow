@@ -6,8 +6,8 @@ import 'package:houseflow/models/device.dart';
 import 'package:houseflow/models/devices/index.dart';
 import 'package:houseflow/services/device.dart';
 import 'package:houseflow/services/misc.dart';
+import 'package:houseflow/services/notifications.dart';
 import 'package:houseflow/services/preferences.dart';
-import 'package:houseflow/utils/misc.dart';
 import 'package:quick_actions/quick_actions.dart';
 
 class DeviceShortcut {
@@ -99,7 +99,8 @@ abstract class DeviceActions {
           token: await currentUser.getIdToken(),
         ));
 
-    await sendDeviceRequest(deviceRequest);
+    final response = await sendDeviceRequest(deviceRequest);
+    Notifications.showActionResponse(response.statusCode);
   }
 
   static Future<void> setShortcutItemsFromPreferences(
