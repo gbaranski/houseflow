@@ -43,7 +43,7 @@ const SUPPORT_EMAIL_URL_ISSUE = "$SUPPORT_EMAIL_URL?subject=Issue with app";
 const GITHUB_URL = "https://github.com/gbaranski/houseflow";
 const GITHUB_URL_ISSUES = "$GITHUB_URL/issues";
 
-const DEVICE_API_URL = 'http://192.168.1.10/device';
+const DEVICE_API_URL = 'https://api.gbaranski.com/device';
 
 const ROOT_CA = '''
 -----BEGIN CERTIFICATE-----
