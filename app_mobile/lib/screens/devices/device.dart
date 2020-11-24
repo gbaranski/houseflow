@@ -39,10 +39,6 @@ class Device extends StatelessWidget {
               deviceRequestDevice: DeviceRequestDevice(
                   action: DeviceAction(name: DeviceActionTypes.MixWater),
                   uid: firebaseDevice.uid),
-              onSuccessCallback: () => Notifications.scheduleNotification(
-                  title: "Water have been mixed!",
-                  body: "Water should be warm now, it's time to go",
-                  duration: const Duration(minutes: 6)),
             );
           case 'GATE':
             return DeviceCardWrapper(
