@@ -7,6 +7,7 @@ import 'package:houseflow/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:houseflow/utils/misc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService extends ChangeNotifier {
@@ -150,6 +151,8 @@ class AuthService extends ChangeNotifier {
         });
       _firebaseUser = null;
       _currentUser = null;
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.clear();
       return await _auth.signOut();
     } catch (e) {
       print(e.toString());
