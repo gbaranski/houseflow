@@ -37,8 +37,7 @@ class Device extends StatelessWidget {
               color: Color.fromRGBO(79, 119, 149, 1),
               firebaseDevice: firebaseDevice,
               deviceRequestDevice: DeviceRequestDevice(
-                  action:
-                      DeviceRequestAction(name: DeviceRequestActions.MixWater),
+                  action: DeviceAction(name: DeviceActionTypes.MixWater),
                   uid: firebaseDevice.uid),
               onSuccessCallback: () => Notifications.scheduleNotification(
                   title: "Water have been mixed!",
@@ -50,8 +49,7 @@ class Device extends StatelessWidget {
               color: Color.fromRGBO(103, 151, 109, 1),
               firebaseDevice: firebaseDevice,
               deviceRequestDevice: DeviceRequestDevice(
-                  action:
-                      DeviceRequestAction(name: DeviceRequestActions.OpenGate),
+                  action: DeviceAction(name: DeviceActionTypes.OpenGate),
                   uid: firebaseDevice.uid),
             );
           case 'GARAGE':
@@ -59,8 +57,7 @@ class Device extends StatelessWidget {
               color: Color.fromRGBO(183, 111, 110, 1),
               firebaseDevice: firebaseDevice,
               deviceRequestDevice: DeviceRequestDevice(
-                  action: DeviceRequestAction(
-                      name: DeviceRequestActions.OpenGarage),
+                  action: DeviceAction(name: DeviceActionTypes.OpenGarage),
                   uid: firebaseDevice.uid),
             );
           case 'LIGHT':
@@ -68,8 +65,7 @@ class Device extends StatelessWidget {
               color: Color(0xFFffa000),
               firebaseDevice: firebaseDevice,
               deviceRequestDevice: DeviceRequestDevice(
-                  action: DeviceRequestAction(
-                      name: DeviceRequestActions.SwitchLights),
+                  action: DeviceAction(name: DeviceActionTypes.SwitchLights),
                   uid: firebaseDevice.uid),
             );
           default:

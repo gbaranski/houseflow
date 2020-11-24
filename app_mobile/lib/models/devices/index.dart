@@ -1,15 +1,15 @@
-enum DeviceRequestActions { OpenGate, OpenGarage, MixWater, SwitchLights }
+enum DeviceActionTypes { OpenGate, OpenGarage, MixWater, SwitchLights }
 
-extension DeviceActionsExtension on DeviceRequestActions {
+extension DeviceActionsExtension on DeviceActionTypes {
   String stringify() {
     switch (this) {
-      case DeviceRequestActions.MixWater:
+      case DeviceActionTypes.MixWater:
         return 'mix_water';
-      case DeviceRequestActions.OpenGate:
+      case DeviceActionTypes.OpenGate:
+        return 'open_gate';
+      case DeviceActionTypes.OpenGarage:
         return 'open_garage';
-      case DeviceRequestActions.OpenGarage:
-        return 'open_garage';
-      case DeviceRequestActions.SwitchLights:
+      case DeviceActionTypes.SwitchLights:
         return 'switch_lights';
       default:
         return null;
