@@ -47,6 +47,28 @@ class DeviceShortcut {
       @required this.action});
 }
 
+class DeviceActionShortcutItem {
+  String name;
+  int id;
+  String deviceUID;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'id': id,
+      'deviceUID': deviceUID,
+    };
+  }
+
+  factory DeviceActionShortcutItem.fromMap(Map<String, dynamic> map) {
+    return DeviceActionShortcutItem(
+        deviceUID: map['deviceUID'], name: map['name'], id: map['id']);
+  }
+
+  DeviceActionShortcutItem(
+      {@required this.name, @required this.id, @required this.deviceUID});
+}
+
 abstract class DeviceActions {
   static String removeActionPrefix(String sentence) {
     return sentence.replaceFirst(new RegExp('action_'), '');
@@ -54,12 +76,10 @@ abstract class DeviceActions {
 
   static Future _actionsCallback(String shortcut, User currentUser) async {
     print("Recieved action from shortcut $shortcut");
-    return;
 
-    final DeviceActionTypes deviceRequestActions = DeviceActionTypes.values
-        .firstWhere(
-            (action) => action.stringify() == removeActionPrefix(shortcut));
-    if (deviceRequestActions == null) {
+    final DeviceActionShortcutItem deviceActionShortcutItem =
+        DeviceActionShortcutItem.fromMap(jsonDecode(shortcut));
+    if (deviceActionShortcutItem == null) {
       throw new Exception('Unexpected shortcut $shortcut');
     }
 
@@ -67,9 +87,13 @@ abstract class DeviceActions {
 
     final DeviceRequest deviceRequest = DeviceRequest(
         device: DeviceRequestDevice(
+            uid: deviceActionShortcutItem.deviceUID,
             action:
                 // temporary solution, but currently every device accepts id: 1
-                DeviceAction(name: deviceRequestActions, id: 1)),
+                DeviceAction(
+                    name: DeviceActionTypes.values.firstWhere((type) =>
+                        type.stringify() == deviceActionShortcutItem.name),
+                    id: deviceActionShortcutItem.id)),
         user: DeviceRequestUser(
           geoPoint: geoPoint,
           token: await currentUser.getIdToken(),
@@ -82,11 +106,11 @@ abstract class DeviceActions {
           AppPreferences preferences) =>
       QuickActions().setShortcutItems(preferences.shortcuts
           .map((shortcut) => ShortcutItem(
-                type: jsonEncode({
-                  'name': shortcut.action.name.stringify(),
-                  'id': shortcut.action.id,
-                  'deviceUID': shortcut.deviceUID,
-                }),
+                type: jsonEncode(DeviceActionShortcutItem(
+                        deviceUID: shortcut.deviceUID,
+                        name: shortcut.action.name.stringify(),
+                        id: shortcut.action.id)
+                    .toMap()),
                 localizedTitle: shortcut.title,
                 icon: shortcut.icon,
               ))
