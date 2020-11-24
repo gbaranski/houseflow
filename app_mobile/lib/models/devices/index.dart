@@ -15,6 +15,21 @@ extension DeviceActionsExtension on DeviceActionTypes {
         return null;
     }
   }
+
+  String stringify2() {
+    switch (this) {
+      case DeviceActionTypes.MixWater:
+        return 'Mix water';
+      case DeviceActionTypes.OpenGate:
+        return 'Open gate';
+      case DeviceActionTypes.OpenGarage:
+        return 'Open garage';
+      case DeviceActionTypes.SwitchLights:
+        return 'Switch lights';
+      default:
+        return null;
+    }
+  }
 }
 
 abstract class DeviceData {}
