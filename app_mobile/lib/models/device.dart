@@ -7,13 +7,20 @@ class FirebaseDevice {
   bool status;
   String type;
   String uid;
+  List<DeviceAction> actions;
 
   factory FirebaseDevice.fromMap(Map<String, dynamic> map) {
     return FirebaseDevice(
         ip: map['ip'],
         status: map['status'],
         type: map['type'],
-        uid: map['uid']);
+        uid: map['uid'],
+        actions: (map['actions'] as List<dynamic>)
+            .map((action) => DeviceAction(
+                name: DeviceActionTypes.values.firstWhere((actionType) =>
+                    actionType.stringify() == action['name'] as String),
+                id: action['id']))
+            .toList());
   }
   Map<String, dynamic> toJson() {
     return {
@@ -21,6 +28,10 @@ class FirebaseDevice {
       'status': status,
       'type': type,
       'uid': uid,
+      'actions': actions.map((action) => {
+            'name': action.name,
+            'id': action.id,
+          })
     };
   }
 
@@ -28,7 +39,8 @@ class FirebaseDevice {
       {@required this.ip,
       @required this.status,
       @required this.type,
-      @required this.uid});
+      @required this.uid,
+      @required this.actions});
 }
 
 class DeviceHistorySource {
@@ -116,16 +128,16 @@ class DeviceRequestUser {
   DeviceRequestUser({@required this.token, @required this.geoPoint});
 }
 
-class DeviceRequestAction {
-  final DeviceRequestActions name;
+class DeviceAction {
+  final DeviceActionTypes name;
   final int id;
 
-  DeviceRequestAction({@required this.name, this.id = 1});
+  DeviceAction({@required this.name, this.id = 1});
 }
 
 class DeviceRequestDevice {
   final String uid;
-  final DeviceRequestAction action;
+  final DeviceAction action;
   final String data;
 
   @override
