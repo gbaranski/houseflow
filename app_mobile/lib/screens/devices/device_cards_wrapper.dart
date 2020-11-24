@@ -76,7 +76,7 @@ class _DeviceCardWrapperState extends State<DeviceCardWrapper>
     try {
       final response = await sendDeviceRequest(deviceRequest);
       if (response.statusCode != 200)
-        throw new Exception("Unexpected response: 200");
+        throw new Exception("Unexpected response: ${response.statusCode}");
       onSucess(context, deviceRequest);
     } catch (e) {
       print("$e while sending request");
