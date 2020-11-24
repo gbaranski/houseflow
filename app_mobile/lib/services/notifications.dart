@@ -90,7 +90,8 @@ class Notifications {
             DEVICE_NOTIFICATION_RESPONSE_CHANNEL_NAME,
             DEVICE_NOTIFICATION_RESPONSE_CHANNEL_DESCRIPTION,
             importance: Importance.max,
-            priority: Priority.high);
+            priority: Priority.high,
+            enableVibration: false);
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     final bool success = statusCode == 200;
