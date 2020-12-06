@@ -1,4 +1,5 @@
 import mqtt, { MqttClient } from 'mqtt';
+import { log } from './logging';
 
 const username = process.env.DEVICE_API_USERNAME;
 const password = process.env.DEVICE_API_PASSWORD;
@@ -13,10 +14,10 @@ export const createMqttClient = (): MqttClient => {
     clientId: `server_device-1`,
   });
   mqttClient.on('connect', () => {
-    console.log('Successfully connected ');
+    log('Successfully connected ');
   });
   mqttClient.on('error', (err) => {
-    console.log(`MQTT error occured ${err}`);
+    log(`MQTT error occured ${err}`);
   });
   return mqttClient;
 };

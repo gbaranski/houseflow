@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 import { Client, Device, Exceptions, RequestHistory } from '@houseflow/types';
 import chalk from 'chalk';
 import { firestore } from 'firebase-admin';
+import { log } from './logging';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
@@ -123,11 +124,9 @@ export const addRequestHistory = async ({
       .doc(deviceUid)
       .collection('history')
       .add(requestHistory);
-    console.log(
-      chalk.greenBright(`Successfully added request history ID: ${res.id}`),
-    );
+    log(chalk.greenBright(`Successfully added request history ID: ${res.id}`));
   } catch (e) {
-    console.log(
+    log(
       chalk.redBright(
         `Error occured while adding request history ${e.message}`,
       ),
