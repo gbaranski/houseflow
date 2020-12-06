@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { log } from './logging';
 
 export type DocumentReference = admin.firestore.DocumentReference;
 
@@ -22,7 +23,7 @@ export const validateDevice = async ({
   if (!snapshot.exists) throw new Error('device secret doc does not exist');
   const data = snapshot.data() as PrivateDeviceData;
   if (data.secret != secret) {
-    console.log({ expected: secret, found_firestore: data.secret });
+    log({ expected: secret, found_firestore: data.secret });
     throw new Error('secret mismatch');
   }
 };

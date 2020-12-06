@@ -1,4 +1,5 @@
 import { validateDevice } from '@/services/firebase';
+import { log } from '@/services/logging';
 import chalk from 'chalk';
 import express from 'express';
 import Joi from 'joi';
@@ -41,14 +42,14 @@ router.post('/user', async (req, res) => {
       uid: userRequest.username,
       secret: userRequest.password,
     });
-    console.log(
+    log(
       chalk.greenBright(
         `Authorized user ${userRequest.clientid} with username ${userRequest.username}`,
       ),
     );
     res.sendStatus(200);
   } catch (e) {
-    console.log(
+    log(
       chalk.redBright(
         `User auth failed: ${e.message} clientID: ${userRequest.clientid} username: ${userRequest.username}`,
       ),
@@ -90,7 +91,7 @@ router.post('/acl', (req, res) => {
         `not allowed topic, expected suffix ${expectedTopicSuffix}, received ${aclRequest.topic}`,
       );
 
-    console.log(
+    log(
       chalk.greenBright(
         `Authorized ACL ${aclRequest.clientid} with username ${
           aclRequest.username
@@ -99,7 +100,7 @@ router.post('/acl', (req, res) => {
     );
     res.sendStatus(200);
   } catch (e) {
-    console.log(
+    log(
       chalk.redBright(
         `ACL Auth failed: ${e.message} client: ${aclRequest.username} topic: ${aclRequest.topic} ip: ${aclRequest.ip}`,
       ),
