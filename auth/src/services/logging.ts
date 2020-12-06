@@ -11,4 +11,4 @@ const logDate = (): string => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const log = (...data: any[]): void =>
-  console.log(logDate, ' - ', ...data);
+  console.log(logDate(), ' - ', ...data);
