@@ -4,7 +4,7 @@ import routes from '@/routes/routes';
 import morgan from 'morgan';
 import chalk from 'chalk';
 
-const CORS_WHITELIST = ['https://houseflow.gbaranski.com', '*'];
+const CORS_WHITELIST = ['*'];
 
 export const app = express();
 app.use(cors({ origin: CORS_WHITELIST }));
