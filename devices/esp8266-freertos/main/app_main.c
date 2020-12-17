@@ -33,12 +33,8 @@
 
 static const char *TAG = "MQTTS_EXAMPLE";
 
-#if CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
-static const uint8_t mqtt_eclipse_org_pem_start[] = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
-#else
-extern const uint8_t mqtt_eclipse_org_pem_start[] asm("_binary_mqtt_eclipse_org_pem_start");
-#endif
-extern const uint8_t mqtt_eclipse_org_pem_end[] asm("_binary_mqtt_eclipse_org_pem_end");
+extern const uint8_t letsencrypt_pem_start[] asm("_binary_letsencrypt_pem_start");
+extern const uint8_t letsencrypt_pem_end[] asm("_binary_letsencrypt_pem_end");
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
 {
@@ -111,8 +107,7 @@ static void mqtt_app_start(void)
 {
     const esp_mqtt_client_config_t mqtt_cfg = {
         .uri = CONFIG_BROKER_URI,
-        .cert_pem = (const char *)mqtt_eclipse_org_pem_start,
-    };
+        .cert_pem = (const char *)letsencrypt_pem_start};
 
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
