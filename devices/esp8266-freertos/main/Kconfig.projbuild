@@ -1,20 +1,21 @@
-menu "Example Configuration"
+menu "Houseflow configuration"
 
     config BROKER_URI
         string "Broker URL"
-        default "mqtts://mqtt.eclipse.org:8883"
+        default ""
         help
             URL of an mqtt broker which this example connects to.
 
-    config BROKER_CERTIFICATE_OVERRIDE
-        string "Broker certificate override"
+    config DEVICE_UID
+        string "Device UID"
         default ""
         help
-            Please leave empty if broker certificate included from a textfile; otherwise fill in a base64 part of PEM
-            format certificate
+            UID of the device, must match with this one in database
 
-    config BROKER_CERTIFICATE_OVERRIDDEN
-        bool
-        default y if BROKER_CERTIFICATE_OVERRIDE != ""
+    config DEVICE_SECRET
+        string "Device SECRET"
+        default ""
+        help
+            Secret of the device, must match with this one in database
 
 endmenu
