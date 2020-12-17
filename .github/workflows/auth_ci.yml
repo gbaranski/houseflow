@@ -1,0 +1,25 @@
+name: 'Auth service CI'
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'auth/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'auth/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_CERT: ${{ secrets.FIREBASE_CERT }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install modules
+        working-directory: './auth'
+        run: npm install
+      - name: Test
+        working-directory: './auth'
+        run: npm test

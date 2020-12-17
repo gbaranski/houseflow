@@ -1,0 +1,25 @@
+name: 'Device API service CI'
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'device_api/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'device_api/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_CERT: ${{ secrets.FIREBASE_CERT }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install modules
+        working-directory: './device_api'
+        run: npm install
+      - name: Run tests
+        working-directory: './device_api'
+        run: npm test
