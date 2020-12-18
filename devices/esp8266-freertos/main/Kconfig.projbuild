@@ -1,11 +1,28 @@
-menu "Houseflow configuration"
+menu "Device configuration"
+
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) for the example to connect to.
+
+    config ESP_WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+
+    config ESP_MAXIMUM_RETRY
+        int "Maximum retry"
+        default 5
+        help
+            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
 
     config BROKER_URI
         string "Broker URL"
         default ""
         help
             URL of an mqtt broker which this example connects to.
-
     config DEVICE_UID
         string "Device UID"
         default ""
@@ -17,5 +34,4 @@ menu "Houseflow configuration"
         default ""
         help
             Secret of the device, must match with this one in database
-
 endmenu
