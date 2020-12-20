@@ -1,1 +1,2 @@
 COMPONENT_SRCDIRS := wifi
+LIB_NAME := hf_core
