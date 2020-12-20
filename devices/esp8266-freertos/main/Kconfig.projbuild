@@ -20,7 +20,7 @@ menu "Device configuration"
 
     config BROKER_URI
         string "Broker URL"
-        default ""
+        default "mqtts://example.com:8883"
         help
             URL of an mqtt broker which this example connects to.
     config DEVICE_UID
