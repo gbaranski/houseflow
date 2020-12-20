@@ -7,6 +7,6 @@
 
 static const char *WIFI_TAG = "wifi station";
 
-void wifi_init_sta(void);
+void wifi_init_sta(unsigned char *ssid, unsigned char *password);
 
 #endif  // ESP8266_FREERTOS_HF_WIFI_H
