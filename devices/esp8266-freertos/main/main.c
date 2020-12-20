@@ -20,6 +20,6 @@ __unused void app_main() {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    wifi_init_sta((unsigned char *) &CONFIG_ESP_WIFI_SSID, (unsigned char *) &CONFIG_ESP_WIFI_PASSWORD);
+    wifi_init_sta();
 //    mqtt_connect();
 }

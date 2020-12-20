@@ -48,7 +48,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(unsigned char *ssid, unsigned char *password) {
+void wifi_init_sta() {
     ESP_LOGI(WIFI_TAG, "Starting WiFI station");
     s_wifi_event_group = xEventGroupCreate();
 
@@ -63,13 +63,9 @@ void wifi_init_sta(unsigned char *ssid, unsigned char *password) {
                                                &event_handler, NULL));
 
     wifi_sta_config_t sta_config = {
-            .ssid = {*ssid},
-            .password = {*password}
+            .ssid = CONFIG_ESP_WIFI_SSID,
+            .password = CONFIG_ESP_WIFI_PASSWORD
     };
-
-    ESP_LOGI(WIFI_TAG, "Connesting to SSID:%s, password:%s",
-             sta_config.ssid, sta_config.password);
-
     wifi_config_t wifi_config = {
             .sta = sta_config,
     };
@@ -100,10 +96,10 @@ void wifi_init_sta(unsigned char *ssid, unsigned char *password) {
      * can test which event actually happened. */
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGI(WIFI_TAG, "connected to ap SSID:%s password:%s",
-                 ssid, password);
+                 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
     } else if (bits & WIFI_FAIL_BIT) {
         ESP_LOGI(WIFI_TAG, "Failed to connect to SSID:%s, password:%s",
-                 ssid, password);
+                 CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
     } else {
         ESP_LOGE(WIFI_TAG, "UNEXPECTED EVENT");
     }
