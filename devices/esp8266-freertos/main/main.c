@@ -7,7 +7,7 @@
 #include "esp_netif.h"
 
 #include "hf_wifi.h"
-//#include "hf_mqtt.h"
+#include "hf_mqtt.h"
 
 static const char *TAG = "app";
 
@@ -21,5 +21,5 @@ __unused void app_main() {
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     wifi_init_sta();
-//    mqtt_connect();
+    mqtt_connect();
 }

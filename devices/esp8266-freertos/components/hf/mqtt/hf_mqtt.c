@@ -4,6 +4,7 @@
 
 #include "hf_mqtt.h"
 
+#include <string.h>
 #include <stdio.h>
 #include <stdint.h>
 #include "esp_system.h"
@@ -78,10 +79,23 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 }
 
 
+// Sum of both length of then cannot be bigger than max mqtt client_id length(23)
+#define CLIENT_ID_PREFIX "device_"
+#define SHORT_UID_LEN 10
+
 void mqtt_connect(void) {
+    const char *device_uid = CONFIG_DEVICE_UID;
+    char client_id[sizeof(CLIENT_ID_PREFIX) + SHORT_UID_LEN];
+    strcat(client_id, CLIENT_ID_PREFIX);
+    strncat(client_id, device_uid, SHORT_UID_LEN);
+    ESP_LOGI(MQTT_TAG, "CERT: %s", (const char*)letsencrypt_pem_start);
+
     const esp_mqtt_client_config_t mqtt_cfg = {
             .uri = CONFIG_BROKER_URI,
             .cert_pem = (const char *)letsencrypt_pem_start,
+            .client_id = client_id,
+            .username = CONFIG_DEVICE_UID,
+            .password = CONFIG_DEVICE_SECRET,
     };
     ESP_LOGI(MQTT_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
