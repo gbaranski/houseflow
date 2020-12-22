@@ -86,24 +86,6 @@ services:
     networks:
       - backend
 
-  # ota:
-  #   tty: true
-  #   container_name: 'ota'
-  #   # command: npm run start
-  #   environment:
-  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-  #   entrypoint: ['echo', 'Service ota is disabled']
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./ota
-  #     dockerfile: Dockerfile
-  #   # restart: 'unless-stopped'
-  #   volumes:
-  #     - ./firebaseConfig.json:/app/firebaseConfig.json
-  #   networks:
-  #     - backend
-
   nginx:
     tty: true
     container_name: 'nginx'
@@ -123,6 +105,22 @@ services:
       - ./certs/privkey.pem:/etc/dockercerts/privkey.pem
     networks:
       - backend
+
+  mongo:
+    image: mongo
+    restart: 'unless-stopped'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
 
 networks:
   backend:
