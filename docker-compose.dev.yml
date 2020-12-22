@@ -69,6 +69,23 @@ services:
     networks:
       - backend
 
+  actions:
+    tty: true
+    container_name: 'actions'
+    command: npm run start:dev
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+    env_file:
+      - .env
+    build:
+      context: ./actions
+      dockerfile: Dockerfile
+    volumes:
+      - ./firebaseConfig.json:/app/firebaseConfig.json
+      - ./actions/src/:/app/src/
+    networks:
+      - backend
+
   # ota:
   #   tty: true
   #   container_name: 'ota'
@@ -99,6 +116,11 @@ services:
       - 80:80
       - 443:443
     restart: 'unless-stopped'
+    depends_on:
+      - 'device_api'
+    volumes:
+      - ./certs/fullchain.pem:/etc/dockercerts/fullchain.pem
+      - ./certs/privkey.pem:/etc/dockercerts/privkey.pem
     networks:
       - backend
 
