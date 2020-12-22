@@ -4,12 +4,8 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "public": "app_web/dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "site": "houseflow-auth",
+    "public": "public",
     "rewrites": [
       {
         "source": "**",
