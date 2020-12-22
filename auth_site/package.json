@@ -7,8 +7,14 @@
     "lint": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
+    "@material-ui/core": "^4.11.2",
+    "@material-ui/icons": "^4.11.2",
+    "@snowpack/plugin-sass": "^1.2.0",
+    "firebase": "^8.2.1",
+    "mdi-material-ui": "^6.21.0",
     "react": "^17.0.0",
-    "react-dom": "^17.0.0"
+    "react-dom": "^17.0.0",
+    "react-router-dom": "^5.2.0"
   },
   "devDependencies": {
     "@snowpack/plugin-dotenv": "^2.0.5",
@@ -19,6 +25,7 @@
     "@types/chai": "^4.2.13",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "@types/react-router-dom": "^5.1.6",
     "@types/snowpack-env": "^2.3.2",
     "@web/test-runner": "^0.10.0",
     "chai": "^4.2.0",
