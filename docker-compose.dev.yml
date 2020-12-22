@@ -20,6 +20,22 @@ services:
     networks:
       - backend
 
+  auth_emqx:
+    tty: true
+    container_name: 'auth_emqx'
+    command: npm run start
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+    env_file:
+      - .env
+    build:
+      context: ./auth_emqx
+      dockerfile: Dockerfile
+    volumes:
+      - ./firebaseConfig.json:/app/firebaseConfig.json
+    networks:
+      - backend
+
   webhooks:
     tty: true
     container_name: 'webhooks'
@@ -34,6 +50,7 @@ services:
       - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
       - backend
+
   device_api:
     tty: true
     container_name: 'device_api'
@@ -49,22 +66,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./device_api/src/:/app/src/
-      - ./firebaseConfig.json:/app/firebaseConfig.json
-    networks:
-      - backend
-
-  auth_emqx:
-    tty: true
-    container_name: 'auth_emqx'
-    command: npm run start
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-    env_file:
-      - .env
-    build:
-      context: ./auth_emqx
-      dockerfile: Dockerfile
-    volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
     networks:
       - backend
@@ -108,19 +109,39 @@ services:
 
   mongo:
     image: mongo
+    container_name: 'mongo'
     restart: 'unless-stopped'
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+    env_file:
+      - .env
+    networks:
+      - backend
 
   mongo-express:
     image: mongo-express
-    restart: always
+    restart: 'unless-stopped'
+    container_name: 'mongo-express'
+    env_file:
+      - .env
     ports:
       - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+    networks:
+      - backend
+
+  auth:
+    tty: true
+    container_name: 'auth'
+    restart: 'unless-stopped'
+    ports:
+      - 80:80
+    depends_on:
+      - mongo
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    networks:
+      - backend
 
 networks:
   backend:
