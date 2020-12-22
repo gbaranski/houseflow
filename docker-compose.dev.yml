@@ -53,16 +53,16 @@ services:
     networks:
       - backend
 
-  auth:
+  auth_emqx:
     tty: true
-    container_name: 'auth'
+    container_name: 'auth_emqx'
     command: npm run start
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
     env_file:
       - .env
     build:
-      context: ./auth
+      context: ./auth_emqx
       dockerfile: Dockerfile
     volumes:
       - ./firebaseConfig.json:/app/firebaseConfig.json
