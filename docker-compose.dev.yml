@@ -126,6 +126,11 @@ services:
       - 8081:8081
     networks:
       - backend
+  redis:
+    image: "redis:alpine"
+    container_name: "redis"
+    networks:
+      - backend
 
   auth:
     tty: true
@@ -135,6 +140,7 @@ services:
       - 80:80
     depends_on:
       - mongo
+      - redis
     build:
       context: ./auth
       dockerfile: Dockerfile
