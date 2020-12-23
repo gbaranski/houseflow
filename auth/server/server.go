@@ -21,6 +21,11 @@ func CreateServer(db *database.Database) *Server {
 	}
 }
 
+func enableCors(w *http.ResponseWriter) {
+	// TODO: Restrict this
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 // Start starts server, this function is blocking
 func (s *Server) Start() error {
 	log.Println("Starting server at port 80")
@@ -32,6 +37,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) onCreateUser(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	if r.Method != "POST" {
 		http.Error(w, "Method is not supported.", http.StatusNotFound)
 		return
@@ -61,5 +67,4 @@ func (s *Server) onCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Created user: %+v", user)
-
 }
