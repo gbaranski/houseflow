@@ -1,70 +1,79 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/gbaranski/houseflow/auth/utils"
 
 	"github.com/gbaranski/houseflow/auth/database"
 )
 
 // Server hold root server state
 type Server struct {
-	db *database.Database
+	db     *database.Database
+	router *gin.Engine
 }
 
-// CreateServer set ups server, it won't run till Server.Start
-func CreateServer(db *database.Database) *Server {
+// NewServer creates server, it won't run till Server.Start
+func NewServer(db *database.Database) *Server {
 	return &Server{
-		db: db,
+		db:     db,
+		router: gin.Default(),
 	}
-}
-
-func enableCors(w *http.ResponseWriter) {
-	// TODO: Restrict this
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 // Start starts server, this function is blocking
 func (s *Server) Start() error {
-	log.Println("Starting server at port 80")
-	http.HandleFunc("/createUser", s.onCreateUser)
-	if err := http.ListenAndServe(":80", nil); err != nil {
-		return err
-	}
-	return nil
+	log.Println("Starting server at port 8080")
+	s.router.POST("/login", s.onLogin)
+	return s.router.Run(":8080")
 }
 
-func (s *Server) onCreateUser(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if r.Method != "POST" {
-		http.Error(w, "Method is not supported.", http.StatusNotFound)
+func (s *Server) onLogin(c *gin.Context) {
+	var user struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, "Invalid json provided")
 		return
 	}
-
-	var user database.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	dbUser, err := s.db.Mongo.GetUser(&user.Email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.JSON(http.StatusNotFound, err.Error())
 		return
 	}
 
-	if user.Validate() != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	//compare the user from the request, with the one we defined:
+	if dbUser.Email != user.Email {
+		c.JSON(http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
-	err = s.db.AddUser(&user)
+	passmatch := utils.CheckPasswordHash(user.Password, dbUser.Password)
+	if !passmatch {
+		c.JSON(http.StatusUnauthorized, "Invalid email or password")
+		return
+	}
+
+	token, err := utils.CreateToken(dbUser.ID)
 	if err != nil {
-		log.Println("Error when adding user to DB: ", err)
-		if database.IsDuplicateError(err) {
-			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		}
-
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
 		return
 	}
+	err = s.db.Redis.CreateAuth(dbUser.ID, token)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	tokens := map[string]string{
+		"access_token":  token.AccessToken.Token,
+		"refresh_token": token.RefreshToken.Token,
+	}
+	c.JSON(http.StatusOK, tokens)
+}
 
-	fmt.Fprintf(w, "Created user: %+v", user)
+func (s *Server) onCreateUser(c *gin.Context) {
 }
