@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,8 +19,12 @@ func IsEmailValid(e string) bool {
 
 // HashPassword hashes password with bcrypt
 func HashPassword(pass string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
-
+	fmt.Println("Received to hashing this: ", []byte(pass))
+	one, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	two, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	fmt.Println("one: ", one)
+	fmt.Println("two: ", two)
+	return one, err
 }
 
 // CheckPasswordHash checks hash of password
