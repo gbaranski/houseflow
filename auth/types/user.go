@@ -15,7 +15,7 @@ import (
 
 // User struct, used to either creating user, or this one in DB
 type User struct {
-	ID        primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" houseflow:"ignore"`
 	FirstName string             `json:"firstName" bson:"firstName"`
 	LastName  string             `json:"lastName" bson:"lastName"`
 	Email     string             `json:"email" bson:"email" houseflow:"email"`
@@ -29,25 +29,16 @@ func (u *User) Validate() error {
 		field := fields.Field(i)
 		structField := fields.Type().Field(i)
 
-		if field.IsZero() {
+		houseflowTags := structField.Tag.Get("houseflow")
+
+		if field.IsZero() && !strings.Contains(houseflowTags, "ignore") {
 			return fmt.Errorf("Field %s is missing", structField.Name)
 		}
 
-		houseflowTags := structField.Tag.Get("houseflow")
 		if strings.Contains(houseflowTags, "email") && !utils.IsEmailValid(field.String()) {
 			return errors.New("Invalid email")
 		}
 	}
-	return nil
-}
-
-// HashPassword hashes password on original object
-func (u *User) HashPassword() error {
-	bytes, err := utils.HashPassword(u.Password)
-	if err != nil {
-		return err
-	}
-	u.Password = string(bytes)
 	return nil
 }
 
