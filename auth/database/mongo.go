@@ -87,20 +87,22 @@ func (m *Mongo) GetUser(email string) (*types.User, error) {
 }
 
 // AddUser adds user to db
-func (m *Mongo) AddUser(user *types.User) error {
-	err := user.HashPassword()
+func (m *Mongo) AddUser(user types.User) (*primitive.ObjectID, error) {
+	password, err := utils.HashPassword(user.Password)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	user.Password = string(password)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	res, err := m.usersCollection.InsertOne(ctx, user)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	log.Println("Inserted user to database with ID: ", res.InsertedID)
-	return nil
+	id := res.InsertedID.(primitive.ObjectID)
+	return &id, nil
 }
 
 func createIndexForUnique(collection *mongo.Collection, key string) (string, error) {
