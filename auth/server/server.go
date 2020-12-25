@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
 
+	"github.com/gbaranski/houseflow/auth/types"
 	"github.com/gbaranski/houseflow/auth/utils"
 
 	"github.com/gbaranski/houseflow/auth/database"
@@ -29,6 +31,7 @@ func NewServer(db *database.Database) *Server {
 func (s *Server) Start() error {
 	log.Println("Starting server at port 8080")
 	s.router.POST("/login", s.onLogin)
+	s.router.POST("/register", s.onRegister)
 	return s.router.Run(":8080")
 }
 
@@ -41,9 +44,13 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, "Invalid json provided")
 		return
 	}
-	dbUser, err := s.db.Mongo.GetUser(&user.Email)
+	dbUser, err := s.db.Mongo.GetUser(user.Email)
 	if err != nil {
-		c.JSON(http.StatusNotFound, err.Error())
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusUnauthorized, "Invalid email or password")
+			return
+		}
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -75,5 +82,26 @@ func (s *Server) onLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, tokens)
 }
 
-func (s *Server) onCreateUser(c *gin.Context) {
+func (s *Server) onRegister(c *gin.Context) {
+	var user types.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, "Invalid json provided")
+		return
+	}
+	if err := user.Validate(); err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	id, err := s.db.Mongo.AddUser(user)
+	if err != nil {
+		if database.IsDuplicateError(err) {
+			c.JSON(http.StatusConflict, "Account already exists")
+			return
+		}
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]string{
+		"id": id.String(),
+	})
 }
