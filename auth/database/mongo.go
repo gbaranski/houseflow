@@ -70,10 +70,10 @@ func createMongo(ctx context.Context) (*Mongo, error) {
 }
 
 // GetUser returns found user from DB
-func (m *Mongo) GetUser(email *string) (*types.User, error) {
+func (m *Mongo) GetUser(email string) (*types.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	result := m.usersCollection.FindOne(ctx, bson.M{"email": *email})
+	result := m.usersCollection.FindOne(ctx, bson.M{"email": email})
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
