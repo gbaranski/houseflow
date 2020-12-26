@@ -36,7 +36,7 @@ func main() {
 		}
 	}()
 	server := server.NewServer(db)
-	err = server.Start()
+	err = server.Router.Run()
 	if err != nil {
 		log.Panicln("Error when starting server", err)
 	}
