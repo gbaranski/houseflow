@@ -33,6 +33,7 @@ func (s *Server) Start() error {
 	log.Println("Starting server at port 8080")
 	s.router.POST("/login", s.onLogin)
 	s.router.POST("/register", s.onRegister)
+	s.router.POST("/logout", s.onLogout)
 	s.router.POST("/someAction", s.onSomeAction)
 	return s.router.Run(":8080")
 }
@@ -106,6 +107,25 @@ func (s *Server) onRegister(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]string{
 		"id": id.String(),
 	})
+}
+
+func (s *Server) onLogout(c *gin.Context) {
+	strtoken := utils.ExtractToken(c.Request)
+	if strtoken == nil {
+		c.JSON(http.StatusUnauthorized, "Authorization token not provided")
+		return
+	}
+	_, claims, err := utils.VerifyToken(*strtoken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, err.Error())
+		return
+	}
+	_, err = s.db.Redis.DeleteAuth(claims.Id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, "Successfully deleted")
 }
 
 func (s *Server) onSomeAction(c *gin.Context) {
