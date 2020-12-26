@@ -58,7 +58,7 @@ func (r *Redis) DeleteAuth(tokenID string) (int64, error) {
 		return 0, err
 	}
 	if deleted < 1 {
-		return deleted, fmt.Errorf("Couldn't find matching token")
+		return deleted, fmt.Errorf("couldn't find matching token")
 	}
 	return deleted, nil
 }
@@ -70,7 +70,7 @@ func (r *Redis) FetchAuth(claims *utils.TokenClaims) (*string, error) {
 	userID, err := r.client.Get(ctx, claims.Id).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, fmt.Errorf("Token not found")
+			return nil, fmt.Errorf("token not found")
 		}
 		return nil, err
 	}

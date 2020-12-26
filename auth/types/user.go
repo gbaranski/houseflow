@@ -32,11 +32,11 @@ func (u *User) Validate() error {
 		houseflowTags := structField.Tag.Get("houseflow")
 
 		if field.IsZero() && !strings.Contains(houseflowTags, "ignore") {
-			return fmt.Errorf("Field %s is missing", structField.Name)
+			return fmt.Errorf("field %s is missing", structField.Name)
 		}
 
 		if strings.Contains(houseflowTags, "email") && !utils.IsEmailValid(field.String()) {
-			return errors.New("Invalid email")
+			return errors.New("invalid email")
 		}
 	}
 	return nil

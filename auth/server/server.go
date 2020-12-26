@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -176,7 +175,6 @@ func (s *Server) onRefresh(c *gin.Context) {
 
 func (s *Server) onSomeAction(c *gin.Context) {
 	strtoken := utils.ExtractToken(c.Request)
-	fmt.Println("strtoken:", *strtoken)
 	if strtoken == nil {
 		c.JSON(http.StatusUnauthorized, "Authorization token not provided")
 		return
