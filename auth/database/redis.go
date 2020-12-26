@@ -30,17 +30,17 @@ func createRedis() (*Redis, error) {
 }
 
 // CreateAuth creates auth and adds token to redis
-func (r *Redis) CreateAuth(userID primitive.ObjectID, td *utils.TokenDetails) error {
-	at := time.Unix(td.AccessToken.Expires, 0)
-	rt := time.Unix(td.RefreshToken.Expires, 0)
+func (r *Redis) CreateAuth(userID primitive.ObjectID, td *utils.Tokens) error {
+	at := time.Unix(td.AccessToken.Claims.ExpiresAt, 0)
+	rt := time.Unix(td.RefreshToken.Claims.ExpiresAt, 0)
 	now := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	err := r.client.Set(ctx, td.AccessToken.UUID.String(), userID.String(), at.Sub(now)).Err()
+	err := r.client.Set(ctx, td.AccessToken.Claims.Id, userID.Hex(), at.Sub(now)).Err()
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, td.RefreshToken.UUID.String(), userID.String(), rt.Sub(now)).Err()
+	err = r.client.Set(ctx, td.RefreshToken.Claims.Id, userID.Hex(), rt.Sub(now)).Err()
 	if err != nil {
 		return err
 	}
@@ -49,10 +49,10 @@ func (r *Redis) CreateAuth(userID primitive.ObjectID, td *utils.TokenDetails) er
 }
 
 // FetchAuth fetches authentication token
-func (r *Redis) FetchAuth(metadata *utils.AccessTokenMetadata) (*string, error) {
+func (r *Redis) FetchAuth(claims *utils.TokenClaims) (*string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	userID, err := r.client.Get(ctx, metadata.UUID.String()).Result()
+	userID, err := r.client.Get(ctx, claims.Id).Result()
 	if err != nil {
 		return nil, err
 	}
