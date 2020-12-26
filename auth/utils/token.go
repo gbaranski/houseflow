@@ -34,8 +34,8 @@ type Tokens struct {
 	RefreshToken TokenDetails
 }
 
-func createJWTToken(expiresAt time.Time) (*TokenClaims, *string, error) {
-	jwtKey := os.Getenv(JWTAccessSecretEnv)
+func createJWTToken(expiresAt time.Time, secretEnv string) (*TokenClaims, *string, error) {
+	jwtKey := os.Getenv(secretEnv)
 
 	id, err := uuid.NewRandom()
 	if err != nil {
@@ -58,12 +58,12 @@ func createJWTToken(expiresAt time.Time) (*TokenClaims, *string, error) {
 // CreateTokens creates tokens
 func CreateTokens() (*Tokens, error) {
 	accessTokenDuration := time.Now().Add(time.Minute * 15)
-	accessTokenClaims, accessToken, err := createJWTToken(accessTokenDuration)
+	accessTokenClaims, accessToken, err := createJWTToken(accessTokenDuration, JWTAccessSecretEnv)
 	if err != nil {
 		return nil, err
 	}
 	refreshTokenDuration := time.Now().Add(time.Hour * 24 * 7)
-	refreshTokenClaims, refreshToken, err := createJWTToken(refreshTokenDuration)
+	refreshTokenClaims, refreshToken, err := createJWTToken(refreshTokenDuration, JWTRefreshSecretEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -80,14 +80,14 @@ func CreateTokens() (*Tokens, error) {
 	}, nil
 }
 
-// VerifyToken verifyes jwt token
-func VerifyToken(strtoken string) (*jwt.Token, *TokenClaims, error) {
+// VerifyToken verifyes jwt token, secretEnv must be some enviroent variable
+func VerifyToken(strtoken string, secretEnv string) (*jwt.Token, *TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(strtoken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		//Make sure that the token method conform to "SigningMethodHMAC"
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(os.Getenv(JWTAccessSecretEnv)), nil
+		return []byte(os.Getenv(secretEnv)), nil
 	})
 	if err != nil {
 		return nil, nil, err
