@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gbaranski/houseflow/auth/types"
@@ -34,6 +35,7 @@ func (s *Server) Start() error {
 	s.router.POST("/login", s.onLogin)
 	s.router.POST("/register", s.onRegister)
 	s.router.POST("/logout", s.onLogout)
+	s.router.POST("/refresh", s.onRefresh)
 	s.router.POST("/someAction", s.onSomeAction)
 	return s.router.Run(":8080")
 }
@@ -70,12 +72,12 @@ func (s *Server) onLogin(c *gin.Context) {
 
 	tokens, err := utils.CreateTokens()
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 	err = s.db.Redis.CreateAuth(dbUser.ID, tokens)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 	token := gin.H{
@@ -115,7 +117,7 @@ func (s *Server) onLogout(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, "Authorization token not provided")
 		return
 	}
-	_, claims, err := utils.VerifyToken(*strtoken)
+	_, claims, err := utils.VerifyToken(*strtoken, utils.JWTAccessSecretEnv)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, err.Error())
 		return
@@ -128,6 +130,50 @@ func (s *Server) onLogout(c *gin.Context) {
 	c.JSON(http.StatusOK, "Successfully deleted")
 }
 
+func (s *Server) onRefresh(c *gin.Context) {
+	var reqTokens struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := c.ShouldBindJSON(&reqTokens); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	_, claims, err := utils.VerifyToken(reqTokens.RefreshToken, utils.JWTRefreshSecretEnv)
+	if err != nil {
+		c.JSON(http.StatusForbidden, err.Error())
+		return
+	}
+	userID, err := s.db.Redis.FetchAuth(claims)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, err.Error())
+		return
+	}
+	mongoUserID, err := primitive.ObjectIDFromHex(*userID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, err.Error())
+		return
+	}
+	// Delete old refresh token
+	if _, err := s.db.Redis.DeleteAuth(claims.Id); err != nil {
+		c.JSON(http.StatusForbidden, err.Error())
+		return
+	}
+	tokens, err := utils.CreateTokens()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err = s.db.Redis.CreateAuth(mongoUserID, tokens); err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+	resTokens := gin.H{
+		"access_token":  tokens.AccessToken.Token,
+		"refresh_token": tokens.RefreshToken.Token,
+	}
+	c.JSON(http.StatusOK, resTokens)
+}
+
 func (s *Server) onSomeAction(c *gin.Context) {
 	strtoken := utils.ExtractToken(c.Request)
 	fmt.Println("strtoken:", *strtoken)
@@ -135,7 +181,7 @@ func (s *Server) onSomeAction(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, "Authorization token not provided")
 		return
 	}
-	_, claims, err := utils.VerifyToken(*strtoken)
+	_, claims, err := utils.VerifyToken(*strtoken, utils.JWTAccessSecretEnv)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, err.Error())
 		return
