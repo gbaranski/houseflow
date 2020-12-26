@@ -23,7 +23,6 @@ type AccessToken struct {
 	Token   string
 	UUID    uuid.UUID
 	Expires int64
-	UserID  string
 }
 
 // AccessTokenMetadata is metadata for access token, this comes from JWT stringified token
@@ -38,7 +37,6 @@ type RefreshToken struct {
 	Token   string
 	UUID    uuid.UUID
 	Expires int64
-	UserID  string
 }
 
 // TokenDetails describes details of token
@@ -56,9 +54,9 @@ func createAccessToken(userID primitive.ObjectID) (*AccessToken, error) {
 		return nil, err
 	}
 	claims := jwt.MapClaims{
-		"access_uuid": UUID,
-		"user_id":     userID.String(),
-		"exp":         expires,
+		"uuid":    UUID,
+		"user_id": userID.Hex(),
+		"exp":     expires,
 	}
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(jwtKey))
 
@@ -69,7 +67,6 @@ func createAccessToken(userID primitive.ObjectID) (*AccessToken, error) {
 		Token:   token,
 		UUID:    UUID,
 		Expires: expires,
-		UserID:  userID.String(),
 	}, nil
 }
 
@@ -82,9 +79,9 @@ func createRefreshToken(userID primitive.ObjectID) (*RefreshToken, error) {
 		return nil, err
 	}
 	claims := jwt.MapClaims{
-		"refresh_uuid": UUID.String(),
-		"user_id":      userID.String(),
-		"exp":          expires,
+		"uuid":    UUID.String(),
+		"user_id": userID.Hex(),
+		"exp":     expires,
 	}
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(jwtKey))
 	if err != nil {
@@ -94,7 +91,6 @@ func createRefreshToken(userID primitive.ObjectID) (*RefreshToken, error) {
 		Token:   token,
 		UUID:    UUID,
 		Expires: expires,
-		UserID:  userID.String(),
 	}, nil
 
 }
@@ -153,7 +149,7 @@ func ExtractTokenMetadata(token jwt.Token) (*AccessTokenMetadata, error) {
 		return nil, fmt.Errorf("Unable to extract token metadata")
 	}
 
-	UUIDStr, ok := claims["access_uuid"].(string)
+	UUIDStr, ok := claims["uuid"].(string)
 	if !ok {
 		return nil, fmt.Errorf("Unable to retreive access_uuid from claims")
 	}
