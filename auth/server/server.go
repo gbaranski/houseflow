@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,26 +16,22 @@ import (
 // Server hold root server state
 type Server struct {
 	db     *database.Database
-	router *gin.Engine
+	Router *gin.Engine
 }
 
 // NewServer creates server, it won't run till Server.Start
 func NewServer(db *database.Database) *Server {
-	return &Server{
-		db:     db,
-		router: gin.Default(),
+	s := &Server{
+		db: db,
 	}
-}
+	s.Router = gin.Default()
+	s.Router.POST("/login", s.onLogin)
+	s.Router.POST("/register", s.onRegister)
+	s.Router.POST("/logout", s.onLogout)
+	s.Router.POST("/refresh", s.onRefresh)
+	s.Router.POST("/someAction", s.onSomeAction)
 
-// Start starts server, this function is blocking
-func (s *Server) Start() error {
-	log.Println("Starting server at port 8080")
-	s.router.POST("/login", s.onLogin)
-	s.router.POST("/register", s.onRegister)
-	s.router.POST("/logout", s.onLogout)
-	s.router.POST("/refresh", s.onRefresh)
-	s.router.POST("/someAction", s.onSomeAction)
-	return s.router.Run(":8080")
+	return s
 }
 
 func (s *Server) onLogin(c *gin.Context) {
