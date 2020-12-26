@@ -94,7 +94,7 @@ func VerifyToken(strtoken string, secretEnv string) (*jwt.Token, *TokenClaims, e
 	}
 	claims, ok := token.Claims.(*TokenClaims)
 	if !ok || !token.Valid {
-		return nil, nil, fmt.Errorf("Failed parsing claims")
+		return nil, nil, fmt.Errorf("failed parsing claims")
 	}
 	return token, claims, nil
 }
