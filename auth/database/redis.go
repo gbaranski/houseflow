@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gbaranski/houseflow/auth/utils"
@@ -54,6 +55,9 @@ func (r *Redis) FetchAuth(claims *utils.TokenClaims) (*string, error) {
 	defer cancel()
 	userID, err := r.client.Get(ctx, claims.Id).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return nil, fmt.Errorf("Token not found")
+		}
 		return nil, err
 	}
 	return &userID, nil

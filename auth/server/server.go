@@ -77,7 +77,7 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	token := map[string]string{
+	token := gin.H{
 		"access_token":  tokens.AccessToken.Token,
 		"refresh_token": tokens.RefreshToken.Token,
 	}
@@ -126,7 +126,7 @@ func (s *Server) onSomeAction(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	c.JSON(http.StatusOK, gin.H{
 		"expires": claims.ExpiresAt,
 		"ID":      claims.Id,
 		"userID":  userID,
