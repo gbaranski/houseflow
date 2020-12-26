@@ -157,7 +157,9 @@ services:
       - redis
     build:
       context: ./auth
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./auth:/app
     env_file:
       - .env
     networks:
