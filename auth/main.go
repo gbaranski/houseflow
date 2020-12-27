@@ -12,13 +12,13 @@ import (
 )
 
 func main() {
-	_, present := os.LookupEnv(utils.JWTAccessSecretEnv)
+	_, present := os.LookupEnv(utils.JWTAccessKey)
 	if !present {
-		log.Panicf("%s not set in .env\n", utils.JWTAccessSecretEnv)
+		log.Panicf("%s not set in .env\n", utils.JWTAccessKey)
 	}
-	_, present = os.LookupEnv(utils.JWTRefreshSecretEnv)
+	_, present = os.LookupEnv(utils.JWTRefreshKey)
 	if !present {
-		log.Panicf("%s not set in .env\n", utils.JWTRefreshSecretEnv)
+		log.Panicf("%s not set in .env\n", utils.JWTRefreshKey)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -36,7 +36,7 @@ func main() {
 		}
 	}()
 	server := server.NewServer(db)
-	err = server.Router.Run()
+	err = server.Router.Run(":80")
 	if err != nil {
 		log.Panicln("Error when starting server", err)
 	}

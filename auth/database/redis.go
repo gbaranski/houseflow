@@ -30,23 +30,23 @@ func createRedis() (*Redis, error) {
 	return &Redis{client: rdb}, nil
 }
 
-// CreateAuth adds token to redis
-func (r *Redis) CreateAuth(userID primitive.ObjectID, td *utils.Tokens) error {
-	at := time.Unix(td.AccessToken.Claims.ExpiresAt, 0)
-	rt := time.Unix(td.RefreshToken.Claims.ExpiresAt, 0)
+// AddTokenPair adds tokenpair to redis
+func (r *Redis) AddTokenPair(userID primitive.ObjectID, tp *utils.TokenPair) error {
+	at := time.Unix(tp.AccessToken.Claims.ExpiresAt, 0)
 	now := time.Now()
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	err := r.client.Set(ctx, td.AccessToken.Claims.Id, userID.Hex(), at.Sub(now)).Err()
+
+	err := r.client.Set(ctx, tp.AccessToken.Claims.Id, userID.Hex(), at.Sub(now)).Err()
 	if err != nil {
 		return err
 	}
-	err = r.client.Set(ctx, td.RefreshToken.Claims.Id, userID.Hex(), rt.Sub(now)).Err()
+	err = r.client.Set(ctx, tp.RefreshToken.Claims.Id, userID.Hex(), 0).Err()
 	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
 // DeleteAuth removes token from redi
@@ -63,14 +63,14 @@ func (r *Redis) DeleteAuth(tokenID string) (int64, error) {
 	return deleted, nil
 }
 
-// FetchAuth fetches authentication token
-func (r *Redis) FetchAuth(claims *utils.TokenClaims) (*string, error) {
+// FetchToken fetches authentication token
+func (r *Redis) FetchToken(claims utils.TokenClaims) (*string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	userID, err := r.client.Get(ctx, claims.Id).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, fmt.Errorf("token not found")
+			return nil, fmt.Errorf("token not found, might be invalid")
 		}
 		return nil, err
 	}

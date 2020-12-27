@@ -9,11 +9,12 @@ import (
 	"github.com/gbaranski/houseflow/auth/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// OAuth2Query sddas
-type OAuth2Query struct {
+// AuthQuery sent by google
+type AuthQuery struct {
 	ClientID     string `form:"client_id" binding:"required"`
 	RedirectURI  string `form:"redirect_uri" binding:"required"`
 	State        string `form:"state" binding:"required"`
@@ -22,20 +23,42 @@ type OAuth2Query struct {
 	UserLocale   string `form:"user_locale"`
 }
 
+// TokenQuery sent by google
+type TokenQuery struct {
+	ClientID     string `form:"client_id" binding:"required"`
+	ClientSecret string `form:"client_secret" binding:"required"`
+	GrantType    string `form:"grant_type" binding:"required"`
+	Code         string `form:"code" binding:"required_if=GrantType authorization_code"`
+	RedirectURI  string `form:"redirect_uri" binding:"required_if=GrantType authorization_code"`
+	RefreshToken string `form:"refresh_token" binding:"required_if=GrantType refresh_token"`
+}
+
+// Move both clientID and clientSecret and projectID to .env
+const clientID = "abcdefg"
+const clientSecret = "12345"
+
+// Fill it later
+const projectID = "houseflow-prod"
+
+func validateRedirectURI(uri string) bool {
+	return uri == fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", projectID) || uri == fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", projectID)
+}
+
 func (s *Server) onAuth(c *gin.Context) {
-	var query OAuth2Query
+	var query AuthQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
+	fmt.Println(query.RedirectURI)
 	if query.ClientID != clientID {
 		c.String(http.StatusBadRequest, "ClientID is invalid")
 		return
 	}
-	if query.RedirectURI != fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", projectID) &&
-		query.RedirectURI != fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", projectID) {
-		c.String(http.StatusBadRequest, "RedirectURI is invalid")
-		return
+	if !validateRedirectURI(query.RedirectURI) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "redirect_uri is invalid",
+		})
 	}
 	c.HTML(http.StatusOK, "auth.tmpl", gin.H{
 		"redirect_uri": query.RedirectURI,
@@ -43,12 +66,22 @@ func (s *Server) onAuth(c *gin.Context) {
 	})
 }
 
+func (s *Server) createRedirectURI(q *AuthQuery, userID primitive.ObjectID) (*string, error) {
+	token, err := utils.CreateAuthorizationCode(userID)
+	if err != nil {
+		return nil, err
+	}
+	redirectURI := fmt.Sprintf("%s?code=%s&state=%s", q.RedirectURI, token.Token.Raw, q.State)
+
+	return &redirectURI, nil
+}
+
 func (s *Server) onLogin(c *gin.Context) {
 	var form struct {
 		Email    string `form:"email"`
 		Password string `form:"password"`
 	}
-	var query OAuth2Query
+	var query AuthQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -77,27 +110,18 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
+	redirectURI, err := s.createRedirectURI(&query, dbUser.ID)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.Redirect(http.StatusSeeOther, *redirectURI)
 
-	tokens, err := utils.CreateTokens()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-	err = s.db.Redis.CreateAuth(dbUser.ID, tokens)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-	token := gin.H{
-		"access_token":  tokens.AccessToken.Token,
-		"refresh_token": tokens.RefreshToken.Token,
-	}
-	c.JSON(http.StatusOK, token)
 }
 
 func (s *Server) onRegister(c *gin.Context) {
 	var form types.User
-	var query OAuth2Query
+	var query AuthQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -124,12 +148,12 @@ func (s *Server) onLogout(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, "Authorization token not provided")
 		return
 	}
-	_, claims, err := utils.VerifyToken(*strtoken, utils.JWTAccessSecretEnv)
+	token, err := utils.VerifyToken(*strtoken, utils.JWTAccessKey)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, err.Error())
 		return
 	}
-	_, err = s.db.Redis.DeleteAuth(claims.Id)
+	_, err = s.db.Redis.DeleteAuth(token.Claims.Id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
