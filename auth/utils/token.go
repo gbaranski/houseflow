@@ -9,13 +9,17 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// JWTAccessSecretEnv ust be set in .env
-const JWTAccessSecretEnv = "AUTH_JWT_ACCESS_KEY"
+// JWTAccessKey ust be set in .env
+const JWTAccessKey = "JWT_ACCESS_KEY"
 
-// JWTRefreshSecretEnv  must be set in .env
-const JWTRefreshSecretEnv = "AUTH_JWT_REFRESH_KEY"
+// JWTRefreshKey  must be set in .env
+const JWTRefreshKey = "JWT_REFRESH_KEY"
+
+// JWTAuthCodeKey  must be set in .env
+const JWTAuthCodeKey = "JWT_AUTHORIZATION_CODE_KEY"
 
 // TokenClaims is claims for jwt token
 type TokenClaims struct {
@@ -24,64 +28,77 @@ type TokenClaims struct {
 
 // TokenDetails combines token string and claims
 type TokenDetails struct {
-	Token  string
-	Claims *TokenClaims
+	Token  *jwt.Token
+	Claims TokenClaims
 }
 
-// Tokens combins both access token and refresh token
-type Tokens struct {
+// TokenPair combins both access token and refresh token
+type TokenPair struct {
 	AccessToken  TokenDetails
 	RefreshToken TokenDetails
 }
 
-func createJWTToken(expiresAt time.Time, secretEnv string) (*TokenClaims, *string, error) {
+func createJWTToken(expiresAt time.Time, secretEnv string, audience *string) (*TokenDetails, error) {
 	jwtKey := os.Getenv(secretEnv)
 
 	id, err := uuid.NewRandom()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	claims := &TokenClaims{
+	claims := TokenClaims{
 		jwt.StandardClaims{
-			ExpiresAt: expiresAt.Unix(),
-			Id:        id.String(),
+			Id: id.String(),
 		},
 	}
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(jwtKey))
-
-	if err != nil {
-		return nil, nil, err
+	if audience != nil {
+		claims.Audience = *audience
 	}
-	return claims, &token, nil
+	if !expiresAt.IsZero() {
+		claims.ExpiresAt = expiresAt.Unix()
+	}
+	strtoken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(jwtKey))
+	if err != nil {
+		return nil, err
+	}
+
+	return VerifyToken(strtoken, secretEnv)
 }
 
-// CreateTokens creates tokens
-func CreateTokens() (*Tokens, error) {
-	accessTokenDuration := time.Now().Add(time.Minute * 15)
-	accessTokenClaims, accessToken, err := createJWTToken(accessTokenDuration, JWTAccessSecretEnv)
+// CreateAuthorizationCode creates authorization code
+func CreateAuthorizationCode(userID primitive.ObjectID) (*TokenDetails, error) {
+	userIDHex := userID.Hex()
+	return createJWTToken(time.Now().Add(time.Minute*10), JWTAuthCodeKey, &userIDHex)
+}
+
+// CreateAccessToken creates acces token and returns it
+func CreateAccessToken() (*TokenDetails, error) {
+	return createJWTToken(time.Now().Add(time.Hour), JWTAccessKey, nil)
+}
+
+// CreateRefreshToken creates acces token and returns it
+func CreateRefreshToken() (*TokenDetails, error) {
+	return createJWTToken(time.Time{}, JWTRefreshKey, nil)
+}
+
+// CreateTokenPair creates accessToken and refreshToken
+func CreateTokenPair() (*TokenPair, error) {
+	accessToken, err := CreateAccessToken()
 	if err != nil {
 		return nil, err
 	}
-	refreshTokenDuration := time.Now().Add(time.Hour * 24 * 7)
-	refreshTokenClaims, refreshToken, err := createJWTToken(refreshTokenDuration, JWTRefreshSecretEnv)
+	refreshToken, err := CreateRefreshToken()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Tokens{
-		RefreshToken: TokenDetails{
-			Token:  *refreshToken,
-			Claims: refreshTokenClaims,
-		},
-		AccessToken: TokenDetails{
-			Token:  *accessToken,
-			Claims: accessTokenClaims,
-		},
+	return &TokenPair{
+		RefreshToken: *refreshToken,
+		AccessToken:  *accessToken,
 	}, nil
 }
 
 // VerifyToken verifyes jwt token, secretEnv must be some enviroent variable
-func VerifyToken(strtoken string, secretEnv string) (*jwt.Token, *TokenClaims, error) {
+func VerifyToken(strtoken string, secretEnv string) (*TokenDetails, error) {
 	token, err := jwt.ParseWithClaims(strtoken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		//Make sure that the token method conform to "SigningMethodHMAC"
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -90,13 +107,16 @@ func VerifyToken(strtoken string, secretEnv string) (*jwt.Token, *TokenClaims, e
 		return []byte(os.Getenv(secretEnv)), nil
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	claims, ok := token.Claims.(*TokenClaims)
 	if !ok || !token.Valid {
-		return nil, nil, fmt.Errorf("failed parsing claims")
+		return nil, fmt.Errorf("failed parsing claims")
 	}
-	return token, claims, nil
+	return &TokenDetails{
+		Token:  token,
+		Claims: *claims,
+	}, nil
 }
 
 // ExtractToken extracts token from Bearer
