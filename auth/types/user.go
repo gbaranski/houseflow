@@ -1,45 +1,20 @@
 package types
 
 import (
-	"errors"
-	"fmt"
 	"os"
-	"reflect"
-	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gbaranski/houseflow/auth/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // User struct, used to either creating user, or this one in DB
 type User struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" houseflow:"ignore"`
-	FirstName string             `json:"firstName" bson:"firstName" form:"firstName"`
-	LastName  string             `json:"lastName" bson:"lastName" form:"lastName"`
-	Email     string             `json:"email" bson:"email" houseflow:"email" form:"email"`
-	Password  string             `json:"password" bson:"password" form:"password"`
-}
-
-// Validate validates password, returns error
-func (u *User) Validate() error {
-	fields := reflect.ValueOf(u).Elem()
-	for i := 0; i < fields.NumField(); i++ {
-		field := fields.Field(i)
-		structField := fields.Type().Field(i)
-
-		houseflowTags := structField.Tag.Get("houseflow")
-
-		if field.IsZero() && !strings.Contains(houseflowTags, "ignore") {
-			return fmt.Errorf("field %s is missing", structField.Name)
-		}
-
-		if strings.Contains(houseflowTags, "email") && !utils.IsEmailValid(field.String()) {
-			return errors.New("invalid email")
-		}
-	}
-	return nil
+	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" binding:"-"`
+	FirstName string             `json:"firstName" bson:"firstName" form:"firstName" binding:"required"`
+	LastName  string             `json:"lastName" bson:"lastName" form:"lastName" binding:"required"`
+	Email     string             `json:"email" bson:"email" houseflow:"email" form:"email" binding:"required,email"`
+	Password  string             `json:"password" bson:"password" form:"password" binding:"required,min=8,max=20"`
 }
 
 // CreateAccessToken creates JWT access token for user
