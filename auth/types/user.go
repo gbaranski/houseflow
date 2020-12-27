@@ -16,10 +16,10 @@ import (
 // User struct, used to either creating user, or this one in DB
 type User struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty" houseflow:"ignore"`
-	FirstName string             `json:"firstName" bson:"firstName"`
-	LastName  string             `json:"lastName" bson:"lastName"`
-	Email     string             `json:"email" bson:"email" houseflow:"email"`
-	Password  string             `json:"password" bson:"password"`
+	FirstName string             `json:"firstName" bson:"firstName" form:"firstName"`
+	LastName  string             `json:"lastName" bson:"lastName" form:"lastName"`
+	Email     string             `json:"email" bson:"email" houseflow:"email" form:"email"`
+	Password  string             `json:"password" bson:"password" form:"password"`
 }
 
 // Validate validates password, returns error
