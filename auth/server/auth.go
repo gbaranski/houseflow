@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gbaranski/houseflow/auth/database"
 	"github.com/gbaranski/houseflow/auth/types"
@@ -33,9 +34,11 @@ type TokenQuery struct {
 	RefreshToken string `form:"refresh_token" binding:"required_if=GrantType refresh_token"`
 }
 
-// Move both clientID and clientSecret and projectID to .env
-const clientID = "abcdefg"
-const clientSecret = "12345"
+// ClientIDEnv Enviroment varaible name for ClientID
+const ClientIDEnv = "AUTH_CLIENT_ID"
+
+// ClientSecretEnv Enviroment varaible name for ClientSecret
+const ClientSecretEnv = "AUTH_CLIENT_SECRET"
 
 // Fill it later
 const projectID = "houseflow-prod"
@@ -50,8 +53,7 @@ func (s *Server) onAuth(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	fmt.Println(query.RedirectURI)
-	if query.ClientID != clientID {
+	if query.ClientID != os.Getenv(ClientIDEnv) {
 		c.String(http.StatusBadRequest, "ClientID is invalid")
 		return
 	}

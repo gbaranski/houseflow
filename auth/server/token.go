@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gbaranski/houseflow/auth/utils"
@@ -102,7 +103,7 @@ func (s *Server) onToken(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	if form.ClientID != clientID || form.ClientSecret != clientSecret {
+	if form.ClientID != os.Getenv(ClientIDEnv) || form.ClientSecret != os.Getenv(ClientSecretEnv) {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error":   "invalid_grant",
 			"message": "Invalid clientID or clientSecret",

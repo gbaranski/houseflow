@@ -21,6 +21,16 @@ func main() {
 		log.Panicf("%s not set in .env\n", utils.JWTRefreshKey)
 	}
 
+	_, present = os.LookupEnv(server.ClientIDEnv)
+	if !present {
+		log.Panicf("%s not set in .env\n", server.ClientIDEnv)
+	}
+
+	_, present = os.LookupEnv(server.ClientSecretEnv)
+	if !present {
+		log.Panicf("%s not set in .env\n", server.ClientSecretEnv)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	db, err := database.CreateDatabase(ctx)
