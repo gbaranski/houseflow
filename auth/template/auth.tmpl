@@ -1,0 +1,32 @@
+<html>
+<div>
+    <h1>Login</h1>
+    <form action="/login" method="POST">
+        <input type="email" autocomplete="email" name="email" placeholder="Email" required />
+        <br />
+        <input type="password" autocomplete="new-password" min="8" name="password" placeholder="Password" required />
+        <br />
+        <input type="submit" disabled/>
+    </form>
+    <br />
+    <h1>Register</h1>
+    <form action="/register" method="POST" target="__blank">
+        <input type="text" autocomplete="given-name" name="firstName" placeholder="First name" required />
+        <br />
+        <input type="text" autocomplete="family-name" name="lastName" placeholder="Last name" required />
+        <br />
+        <input type="email" autocomplete="email" name="email" placeholder="Email" required />
+        <br />
+        <input type="password" autocomplete="new-password" min="8" name="password" placeholder="Password" required />
+        <br />
+        <input type="submit" disabled/>
+    </form>
+</div>
+<script>
+    (() => {
+        document.querySelectorAll('form').forEach((e) => e.action = e.action + window.location.search);
+        document.querySelectorAll('input[type="submit"]').forEach((e) => e.disabled = false);
+    })();
+</script>
+
+</html>
