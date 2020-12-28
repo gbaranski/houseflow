@@ -8,5 +8,23 @@ router.get('/', (req, res) => {
 });
 
 router.post('/fulfillment', fulfillment);
+router.get('/requestSync', async (req, res) => {
+  const userID = req.query['user_id'];
+  if (!userID) {
+    res.status(400).send('user_id not defined');
+    return;
+  }
+  if (typeof userID !== 'string') {
+    res.status(400).send('user_id is invalid');
+    return;
+  }
+  try {
+    const result = await fulfillment.requestSync(userID);
+
+    res.status(200).send(`OK: ${result}`);
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
 
 export default router;
