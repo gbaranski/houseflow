@@ -1,7 +1,6 @@
 import http from 'http';
 import app from './app';
 import chalk from 'chalk';
-import '@/services/mqtt';
 
 const httpServer = http.createServer(app);
 
