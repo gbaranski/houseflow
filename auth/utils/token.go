@@ -119,7 +119,7 @@ func VerifyToken(strtoken string, secretEnv string) (*TokenDetails, error) {
 	}, nil
 }
 
-// ExtractToken extracts token from Bearer
+// ExtractToken extracts Bearer authorization token
 func ExtractToken(r *http.Request) *string {
 	bearToken := r.Header.Get("Authorization")
 	//normally Authorization the_token_xxx
