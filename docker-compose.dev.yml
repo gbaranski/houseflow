@@ -70,22 +70,6 @@ services:
     networks:
       - backend
 
-  actions:
-    tty: true
-    container_name: 'actions'
-    command: npm run start:dev
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-    env_file:
-      - .env
-    build:
-      context: ./actions
-      dockerfile: Dockerfile
-    volumes:
-      - ./firebaseConfig.json:/app/firebaseConfig.json
-      - ./actions/src/:/app/src/
-    networks:
-      - backend
 
   nginx:
     tty: true
@@ -148,8 +132,6 @@ services:
     tty: true
     container_name: 'auth'
     restart: 'unless-stopped'
-    ports:
-      - 8080:8080
     depends_on:
       - mongo
       - redis
@@ -158,6 +140,23 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./auth:/app
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  actions:
+    tty: true
+    container_name: 'actions'
+    restart: 'unless-stopped'
+    depends_on:
+      - mongo
+      - redis
+    build:
+      context: ./actions
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./actions:/app
     env_file:
       - .env
     networks:
