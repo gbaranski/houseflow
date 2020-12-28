@@ -61,6 +61,7 @@ func (s *Server) onAuth(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "redirect_uri is invalid",
 		})
+		return
 	}
 	c.HTML(http.StatusOK, "auth.tmpl", gin.H{
 		"redirect_uri": query.RedirectURI,
