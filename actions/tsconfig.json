@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+      "target": "ES6",
+      "moduleResolution": "node",
+      "sourceMap": true,
+      "outDir": "./dist",
+      "lib": ["es6"],
+      "strict": true,
+      "noImplicitAny": true,
+      "resolveJsonModule": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "noUnusedLocals": false,
+      "noImplicitReturns": true,
+      "esModuleInterop": true,
+      "baseUrl": "./src/",
+      "rootDir": "src",
+      "paths": {
+        "@/*": ["./*"]
+      }
+    },
+    "include": ["src/**/*", "__tests__/**/*"],
+    "exclude": ["node_modules", "acceptance-tests"]
+  }
