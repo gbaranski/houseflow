@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"os"
@@ -19,8 +18,6 @@ type tokenError struct {
 }
 
 func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) {
-	fmt.Println("Requested authcode exchange")
-	fmt.Printf("%+v\n", form)
 	if !validateRedirectURI(form.RedirectURI) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":             "bad_request",
@@ -64,7 +61,6 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 
 	at := time.Unix(tp.AccessToken.Claims.ExpiresAt, 0)
 	now := time.Now()
-	fmt.Println("Seconds to expiration: ", at.Sub(now).Seconds())
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":    "Bearer",
 		"access_token":  tp.AccessToken.Token.Raw,
@@ -74,7 +70,6 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 }
 
 func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
-	fmt.Printf("Requested accesstoken grant\n%+v", form)
 	rt, err := utils.VerifyToken(form.RefreshToken, utils.JWTRefreshKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
