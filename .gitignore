@@ -19,5 +19,6 @@ fullchain.pem
 cacert.pem
 ca.pem
 dist
+service-account.json
 
 *.log
