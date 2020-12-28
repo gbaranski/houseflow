@@ -18,6 +18,7 @@ type tokenError struct {
 }
 
 func (s *Server) onTokenAuthorizationCodeGrant(form *TokenQuery) (gin.H, *tokenError) {
+	fmt.Printf("Requested authcode exchange\n%+v", form)
 	if !validateRedirectURI(form.RedirectURI) {
 		return nil, &tokenError{
 			InvalidGrant: false,
@@ -66,6 +67,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(form *TokenQuery) (gin.H, *tokenE
 }
 
 func (s *Server) onTokenAccessTokenGrant(form *TokenQuery) (gin.H, *tokenError) {
+	fmt.Printf("Requested accesstoken grant\n%+v", form)
 	rt, err := utils.VerifyToken(form.RefreshToken, utils.JWTRefreshKey)
 	if err != nil {
 		return nil, &tokenError{
