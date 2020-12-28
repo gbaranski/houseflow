@@ -149,14 +149,16 @@ services:
     tty: true
     container_name: 'actions'
     restart: 'unless-stopped'
+    command: 'npm run start:dev'
     depends_on:
       - mongo
       - redis
     build:
       context: ./actions
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     volumes:
-      - ./actions:/app
+      - ./actions/src/:/app/src/
+      - ./service-account.json:/app/service-account.json
     env_file:
       - .env
     networks:
