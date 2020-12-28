@@ -1,19 +1,13 @@
-import fs from 'fs';
 import { smarthome } from 'actions-on-google';
 import { extractJWTToken } from '@/utils';
-import { verifyToken } from '@/services/token';
-import { fetchTokenUUID } from '@/services/redis';
+import { verifyToken } from '@/utils/token';
+import { fetchTokenUUID } from '@/database/redis';
+import { DeviceData, findDevices } from '@/database/mongo';
 
-if (!process.env.HOMEGRAPH_API_KEY)
-  throw new Error('HOMEGRAPH_API_KEY not set in .env');
-
-const serviceAccountKey = JSON.parse(
-  fs.readFileSync('/app/service-account.json', 'utf8'),
-);
+const serviceAccountKey = require('/app/service-account.json');
 
 const app = smarthome({
   debug: true,
-  key: process.env.HOMEGRAPH_API_KEY,
   jwt: serviceAccountKey,
 });
 
@@ -32,13 +26,9 @@ app.onSync(async (body, headers) => {
       agentUserId: userID,
       devices: [
         {
-          id: 'washer',
+          id: '5fea26e83702b2017a6043bf',
           type: 'action.devices.types.WASHER',
-          traits: [
-            'action.devices.traits.OnOff',
-            'action.devices.traits.StartStop',
-            'action.devices.traits.RunCycle',
-          ],
+          traits: ['action.devices.traits.OnOff'],
           name: {
             defaultNames: ['My Washer'],
             name: 'Washer',
@@ -51,11 +41,24 @@ app.onSync(async (body, headers) => {
             swVersion: '1.0.1',
           },
           willReportState: true,
-          attributes: {
-            pausable: true,
-          },
         },
       ],
+    },
+  };
+});
+
+app.onQuery(async (body, headers) => {
+  const deviceIDs = body.inputs[0].payload.devices.map((device) => device.id);
+  const devices = await findDevices(deviceIDs);
+  const payloadDevices = new Map<string, DeviceData>();
+  devices.forEach((device) => {
+    payloadDevices.set(device._id as string, device.data);
+  });
+
+  return {
+    requestId: body.requestId,
+    payload: {
+      devices: payloadDevices,
     },
   };
 });
