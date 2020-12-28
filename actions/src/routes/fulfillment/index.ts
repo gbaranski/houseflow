@@ -1,4 +1,8 @@
-import { smarthome } from 'actions-on-google';
+import {
+  smarthome,
+  SmartHomeV1ExecuteRequestCommands,
+  SmartHomeV1ExecuteResponseCommands,
+} from 'actions-on-google';
 import { extractJWTToken } from '@/utils';
 import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
@@ -54,11 +58,39 @@ app.onQuery(async (body, headers) => {
   devices.forEach((device) => {
     payloadDevices.set(device._id as string, device.data);
   });
+  console.log({ payloadDevices });
 
   return {
     requestId: body.requestId,
     payload: {
       devices: payloadDevices,
+    },
+  };
+});
+
+const executeCommand = (
+  cmd: SmartHomeV1ExecuteRequestCommands,
+): SmartHomeV1ExecuteResponseCommands => {
+  return {
+    ids: cmd.devices.map((device) => device.id),
+    status: 'SUCCESS',
+    states: {
+      on: true,
+      online: true,
+    },
+  };
+};
+
+app.onExecute(async (body, headers) => {
+  body.inputs[0].payload.commands;
+  const responses = body.inputs[0].payload.commands.map((cmd) =>
+    executeCommand(cmd),
+  );
+
+  return {
+    requestId: body.requestId,
+    payload: {
+      commands: responses,
     },
   };
 });
