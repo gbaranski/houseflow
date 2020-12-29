@@ -1,3 +1,4 @@
+import { addDevice } from '@/database/mongo';
 import express from 'express';
 import fulfillment from './fulfillment';
 
@@ -25,6 +26,31 @@ router.get('/requestSync', async (req, res) => {
   } catch (e) {
     res.status(500).send(e);
   }
+});
+
+router.get('/add1', async (req, res) => {
+  addDevice({
+    type: 'action.devices.types.LIGHT',
+    traits: ['action.devices.traits.OnOff'],
+    name: {
+      defaultNames: ['Simple light'],
+      name: 'Simple light',
+      nicknames: ['Simple light'],
+    },
+    deviceInfo: {
+      manufacturer: 'gbaranski`s garage',
+      model: 'garage',
+      hwVersion: '1.0',
+      swVersion: '1.0',
+    },
+    willReportState: true,
+    roomHint: 'Bedroom',
+    data: {
+      online: true,
+      on: true,
+    },
+  });
+  res.status(200).send();
 });
 
 export default router;
