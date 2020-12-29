@@ -1,12 +1,13 @@
 import {
   smarthome,
-  SmartHomeV1ExecuteRequestCommands,
+  SmartHomeV1ExecuteRequestExecution,
   SmartHomeV1ExecuteResponseCommands,
+  SmartHomeV1SyncDevices,
 } from 'actions-on-google';
 import { extractJWTToken } from '@/utils';
 import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
-import { DeviceData, findDevices } from '@/database/mongo';
+import { findDevices, getUser } from '@/database/mongo';
 
 const serviceAccountKey = require('/app/service-account.json');
 
@@ -43,16 +44,22 @@ app.onSync(async (body, headers) => {
           roomHint: device.roomHint,
         }),
       ),
-        },
+    },
   };
 });
 
 app.onQuery(async (body, headers) => {
   const deviceIDs = body.inputs[0].payload.devices.map((device) => device.id);
   const devices = await findDevices(deviceIDs);
-  const payloadDevices = new Map<string, DeviceData>();
+  let payloadDevices = {};
   devices.forEach((device) => {
-    payloadDevices.set(device._id as string, device.data);
+    payloadDevices = {
+      ...payloadDevices,
+      [device._id as string]: {
+        ...device.data,
+        status: 'SUCCESS',
+      },
+    };
   });
   console.log({ payloadDevices });
 
@@ -70,14 +77,14 @@ const executeOnDevice = (
 ): SmartHomeV1ExecuteResponseCommands[] => {
   return executions.map((execution) => {
     console.log(`Executing ${execution.command} on ${deviceID}`);
-  return {
+    return {
       ids: [deviceID],
-    status: 'SUCCESS',
-    states: {
-      on: true,
-      online: true,
-    },
-  };
+      status: 'SUCCESS',
+      states: {
+        on: true,
+        online: true,
+      },
+    };
   });
 };
 
@@ -86,7 +93,7 @@ app.onExecute(async (body, headers) => {
     .map((cmd) => {
       return cmd.devices.map((device) =>
         executeOnDevice(device.id, cmd.execution),
-  );
+      );
     })
     .flat(2);
 
