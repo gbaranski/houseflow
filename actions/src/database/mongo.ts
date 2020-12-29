@@ -49,7 +49,7 @@ interface LightData extends BaseDeviceData {
   on: boolean;
 }
 
-type AnyDeviceData = WaterHeaterData | GarageData | LightData;
+export type AnyDeviceData = WaterHeaterData | GarageData | LightData;
 
 export interface Device {
   // defined only when retreiving from DB
