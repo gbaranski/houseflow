@@ -23,31 +23,27 @@ app.onSync(async (body, headers) => {
   console.log({ claims });
   const userID = await fetchTokenUUID(claims.jti);
   console.log({ userID });
+  const user = await getUser(userID);
+  console.log({ user });
+  const devices = await findDevices(user.devices);
+  console.log({ devices });
 
   return {
     requestId: body.requestId,
     payload: {
       agentUserId: userID,
-      devices: [
-        {
-          id: '5fea26e83702b2017a6043bf',
-          type: 'action.devices.types.WASHER',
-          traits: ['action.devices.traits.OnOff'],
-          name: {
-            defaultNames: ['My Washer'],
-            name: 'Washer',
-            nicknames: ['Washer'],
-          },
-          deviceInfo: {
-            manufacturer: 'Acme Co',
-            model: 'acme-washer',
-            hwVersion: '1.0',
-            swVersion: '1.0.1',
-          },
-          willReportState: true,
+      devices: devices.map(
+        (device): SmartHomeV1SyncDevices => ({
+          id: device._id as string, // that comes from DB, it must be defined
+          type: device.type,
+          traits: device.traits,
+          name: device.name,
+          willReportState: device.willReportState,
+          deviceInfo: device.deviceInfo,
+          roomHint: device.roomHint,
+        }),
+      ),
         },
-      ],
-    },
   };
 });
 
