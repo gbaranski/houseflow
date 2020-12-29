@@ -10,3 +10,6 @@ export const extractJWTToken = (headers: Headers): string => {
   if (splitted.length != 2) throw new Error('Authorization header is invalid');
   return splitted[1];
 };
+
+export const getRandomShortID = (): string =>
+  Math.random().toString(36).substr(2, 9);

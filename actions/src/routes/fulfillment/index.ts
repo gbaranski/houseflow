@@ -8,6 +8,7 @@ import { extractJWTToken } from '@/utils';
 import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
 import { findDevices, getUser } from '@/database/mongo';
+import { sendDeviceMessage } from '@/services/mqtt';
 
 const serviceAccountKey = require('/app/service-account.json');
 
@@ -61,7 +62,6 @@ app.onQuery(async (body, headers) => {
       },
     };
   });
-  console.log({ payloadDevices });
 
   return {
     requestId: body.requestId,
@@ -74,19 +74,13 @@ app.onQuery(async (body, headers) => {
 const executeOnDevice = (
   deviceID: string,
   executions: SmartHomeV1ExecuteRequestExecution[],
-): SmartHomeV1ExecuteResponseCommands[] => {
-  return executions.map((execution) => {
-    console.log(`Executing ${execution.command} on ${deviceID}`);
-    return {
-      ids: [deviceID],
-      status: 'SUCCESS',
-      states: {
-        on: true,
-        online: true,
-      },
-    };
-  });
-};
+): Promise<SmartHomeV1ExecuteResponseCommands>[] =>
+  executions.map(
+    (execution): Promise<SmartHomeV1ExecuteResponseCommands> => {
+      console.log(`Executing ${execution.command} on ${deviceID}`);
+      return sendDeviceMessage(deviceID, 'OnOff', execution.params || {});
+    },
+  );
 
 app.onExecute(async (body, headers) => {
   const commands = body.inputs[0].payload.commands
@@ -100,7 +94,7 @@ app.onExecute(async (body, headers) => {
   return {
     requestId: body.requestId,
     payload: {
-      commands: commands,
+      commands: await Promise.all(commands),
     },
   };
 });
