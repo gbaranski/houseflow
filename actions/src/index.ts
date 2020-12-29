@@ -1,7 +1,8 @@
 import http from 'http';
 import app from './app';
 import chalk from 'chalk';
-import { addDevice, connectMongo } from '@/database/mongo';
+import { connectMongo } from '@/database/mongo';
+import '@/services/mqtt';
 
 (async () => {
   await connectMongo();
