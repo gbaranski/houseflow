@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	"os"
@@ -70,6 +71,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 }
 
 func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
+	fmt.Println("Attempt to get access token")
 	rt, err := utils.VerifyToken(form.RefreshToken, utils.JWTRefreshKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -100,7 +102,7 @@ func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":   "Bearer",
 		"access_token": at.Token.Raw,
-		"expires_in":   atexp.Sub(now),
+		"expires_in":   math.Round(atexp.Sub(now).Seconds()),
 	})
 }
 
