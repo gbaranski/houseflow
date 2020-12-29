@@ -71,24 +71,17 @@ app.onQuery(async (body, headers) => {
   };
 });
 
-const executeOnDevice = (
-  deviceID: string,
-  executions: SmartHomeV1ExecuteRequestExecution[],
-): Promise<SmartHomeV1ExecuteResponseCommands>[] =>
-  executions.map(
-    (execution): Promise<SmartHomeV1ExecuteResponseCommands> => {
-      console.log(`Executing ${execution.command} on ${deviceID}`);
-      return sendDeviceMessage(deviceID, 'OnOff', execution.params || {});
-    },
-  );
-
 app.onExecute(async (body, headers) => {
-  const commands = body.inputs[0].payload.commands
-    .map((cmd) => {
-      return cmd.devices.map((device) =>
-        executeOnDevice(device.id, cmd.execution),
-      );
-    })
+  const payload = body.inputs[0].payload;
+
+  const commands = payload.commands
+    .map(({ execution, devices }) =>
+      execution.map((exec) =>
+        devices.map((device) =>
+          sendDeviceMessage(device.id, exec.command, exec.params || {}),
+        ),
+      ),
+    )
     .flat(2);
 
   return {
