@@ -10,7 +10,7 @@ services:
       - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=false
 
-      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+      - EMQX_LOADED_PLUGINS=emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
@@ -20,55 +20,55 @@ services:
     networks:
       - backend
 
-  auth_emqx:
-    tty: true
-    container_name: 'auth_emqx'
-    command: npm run start
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-    env_file:
-      - .env
-    build:
-      context: ./auth_emqx
-      dockerfile: Dockerfile
-    volumes:
-      - ./firebaseConfig.json:/app/firebaseConfig.json
-    networks:
-      - backend
+  # auth_emqx:
+  #   tty: true
+  #   container_name: 'auth_emqx'
+  #   command: npm run start
+  #   environment:
+  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: ./auth_emqx
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./firebaseConfig.json:/app/firebaseConfig.json
+  #   networks:
+  #     - backend
 
-  webhooks:
-    tty: true
-    container_name: 'webhooks'
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-    env_file:
-      - .env
-    build:
-      context: ./webhooks
-      dockerfile: Dockerfile
-    volumes:
-      - ./firebaseConfig.json:/app/firebaseConfig.json
-    networks:
-      - backend
+  # webhooks:
+  #   tty: true
+  #   container_name: 'webhooks'
+  #   environment:
+  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+  #   env_file:
+  #     - .env
+  #   build:
+  #     context: ./webhooks
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./firebaseConfig.json:/app/firebaseConfig.json
+  #   networks:
+  #     - backend
 
-  device_api:
-    tty: true
-    container_name: 'device_api'
-    command: npm run start:dev
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-    env_file:
-      - .env
-    depends_on:
-      - 'emqx'
-    build:
-      context: ./device_api
-      dockerfile: Dockerfile
-    volumes:
-      - ./device_api/src/:/app/src/
-      - ./firebaseConfig.json:/app/firebaseConfig.json
-    networks:
-      - backend
+  # device_api:
+  #   tty: true
+  #   container_name: 'device_api'
+  #   command: npm run start:dev
+  #   environment:
+  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - 'emqx'
+  #   build:
+  #     context: ./device_api
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./device_api/src/:/app/src/
+  #     - ./firebaseConfig.json:/app/firebaseConfig.json
+  #   networks:
+  #     - backend
 
 
   nginx:
