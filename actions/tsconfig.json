@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-      "target": "ES6",
+      "target": "ES2019",
       "moduleResolution": "node",
       "sourceMap": true,
       "outDir": "./dist",
-      "lib": ["es6"],
+      "lib": ["es2019", "es2020.bigint", "es2020.string", "es2020.symbol.wellknown"],
       "strict": true,
       "noImplicitAny": true,
       "resolveJsonModule": true,
