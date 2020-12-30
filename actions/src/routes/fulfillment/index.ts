@@ -8,7 +8,7 @@ import { extractJWTToken } from '@/utils';
 import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
 import { findDevices, getUser } from '@/database/mongo';
-import { sendDeviceMessage } from '@/services/mqtt';
+import { sendCommand } from '@/services/mqtt';
 
 const serviceAccountKey = require('/app/service-account.json');
 
@@ -78,7 +78,7 @@ app.onExecute(async (body, headers) => {
     .map(({ execution, devices }) =>
       execution.map((exec) =>
         devices.map((device) =>
-          sendDeviceMessage(device.id, exec.command, exec.params || {}),
+          sendCommand(device.id, exec.command, exec.params || {}),
         ),
       ),
     )

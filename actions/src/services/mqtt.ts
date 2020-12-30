@@ -25,7 +25,7 @@ interface DeviceResponse extends SmartHomeV1ExecuteResponseCommands {
   correlationData: string;
 }
 
-export const sendDeviceMessage = (
+export const sendCommand = (
   deviceID: string,
   cmd: string,
   params: object,
