@@ -96,6 +96,7 @@ func (m *Mongo) AddUser(user types.User) (*primitive.ObjectID, error) {
 	}
 
 	user.Password = string(password)
+	user.Devices = []string{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
