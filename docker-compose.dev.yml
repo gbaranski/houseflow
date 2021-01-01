@@ -98,33 +98,9 @@ services:
     networks:
       - backend
 
-  mongo-express:
-    image: mongo-express
-    restart: 'unless-stopped'
-    container_name: 'mongo-express'
-    env_file:
-      - .env
-    ports:
-      - 8081:8081
-    networks:
-      - backend
-
   redis:
-    image: "redis:alpine"
+    image: "redis:latest"
     container_name: "redis"
-    networks:
-      - backend
-
-  redis-commander:
-    container_name: redis-commander
-    hostname: redis-commander
-    image: rediscommander/redis-commander:latest
-    restart: 'unless-stopped'
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-      - PORT=9000
-    ports:
-      - "9000:9000"
     networks:
       - backend
 
