@@ -70,7 +70,6 @@ services:
   #   networks:
   #     - backend
 
-
   nginx:
     tty: true
     container_name: 'nginx'
@@ -95,12 +94,25 @@ services:
     restart: 'unless-stopped'
     env_file:
       - .env
+    environment:
+      - MONGO_INITDB_DATABASE=houseflowDB
+    networks:
+      - backend
+
+  mongo-express:
+    image: mongo-express
+    restart: 'unless-stopped'
+    container_name: 'mongo-express'
+    env_file:
+      - .env
+    ports:
+      - 8081:8081
     networks:
       - backend
 
   redis:
-    image: "redis:latest"
-    container_name: "redis"
+    image: 'redis:latest'
+    container_name: 'redis'
     networks:
       - backend
 
@@ -116,6 +128,22 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./auth:/app
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  state_manager:
+    tty: true
+    container_name: 'state_manager'
+    restart: 'unless-stopped'
+    depends_on:
+      - mongo
+    build:
+      context: ./state_manager
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./state_manager:/app
     env_file:
       - .env
     networks:
