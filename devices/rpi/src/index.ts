@@ -9,7 +9,7 @@ if (!DEVICE_UID || !DEVICE_SECRET || !MQTT_URL) {
   );
 }
 
-const mqttClient = mqtt.connect(MQTT_URL, {
+export const mqttClient = mqtt.connect(MQTT_URL, {
   clientId: 'device_' + Math.random().toString(16).substr(2, 8),
   username: DEVICE_UID,
   password: DEVICE_SECRET,
@@ -18,4 +18,4 @@ const mqttClient = mqtt.connect(MQTT_URL, {
 
 mqttClient.on('error', console.log);
 
-mqttClient.on('connect', () => onConnection(mqttClient));
+mqttClient.on('connect', () => onConnection());
