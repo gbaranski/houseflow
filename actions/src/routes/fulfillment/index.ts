@@ -1,9 +1,4 @@
-import {
-  smarthome,
-  SmartHomeV1ExecuteRequestExecution,
-  SmartHomeV1ExecuteResponseCommands,
-  SmartHomeV1SyncDevices,
-} from 'actions-on-google';
+import { smarthome, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { extractJWTToken } from '@/utils';
 import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
@@ -57,7 +52,7 @@ app.onQuery(async (body, headers) => {
     payloadDevices = {
       ...payloadDevices,
       [device._id as string]: {
-        ...device.data,
+        ...device.state,
         status: 'SUCCESS',
       },
     };
@@ -71,6 +66,8 @@ app.onQuery(async (body, headers) => {
   };
 });
 
+const parseCommand = (cmd: string): string => cmd.split('.').reverse()[0];
+
 app.onExecute(async (body, headers) => {
   const payload = body.inputs[0].payload;
 
@@ -78,7 +75,7 @@ app.onExecute(async (body, headers) => {
     .map(({ execution, devices }) =>
       execution.map((exec) =>
         devices.map((device) =>
-          sendCommand(device.id, exec.command, exec.params || {}),
+          sendCommand(device.id, parseCommand(exec.command), exec.params || {}),
         ),
       ),
     )

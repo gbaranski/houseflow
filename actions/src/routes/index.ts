@@ -4,7 +4,7 @@ import fulfillment from './fulfillment';
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/', (_, res) => {
   res.send('Hello from Action server');
 });
 
@@ -28,24 +28,24 @@ router.get('/requestSync', async (req, res) => {
   }
 });
 
-router.get('/add1', async (req, res) => {
+router.get('/add1', async (_, res) => {
   addDevice({
     type: 'action.devices.types.LIGHT',
     traits: ['action.devices.traits.OnOff'],
     name: {
-      defaultNames: ['Simple light'],
-      name: 'Simple light',
-      nicknames: ['Simple light'],
+      defaultNames: ['Night lamp', 'Bedside lamp'],
+      name: 'Night lamp',
+      nicknames: ['Night lamp'],
     },
     deviceInfo: {
       manufacturer: 'gbaranski`s garage',
-      model: 'garage',
+      model: 'nightlamp',
       hwVersion: '1.0',
       swVersion: '1.0',
     },
     willReportState: true,
     roomHint: 'Bedroom',
-    data: {
+    state: {
       online: true,
       on: true,
     },
