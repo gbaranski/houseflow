@@ -2,6 +2,7 @@ import { getRandomShortID } from '@/utils';
 import { SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { DeviceOfflineException } from '@/types';
 import mqtt from 'mqtt';
+import { updateDeviceState } from '@/database/mongo';
 
 const mqttClient = mqtt.connect('mqtt://emqx', {
   clientId: 'server_actions-1',
@@ -23,7 +24,8 @@ const sendMessage = ({
 }: {
   payload: Object;
   topic: string;
-}) => {
+}): Promise<DeviceResponse> => {
+  console.log(`Sending message on topic ${topic}`);
   const topicPair = {
     request: topic + '/request',
     response: topic + '/response',
@@ -37,7 +39,7 @@ const sendMessage = ({
     correlationData: correlationData,
   };
 
-  return new Promise<Object>((resolve, reject) => {
+  return new Promise<DeviceResponse>((resolve, reject) => {
     let completed = false;
 
     const listenerCallback = (
@@ -56,6 +58,7 @@ const sendMessage = ({
         mqttClient.unsubscribe(topicPair.response);
         mqttClient.removeListener('message', listenerCallback);
         completed = true;
+        console.log({ responseRequest });
         resolve(responseRequest);
       }
     };
@@ -82,6 +85,7 @@ export const sendCommand = async (
       topic: `${deviceID}/commands/${cmd}`,
       payload: { params },
     });
+    updateDeviceState(deviceID, res.states || { online: true });
     return res as SmartHomeV1ExecuteResponseCommands;
   } catch (e) {
     if (e instanceof DeviceOfflineException) {

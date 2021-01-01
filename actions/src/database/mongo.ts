@@ -2,7 +2,13 @@ import {
   SmartHomeV1SyncDeviceInfo,
   SmartHomeV1SyncName,
 } from 'actions-on-google';
-import { Collection, Db, MongoClient, ObjectId } from 'mongodb';
+import {
+  Collection,
+  Db,
+  MongoClient,
+  ObjectId,
+  UpdateWriteOpResult,
+} from 'mongodb';
 
 const { MONGO_INITDB_ROOT_USERNAME, MONGO_INITDB_ROOT_PASSWORD } = process.env;
 if (!MONGO_INITDB_ROOT_USERNAME || !MONGO_INITDB_ROOT_PASSWORD)
@@ -61,7 +67,7 @@ export interface Device {
   willReportState: boolean;
   deviceInfo: SmartHomeV1SyncDeviceInfo;
   roomHint: string;
-  data: AnyDeviceData;
+  state: AnyDeviceData;
   attributes?: object;
 }
 
@@ -95,4 +101,22 @@ export const getUser = async (userID: string): Promise<User> => {
   });
   if (!user) throw new Error('Unable to find user with matching ID');
   return user;
+};
+
+export const updateDeviceState = async (
+  deviceID: string,
+  state: Object,
+): Promise<void> => {
+  console.log(`updating device state of ${deviceID} to `, state);
+  const res = await devicesCollection.updateOne(
+    {
+      _id: new ObjectId(deviceID),
+    },
+    {
+      $set: {
+        state: state,
+      },
+    },
+  );
+  console.log(`Updated device state ID: ${deviceID} res: ${res.result}`);
 };
