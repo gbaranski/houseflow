@@ -1,5 +1,9 @@
-import { smarthome, SmartHomeV1SyncDevices } from 'actions-on-google';
-import { extractJWTToken } from '@/utils';
+import {
+  smarthome,
+  SmartHomeV1ExecuteResponseCommands,
+  SmartHomeV1SyncDevices,
+} from 'actions-on-google';
+import { convertArrayToObject, extractJWTToken } from '@/utils';
 import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
 import { findDevices, getUser } from '@/database/mongo';
@@ -46,7 +50,6 @@ app.onSync(async (body, headers) => {
 });
 
 app.onQuery(async (body, headers) => {
-  console.log({ headers });
   const token = extractJWTToken(headers);
   const claims = await verifyToken(token);
   const userID = await fetchTokenUUID(claims.jti);
@@ -57,25 +60,26 @@ app.onQuery(async (body, headers) => {
   );
 
   const payloadDevices = requestedDevicesIDs.map((deviceID) => {
-    const dbDevice = userDevices.find((device) => device._id === deviceID);
+    const dbDevice = userDevices.find((device) => device._id?.equals(deviceID));
+
     if (!dbDevice || !deviceID) {
+      console.log({ dbDevice, deviceID, userDevices });
       return {
         status: 'ERROR',
         errorCode: 'relinkRequired',
       };
     }
     return {
-      [deviceID.toHexString()]: {
-        ...dbDevice.state,
-        status: 'SUCCESS',
-      },
+      ...dbDevice.state,
+      status: 'SUCCESS',
+      id: deviceID,
     };
   });
 
   return {
     requestId: body.requestId,
     payload: {
-      devices: payloadDevices,
+      devices: convertArrayToObject(payloadDevices, 'id'),
     },
   };
 });
@@ -83,13 +87,40 @@ app.onQuery(async (body, headers) => {
 const parseCommand = (cmd: string): string => cmd.split('.').reverse()[0];
 
 app.onExecute(async (body, headers) => {
+  console.log({ headers });
+  const token = extractJWTToken(headers);
+  const claims = await verifyToken(token);
+  const userID = await fetchTokenUUID(claims.jti);
+  const user = await getUser(userID);
+  const userDevices = await findDevices(user.devices);
+
   const payload = body.inputs[0].payload;
 
   const commands = payload.commands
     .map(({ execution, devices }) =>
       execution.map((exec) =>
-        devices.map((device) =>
-          sendCommand(device.id, parseCommand(exec.command), exec.params || {}),
+        devices.map(
+          async (device): Promise<SmartHomeV1ExecuteResponseCommands> => {
+            if (
+              !userDevices.some(
+                (userDevice) => userDevice._id?.toHexString() === device.id,
+              )
+            ) {
+              console.log(
+                `User ${userID} doesn't have devices with ID ${device.id}`,
+              );
+              return {
+                ids: [device.id],
+                status: 'ERROR',
+                errorCode: 'relinkRequired',
+              };
+            }
+            return sendCommand(
+              device.id,
+              parseCommand(exec.command),
+              exec.params || {},
+            );
+          },
         ),
       ),
     )
