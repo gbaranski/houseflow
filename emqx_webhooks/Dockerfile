@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:alpine
 
 ENV GO111MODULE=on
 
