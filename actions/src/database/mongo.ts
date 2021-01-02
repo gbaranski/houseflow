@@ -59,7 +59,7 @@ export type AnyDeviceData = WaterHeaterData | GarageData | LightData;
 
 export interface Device {
   // defined only when retreiving from DB
-  _id?: string;
+  _id?: ObjectId;
 
   type: string;
   traits: string[];

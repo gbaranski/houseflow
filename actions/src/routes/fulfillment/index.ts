@@ -4,6 +4,7 @@ import { verifyToken } from '@/utils/token';
 import { fetchTokenUUID } from '@/database/redis';
 import { findDevices, getUser } from '@/database/mongo';
 import { sendCommand } from '@/services/mqtt';
+import { ObjectId } from 'mongodb';
 
 const serviceAccountKey = require('/app/service-account.json');
 
@@ -31,7 +32,7 @@ app.onSync(async (body, headers) => {
       agentUserId: userID,
       devices: devices.map(
         (device): SmartHomeV1SyncDevices => ({
-          id: device._id as string, // that comes from DB, it must be defined
+          id: device._id?.toHexString() as string, // that comes from DB, it must be defined
           type: device.type,
           traits: device.traits,
           name: device.name,
@@ -45,14 +46,27 @@ app.onSync(async (body, headers) => {
 });
 
 app.onQuery(async (body, headers) => {
-  const deviceIDs = body.inputs[0].payload.devices.map((device) => device.id);
-  const devices = await findDevices(deviceIDs);
-  let payloadDevices = {};
-  devices.forEach((device) => {
-    payloadDevices = {
-      ...payloadDevices,
-      [device._id as string]: {
-        ...device.state,
+  console.log({ headers });
+  const token = extractJWTToken(headers);
+  const claims = await verifyToken(token);
+  const userID = await fetchTokenUUID(claims.jti);
+  const user = await getUser(userID);
+  const userDevices = await findDevices(user.devices);
+  const requestedDevicesIDs = body.inputs[0].payload.devices.map(
+    (device) => new ObjectId(device.id),
+  );
+
+  const payloadDevices = requestedDevicesIDs.map((deviceID) => {
+    const dbDevice = userDevices.find((device) => device._id === deviceID);
+    if (!dbDevice || !deviceID) {
+      return {
+        status: 'ERROR',
+        errorCode: 'relinkRequired',
+      };
+    }
+    return {
+      [deviceID.toHexString()]: {
+        ...dbDevice.state,
         status: 'SUCCESS',
       },
     };
