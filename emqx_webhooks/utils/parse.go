@@ -2,17 +2,9 @@ package parse
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 
 	types "github.com/gbaranski/houseflow/webhooks/types"
 )
-
-// BodyToBytes parses request body to bytes array
-func BodyToBytes(reqBody io.ReadCloser) ([]byte, error) {
-	body, readErr := ioutil.ReadAll(reqBody)
-	return body, readErr
-}
 
 // Those 3 functions are bad, it could be rewritten to one, but golang doesn't have generics yet
 

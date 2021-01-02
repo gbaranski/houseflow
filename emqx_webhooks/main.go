@@ -4,19 +4,23 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/gbaranski/houseflow/webhooks/database"
 	server "github.com/gbaranski/houseflow/webhooks/server"
-	services "github.com/gbaranski/houseflow/webhooks/services"
 )
 
 func main() {
-	firebaseClient, error := services.InitFirebase(context.Background())
-	if error != nil {
-		log.Fatalln(error)
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	log.Println("Starting webhooks")
+	db, err := database.CreateDatabase(ctx)
+	if err != nil {
+		panic(err)
+	}
+	s := server.NewServer(db)
 	http.HandleFunc("/event", func(w http.ResponseWriter, req *http.Request) {
-		server.OnEvent(w, req, firebaseClient)
+		s.OnEvent(w, req)
 	})
 
 	http.ListenAndServe(":80", nil)

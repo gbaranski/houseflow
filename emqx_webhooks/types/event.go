@@ -2,14 +2,14 @@ package eventtypes
 
 // WebhookEvent when webhook triggered
 type WebhookEvent struct {
-	Action string `json:"action"`
+	Action   string `json:"action"`
+	Username string `json:"username"`
+	ClientID string `json:"clientid"`
 }
 
 // ConnectedEvent when client connects
 type ConnectedEvent struct {
 	WebhookEvent
-	Username           string `json:"username"`
-	ClientID           string `json:"clientid"`
 	ProtoVersion       int    `json:"proto_ver"`
 	KeepAlive          int    `json:"keepalive"`
 	IPAddress          string `json:"ipaddress"`
@@ -19,7 +19,5 @@ type ConnectedEvent struct {
 // DisconnectedEvent when client disconnected
 type DisconnectedEvent struct {
 	WebhookEvent
-	Username string `json:"username"`
-	ClientID string `json:"clientid"`
-	Reason   string `json:"reason"`
+	Reason string `json:"reason"`
 }
