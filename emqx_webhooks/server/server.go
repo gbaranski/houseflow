@@ -33,24 +33,17 @@ func (s *Server) OnEvent(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("bytes: ", b)
 	fmt.Println("str: ", string(b))
 
-	fmt.Println("here 1")
-
 	if err != nil {
-		fmt.Println("here 2")
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		log.Println("Failed reading request body: ", err.Error())
 		return
 	}
-	fmt.Println("here 3")
 	var e types.WebhookEvent
 	if err := json.Unmarshal(b, &e); err != nil {
-		fmt.Println("here 4")
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		log.Println("Failed unmarhsalling body: ", err.Error())
 		return
 	}
-
-	fmt.Println("here 5")
 
 	if !strings.HasPrefix(e.ClientID, "device_") {
 		return
