@@ -10,13 +10,27 @@ services:
       - EMQX_LOG__LEVEL=debug
       - EMQX_ALLOW_ANONYMOUS=true
 
-      - EMQX_LOADED_PLUGINS=emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+      - EMQX_LOADED_PLUGINS=emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
       - 18083:18083 # Dashboard
     volumes:
       - ./emqx/plugins:/opt/emqx/etc/plugins
+    networks:
+      - backend
+
+  emqx_webhooks:
+    tty: true
+    container_name: 'emqx_webhooks'
+    env_file:
+      - .env
+    build:
+      context: ./emqx_webhooks
+      dockerfile: Dockerfile
+    depends_on:
+      - emqx
+      - mongo
     networks:
       - backend
 
@@ -30,21 +44,6 @@ services:
   #     - .env
   #   build:
   #     context: ./auth_emqx
-  #     dockerfile: Dockerfile
-  #   volumes:
-  #     - ./firebaseConfig.json:/app/firebaseConfig.json
-  #   networks:
-  #     - backend
-
-  # webhooks:
-  #   tty: true
-  #   container_name: 'webhooks'
-  #   environment:
-  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./webhooks
   #     dockerfile: Dockerfile
   #   volumes:
   #     - ./firebaseConfig.json:/app/firebaseConfig.json
@@ -126,6 +125,9 @@ services:
     build:
       context: ./auth
       dockerfile: Dockerfile.dev
+    depends_on:
+      - mongo
+      - redis
     volumes:
       - ./auth:/app
     env_file:
@@ -139,6 +141,7 @@ services:
     restart: 'unless-stopped'
     depends_on:
       - mongo
+      - emqx
     build:
       context: ./state_manager
       dockerfile: Dockerfile.dev
