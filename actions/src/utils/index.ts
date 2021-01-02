@@ -13,3 +13,13 @@ export const extractJWTToken = (headers: Headers): string => {
 
 export const getRandomShortID = (): string =>
   Math.random().toString(36).substr(2, 9);
+
+export const convertArrayToObject = (array: any[], key: string) => {
+  const initialValue = {};
+  return array.reduce((obj, item) => {
+    return {
+      ...obj,
+      [item[key]]: item,
+    };
+  }, initialValue);
+};
