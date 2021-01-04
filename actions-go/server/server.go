@@ -97,9 +97,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		}
 		return
 	}
-	fmt.Printf("Base: %+v\n", base)
-	fmt.Println("Inputs: ", base.Inputs)
-	fmt.Println("Inputslen: ", len(base.Inputs))
+	fmt.Printf("Base request: %+v\n", base)
 	// Currently not even expecting more than 1 input
 	switch base.Inputs[0].Intent {
 	case fulfillment.SyncIntent:
