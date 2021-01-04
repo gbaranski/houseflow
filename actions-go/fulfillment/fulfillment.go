@@ -38,7 +38,7 @@ type OtherDeviceID struct {
 // DeviceName names of this device.
 type DeviceName struct {
 	// Primary name of the device, generally provided by the user. This is also the name the Assistant will prefer to describe the device in responses.
-	Name string `json:"name" bindng:"required"`
+	Name string `json:"name" binding:"required"`
 
 	// List of names provided by the developer rather than the user, often manufacturer names, SKUs, etc.
 	DefaultNames []string `json:"defaultNames,omitempty"`
@@ -50,19 +50,19 @@ type DeviceName struct {
 // Device metadata.
 type Device struct {
 	// The ID of the device in the developer's cloud. This must be unique for the user and for the developer, as in cases of sharing we may use this to dedupe multiple views of the same device. It should be immutable for the device; if it changes, the Assistant will treat it as a new device.
-	ID string `json:"id" bindng:"required"`
+	ID string `json:"id" binding:"required"`
 
 	// The hardware type of device.
-	Type string `json:"type" bindng:"required"`
+	Type string `json:"type" binding:"required"`
 
 	// List of traits this device has. This defines the commands, attributes, and states that the device supports.
-	Traits []string `json:"traits" bindng:"required"`
+	Traits []string `json:"traits" binding:"required"`
 
 	// Names of this device.
-	Name DeviceName `json:"name" bindng:"required"`
+	Name DeviceName `json:"name" binding:"required"`
 
 	// Indicates whether this device will have its states updated by the Real Time Feed. (true to use the Real Time Feed for reporting state, and false to use the polling model.)
-	WillReportState bool `json:"willReportState" bindng:"required"`
+	WillReportState bool `json:"willReportState" binding:"required"`
 
 	// Provides the current room of the device in the user's home to simplify setup.
 	RoomHint string `json:"roomHint,omitempty"`
@@ -82,13 +82,13 @@ type Device struct {
 
 // BaseRequestInput ...
 type BaseRequestInput struct {
-	Intent string `json:"intent" bindng:"required"`
+	Intent string `json:"intent" binding:"required"`
 }
 
 // BaseRequest is common for all intents
 type BaseRequest struct {
 	// ID of the corresponding request.
-	RequestID string `json:"requestId" bindng:"required"`
+	RequestID string `json:"requestId" binding:"required"`
 
-	Inputs []BaseRequestInput `json:"inputs" bindng:"required"`
+	Inputs []BaseRequestInput `json:"inputs" binding:"required"`
 }
