@@ -41,6 +41,12 @@ type QueryRequest struct {
 
 // QueryResponsePayload ...
 type QueryResponsePayload struct {
+	// An error code for the entire transaction for auth failures and developer system unavailability. For individual device errors use the errorCode within the device object.
+	ErrorCode string `json:"errorCode,omitempty"`
+
+	// Detailed error which will never be presented to users but may be logged or used during development.
+	DebugString string `json:"debugString,omitempty"`
+
 	// https://developers.google.com/assistant/smarthome/reference/intent/query#response
 	//
 	// Must contain
