@@ -1,9 +1,5 @@
 package fulfillment
 
-// Fulfillment ...
-type Fulfillment struct {
-}
-
 const (
 	// SyncIntent https://developers.google.com/assistant/smarthome/reference/intent/sync
 	SyncIntent = "action.devices.SYNC"
@@ -95,9 +91,4 @@ type BaseRequest struct {
 	RequestID string `json:"requestId" bindng:"required"`
 
 	Inputs []BaseRequestInput `json:"inputs" bindng:"required"`
-}
-
-// NewFulfillment creates fulfillment
-func NewFulfillment() Fulfillment {
-	return Fulfillment{}
 }

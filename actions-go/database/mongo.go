@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gbaranski/houseflow/actions/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -63,7 +64,7 @@ func createMongo(ctx context.Context) (*Mongo, error) {
 }
 
 // GetUserByEmail returns found user from DB, query by email
-func (m *Mongo) GetUserByEmail(email string) (*User, error) {
+func (m *Mongo) GetUserByEmail(email string) (*types.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	result := m.usersCollection.FindOne(ctx, bson.M{"email": email})
@@ -71,7 +72,7 @@ func (m *Mongo) GetUserByEmail(email string) (*User, error) {
 		return nil, result.Err()
 	}
 
-	var user *User
+	var user *types.User
 	if err := result.Decode(&user); err != nil {
 		return nil, err
 	}
@@ -80,7 +81,7 @@ func (m *Mongo) GetUserByEmail(email string) (*User, error) {
 }
 
 // GetUserByID returns found user from DB, query by _id
-func (m *Mongo) GetUserByID(ID primitive.ObjectID) (*User, error) {
+func (m *Mongo) GetUserByID(ID primitive.ObjectID) (*types.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	result := m.usersCollection.FindOne(ctx, bson.M{"_id": ID})
@@ -88,12 +89,17 @@ func (m *Mongo) GetUserByID(ID primitive.ObjectID) (*User, error) {
 		return nil, result.Err()
 	}
 
-	var user *User
+	var user *types.User
 	if err := result.Decode(&user); err != nil {
 		return nil, err
 	}
 
 	return user, nil
+}
+
+// GetUserDevices retreives user devices
+func (m *Mongo) GetUserDevices(devices []string) ([]types.Device, error) {
+
 }
 
 // IsDuplicateError checks if mongo write error is about duplicate

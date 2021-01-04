@@ -96,8 +96,3 @@ type ExecuteResponse struct {
 	// Intent response payload.
 	Payload ExecuteRequestPayload `json:"payload" bindng:"required"`
 }
-
-// OnExecute https://developers.google.com/assistant/smarthome/reference/intent/execute
-func (f *Fulfillment) OnExecute() {
-
-}
