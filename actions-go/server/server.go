@@ -77,25 +77,33 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	for _, e := range base.Inputs {
-		switch e.Intent {
-		case fulfillment.SyncIntent:
-			var sr fulfillment.SyncRequest
-			err = c.MustBindWith(sr, binding.JSON)
-			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error":             "invalid_json",
-					"error_description": err.Error(),
-				})
-			}
-			s.onSync(c, sr, *user)
-		case fulfillment.QueryIntent:
-		case fulfillment.ExecuteIntent:
-		case fulfillment.DisconnectIntent:
-			c.JSON(http.StatusNotImplemented, gin.H{
-				"error": "not_implemented",
+	// Currently not even expecting more than 1 input
+	switch base.Inputs[0].Intent {
+	case fulfillment.SyncIntent:
+		var sr fulfillment.SyncRequest
+		err = c.MustBindWith(sr, binding.JSON)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":             "invalid_json",
+				"error_description": err.Error(),
 			})
 		}
+		s.onSync(c, sr, *user)
+	case fulfillment.QueryIntent:
+		var qr fulfillment.QueryRequest
+		err = c.MustBindWith(qr, binding.JSON)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":             "invalid_json",
+				"error_description": err.Error(),
+			})
+		}
+		s.OnQuery(c, qr, *user)
+	case fulfillment.ExecuteIntent:
+	case fulfillment.DisconnectIntent:
+		c.JSON(http.StatusNotImplemented, gin.H{
+			"error": "not_implemented",
+		})
 	}
 
 }
