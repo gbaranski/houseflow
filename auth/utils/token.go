@@ -32,12 +32,6 @@ type TokenDetails struct {
 	Claims TokenClaims
 }
 
-// TokenPair combins both access token and refresh token
-type TokenPair struct {
-	AccessToken  TokenDetails
-	RefreshToken TokenDetails
-}
-
 func createJWTToken(expiresAt time.Time, secretEnv string, audience *string) (*TokenDetails, error) {
 	jwtKey := os.Getenv(secretEnv)
 
@@ -71,30 +65,15 @@ func CreateAuthorizationCode(userID primitive.ObjectID) (*TokenDetails, error) {
 }
 
 // CreateAccessToken creates acces token and returns it
-func CreateAccessToken() (*TokenDetails, error) {
-	return createJWTToken(time.Now().Add(time.Hour), JWTAccessKey, nil)
+func CreateAccessToken(userID primitive.ObjectID) (*TokenDetails, error) {
+	userIDHex := userID.Hex()
+	return createJWTToken(time.Now().Add(time.Hour), JWTAccessKey, &userIDHex)
 }
 
 // CreateRefreshToken creates acces token and returns it
-func CreateRefreshToken() (*TokenDetails, error) {
-	return createJWTToken(time.Time{}, JWTRefreshKey, nil)
-}
-
-// CreateTokenPair creates accessToken and refreshToken
-func CreateTokenPair() (*TokenPair, error) {
-	accessToken, err := CreateAccessToken()
-	if err != nil {
-		return nil, err
-	}
-	refreshToken, err := CreateRefreshToken()
-	if err != nil {
-		return nil, err
-	}
-
-	return &TokenPair{
-		RefreshToken: *refreshToken,
-		AccessToken:  *accessToken,
-	}, nil
+func CreateRefreshToken(userID primitive.ObjectID) (*TokenDetails, error) {
+	userIDHex := userID.Hex()
+	return createJWTToken(time.Time{}, JWTRefreshKey, &userIDHex)
 }
 
 // VerifyToken verifyes jwt token, secretEnv must be some enviroent variable

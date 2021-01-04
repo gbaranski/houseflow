@@ -30,23 +30,14 @@ func createRedis() (*Redis, error) {
 	return &Redis{client: rdb}, nil
 }
 
-// AddTokenPair adds tokenpair to redis
-func (r *Redis) AddTokenPair(userID primitive.ObjectID, tp *utils.TokenPair) error {
-	at := time.Unix(tp.AccessToken.Claims.ExpiresAt, 0)
-	now := time.Now()
+// AddToken adds token to Redis DB
+func (r *Redis) AddToken(userID primitive.ObjectID, td *utils.TokenDetails) error {
+	exp := time.Unix(td.Claims.ExpiresAt, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	err := r.client.Set(ctx, tp.AccessToken.Claims.Id, userID.Hex(), at.Sub(now)).Err()
-	if err != nil {
-		return err
-	}
-	err = r.client.Set(ctx, tp.RefreshToken.Claims.Id, userID.Hex(), 0).Err()
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.client.Set(ctx, td.Claims.Id, userID.Hex(), time.Since(exp)).Err()
 }
 
 // DeleteAuth removes token from redi
