@@ -83,3 +83,21 @@ type Device struct {
 	// List of alternate IDs used to identify a cloud synced device for local execution.
 	OtherDevicesIDs []OtherDeviceID `json:"otherDeviceIds,omitempty"`
 }
+
+// BaseRequestInput ...
+type BaseRequestInput struct {
+	Intent string `json:"intent" validate:"required"`
+}
+
+// BaseRequest is common for all intents
+type BaseRequest struct {
+	// ID of the corresponding request.
+	RequestID string `json:"requestId" validate:"required"`
+
+	Inputs []BaseRequestInput `json:"inputs" validate:"required"`
+}
+
+// NewFulfillment creates fulfillment
+func NewFulfillment() Fulfillment {
+	return Fulfillment{}
+}
