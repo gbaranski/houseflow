@@ -1,23 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"time"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/gbaranski/houseflow/actions/database"
+	"github.com/gbaranski/houseflow/actions/fulfillment"
+	"github.com/gbaranski/houseflow/actions/server"
 )
 
 type test struct {
-	Something string `validate:"eq=action.devices.SYNC"`
+	Something string `bindng:"eq=action.devices.SYNC"`
 }
 
 func main() {
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// db, err := database.CreateDatabase(ctx)
-	// defer cancel()
-	tst := test{
-		Something: "action.devices.SYNC",
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	db, err := database.CreateDatabase(ctx)
+	defer cancel()
+	f := fulfillment.NewFulfillment()
+	s := server.NewServer(db, f)
+	err = s.Router.Run(":80")
+	if err != nil {
+		panic(err)
 	}
-	validator := validator.New()
-	err := validator.Struct(tst)
-	fmt.Println(err)
 }

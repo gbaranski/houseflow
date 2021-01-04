@@ -1,12 +1,16 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/gbaranski/houseflow/actions/database"
 	"github.com/gbaranski/houseflow/actions/fulfillment"
+	"github.com/gbaranski/houseflow/actions/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Server hold root server state
@@ -17,33 +21,93 @@ type Server struct {
 }
 
 // NewServer creates server, it won't run till Server.Start
-func NewServer(db *database.Database) *Server {
+func NewServer(db *database.Database, fulfillment fulfillment.Fulfillment) *Server {
 	s := &Server{
-		db: db,
+		db:          db,
+		fulfillment: fulfillment,
+		Router:      gin.Default(),
 	}
-	s.Router = gin.Default()
-	s.Router.POST("/fulfillment")
+	s.Router.POST("/fulfillment", s.onFulfillment)
 	return s
 }
 
-type test1 struct {
-	Something1 string `json:"something1"`
-}
-
-type test2 struct {
-	Something1 string `json:"something1"`
-	Something2 string `json:"something2"`
-}
-
 func (s *Server) onFulfillment(c *gin.Context) {
-	jsonstr := `{"something1":"smth1","something2":"smth2"}`
-	var test1 test1
-	_ = json.Unmarshal([]byte(jsonstr), &test1)
+	var base fulfillment.BaseRequest
 
-	var test2 test2
-	_ = json.Unmarshal([]byte(jsonstr), &test2)
+	if err := c.MustBindWith(&base, binding.JSON); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":             "invalid_json",
+			"error_description": err.Error(),
+		})
+		return
+	}
 
-	fmt.Printf("Test1: %+v\n", test1)
-	fmt.Printf("Test2: %+v\n", test2)
+	token := extractToken(c.Request)
+	if token == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "missing_bearer_token",
+		})
+	}
+	td, err := utils.VerifyToken(*token, utils.JWTAccessKey)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":             "invalid_token",
+			"error_description": err.Error(),
+		})
+	}
+	userID, err := primitive.ObjectIDFromHex(td.Claims.Audience)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":             "invalid_token_aud",
+			"error_description": err.Error(),
+		})
+	}
 
+	user, err := s.db.Mongo.GetUserByID(userID)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":             "user_not_found",
+				"error_description": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":             "unable_retreive_user",
+				"error_description": err.Error(),
+			})
+		}
+		return
+	}
+
+	for _, e := range base.Inputs {
+		switch e.Intent {
+		case fulfillment.SyncIntent:
+			var sr fulfillment.SyncRequest
+			err = c.MustBindWith(sr, binding.JSON)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error":             "invalid_json",
+					"error_description": err.Error(),
+				})
+			}
+			s.fulfillment.OnSync(sr, *user)
+		case fulfillment.QueryIntent:
+		case fulfillment.ExecuteIntent:
+		case fulfillment.DisconnectIntent:
+			c.JSON(http.StatusNotImplemented, gin.H{
+				"error": "not_implemented",
+			})
+		}
+	}
+
+}
+
+func extractToken(r *http.Request) *string {
+	bearToken := r.Header.Get("Authorization")
+	//normally Authorization the_token_xxx
+	strArr := strings.Split(bearToken, " ")
+	if len(strArr) == 2 {
+		return &strArr[1]
+	}
+	return nil
 }

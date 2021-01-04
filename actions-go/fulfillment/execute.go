@@ -98,6 +98,6 @@ type ExecuteResponse struct {
 }
 
 // OnExecute https://developers.google.com/assistant/smarthome/reference/intent/execute
-func (f *Fulfillment) onExecute() {
+func (f *Fulfillment) OnExecute() {
 
 }
