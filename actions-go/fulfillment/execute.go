@@ -48,25 +48,12 @@ type ExecuteRequest struct {
 
 // ---------- Response ----------
 
-const (
-	// ExecuteStatusSuccess confirm that the command succeeded.
-	ExecuteStatusSuccess = "SUCCESS"
-	// ExecuteStatusPending command is enqueued but expected to succeed.
-	ExecuteStatusPending = "PENDING"
-	// ExecuteStatusOffline target device is in offline state or unreachable.
-	ExecuteStatusOffline = "OFFLINE"
-	// ExecuteStatusExceptions There is an issue or alert associated with a command. The command could succeed or fail. This status type is typically set when you want to send additional information about another connected device.
-	ExecuteStatusExceptions = "EXCEPTIONS"
-	// ExecuteStatusError Target device is unable to perform the command.
-	ExecuteStatusError = "ERROR"
-)
-
 // ExecuteResponseCommands ...
 type ExecuteResponseCommands struct {
 	// List of device IDs corresponding to this status.
 	IDs []string `json:"ids" binding:"required"`
 
-	// Result of the execute operation, must be one of ExecuteStatus...
+	// Result of the execute operation, must be one of Status...
 	Status string `json:"status" binding:"required,oneof=SUCCESS PENDING OFFLINE EXCEPTIONS ERROR"`
 
 	// Aligned with per-trait states described in each trait schema reference. These are the states after execution, if available.
