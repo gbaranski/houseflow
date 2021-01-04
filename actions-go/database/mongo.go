@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -61,11 +62,28 @@ func createMongo(ctx context.Context) (*Mongo, error) {
 
 }
 
-// GetUser returns found user from DB
-func (m *Mongo) GetUser(email string) (*User, error) {
+// GetUserByEmail returns found user from DB, query by email
+func (m *Mongo) GetUserByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	result := m.usersCollection.FindOne(ctx, bson.M{"email": email})
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+
+	var user *User
+	if err := result.Decode(&user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// GetUserByID returns found user from DB, query by _id
+func (m *Mongo) GetUserByID(ID primitive.ObjectID) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	result := m.usersCollection.FindOne(ctx, bson.M{"_id": ID})
 	if result.Err() != nil {
 		return nil, result.Err()
 	}

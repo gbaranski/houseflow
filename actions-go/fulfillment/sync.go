@@ -1,5 +1,9 @@
 package fulfillment
 
+import (
+	"github.com/gbaranski/houseflow/actions/database"
+)
+
 // ---------- Request ----------
 
 // SyncRequestInput ...
@@ -48,6 +52,6 @@ type SyncResponse struct {
 // --------------------
 
 // OnSync handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
-func (f *Fulfillment) onSync() {
+func (f *Fulfillment) OnSync(r SyncRequest, user database.User) {
 
 }
