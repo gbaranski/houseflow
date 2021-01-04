@@ -31,7 +31,7 @@ func (s *Server) OnQuery(c *gin.Context, r fulfillment.QueryRequest, user types.
 		})
 		return
 	}
-	var payloadDevices map[string]interface{}
+	payloadDevices := make(map[string]interface{})
 	for _, device := range r.Inputs[0].Payload.Devices {
 		// Check if user has proper permission to the specific device
 		var correspondingDBDevice *types.Device
