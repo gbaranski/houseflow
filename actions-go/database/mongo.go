@@ -21,9 +21,10 @@ const mongoPasswordEnv string = "MONGO_INITDB_ROOT_PASSWORD"
 
 // Mongo contains db and client
 type Mongo struct {
-	db              *mongo.Database
-	Client          *mongo.Client
-	usersCollection *mongo.Collection
+	db                *mongo.Database
+	Client            *mongo.Client
+	usersCollection   *mongo.Collection
+	devicesCollection *mongo.Collection
 }
 
 func getMongoCredentials() (*string, *string, error) {
@@ -56,9 +57,10 @@ func createMongo(ctx context.Context) (*Mongo, error) {
 	log.Println("Successfully connected and pinged.")
 
 	return &Mongo{
-		db:              db,
-		Client:          client,
-		usersCollection: db.Collection("users"),
+		db:                db,
+		Client:            client,
+		usersCollection:   db.Collection("users"),
+		devicesCollection: db.Collection("devices"),
 	}, nil
 
 }
@@ -98,8 +100,18 @@ func (m *Mongo) GetUserByID(ID primitive.ObjectID) (*types.User, error) {
 }
 
 // GetUserDevices retreives user devices
-func (m *Mongo) GetUserDevices(devices []string) ([]types.Device, error) {
-
+func (m *Mongo) GetUserDevices(deviceIDs []primitive.ObjectID) ([]types.Device, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cur, err := m.devicesCollection.Find(ctx, bson.M{"_id": bson.M{"$in": deviceIDs}})
+	if err != nil {
+		return nil, err
+	}
+	var devices []types.Device
+	if err = cur.All(ctx, &devices); err != nil {
+		return nil, err
+	}
+	return devices, nil
 }
 
 // IsDuplicateError checks if mongo write error is about duplicate
