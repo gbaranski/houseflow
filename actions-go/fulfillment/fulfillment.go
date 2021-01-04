@@ -11,6 +11,19 @@ const (
 	DisconnectIntent = "action.devices.DISCONNECT"
 )
 
+const (
+	// StatusSuccess confirm that the command succeeded.
+	StatusSuccess = "SUCCESS"
+	// StatusPending command is enqueued but expected to succeed.
+	StatusPending = "PENDING"
+	// StatusOffline target device is in offline state or unreachable.
+	StatusOffline = "OFFLINE"
+	// StatusExceptions There is an issue or alert associated with a command. The command could succeed or fail. This status type is typically set when you want to send additional information about another connected device.
+	StatusExceptions = "EXCEPTIONS"
+	// StatusError Target device is unable to perform the command.
+	StatusError = "ERROR"
+)
+
 // DeviceInfo contains fields describing the device for use in one-off logic if needed (e.g. 'broken firmware version X of light Y requires adjusting color', or 'security flaw requires notifying all users of firmware Z').
 type DeviceInfo struct {
 	// Especially useful when the developer is a hub for other devices. Google may provide a standard list of manufacturers here so that e.g. TP-Link and Smartthings both describe 'osram' the same way.
