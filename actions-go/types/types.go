@@ -21,3 +21,18 @@ type Device struct {
 	ID    primitive.ObjectID     `bson:"_id,omitempty" binding:"-"`
 	State map[string]interface{} `bson:"state"`
 }
+
+// DeviceResponse is type of response coming out of the device
+type DeviceResponse struct {
+	CorrelationData string                 `json:"correlationData"`
+	State           map[string]interface{} `json:"state"`
+	Status          string                 `json:"status"`
+	Error           string                 `json:"error,omitempty"`
+}
+
+// DeviceRequest is type of request incoming to the device
+type DeviceRequest struct {
+	CorrelationData string                 `json:"correlationData"`
+	State           map[string]interface{} `json:"state"`
+	Command         string                 `json:"command"`
+}
