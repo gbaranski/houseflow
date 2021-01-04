@@ -9,5 +9,5 @@ type User struct {
 	LastName  string             `json:"lastName" bson:"lastName" form:"lastName" binding:"required"`
 	Email     string             `json:"email" bson:"email" houseflow:"email" form:"email" binding:"required,email"`
 	Password  string             `json:"password" bson:"password" form:"password" binding:"required,min=8,max=20"`
-	Devices   []string           `bson:"devices"`
+	Devices   []string           `bson:"devices" binding:"required"`
 }
