@@ -88,7 +88,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 					"error_description": err.Error(),
 				})
 			}
-			s.onSync(sr, *user)
+			s.onSync(c, sr, *user)
 		case fulfillment.QueryIntent:
 		case fulfillment.ExecuteIntent:
 		case fulfillment.DisconnectIntent:
