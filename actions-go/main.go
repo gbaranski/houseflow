@@ -9,7 +9,7 @@ import (
 )
 
 type test struct {
-	Something string `bindng:"eq=action.devices.SYNC"`
+	Something string `binding:"eq=action.devices.SYNC"`
 }
 
 func main() {

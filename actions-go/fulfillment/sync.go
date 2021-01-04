@@ -7,16 +7,16 @@ type SyncRequestInput struct {
 	// Intent request type.
 	//
 	// (Constant value: "action.devices.SYNC")
-	Intent string `json:"intent" bindng:"required,eq=action.devices.SYNC"`
+	Intent string `json:"intent" binding:"required,eq=action.devices.SYNC"`
 }
 
 // SyncRequest ...
 type SyncRequest struct {
 	// ID of the request.
-	RequestID string `json:"requestId" bindng:"required"`
+	RequestID string `json:"requestId" binding:"required"`
 
 	// List of inputs matching the intent request.
-	Inputs []SyncRequestInput `json:"inputs" bindng:"required"`
+	Inputs []SyncRequestInput `json:"inputs" binding:"required"`
 }
 
 // ---------- Response ----------
@@ -24,10 +24,10 @@ type SyncRequest struct {
 // SyncResponsePayload ...
 type SyncResponsePayload struct {
 	// Reflects the unique (and immutable) user ID on the agent's platform. The string is opaque to Google, so if there's an immutable form vs a mutable form on the agent side, use the immutable form (e.g. an account number rather than email).
-	AgentUserID string `json:"agentUserId" bindng:"required"`
+	AgentUserID string `json:"agentUserId" binding:"required"`
 
 	// List of devices owned by the user. Zero or more devices are returned (zero devices meaning the user has no devices, or has disconnected them all).
-	Devices []Device `json:"devices" bindng:"required"`
+	Devices []Device `json:"devices" binding:"required"`
 
 	// For systematic errors on SYNC
 	ErrorCode string `json:"errorCode,omitempty"`
@@ -39,10 +39,10 @@ type SyncResponsePayload struct {
 // SyncResponse ...
 type SyncResponse struct {
 	// ID of the corresponding request.
-	RequestID string `json:"requestId" bindng:"required"`
+	RequestID string `json:"requestId" binding:"required"`
 
 	// Intent response payload.
-	Payload SyncResponsePayload `json:"payload" bindng:"required"`
+	Payload SyncResponsePayload `json:"payload" binding:"required"`
 }
 
 // --------------------
