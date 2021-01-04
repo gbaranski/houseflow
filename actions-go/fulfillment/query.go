@@ -63,8 +63,3 @@ type QueryResponse struct {
 }
 
 // --------------------
-
-// OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
-func (f *Fulfillment) OnQuery() {
-
-}

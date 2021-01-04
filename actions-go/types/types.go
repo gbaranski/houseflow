@@ -1,6 +1,9 @@
-package database
+package types
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"github.com/gbaranski/houseflow/actions/fulfillment"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // User struct, used to either creating user, or this one in DB
 type User struct {
@@ -10,4 +13,9 @@ type User struct {
 	Email     string             `json:"email" bson:"email" houseflow:"email" form:"email" binding:"required,email"`
 	Password  string             `json:"password" bson:"password" form:"password" binding:"required,min=8,max=20"`
 	Devices   []string           `bson:"devices" binding:"required"`
+}
+
+// Device is device from database
+type Device struct {
+	fulfillment.Device
 }

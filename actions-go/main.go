@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gbaranski/houseflow/actions/database"
-	"github.com/gbaranski/houseflow/actions/fulfillment"
 	"github.com/gbaranski/houseflow/actions/server"
 )
 
@@ -17,8 +16,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	db, err := database.CreateDatabase(ctx)
 	defer cancel()
-	f := fulfillment.NewFulfillment()
-	s := server.NewServer(db, f)
+	s := server.NewServer(db)
 	err = s.Router.Run(":80")
 	if err != nil {
 		panic(err)

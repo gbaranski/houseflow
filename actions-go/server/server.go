@@ -15,17 +15,15 @@ import (
 
 // Server hold root server state
 type Server struct {
-	db          *database.Database
-	Router      *gin.Engine
-	fulfillment fulfillment.Fulfillment
+	db     *database.Database
+	Router *gin.Engine
 }
 
 // NewServer creates server, it won't run till Server.Start
-func NewServer(db *database.Database, fulfillment fulfillment.Fulfillment) *Server {
+func NewServer(db *database.Database) *Server {
 	s := &Server{
-		db:          db,
-		fulfillment: fulfillment,
-		Router:      gin.Default(),
+		db:     db,
+		Router: gin.Default(),
 	}
 	s.Router.POST("/fulfillment", s.onFulfillment)
 	return s
@@ -90,7 +88,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 					"error_description": err.Error(),
 				})
 			}
-			s.fulfillment.OnSync(sr, *user)
+			s.onSync(sr, *user)
 		case fulfillment.QueryIntent:
 		case fulfillment.ExecuteIntent:
 		case fulfillment.DisconnectIntent:
