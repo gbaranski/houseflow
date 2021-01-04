@@ -17,6 +17,7 @@ type User struct {
 
 // Device is device from database
 type Device struct {
-	ID primitive.ObjectID `bson:"_id,omitempty" binding:"-"`
 	fulfillment.Device
+	ID    primitive.ObjectID     `bson:"_id,omitempty" binding:"-"`
+	State map[string]interface{} `bson:"state"`
 }
