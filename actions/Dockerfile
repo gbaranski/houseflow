@@ -1,16 +1,16 @@
-FROM node:lts-alpine
+FROM golang:latest
 
+ENV GO111MODULE=on
 
 WORKDIR /app
 
-# Install app dependencies
-COPY package*.json ./
+COPY go.mod .
+COPY go.sum .
 
-# Note that, rather than copying the entire working directory, we are only copying the package.json file.
-# This allows us to take advantage of cached Docker layers
-RUN npm install
+RUN go mod download
 
-# Bundle app source
 COPY . .
 
-CMD [ "npm", "run", "start" ]
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
+
+CMD ["/app/auth"]
