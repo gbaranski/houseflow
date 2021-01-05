@@ -1,7 +1,6 @@
 package device
 
 import (
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gbaranski/houseflow/devices/lights_go/config"
 )
 
@@ -23,11 +22,11 @@ type Response struct {
 type Request struct {
 	CorrelationData string `json:"correlationData"`
 	State           State  `json:"state"`
+	Command         string `json:"command"`
 }
 
 // Device ...
 type Device struct {
-	config     *config.Config
-	state      State
-	MQTTClient mqtt.Client
+	config *config.Config
+	state  State
 }
