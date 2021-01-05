@@ -22,7 +22,7 @@ import (
 var errDeviceTimeout = errors.New("device timeout")
 var errInvalidSignature = errors.New("invalid signature")
 
-func (s *Server) sendMQTTRequestWithResponse(ctx context.Context, device types.Device, request types.DeviceRequest) (*types.DeviceResponse, error) {
+func (s *Server) sendMQTTRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (*types.DeviceResponse, error) {
 	reqTopic := fmt.Sprintf("%s/command/request", device.ID.Hex())
 	resTopic := fmt.Sprintf("%s/command/response", device.ID.Hex())
 	msgc := make(chan mqtt.Message)
@@ -37,7 +37,7 @@ func (s *Server) sendMQTTRequestWithResponse(ctx context.Context, device types.D
 		s.mqtt.Unsubscribe(resTopic)
 	}()
 
-	reqjson, err := json.Marshal(request)
+	reqjson, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +57,7 @@ readMessages:
 			return nil, errDeviceTimeout
 
 		case msg, ok := <-msgc:
+			fmt.Println("Received some message")
 			if !ok {
 				fmt.Println("Failed waiting for msg for unknown reason")
 				continue readMessages
@@ -74,14 +75,21 @@ readMessages:
 				fmt.Println("Failed unmarshalling json: ", err.Error())
 				continue readMessages
 			}
-			if res.CorrelationData != request.CorrelationData {
+			if res.CorrelationData != req.CorrelationData {
 				fmt.Println("Correlation data doesn't match, skipping")
 				continue readMessages
 			}
-			valid := ed25519.Verify(ed25519.PublicKey(device.PublicKey), []byte(resjson), dsig)
+			// TODO: make database store raw bin
+			dpkey, err := base64.StdEncoding.DecodeString(device.PublicKey)
+			if err != nil {
+				fmt.Println("fail parsing device public key: ", err.Error())
+				return nil, fmt.Errorf("fail parsing device public key %s", err.Error())
+			}
+			valid := ed25519.Verify(ed25519.PublicKey(dpkey), []byte(resjson), dsig)
 			if !valid {
 				return nil, errInvalidSignature
 			}
+			return &res, nil
 		}
 	}
 }
@@ -132,7 +140,6 @@ func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user ty
 					continue
 				}
 
-				fmt.Println("Exeuction params: ", execution.Params)
 				request := types.DeviceRequest{
 					CorrelationData: utils.GenerateRandomString(16),
 					State:           execution.Params,
@@ -140,7 +147,6 @@ func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user ty
 				}
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 				defer cancel()
-				fmt.Println(correspondingDBDevice)
 				deviceResponse, err := s.sendMQTTRequestWithResponse(ctx, *correspondingDBDevice, request)
 				if err != nil {
 					fmt.Println("Error occured when executing on device: ", err.Error())
