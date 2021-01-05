@@ -3,12 +3,8 @@ package utils
 import (
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"strings"
 )
-
-// ObjectIDRegexp is regular expression for Mongo ObjectID
-var ObjectIDRegexp, _ = regexp.Compile("/^(?=[a-f\\d]{24}$)(\\d+[a-f]|[a-f]+\\d)/i")
 
 // ParsePayload parses payload, returns respectively payload and signature
 func ParsePayload(p []byte) (string, []byte, error) {
