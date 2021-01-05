@@ -7,10 +7,10 @@ services:
       - .env
     environment:
       - EMQX_NAME=emqx
-      - EMQX_LOG__LEVEL=debug
+      - EMQX_LOG__LEVEL=info
       - EMQX_ALLOW_ANONYMOUS=true
 
-      - EMQX_LOADED_PLUGINS=emqx_web_hook,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+      - EMQX_LOADED_PLUGINS=emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
@@ -156,16 +156,15 @@ services:
     tty: true
     container_name: 'actions'
     restart: 'unless-stopped'
-    command: 'npm run start:dev'
     depends_on:
       - mongo
       - redis
     build:
       context: ./actions
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     volumes:
-      - ./actions/src/:/app/src/
-      - ./service-account.json:/app/service-account.json
+      - ./actions:/app
+      # - ./service-account.json:/app/service-account.json
     env_file:
       - .env
     networks:
