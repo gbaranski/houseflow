@@ -34,7 +34,7 @@ type ExecuteRequestInput struct {
 	Intent string `json:"intent" binding:"required,eq=action.devices.EXECUTE"`
 
 	// EXECUTE request payload.
-	Payload []ExecuteRequestPayload `json:"payload" binding:"required"`
+	Payload ExecuteRequestPayload `json:"payload" binding:"required"`
 }
 
 // ExecuteRequest ...
@@ -81,5 +81,5 @@ type ExecuteResponse struct {
 	RequestID string `json:"requestId" binding:"required"`
 
 	// Intent response payload.
-	Payload ExecuteRequestPayload `json:"payload" binding:"required"`
+	Payload ExecuteResponsePayload `json:"payload" binding:"required"`
 }

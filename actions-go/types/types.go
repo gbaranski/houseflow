@@ -18,8 +18,9 @@ type User struct {
 // Device is device from database
 type Device struct {
 	fulfillment.Device
-	ID    primitive.ObjectID     `bson:"_id,omitempty" binding:"-"`
-	State map[string]interface{} `bson:"state"`
+	ID        primitive.ObjectID     `bson:"_id,omitempty" binding:"-"`
+	PublicKey string                 `bson:"publickey"`
+	State     map[string]interface{} `bson:"state"`
 }
 
 // DeviceResponse is type of response coming out of the device
