@@ -114,6 +114,25 @@ func (m *Mongo) GetUserDevices(deviceIDs []primitive.ObjectID) ([]types.Device, 
 	return devices, nil
 }
 
+// UpdateDeviceState updates device state
+func (m *Mongo) UpdateDeviceState(deviceID primitive.ObjectID, state map[string]interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	result, err := m.devicesCollection.UpdateOne(ctx,
+		bson.M{"_id": deviceID},
+		bson.D{
+			bson.E{Key: "$set", Value: bson.D{bson.E{Key: "state", Value: state}}},
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if result.ModifiedCount < 1 {
+		return fmt.Errorf("Not modified any document")
+	}
+	return nil
+}
+
 // IsDuplicateError checks if mongo write error is about duplicate
 func IsDuplicateError(err error) bool {
 	var e mongo.WriteException
