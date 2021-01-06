@@ -183,6 +183,11 @@ func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user ty
 					Status: "SUCCESS",
 					States: deviceResponse.State,
 				})
+				err = s.db.Mongo.UpdateDeviceState(correspondingDBDevice.ID, deviceResponse.State)
+				if err != nil {
+					fmt.Println("failed updating state, ", err.Error())
+				}
+
 			}
 		}
 	}
