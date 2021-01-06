@@ -16,28 +16,24 @@ func GenerateKeypair() (ed25519.PublicKey, ed25519.PrivateKey) {
 }
 
 // EncodeKeypair encodes both pkey and skey using base64 and returns two strings
-//
-// To be exact returned skey is seed, which is 2 times smaller than whole private key which stores pkey+seed
-// https://pkg.go.dev/golang.org/x/crypto/ed25519#NewKeyFromSeed
 func EncodeKeypair(pkey ed25519.PublicKey, skey ed25519.PrivateKey) (string, string) {
 	pkeyEnc := base64.StdEncoding.EncodeToString(pkey)
-	skeySeedEnc := base64.StdEncoding.EncodeToString(skey.Seed())
-	return pkeyEnc, skeySeedEnc
+	skeyEnc := base64.StdEncoding.EncodeToString(skey)
+	return pkeyEnc, skeyEnc
 }
 
-// DecodeKeypair decodes base64 encoded pkey and seed of skey
+// DecodeKeypair decodes base64 encoded pkey and skey
 func DecodeKeypair(pkeystr string, skeySeedstr string) (ed25519.PublicKey, ed25519.PrivateKey) {
 	pkeydec, err := base64.StdEncoding.DecodeString(pkeystr)
 	if err != nil {
 		panic(err)
 	}
-	pkey := ed25519.PublicKey(pkeydec)
 
-	skeySeed, err := base64.StdEncoding.DecodeString(skeySeedstr)
+	skeydec, err := base64.StdEncoding.DecodeString(skeySeedstr)
 	if err != nil {
 		panic(err)
 	}
-	skey := ed25519.NewKeyFromSeed(skeySeed)
 
-	return pkey, skey
+	return ed25519.PublicKey(pkeydec),
+		ed25519.PrivateKey(skeydec)
 }
