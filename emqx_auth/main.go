@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gbaranski/houseflow/emqx_auth/database"
+	"github.com/gbaranski/houseflow/emqx_auth/server"
 )
 
 func main() {
@@ -14,5 +15,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	s := server.NewServer(db)
+	s.Router.Run(":80")
 }
