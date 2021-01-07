@@ -31,7 +31,7 @@ const (
 // TokenOptions define options for creating JWT Token
 type TokenOptions struct {
 	// Duration after token will expire
-	ExpiresAt time.Duration
+	Duration time.Duration
 
 	// Secret key used to generate JWT, must be present
 	Key string
@@ -52,10 +52,13 @@ func CreateJWTToken(opts TokenOptions) (*TokenDetails, error) {
 			Audience: opts.Audience,
 		},
 	}
-	if opts.ExpiresAt != 0 {
-		claims.ExpiresAt = time.Now().Add(opts.ExpiresAt).Unix()
+	if opts.Duration != 0 {
+		claims.ExpiresAt = time.Now().Add(opts.Duration).Unix()
 	}
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(opts.Key)
+	if claims.Valid() != nil {
+		return nil, fmt.Errorf("invalid claims: %s", claims.Valid().Error())
+	}
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(opts.Key))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +67,8 @@ func CreateJWTToken(opts TokenOptions) (*TokenDetails, error) {
 
 // VerifyToken verifyes jwt token, secretEnv must be some enviroent variable
 func VerifyToken(strtoken string, key []byte) (*TokenDetails, error) {
-	token, err := jwt.Parse(strtoken, func(token *jwt.Token) (interface{}, error) {
+	var claims TokenClaims
+	token, err := jwt.ParseWithClaims(strtoken, &claims, func(token *jwt.Token) (interface{}, error) {
 		//Make sure that the token method conform to "SigningMethodHMAC"
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -74,13 +78,15 @@ func VerifyToken(strtoken string, key []byte) (*TokenDetails, error) {
 	if err != nil {
 		return nil, err
 	}
-	claims, ok := token.Claims.(*TokenClaims)
-	if !ok || !token.Valid {
-		return nil, fmt.Errorf("failed parsing claims")
+	if !token.Valid {
+		return nil, fmt.Errorf("token is invalid")
+	}
+	if claims.Valid() != nil {
+		return nil, fmt.Errorf("failed parsing claims: %s", claims.Valid().Error())
 	}
 	return &TokenDetails{
 		Token:  token,
-		Claims: *claims,
+		Claims: claims,
 	}, nil
 }
 

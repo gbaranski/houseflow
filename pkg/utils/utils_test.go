@@ -98,7 +98,7 @@ func TestExtractHeaderToken(t *testing.T) {
 }
 
 func TestHashPassword(t *testing.T) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 2; i++ {
 		pass := GenerateRandomString(16)
 		hash, err := HashPassword(pass)
 		if err != nil {
