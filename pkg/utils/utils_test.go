@@ -66,4 +66,10 @@ func TestParseSignedPayload(t *testing.T) {
 	if string(sig) != "hello" {
 		t.Fatalf("fail constant sig test, received: %s, expected: hello", sig)
 	}
+
+	_, _, err = ParseSignedPayload([]byte("thisshouldthrow"))
+	if err == nil {
+		t.Fatalf("expected to return error")
+	}
+}
 }
