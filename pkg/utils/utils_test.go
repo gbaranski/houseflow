@@ -30,22 +30,15 @@ type Payload struct {
 }
 
 func TestParseSignedPayload(t *testing.T) {
-	// Single constant
-	payloads := []Payload{
-		{
-			sig:    "helloworld",
-			encsig: "aGVsbG93b3JsZA==",
-			msg:    "houseflowisawesome",
-		},
-	}
+	var payloads [100]Payload
 	for i := 0; i < 100; i++ {
 		sig := GenerateRandomString(32)
 		encSig := base64.StdEncoding.EncodeToString([]byte(sig))
-		payloads = append(payloads, Payload{
+		payloads[i] = Payload{
 			sig:    sig,
 			encsig: encSig,
 			msg:    GenerateRandomString(100),
-		})
+		}
 	}
 
 	for _, p := range payloads {
@@ -60,5 +53,17 @@ func TestParseSignedPayload(t *testing.T) {
 		if string(sig) != p.sig {
 			t.Fatalf("fail sig doesn't match, received: %s, expected: %s", msg, p.msg)
 		}
+	}
+
+	// Test some constant
+	msg, sig, err := ParseSignedPayload([]byte("aGVsbG8=.world"))
+	if err != nil {
+		t.Fatalf("fail constant test with err: %s", err.Error())
+	}
+	if msg != "world" {
+		t.Fatalf("fail constant msg test, received: %s, expected: world", msg)
+	}
+	if string(sig) != "hello" {
+		t.Fatalf("fail constant sig test, received: %s, expected: hello", sig)
 	}
 }
