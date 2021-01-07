@@ -10,7 +10,7 @@ services:
       - EMQX_LOG__LEVEL=info
       - EMQX_ALLOW_ANONYMOUS=true
 
-      - EMQX_LOADED_PLUGINS=emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
@@ -34,21 +34,18 @@ services:
     networks:
       - backend
 
-  # auth_emqx:
-  #   tty: true
-  #   container_name: 'auth_emqx'
-  #   command: npm run start
-  #   environment:
-  #     - GOOGLE_APPLICATION_CREDENTIALS=/app/firebaseConfig.json
-  #   env_file:
-  #     - .env
-  #   build:
-  #     context: ./auth_emqx
-  #     dockerfile: Dockerfile
-  #   volumes:
-  #     - ./firebaseConfig.json:/app/firebaseConfig.json
-  #   networks:
-  #     - backend
+  emqx_auth:
+    tty: true
+    container_name: 'emqx_auth'
+    env_file:
+      - .env
+    build:
+      context: ./emqx_auth
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./emqx_auth:/app
+    networks:
+      - backend
 
   # device_api:
   #   tty: true
