@@ -63,6 +63,7 @@ func createMongo(ctx context.Context) (*Mongo, error) {
 
 }
 
+// UpdateDeviceState updates device state
 func (m *Mongo) UpdateDeviceState(c mqtt.Client, msg mqtt.Message) {
 	fmt.Println("Updating device state")
 	deviceID := msg.Topic()[:24]
