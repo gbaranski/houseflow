@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestGenerateRandomString(t *testing.T) {
@@ -93,4 +95,28 @@ func TestExtractHeaderToken(t *testing.T) {
 		t.Fatalf("expected token to be nil")
 	}
 
+}
+
+func TestHashPassword(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		pass := GenerateRandomString(16)
+		hash, err := HashPassword(pass)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+		err = bcrypt.CompareHashAndPassword(hash, []byte(pass))
+		if err != nil {
+			t.Fatalf("err while comparing: %s", err.Error())
+		}
+	}
+
+	// should fail
+	hash, err := HashPassword("helloworld")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	err = bcrypt.CompareHashAndPassword(hash, []byte("worldhello"))
+	if err == nil {
+		t.Fatalf("expected error for wrong password, err returned nil")
+	}
 }
