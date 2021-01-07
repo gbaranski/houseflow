@@ -18,20 +18,32 @@ menu "Device configuration"
         help
             Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
 
-    config BROKER_URI
+    config BROKER_URL
         string "Broker URL"
-        default "mqtts://example.com:8883"
+        default "mqtt://192.168.1.10:1883/mqtt"
         help
             URL of an mqtt broker which this example connects to.
-    config DEVICE_UID
-        string "Device UID"
+    config DEVICE_ID
+        string "Device ID"
         default ""
         help
-            UID of the device, must match with this one in database
+            Must match with ObjectID of device in DB
 
-    config DEVICE_SECRET
-        string "Device SECRET"
+    config DEVICE_PUBLIC_KEY
+        string "Device public key"
         default ""
         help
-            Secret of the device, must match with this one in database
+            Ed25519 public key, must match with this one in database
+
+    config DEVICE_PRIVATE_KEY
+        string "Device private key"
+        default ""
+        help
+            Ed25519 private key, must match with public key
+
+    config SERVER_PUBLIC_KEY
+        string "Server public key"
+        default ""
+        help
+            Ed25519 public key, must match with the servers public key set in .env
 endmenu

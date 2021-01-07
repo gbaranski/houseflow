@@ -12,12 +12,13 @@
 #include "esp_netif.h"
 #include "esp_system.h"
 #include "esp_tls.h"
+#include "hf_crypto.h"
+#include "mbedtls/base64.h"
 #include "mqtt_client.h"
 #include "nvs_flash.h"
+#include "sodium.h"
 
-extern const uint8_t letsencrypt_pem_start[] asm(
-    "_binary_letsencrypt_pem_start");
-extern const uint8_t letsencrypt_pem_end[] asm("_binary_letsencrypt_pem_end");
+struct Keypair kp;
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
   esp_mqtt_client_handle_t client = event->client;
@@ -27,7 +28,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     case MQTT_EVENT_CONNECTED:
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_CONNECTED");
       msg_id = esp_mqtt_client_subscribe(
-          client, CONFIG_DEVICE_UID "/action1/request", 0);
+          client, CONFIG_DEVICE_ID "/action1/request", 0);
       ESP_LOGI(MQTT_TAG, "sent subscribe successful, msg_id=%d", msg_id);
       break;
     case MQTT_EVENT_DISCONNECTED:
@@ -81,23 +82,36 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
   mqtt_event_handler_cb(event_data);
 }
 
-// Sum of both length of then cannot be bigger than max mqtt client_id
-// length(23)
-#define CLIENT_ID_PREFIX "device_"
-#define SHORT_UID_LEN 10
+void mqtt_connect() {
+  crypto_err_t err = get_public_key(&kp);
+  if (err != CRYPTO_ERR_OK) {
+    ESP_LOGE(MQTT_TAG, "fail read public_key err: %d", err);
+    return;
+  }
+  err = get_private_key(&kp);
+  if (err != CRYPTO_ERR_OK) {
+    ESP_LOGE(MQTT_TAG, "fail read private_key err: %d", err);
+    return;
+  }
 
-void mqtt_connect(void) {
-  const char *device_uid = CONFIG_DEVICE_UID;
-  char client_id[sizeof(CLIENT_ID_PREFIX) + SHORT_UID_LEN];
-  strcat(client_id, CLIENT_ID_PREFIX);
-  strncat(client_id, device_uid, SHORT_UID_LEN);
+  unsigned char password[ED25519_SIGNATURE_LENGTH];
+  err = sign_public_key(&kp, password);
+  if (err != 0) {
+    ESP_LOGE(MQTT_TAG, "fail gen password err: %d", err);
+    return;
+  }
+  unsigned char encoded_password[ED25519_BASE64_SIGNATURE_LENGTH];
+  err = encode_signature(password, encoded_password);
+  if (err != CRYPTO_ERR_OK) {
+    ESP_LOGE(MQTT_TAG, "fail encode password err: %d", err);
+    return;
+  }
 
   const esp_mqtt_client_config_t mqtt_cfg = {
-      .uri = CONFIG_BROKER_URI,
-      .cert_pem = (const char *)letsencrypt_pem_start,
-      .client_id = client_id,
-      .username = CONFIG_DEVICE_UID,
-      .password = CONFIG_DEVICE_SECRET,
+      .uri = CONFIG_BROKER_URL,
+      .client_id = CONFIG_DEVICE_ID,
+      .username = CONFIG_DEVICE_PUBLIC_KEY,
+      .password = (const char *)&encoded_password,
   };
   ESP_LOGI(MQTT_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
   esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
