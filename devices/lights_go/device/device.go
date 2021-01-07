@@ -28,7 +28,10 @@ func CreateDevice(config *config.Config) Device {
 
 // Takes public key and signes it using private key, it is password for MQTT
 func (d *Device) generateMQTTPassword() string {
-	return string(ed25519.Sign(d.config.PrivateKey, d.config.PublicKey))
+	sig := ed25519.Sign(d.config.PrivateKey, d.config.PublicKey)
+	sigenc := base64.StdEncoding.EncodeToString(sig)
+
+	return sigenc
 }
 
 // StartMQTT Starts MQTT client, doesn't block, and returns MQTT Client

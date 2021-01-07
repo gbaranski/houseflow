@@ -44,11 +44,11 @@ func Load() (*Config, error) {
 	if !exists {
 		return nil, fmt.Errorf("PRIVATE_KEY does not exist in .env")
 	}
-	skeySeedDecoded, err := base64.StdEncoding.DecodeString(skeystr)
+	skeyDecoded, err := base64.StdEncoding.DecodeString(skeystr)
 	if err != nil {
 		return nil, fmt.Errorf("PRIVATE_KEY is invalid %s", err.Error())
 	}
-	skey := ed25519.NewKeyFromSeed(skeySeedDecoded)
+	skey := ed25519.PrivateKey(skeyDecoded)
 
 	serverPkeyStr, exists := os.LookupEnv("SERVER_PUBLIC_KEY")
 	if !exists {
