@@ -23,13 +23,13 @@ func TestGenerateRandomString(t *testing.T) {
 	}
 }
 
-type Payload struct {
-	sig    string
-	encsig string
-	msg    string
-}
-
 func TestParseSignedPayload(t *testing.T) {
+	type Payload struct {
+		sig    string
+		encsig string
+		msg    string
+	}
+
 	var payloads [100]Payload
 	for i := 0; i < 100; i++ {
 		sig := GenerateRandomString(32)
