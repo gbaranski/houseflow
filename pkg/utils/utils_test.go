@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/base64"
+	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 )
@@ -72,4 +74,23 @@ func TestParseSignedPayload(t *testing.T) {
 		t.Fatalf("expected to return error")
 	}
 }
+
+func TestExtractHeaderToken(t *testing.T) {
+	token := GenerateRandomString(64)
+	req := http.Request{Header: http.Header{}}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	str := ExtractHeaderToken(&req)
+	if str == nil {
+		t.Fatalf("unexpected nil token")
+	}
+	if *str != token {
+		t.Fatalf("tokens doesn't match, received: %s, expected: %s", *str, token)
+	}
+
+	req.Header.Del("Authorization")
+	str = ExtractHeaderToken(&req)
+	if str != nil {
+		t.Fatalf("expected token to be nil")
+	}
+
 }
