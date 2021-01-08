@@ -7,18 +7,14 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	jose "github.com/dvsekhvalnov/jose2go"
 	"github.com/google/uuid"
 )
-
-// TokenClaims is claims for jwt token
-type TokenClaims struct {
-	jwt.StandardClaims
-}
 
 // TokenDetails combines token string and claims
 type TokenDetails struct {
 	Token  *jwt.Token
-	Claims TokenClaims
+	Claims jwt.StandardClaims
 }
 
 const (
@@ -42,15 +38,14 @@ type TokenOptions struct {
 
 // CreateJWTToken creates JWT Token with options
 func CreateJWTToken(opts TokenOptions) (*TokenDetails, error) {
+	jose.Sign()
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
-	claims := TokenClaims{
-		jwt.StandardClaims{
-			Id:       id.String(),
-			Audience: opts.Audience,
-		},
+	claims := jwt.StandardClaims{
+		Id:       id.String(),
+		Audience: opts.Audience,
 	}
 	if opts.Duration != 0 {
 		claims.ExpiresAt = time.Now().Add(opts.Duration).Unix()
@@ -67,9 +62,7 @@ func CreateJWTToken(opts TokenOptions) (*TokenDetails, error) {
 
 // VerifyToken verifyes jwt token, secretEnv must be some enviroent variable
 func VerifyToken(strtoken string, key []byte) (*TokenDetails, error) {
-	var claims TokenClaims
-	token, err := jwt.ParseWithClaims(strtoken, &claims, func(token *jwt.Token) (interface{}, error) {
-		//Make sure that the token method conform to "SigningMethodHMAC"
+	token, err := jwt.ParseWithClaims(strtoken, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -81,12 +74,21 @@ func VerifyToken(strtoken string, key []byte) (*TokenDetails, error) {
 	if !token.Valid {
 		return nil, fmt.Errorf("token is invalid")
 	}
+
+	if token.Claims.Valid() != nil {
+		return nil, token.Claims.Valid()
+	}
+
+	claims, ok := token.Claims.(*jwt.StandardClaims)
 	if claims.Valid() != nil {
-		return nil, fmt.Errorf("failed parsing claims: %s", claims.Valid().Error())
+		return nil, claims.Valid()
+	}
+	if !ok {
+		return nil, fmt.Errorf("claims are invalid")
 	}
 	return &TokenDetails{
 		Token:  token,
-		Claims: claims,
+		Claims: *claims,
 	}, nil
 }
 
