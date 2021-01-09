@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gbaranski/houseflow/auth/utils"
+	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/net/context"
@@ -16,42 +16,61 @@ type RedisOptions struct {
 	//
 	// Default: false
 	Enabled bool
+
+  // Username for redis
+  //
+  // Default: "root"
+  Username string
+
+  // Password for redis
+  //
+  // Default: "example"
+  Password string
 }
+
+// Parse parses the options and set the defaults
+func (opts *RedisOptions) Parse() {
+  if opts.Username == "" {
+    opts.Username = "root"
+  }
+  if opts.Password == "" {
+    opts.Password = "example"
+  }
+
+}
+
 
 // Redis contains db and client
 type Redis struct {
 	client *redis.Client
+  opts RedisOptions
 }
 
-func createRedis() (*Redis, error) {
-	rdb := redis.NewClient(&redis.Options{
+// NewRedis creates Redis, connects to redisdb with given options
+func NewRedis(ctx context.Context, opts RedisOptions) (Redis, error) {
+  opts.Parse()
+	client := redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",
-		Password: "",
+    Username: opts.Username,
+		Password: opts.Password,
 		DB:       0,
 	})
-	pctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-	_, err := rdb.Ping(pctx).Result()
+	_, err := client.Ping(ctx).Result()
 	if err != nil {
-		return nil, err
+		return Redis{}, err
 	}
-	return &Redis{client: rdb}, nil
+  return Redis{client: client, opts: opts}, nil
 }
 
 // AddToken adds token to Redis DB
-func (r *Redis) AddToken(userID primitive.ObjectID, td *utils.TokenDetails) error {
-	exp := time.Unix(td.Claims.ExpiresAt, 0)
+func (r *Redis) AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error {
+	exp := time.Unix(token.ExpiresAt, 0)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	return r.client.Set(ctx, td.Claims.Id, userID.Hex(), time.Since(exp)).Err()
+	return r.client.Set(ctx, token.ID, userID.Hex(), time.Since(exp)).Err()
 }
 
-// DeleteAuth removes token from redi
-func (r *Redis) DeleteAuth(tokenID string) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+// DeleteToken removes token from redi
+func (r *Redis) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
 	deleted, err := r.client.Del(ctx, tokenID).Result()
 	if err != nil {
 		return 0, err
@@ -62,16 +81,14 @@ func (r *Redis) DeleteAuth(tokenID string) (int64, error) {
 	return deleted, nil
 }
 
-// FetchToken fetches authentication token
-func (r *Redis) FetchToken(claims utils.TokenClaims) (*string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-	userID, err := r.client.Get(ctx, claims.Id).Result()
+// FetchToken fetches token and returns correspoding UserID
+func (r *Redis) FetchToken(ctx context.Context, token utils.Token) (string, error) {
+	userID, err := r.client.Get(ctx, token.ID).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return nil, fmt.Errorf("token not found, might be invalid")
+			return "", fmt.Errorf("token not found, might be invalid")
 		}
-		return nil, err
+		return "", err
 	}
-	return &userID, nil
+	return userID, nil
 }
