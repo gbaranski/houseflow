@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 
@@ -42,4 +43,15 @@ func GenerateRandomString(length int) string {
 // HashPassword hashes password with bcrypt
 func HashPassword(pass string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+}
+
+// MustGetEnv retreives the enviroment variable
+//
+// Panics if doesn't exists
+func MustGetEnv(key string) string {
+  env, present := os.LookupEnv(key)
+  if !present {
+    panic(fmt.Errorf("%s enviroment variable is unset", key))
+  }
+  return env
 }
