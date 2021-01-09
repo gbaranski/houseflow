@@ -1,65 +1,60 @@
 package utils
 
 import (
-	"fmt"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+  "bou.ke/monkey"
 )
 
 func TestValidCreateToken(t *testing.T) {
 	key := GenerateRandomString(20)
 	aud := GenerateRandomString(20)
-	token, err := CreateJWTToken(TokenOptions{
-		Duration: time.Hour,
-		Key:      key,
-		Audience: aud,
-	})
+  tokenID, err := uuid.NewRandom()
+  if err != nil {
+    t.Fatalf(err.Error())
+  }
+  token := Token{
+    ExpiresAt: time.Now().Add(time.Hour).Unix(),
+    Audience: aud,
+    ID: tokenID.String(),
+  }
+	strtoken, err := token.Sign([]byte(key))
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	td, err := VerifyToken(token.Token.Raw, []byte(key))
+  dt, err := VerifyToken(strtoken, []byte(key))
 	if err != nil {
 		t.Fatalf("fail verify token: %s", err.Error())
 	}
-	if td.Claims.Valid() != nil {
-		t.Fatalf("invalid claims: %s", td.Claims.Valid().Error())
-	}
-	if td.Claims.Audience != aud {
-		t.Fatalf("audience doesn't match, expected: %s, received: %s", aud, token.Claims.Audience)
-	}
-	exp := time.Unix(td.Claims.ExpiresAt, 0)
-	now := time.Now()
-	if exp.Sub(now).Minutes() < 59 {
-		t.Fatalf("too big difference, expected: >= 59, received: %f", exp.Sub(now).Minutes())
-	}
+  if !dt.Equal(token) {
+    t.Fatalf("fail tokens are not equal")
+  }
 }
 
 func TestExpiredCreateToken(t *testing.T) {
 	key := GenerateRandomString(20)
 	aud := GenerateRandomString(20)
-	token, err := CreateJWTToken(TokenOptions{
-		Duration: time.Millisecond, // not zero
-		Key:      key,
-		Audience: aud,
-	})
+  tokenID, err := uuid.NewRandom()
+  if err != nil {
+    t.Fatalf(err.Error())
+  }
+  token := Token{
+    ExpiresAt: time.Now().Add(time.Hour).Unix(),
+    Audience: aud,
+    ID: tokenID.String(),
+  }
+  now := time.Now()
+  monkey.Patch(time.Now, func () time.Time {
+    return now.Add(time.Hour + time.Second)
+  })
+	strtoken, err := token.Sign([]byte(key))
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	fmt.Println(token.Token.Raw)
-	time.Sleep(time.Millisecond * 5)
-	td, err := VerifyToken(token.Token.Raw, []byte(key))
-	if err != nil {
-		t.Fatalf("fail verify token: %s", err.Error())
-	}
-	if td.Claims.Valid() != nil {
-		t.Fatalf("invalid claims: %s", td.Claims.Valid().Error())
-	}
-	if td.Claims.Audience != aud {
-		t.Fatalf("audience doesn't match, expected: %s, received: %s", aud, token.Claims.Audience)
-	}
-	exp := time.Unix(td.Claims.ExpiresAt, 0)
-	now := time.Now()
-	if exp.Sub(now).Minutes() < 59 {
-		t.Fatalf("too big difference, expected: >= 59, received: %f", exp.Sub(now).Minutes())
+  _, err = VerifyToken(strtoken, []byte(key))
+	if err == nil {
+		t.Fatalf("unexpected pass in token verify")
 	}
 }
