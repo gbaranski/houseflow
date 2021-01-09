@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -119,4 +120,26 @@ func TestHashPassword(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error for wrong password, err returned nil")
 	}
+}
+
+func TestMustGetEnv(t *testing.T) {
+	os.Setenv("testingvar", "helloworld")
+	defer func() {
+		os.Unsetenv("testingvar")
+	}()
+
+	env := MustGetEnv("testingvar")
+	if env != "helloworld" {
+		t.Fatalf("enviroment variable doesnt match")
+	}
+}
+
+func TestMustGetEnvNotPresent(t *testing.T) {
+  defer func() {
+    if r := recover(); r == nil {
+      t.Fatalf("function expected to panic")
+    }
+  }()
+
+	MustGetEnv("skfjafasdkjfsdkljafdskljafdsklajbgvbjkfdsjkgjhkfdasjhk")
 }
