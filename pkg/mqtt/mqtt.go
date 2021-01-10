@@ -18,7 +18,7 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
-type MQTTOptions struct {
+type Options struct {
 	// ClientID, required
 	ClientID string
 
@@ -40,7 +40,7 @@ type MQTTOptions struct {
 }
 
 // Parses options to the defaults
-func (opts *MQTTOptions) Parse() {
+func (opts *Options) Parse() {
 	if opts.BrokerURL == "" {
 		opts.BrokerURL = "tcp://emqx:1883/mqtt"
 	}
@@ -54,11 +54,11 @@ func (opts *MQTTOptions) Parse() {
 }
 
 type MQTT struct {
-	client paho.Client
-	opts   MQTTOptions
+	Client paho.Client
+	opts   Options
 }
 
-func NewMQTT(opts MQTTOptions) MQTT {
+func NewMQTT(opts Options) (MQTT, error) {
 	paho.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	paho.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
 	paho.WARN = log.New(os.Stdout, "[WARN]  ", 0)
@@ -74,12 +74,12 @@ func NewMQTT(opts MQTTOptions) MQTT {
 
 	c := paho.NewClient(copts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+    return MQTT{}, token.Error()
 	}
 	return MQTT{
-		client: c,
+		Client: c,
 		opts:   opts,
-	}
+	}, nil
 }
 
 var ErrDeviceTimeout = errors.New("device timeout")
@@ -90,14 +90,14 @@ func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device,
 	resTopic := fmt.Sprintf("%s/command/response", device.ID.Hex())
 	msgc := make(chan paho.Message)
 
-	if token := m.client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
+	if token := m.Client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
 		msgc <- m
 	}); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
 	}
 
 	defer func() {
-		m.client.Unsubscribe(resTopic)
+		m.Client.Unsubscribe(resTopic)
 	}()
 
 	reqjson, err := json.Marshal(req)
@@ -110,7 +110,7 @@ func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device,
 
 	reqp := strings.Join([]string{encssig, string(reqjson)}, ".")
 
-	if token := m.client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
+	if token := m.Client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
 	}
 

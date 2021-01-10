@@ -16,11 +16,6 @@ import (
 
 // MongoOptions defines options for mongoDB, use NewMongoOptions for constructor
 type MongoOptions struct {
-	// Defines if should connect to Mongo
-	//
-	// Default: false
-	Enabled bool
-
   // Username for mongoDB
   //
   // Default: "root"
