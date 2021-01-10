@@ -135,7 +135,7 @@ func (m *Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.U
 
 // AddUser adds user to db
 func (m *Mongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
-	password, err := utils.HashPassword(user.Password)
+	password, err := utils.HashPassword([]byte(user.Password))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
