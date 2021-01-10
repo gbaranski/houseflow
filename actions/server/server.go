@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/database"
+	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -18,14 +18,14 @@ import (
 )
 
 var (
-  AccessKey = utils.MustGetEnv("ACCESS_KEY")
+	AccessKey = utils.MustGetEnv("ACCESS_KEY")
 )
 
 // Server hold root server state
 type Server struct {
-	mongo     database.Mongo
+	mongo  database.Mongo
 	Router *gin.Engine
-  mqtt   mqtt.MQTT
+	mqtt   mqtt.MQTT
 }
 
 type responseBodyWriter struct {
@@ -93,8 +93,8 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-  ctx, cancel := context.WithTimeout(context.Background(), time.Second * 3)
-  defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
 
 	user, err := s.mongo.GetUserByID(ctx, userID)
 	if err != nil {
@@ -132,8 +132,6 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		})
 		return
 	}
-
-
 
 	fmt.Printf("Base request: %+v\n", base)
 	// Currently not even expecting more than 1 input
@@ -178,4 +176,3 @@ func (s *Server) onFulfillment(c *gin.Context) {
 	}
 
 }
-
