@@ -1,15 +1,16 @@
-package event
+package emqxwh
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
-	database "github.com/gbaranski/houseflow/webhooks/database"
-	types "github.com/gbaranski/houseflow/webhooks/types"
+	"github.com/gbaranski/houseflow/pkg/database"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,13 +18,35 @@ const uuidLength = 36
 
 // Server struct which holds state of app
 type Server struct {
-	db *database.Database
+	mongo database.Mongo
 }
 
-func NewServer(db *database.Database) Server {
+func NewServer(db database.Mongo) Server {
 	return Server{
-		db: db,
+		mongo: db,
 	}
+}
+
+// WebhookEvent when webhook triggered
+type WebhookEvent struct {
+	Action   string `json:"action"`
+	Username string `json:"username"`
+	ClientID string `json:"clientid"`
+}
+
+// ConnectedEvent when client connects
+type ConnectedEvent struct {
+	WebhookEvent
+	ProtoVersion       int    `json:"proto_ver"`
+	KeepAlive          int    `json:"keepalive"`
+	IPAddress          string `json:"ipaddress"`
+	ConnectedTimestamp uint64 `json:"connected_at"`
+}
+
+// DisconnectedEvent when client disconnected
+type DisconnectedEvent struct {
+	WebhookEvent
+	Reason string `json:"reason"`
 }
 
 // OnEvent handles /event request
@@ -38,7 +61,7 @@ func (s *Server) OnEvent(w http.ResponseWriter, r *http.Request) {
 		log.Println("Failed reading request body: ", err.Error())
 		return
 	}
-	var e types.WebhookEvent
+	var e WebhookEvent
 	if err := json.Unmarshal(b, &e); err != nil {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		log.Println("Failed unmarhsalling body: ", err.Error())
@@ -62,10 +85,13 @@ func (s *Server) OnEvent(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error when parsing ObjectID: %s, err: %s", e.Username, err.Error())
 		return
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
 	if e.Action == "client_connected" {
-		err = s.db.Mongo.UpdateDeviceOnlineState(deviceID, true)
+		err = s.mongo.UpdateDeviceOnlineState(ctx, deviceID, true)
 	} else if e.Action == "client_disconnected" {
-		err = s.db.Mongo.UpdateDeviceOnlineState(deviceID, false)
+		err = s.mongo.UpdateDeviceOnlineState(ctx, deviceID, false)
 	}
 	if err != nil {
 		fmt.Fprintf(w, err.Error())
