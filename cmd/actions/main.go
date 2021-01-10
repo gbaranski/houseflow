@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -14,10 +16,18 @@ import (
 var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
-	privateKey    = utils.MustGetEnv("SERVER_PRIVATE_KEY")
+	privateKey    ed25519.PrivateKey
 	serviceName   = utils.MustGetEnv("SERVICE_NAME")
 	serviceID     = utils.MustGetEnv("SERVICE_ID")
 )
+
+func init() {
+	skey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PRIVATE_KEY"))
+	if err != nil {
+		panic(err)
+	}
+	privateKey = ed25519.PrivateKey(skey)
+}
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -36,9 +46,9 @@ func main() {
 		PingTimeout: time.Second * 5,
 		PrivateKey:  []byte(privateKey),
 	})
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 
 	s := actions.NewServer(mongo, mqtt)
 	err = s.Router.Run(":80")
