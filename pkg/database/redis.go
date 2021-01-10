@@ -12,31 +12,15 @@ import (
 
 // RedisOptions defines options for redis
 type RedisOptions struct {
-	// Defines if should connect to Redis
-	//
-	// Default: false
-	Enabled bool
-
   // Username for redis
-  //
-  // Default: "root"
   Username string
 
   // Password for redis
-  //
-  // Default: "example"
   Password string
 }
 
 // Parse parses the options and set the defaults
 func (opts *RedisOptions) Parse() {
-  if opts.Username == "" {
-    opts.Username = "root"
-  }
-  if opts.Password == "" {
-    opts.Password = "example"
-  }
-
 }
 
 
