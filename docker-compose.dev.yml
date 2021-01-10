@@ -1,0 +1,145 @@
+version: '3.8'
+services:
+  # Vendor services
+  nginx:
+    tty: true
+    container_name: 'nginx'
+    build:
+      context: ./build/nginx
+      dockerfile: Dockerfile.dev
+    ports:
+      - 80:80
+      - 443:443
+    restart: 'unless-stopped'
+    volumes:
+      - ./certs/fullchain.pem:/etc/dockercerts/fullchain.pem
+      - ./certs/privkey.pem:/etc/dockercerts/privkey.pem
+    networks:
+      - backend
+
+  mongo:
+    image: mongo
+    container_name: 'mongo'
+    restart: 'unless-stopped'
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_DATABASE=houseflowDB
+    networks:
+      - backend
+
+  mongo-express:
+    image: mongo-express
+    restart: 'unless-stopped'
+    container_name: 'mongo-express'
+    env_file:
+      - .env
+    ports:
+      - 8081:8081
+    networks:
+      - backend
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=$MONGO_INITDB_ROOT_USERNAME
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=$MONGO_INITDB_ROOT_PASSWORD
+
+  redis:
+    image: 'redis:latest'
+    container_name: 'redis'
+    networks:
+      - backend
+
+  emqx:
+    tty: true
+    image: 'emqx/emqx'
+    container_name: 'emqx'
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_LOG__LEVEL=info
+      - EMQX_ALLOW_ANONYMOUS=true
+
+      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+    ports:
+      - 1883:1883 # MQTT
+      - 8083:8083 # MQTT/WS
+      - 18083:18083 # Dashboard
+    volumes:
+      - ./emqx/plugins:/opt/emqx/etc/plugins
+    networks:
+      - backend
+
+  # My services
+  emqx_webhooks:
+    tty: true
+    container_name: 'emqx_webhooks'
+    env_file:
+      - .env
+    build:
+      context: ./cmd/emqx/webhooks
+      dockerfile: $PWD/build/go/Dockerfile
+    depends_on:
+      - emqx
+      - mongo
+    networks:
+      - backend
+
+  emqx_auth:
+    tty: true
+    container_name: 'emqx_auth'
+    env_file:
+      - .env
+    build:
+      context: ./cmd/emqx/auth
+      dockerfile: $PWD/build/go/Dockerfile
+    networks:
+      - backend
+
+  auth:
+    tty: true
+    container_name: 'auth'
+    restart: 'unless-stopped'
+    depends_on:
+      - mongo
+      - redis
+    build:
+      context: ./cmd/auth
+      dockerfile: $PWD/build/go/Dockerfile
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  state_manager:
+    tty: true
+    container_name: 'state_manager'
+    restart: 'unless-stopped'
+    depends_on:
+      - mongo
+      - emqx
+    build:
+      context: ./cmd/state_manager
+      dockerfile: $PWD/build/go/Dockerfile
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  actions:
+    tty: true
+    container_name: 'actions'
+    restart: 'unless-stopped'
+    depends_on:
+      - mongo
+      - redis
+    build:
+      context: ./cmd/actions
+      dockerfile: $PWD/build/go/Dockerfile
+    env_file:
+      - .env
+    networks:
+      - backend
+
+networks:
+  backend:
