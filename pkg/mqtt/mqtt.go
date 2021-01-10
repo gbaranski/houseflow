@@ -1,10 +1,19 @@
 package mqtt
 
 import (
+	"context"
+	"crypto/ed25519"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/gbaranski/houseflow/pkg/utils"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
@@ -25,6 +34,9 @@ type MQTTOptions struct {
 	//
 	// Default: 5s
 	PingTimeout time.Duration
+
+  // PrivateKey is servers private key
+  PrivateKey ed25519.PrivateKey
 }
 
 // Parses options to the defaults
@@ -67,5 +79,81 @@ func NewMQTT(opts MQTTOptions) MQTT {
 	return MQTT{
 		client: c,
 		opts:   opts,
+	}
+}
+
+var ErrDeviceTimeout = errors.New("device timeout")
+var ErrInvalidSignature = errors.New("invalid signature")
+
+func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (*types.DeviceResponse, error) {
+	reqTopic := fmt.Sprintf("%s/command/request", device.ID.Hex())
+	resTopic := fmt.Sprintf("%s/command/response", device.ID.Hex())
+	msgc := make(chan paho.Message)
+
+	if token := m.client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
+		msgc <- m
+	}); token.Wait() && token.Error() != nil {
+		return nil, token.Error()
+	}
+
+	defer func() {
+		m.client.Unsubscribe(resTopic)
+	}()
+
+	reqjson, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	ssig := ed25519.Sign(m.opts.PrivateKey, reqjson)
+	encssig := base64.StdEncoding.EncodeToString(ssig)
+
+	reqp := strings.Join([]string{encssig, string(reqjson)}, ".")
+
+	if token := m.client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
+		return nil, token.Error()
+	}
+
+readMessages:
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ErrDeviceTimeout
+
+		case msg, ok := <-msgc:
+			fmt.Println("Received some message")
+			if !ok {
+				fmt.Println("Failed waiting for msg for unknown reason")
+				continue readMessages
+			}
+
+			resp := msg.Payload()
+			resjson, dsig, err := utils.ParseSignedPayload(resp)
+			if err != nil {
+				fmt.Println("Failed parsing payload to json and sig: ", err.Error())
+				continue readMessages
+			}
+			var res types.DeviceResponse
+			err = json.Unmarshal([]byte(resjson), &res)
+			if err != nil {
+				fmt.Println("Failed unmarshalling json: ", err.Error())
+				continue readMessages
+			}
+			if res.CorrelationData != req.CorrelationData {
+				fmt.Println("Correlation data doesn't match, skipping")
+				continue readMessages
+			}
+			// TODO: make database store raw bin
+			dpkey, err := base64.StdEncoding.DecodeString(device.PublicKey)
+			if err != nil {
+				fmt.Println("fail parsing device public key: ", err.Error())
+				return nil, fmt.Errorf("fail parsing device public key %s", err.Error())
+			}
+			valid := ed25519.Verify(ed25519.PublicKey(dpkey), []byte(resjson), dsig)
+			if !valid {
+				return nil, ErrInvalidSignature
+			}
+			return &res, nil
+		}
 	}
 }
