@@ -3,37 +3,15 @@ package server
 import (
 	"net/http"
 
-	"github.com/gbaranski/houseflow/actions/fulfillment"
-	"github.com/gbaranski/houseflow/actions/types"
+	"github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OnSync handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
-func (s *Server) onSync(c *gin.Context, r fulfillment.SyncRequest, user types.User) {
-	var deviceIDs []primitive.ObjectID
-	for _, id := range user.Devices {
-		objID, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":             "convert_object_id_fail",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		deviceIDs = append(deviceIDs, objID)
-	}
-	dbDevices, err := s.db.Mongo.GetUserDevices(deviceIDs)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "get_devices_fail",
-			"error_description": err.Error(),
-		})
-		return
-	}
-
+func (s *Server) onSync(c *gin.Context, r fulfillment.SyncRequest, user types.User, userDevices []types.Device) {
 	var fdevices []fulfillment.Device
-	for _, device := range dbDevices {
+	for _, device := range userDevices {
 		fdevices = append(fdevices, fulfillment.Device{
 			ID:              device.ID.Hex(),
 			Type:            device.Type,

@@ -7,9 +7,15 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gbaranski/houseflow/actions/config"
-	"github.com/gbaranski/houseflow/actions/database"
 	"github.com/gbaranski/houseflow/actions/server"
+	"github.com/gbaranski/houseflow/pkg/database"
+	"github.com/gbaranski/houseflow/pkg/utils"
+)
+
+var (
+  mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
+  mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
+  
 )
 
 func initMQTT() mqtt.Client {
@@ -34,12 +40,14 @@ func initMQTT() mqtt.Client {
 }
 
 func main() {
-	config, err := config.Load()
-	if err != nil {
-		panic(err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+  mongo, err := database.NewMongo(ctx, database.MongoOptions{
+  	Enabled:      true,
+  	Username:     "",
+  	Password:     "",
+  	DatabaseName: "houseflowDB",
+  })
 	db, err := database.CreateDatabase(ctx)
 	defer cancel()
 
