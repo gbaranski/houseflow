@@ -1,4 +1,4 @@
-package server
+package emqxauth
 
 // UserRequest is request about user connect
 type UserRequest struct {

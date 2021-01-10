@@ -1,22 +1,22 @@
-package server
+package emqxauth
 
 import (
 	"fmt"
 
-	"github.com/gbaranski/houseflow/emqx_auth/database"
+	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gin-gonic/gin"
 )
 
 // Server holds state
 type Server struct {
-	db     *database.Database
+	mongo     database.Mongo
 	Router *gin.Engine
 }
 
 // NewServer implements server
-func NewServer(db *database.Database) Server {
+func NewServer(mongo database.Mongo) Server {
 	s := Server{
-		db:     db,
+		mongo:     mongo,
 		Router: gin.Default()}
 
 	s.Router.POST("/user", s.onUser)
