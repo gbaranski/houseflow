@@ -24,21 +24,23 @@ func main() {
 	defer cancel()
 
 	mongo, err := database.NewMongo(ctx, database.MongoOptions{
-		Enabled:      true,
 		Username:     mongoUsername,
 		Password:     mongoPassword,
 		DatabaseName: "houseflowDB",
 	})
 
-	mqttc := mqtt.NewMQTT(mqtt.MQTTOptions{
+	mqtt, err := mqtt.NewMQTT(mqtt.Options{
 		ClientID:    fmt.Sprintf("%s-%s", serviceName, serviceID),
 		BrokerURL:   "tcp://emqx:1883/mqtt",
 		KeepAlive:   time.Second * 30,
 		PingTimeout: time.Second * 5,
 		PrivateKey:  []byte(privateKey),
 	})
+  if err != nil {
+    panic(err)
+  }
 
-	s := actions.NewServer(mongo, mqttc)
+	s := actions.NewServer(mongo, mqtt)
 	err = s.Router.Run(":80")
 	if err != nil {
 		panic(err)
