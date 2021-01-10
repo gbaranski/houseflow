@@ -44,13 +44,13 @@ func GenerateRandomString(length int) string {
 }
 
 // HashPassword hashes password with bcrypt
-func HashPassword(pass string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+func HashPassword(pass []byte) ([]byte, error) {
+	return bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
 }
 
 // CheckPasswordHash checks hash of password, returns true if they match, otherwise false
-func ComparePasswordAndHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+func ComparePasswordAndHash(password, hash []byte) bool {
+	err := bcrypt.CompareHashAndPassword(hash, password)
 	return err == nil
 }
 
@@ -64,8 +64,6 @@ func MustGetEnv(key string) string {
   }
   return env
 }
-
-
 
 type responseBodyWriter struct {
 	gin.ResponseWriter

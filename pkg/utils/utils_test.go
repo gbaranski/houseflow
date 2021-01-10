@@ -101,7 +101,7 @@ func TestExtractHeaderToken(t *testing.T) {
 func TestHashPassword(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		pass := GenerateRandomString(16)
-		hash, err := HashPassword(pass)
+		hash, err := HashPassword([]byte(pass))
 		if err != nil {
 			t.Fatalf(err.Error())
 		}
@@ -112,13 +112,37 @@ func TestHashPassword(t *testing.T) {
 	}
 
 	// should fail
-	hash, err := HashPassword("helloworld")
+	hash, err := HashPassword([]byte("helloworld"))
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 	err = bcrypt.CompareHashAndPassword(hash, []byte("worldhello"))
 	if err == nil {
 		t.Fatalf("expected error for wrong password, err returned nil")
+	}
+}
+
+func TestCompareHash(t *testing.T) {
+	pass := []byte(GenerateRandomString(20))
+	hash, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	match := ComparePasswordAndHash(pass, hash)
+	if !match {
+    t.Fatalf("fail hash doesn't match")
+	}
+}
+
+func TestCompareHashInvalid(t *testing.T) {
+	pass := []byte(GenerateRandomString(20))
+	hash, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	match := ComparePasswordAndHash([]byte(GenerateRandomString(20)), hash)
+	if !match {
+    t.Fatalf("fail hash doesn't match")
 	}
 }
 
@@ -135,11 +159,11 @@ func TestMustGetEnv(t *testing.T) {
 }
 
 func TestMustGetEnvNotPresent(t *testing.T) {
-  defer func() {
-    if r := recover(); r == nil {
-      t.Fatalf("function expected to panic")
-    }
-  }()
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatalf("function expected to panic")
+		}
+	}()
 
 	MustGetEnv("skfjafasdkjfsdkljafdskljafdsklajbgvbjkfdsjkgjhkfdasjhk")
 }
