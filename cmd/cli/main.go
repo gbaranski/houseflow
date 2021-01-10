@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gbaranski/houseflow/cli/genkey"
+	"github.com/gbaranski/houseflow/internal/genkey"
 )
 
 func showUsageAndExit() {
