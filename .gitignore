@@ -1,24 +1,10 @@
-# GLOBAL
-node_modules
+# Secrets
 .env
-.idea
 firebaseConfig.json
-.DS_Store
-
-# WEB
-build
-
-# ESP
-secret.h
-
-.vscode
-.firebase
-
-privkey.pem
-fullchain.pem
-cacert.pem
-ca.pem
-dist
 service-account.json
 
+# OSX Files
+.DS_Store
+
+# trash
 *.log
