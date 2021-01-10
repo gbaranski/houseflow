@@ -7,8 +7,10 @@ import (
 	"os"
 	"strings"
 	"time"
-
 	"golang.org/x/crypto/bcrypt"
+  "bytes"
+
+	"github.com/gin-gonic/gin"
 )
 
 // ParseSignedPayload parses payload, returns respectively message and signature
@@ -55,3 +57,24 @@ func MustGetEnv(key string) string {
   }
   return env
 }
+
+
+
+type responseBodyWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (r responseBodyWriter) Write(b []byte) (int, error) {
+	r.body.Write(b)
+	return r.ResponseWriter.Write(b)
+}
+
+// LogResponseBody is middleware for Gin to log response
+func LogResponseBody(c *gin.Context) {
+	w := &responseBodyWriter{body: &bytes.Buffer{}, ResponseWriter: c.Writer}
+	c.Writer = w
+	c.Next()
+	fmt.Println("Response body: " + w.body.String())
+}
+

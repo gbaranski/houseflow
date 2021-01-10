@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gbaranski/houseflow/actions/server"
+	"github.com/gbaranski/houseflow/internal/actions"
 	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -38,7 +38,7 @@ func main() {
 		PrivateKey:  []byte(privateKey),
 	})
 
-	s := server.NewServer(mongo, mqttc)
+	s := actions.NewServer(mongo, mqttc)
 	err = s.Router.Run(":80")
 	if err != nil {
 		panic(err)
