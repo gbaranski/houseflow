@@ -19,7 +19,7 @@ func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user ty
 	for _, command := range r.Inputs[0].Payload.Commands {
 		for _, execution := range command.Execution {
 			for _, device := range command.Devices {
-        // Search userDevices for the devices which Execute request wants to match
+				// Search userDevices for the devices which Execute request wants to match
 				var correspondingDBDevice *types.Device
 				for _, userDevice := range userDevices {
 					if userDevice.ID.Hex() == device.ID {
