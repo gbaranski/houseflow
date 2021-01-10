@@ -2,27 +2,30 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
-	"strings"
+	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gbaranski/houseflow/actions/config"
-	"github.com/gbaranski/houseflow/actions/database"
-	"github.com/gbaranski/houseflow/actions/fulfillment"
-	"github.com/gbaranski/houseflow/actions/utils"
+	"github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/database"
+	"github.com/gbaranski/houseflow/pkg/mqtt"
+	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+var (
+  AccessKey = utils.MustGetEnv("ACCESS_KEY")
+)
+
 // Server hold root server state
 type Server struct {
-	db     *database.Database
+	mongo     *database.Mongo
 	Router *gin.Engine
-	mqtt   mqtt.Client
-	config config.Config
+  mqtt   mqtt.MQTT
 }
 
 type responseBodyWriter struct {
@@ -43,12 +46,11 @@ func logResponseBody(c *gin.Context) {
 }
 
 // NewServer creates server, it won't run till Server.Start
-func NewServer(db *database.Database, mqtt mqtt.Client, config config.Config) *Server {
+func NewServer(mongo *database.Mongo, mqtt mqtt.MQTT) *Server {
 	s := &Server{
-		db:     db,
+		mongo:  mongo,
 		Router: gin.Default(),
 		mqtt:   mqtt,
-		config: config,
 	}
 	s.Router.Use(logResponseBody)
 	s.Router.POST("/fulfillment", s.onFulfillment)
@@ -67,14 +69,14 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	token := extractToken(c.Request)
+	token := utils.ExtractHeaderToken(c.Request)
 	if token == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "missing_bearer_token",
 		})
 		return
 	}
-	td, err := utils.VerifyToken(*token, utils.JWTAccessKey)
+	td, err := utils.VerifyToken(*token, []byte(AccessKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_token",
@@ -82,7 +84,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		})
 		return
 	}
-	userID, err := primitive.ObjectIDFromHex(td.Claims.Audience)
+	userID, err := primitive.ObjectIDFromHex(td.Audience)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_token_aud",
@@ -91,7 +93,10 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	user, err := s.db.Mongo.GetUserByID(userID)
+  ctx, cancel := context.WithTimeout(context.Background(), time.Second * 3)
+  defer cancel()
+
+	user, err := s.mongo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, gin.H{
@@ -106,6 +111,30 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		}
 		return
 	}
+
+	var deviceIDs []primitive.ObjectID
+	for _, id := range user.Devices {
+		objID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":             "convert_object_id_fail",
+				"error_description": err.Error(),
+			})
+			return
+		}
+		deviceIDs = append(deviceIDs, objID)
+	}
+	userDevices, err := s.mongo.GetDevicesByIDs(ctx, deviceIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":             "get_devices_fail",
+			"error_description": err.Error(),
+		})
+		return
+	}
+
+
+
 	fmt.Printf("Base request: %+v\n", base)
 	// Currently not even expecting more than 1 input
 	switch base.Inputs[0].Intent {
@@ -119,7 +148,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 			})
 			return
 		}
-		s.onSync(c, sr, *user)
+		s.onSync(c, sr, user, userDevices)
 	case fulfillment.QueryIntent:
 		var qr fulfillment.QueryRequest
 		err = c.ShouldBindBodyWith(&qr, binding.JSON)
@@ -130,7 +159,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 			})
 			return
 		}
-		s.OnQuery(c, qr, *user)
+		s.OnQuery(c, qr, user, userDevices)
 	case fulfillment.ExecuteIntent:
 		var er fulfillment.ExecuteRequest
 		err := c.ShouldBindBodyWith(&er, binding.JSON)
@@ -141,7 +170,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 			})
 			return
 		}
-		s.onExecute(c, er, *user)
+		s.onExecute(c, er, user, userDevices)
 	case fulfillment.DisconnectIntent:
 		c.JSON(http.StatusNotImplemented, gin.H{
 			"error": "not_implemented",
@@ -150,12 +179,3 @@ func (s *Server) onFulfillment(c *gin.Context) {
 
 }
 
-func extractToken(r *http.Request) *string {
-	bearToken := r.Header.Get("Authorization")
-	//normally Authorization the_token_xxx
-	strArr := strings.Split(bearToken, " ")
-	if len(strArr) == 2 {
-		return &strArr[1]
-	}
-	return nil
-}

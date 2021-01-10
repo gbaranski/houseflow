@@ -3,41 +3,20 @@ package server
 import (
 	"net/http"
 
-	"github.com/gbaranski/houseflow/actions/fulfillment"
-	"github.com/gbaranski/houseflow/actions/types"
+	"github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
-func (s *Server) OnQuery(c *gin.Context, r fulfillment.QueryRequest, user types.User) {
-	var deviceIDs []primitive.ObjectID
-	for _, id := range user.Devices {
-		objID, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":             "convert_object_id_fail",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		deviceIDs = append(deviceIDs, objID)
-	}
-	dbDevices, err := s.db.Mongo.GetUserDevices(deviceIDs)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "get_devices_fail",
-			"error_description": err.Error(),
-		})
-		return
-	}
+func (s *Server) OnQuery(c *gin.Context, r fulfillment.QueryRequest, user types.User, userDevices []types.Device) {
 	payloadDevices := make(map[string]interface{})
 	for _, device := range r.Inputs[0].Payload.Devices {
 		// Check if user has proper permission to the specific device
 		var correspondingDBDevice *types.Device
-		for _, dbDevice := range dbDevices {
-			if dbDevice.ID.Hex() == device.ID {
-				correspondingDBDevice = &dbDevice
+		for _, userDevice := range userDevices {
+			if userDevice.ID.Hex() == device.ID {
+				correspondingDBDevice = &userDevice
 				break
 			}
 		}
