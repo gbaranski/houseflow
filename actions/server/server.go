@@ -23,7 +23,7 @@ var (
 
 // Server hold root server state
 type Server struct {
-	mongo     *database.Mongo
+	mongo     database.Mongo
 	Router *gin.Engine
   mqtt   mqtt.MQTT
 }
@@ -46,7 +46,7 @@ func logResponseBody(c *gin.Context) {
 }
 
 // NewServer creates server, it won't run till Server.Start
-func NewServer(mongo *database.Mongo, mqtt mqtt.MQTT) *Server {
+func NewServer(mongo database.Mongo, mqtt mqtt.MQTT) *Server {
 	s := &Server{
 		mongo:  mongo,
 		Router: gin.Default(),
