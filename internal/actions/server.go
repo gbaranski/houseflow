@@ -1,15 +1,14 @@
-package server
+package actions
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/mqtt"
+	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -28,23 +27,6 @@ type Server struct {
 	mqtt   mqtt.MQTT
 }
 
-type responseBodyWriter struct {
-	gin.ResponseWriter
-	body *bytes.Buffer
-}
-
-func (r responseBodyWriter) Write(b []byte) (int, error) {
-	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
-}
-
-func logResponseBody(c *gin.Context) {
-	w := &responseBodyWriter{body: &bytes.Buffer{}, ResponseWriter: c.Writer}
-	c.Writer = w
-	c.Next()
-	fmt.Println("Response body: " + w.body.String())
-}
-
 // NewServer creates server, it won't run till Server.Start
 func NewServer(mongo database.Mongo, mqtt mqtt.MQTT) *Server {
 	s := &Server{
@@ -52,16 +34,58 @@ func NewServer(mongo database.Mongo, mqtt mqtt.MQTT) *Server {
 		Router: gin.Default(),
 		mqtt:   mqtt,
 	}
-	s.Router.Use(logResponseBody)
+	s.Router.Use(utils.LogResponseBody)
 	s.Router.POST("/fulfillment", s.onFulfillment)
 	return s
+}
+
+func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, userDevices []types.Device) {
+	switch intent {
+	case fulfillment.SyncIntent:
+		var req fulfillment.SyncRequest
+		err := c.ShouldBindBodyWith(&req, binding.JSON)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":             "sync_invalid_json",
+				"error_description": err.Error(),
+			})
+			return
+		}
+		s.onSync(c, req, user, userDevices)
+	case fulfillment.QueryIntent:
+		var req fulfillment.QueryRequest
+		err := c.ShouldBindBodyWith(&req, binding.JSON)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":             "query_invalid_json",
+				"error_description": err.Error(),
+			})
+			return
+		}
+		s.OnQuery(c, req, user, userDevices)
+	case fulfillment.ExecuteIntent:
+		var er fulfillment.ExecuteRequest
+		err := c.ShouldBindBodyWith(&er, binding.JSON)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":             "execute_invalid_json",
+				"error_description": err.Error(),
+			})
+			return
+		}
+		s.onExecute(c, er, user, userDevices)
+	case fulfillment.DisconnectIntent:
+		c.JSON(http.StatusNotImplemented, gin.H{
+			"error": "not_implemented",
+		})
+	}
+
 }
 
 func (s *Server) onFulfillment(c *gin.Context) {
 	var base fulfillment.BaseRequest
 
 	if err := c.ShouldBindBodyWith(&base, binding.JSON); err != nil {
-		fmt.Println("Init parse failed ", err.Error())
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":             "init_parse_invalid_json",
 			"error_description": err.Error(),
@@ -69,14 +93,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	token := utils.ExtractHeaderToken(c.Request)
-	if token == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "missing_bearer_token",
-		})
-		return
-	}
-	td, err := utils.VerifyToken(*token, []byte(AccessKey))
+	userID, err := utils.ExtractWithVerifyUserToken(c.Request, []byte(AccessKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_token",
@@ -84,19 +101,11 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		})
 		return
 	}
-	userID, err := primitive.ObjectIDFromHex(td.Audience)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_token_aud",
-			"error_description": err.Error(),
-		})
-		return
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
+	user, err := s.mongo.GetUserByID(ctx, *userID)
 
-	user, err := s.mongo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusNotFound, gin.H{
@@ -132,47 +141,5 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		})
 		return
 	}
-
-	fmt.Printf("Base request: %+v\n", base)
-	// Currently not even expecting more than 1 input
-	switch base.Inputs[0].Intent {
-	case fulfillment.SyncIntent:
-		var sr fulfillment.SyncRequest
-		err = c.ShouldBindBodyWith(&sr, binding.JSON)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":             "sync_invalid_json",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		s.onSync(c, sr, user, userDevices)
-	case fulfillment.QueryIntent:
-		var qr fulfillment.QueryRequest
-		err = c.ShouldBindBodyWith(&qr, binding.JSON)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":             "query_invalid_json",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		s.OnQuery(c, qr, user, userDevices)
-	case fulfillment.ExecuteIntent:
-		var er fulfillment.ExecuteRequest
-		err := c.ShouldBindBodyWith(&er, binding.JSON)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":             "execute_invalid_json",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		s.onExecute(c, er, user, userDevices)
-	case fulfillment.DisconnectIntent:
-		c.JSON(http.StatusNotImplemented, gin.H{
-			"error": "not_implemented",
-		})
-	}
-
+	s.redirectIntent(c, base.Inputs[0].Intent, user, userDevices)
 }
