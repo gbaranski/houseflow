@@ -1,13 +1,13 @@
-package server
+package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"os"
+	"time"
 
-	"github.com/gbaranski/houseflow/auth/database"
-	"github.com/gbaranski/houseflow/auth/types"
-	"github.com/gbaranski/houseflow/auth/utils"
+	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -34,14 +34,11 @@ type TokenQuery struct {
 	RefreshToken string `form:"refresh_token" binding:"required_if=GrantType refresh_token"`
 }
 
-// ClientIDEnv Enviroment varaible name for ClientID
-const ClientIDEnv = "AUTH_CLIENT_ID"
-
-// ClientSecretEnv Enviroment varaible name for ClientSecret
-const ClientSecretEnv = "AUTH_CLIENT_SECRET"
-
-// Fill it later
-const projectID = "houseflow-prod"
+var (
+	projectID    = utils.MustGetEnv("PROJECT_ID")
+	clientID     = utils.MustGetEnv("OAUTH_CLIENT_ID")
+	clientSecret = utils.MustGetEnv("OAUTH_CLIENT_SECRET")
+)
 
 func validateRedirectURI(uri string) bool {
 	return uri == fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", projectID) || uri == fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", projectID)
@@ -53,7 +50,7 @@ func (s *Server) onAuth(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	if query.ClientID != os.Getenv(ClientIDEnv) {
+	if query.ClientID != clientID {
 		c.String(http.StatusBadRequest, "ClientID is invalid")
 		return
 	}
@@ -69,14 +66,17 @@ func (s *Server) onAuth(c *gin.Context) {
 	})
 }
 
-func (s *Server) createRedirectURI(q *AuthQuery, userID primitive.ObjectID) (*string, error) {
-	token, err := utils.CreateAuthorizationCode(userID)
-	if err != nil {
-		return nil, err
+func (s *Server) createRedirectURI(q *AuthQuery, userID primitive.ObjectID) (string, error) {
+	token := utils.Token{
+		Audience:  userID.Hex(),
+		ExpiresAt: time.Now().Add(utils.AuthorizationCodeDuration).Unix(),
 	}
-	redirectURI := fmt.Sprintf("%s?code=%s&state=%s", q.RedirectURI, token.Token.Raw, q.State)
+	strtoken, err := token.Sign([]byte(authorizationCodeKey))
+	if err != nil {
+		return "", err
+	}
 
-	return &redirectURI, nil
+	return fmt.Sprintf("%s?code=%s&state=%s", q.RedirectURI, strtoken, q.State), nil
 }
 
 func (s *Server) onLogin(c *gin.Context) {
@@ -93,7 +93,9 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.String(http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	dbUser, err := s.db.Mongo.GetUser(form.Email)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	dbUser, err := s.mongo.GetUserByEmail(ctx, form.Email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			c.JSON(http.StatusUnauthorized, "Invalid email or password")
@@ -108,7 +110,7 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
-	passmatch := utils.CheckPasswordHash(form.Password, dbUser.Password)
+	passmatch := utils.ComparePasswordAndHash(form.Password, dbUser.Password)
 	if !passmatch {
 		c.JSON(http.StatusUnauthorized, "Invalid email or password")
 		return
@@ -118,7 +120,7 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.Redirect(http.StatusSeeOther, *redirectURI)
+	c.Redirect(http.StatusSeeOther, redirectURI)
 
 }
 
@@ -133,30 +135,38 @@ func (s *Server) onRegister(c *gin.Context) {
 		c.String(http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	id, err := s.db.Mongo.AddUser(form)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	id, err := s.mongo.AddUser(ctx, form)
 	if err != nil {
-		if database.IsDuplicateError(err) {
-			c.String(http.StatusConflict, "Account already exists")
+		merr := err.(mongo.WriteException)
+		for _, werr := range merr.WriteErrors {
+			if werr.Code == 11000 {
+				c.String(http.StatusConflict, "Account already exists")
+				return
+			}
+			c.JSON(http.StatusInternalServerError, err.Error())
 			return
 		}
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
-		return
 	}
 	c.String(http.StatusOK, fmt.Sprintf("Account created with ID: %s, now you can log in", id.Hex()))
 }
 
 func (s *Server) onLogout(c *gin.Context) {
-	strtoken := utils.ExtractToken(c.Request)
+	strtoken := utils.ExtractHeaderToken(c.Request)
 	if strtoken == nil {
 		c.JSON(http.StatusUnauthorized, "Authorization token not provided")
 		return
 	}
-	token, err := utils.VerifyToken(*strtoken, utils.JWTAccessKey)
+	token, err := utils.VerifyToken(*strtoken, []byte(accessKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, err.Error())
 		return
 	}
-	_, err = s.db.Redis.DeleteAuth(token.Claims.Id)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	_, err = s.redis.DeleteToken(ctx, token.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return

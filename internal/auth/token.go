@@ -1,21 +1,50 @@
-package server
+package auth
 
 import (
+	"context"
 	"fmt"
-	"math"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/gbaranski/houseflow/auth/utils"
+	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var ()
 
 type tokenError struct {
 	InvalidGrant bool
 	Err          error
+}
+
+func newRefreshToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
+  id, err := uuid.NewRandom()
+	if err != nil {
+    return
+	}
+	token = utils.Token{
+		Audience: userID.Hex(),
+		ID:       id.String(),
+	}
+  strtoken, err = token.Sign([]byte(refreshKey))
+  return
+}
+
+func newAccessToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
+  id, err := uuid.NewRandom()
+	if err != nil {
+    return
+	}
+	token = utils.Token{
+		Audience: userID.Hex(),
+		ID:       id.String(),
+    ExpiresAt: time.Now().Add(utils.AccessTokenDuration).Unix(),
+	}
+  strtoken, err = token.Sign([]byte(accessKey))
+  return
 }
 
 func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) {
@@ -26,7 +55,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		})
 		return
 	}
-	token, err := utils.VerifyToken(form.Code, utils.JWTAuthCodeKey)
+	token, err := utils.VerifyToken(form.Code, []byte(authorizationCodeKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_grant",
@@ -35,7 +64,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-	userID, err := primitive.ObjectIDFromHex(token.Claims.Audience)
+	userID, err := primitive.ObjectIDFromHex(token.Audience)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_grant",
@@ -44,7 +73,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-	rt, err := utils.CreateRefreshToken(userID)
+  rt, rtstr, err := newRefreshToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "rt_create_fail",
@@ -52,7 +81,8 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		})
 		return
 	}
-	at, err := utils.CreateAccessToken(userID)
+
+  _, atstr, err := newAccessToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "at_create_fail",
@@ -61,36 +91,20 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-	err = s.db.Redis.AddToken(userID, rt)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "Failed adding token pair",
-			"error_description": err.Error(),
-		})
-		return
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+  s.redis.AddToken(ctx, userID, rt)
 
-	atexp := time.Unix(at.Claims.ExpiresAt, 0)
-	now := time.Now()
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":    "Bearer",
-		"access_token":  at.Token.Raw,
-		"refresh_token": rt.Token.Raw,
-		"expires_in":    math.Round(atexp.Sub(now).Seconds()),
+		"access_token":  atstr,
+		"refresh_token": rtstr,
+		"expires_in":    int(utils.AccessTokenDuration.Seconds()),
 	})
 }
 
 func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
-	fmt.Println("Attempt to get access token")
-	rt, err := utils.VerifyToken(form.RefreshToken, utils.JWTRefreshKey)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
-		})
-		return
-	}
-	userID, err := s.db.Redis.FetchToken(rt.Claims)
+	rt, err := utils.VerifyToken(form.RefreshToken, []byte(refreshKey))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":             "invalid_grant",
@@ -99,7 +113,18 @@ func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 		return
 	}
 
-	userIDObject, err := primitive.ObjectIDFromHex(*userID)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	userID, err := s.redis.FetchToken(ctx, *rt)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":             "invalid_grant",
+			"error_description": err.Error(),
+		})
+		return
+	}
+
+	userIDObject, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		fmt.Println("Unable to parse userID to objectID")
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -108,20 +133,18 @@ func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 		})
 		return
 	}
-	at, err := utils.CreateAccessToken(userIDObject)
+	_, atstr, err := newAccessToken(userIDObject)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "Failed creating access token",
+			"error":             "at_create_fail",
 			"error_description": err.Error(),
 		})
 		return
 	}
-	atexp := time.Unix(at.Claims.ExpiresAt, 0)
-	now := time.Now()
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":   "Bearer",
-		"access_token": at.Token.Raw,
-		"expires_in":   math.Round(atexp.Sub(now).Seconds()),
+		"access_token": atstr,
+		"expires_in":   int(utils.AccessTokenDuration.Seconds()),
 	})
 }
 
@@ -131,7 +154,7 @@ func (s *Server) onToken(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	if form.ClientID != os.Getenv(ClientIDEnv) || form.ClientSecret != os.Getenv(ClientSecretEnv) {
+	if form.ClientID != clientID || form.ClientSecret != clientSecret {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error":   "invalid_grant",
 			"message": "Invalid clientID or clientSecret",

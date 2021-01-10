@@ -1,14 +1,15 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
+
 	"golang.org/x/crypto/bcrypt"
-  "bytes"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,6 +46,12 @@ func GenerateRandomString(length int) string {
 // HashPassword hashes password with bcrypt
 func HashPassword(pass string) ([]byte, error) {
 	return bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+}
+
+// CheckPasswordHash checks hash of password, returns true if they match, otherwise false
+func ComparePasswordAndHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // MustGetEnv retreives the enviroment variable
