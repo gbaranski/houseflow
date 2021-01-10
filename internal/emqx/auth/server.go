@@ -1,4 +1,4 @@
-package emqxauth
+package auth
 
 import (
 	"fmt"

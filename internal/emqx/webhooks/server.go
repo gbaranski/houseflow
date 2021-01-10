@@ -1,4 +1,4 @@
-package emqxwh
+package webhooks
 
 import (
 	"context"

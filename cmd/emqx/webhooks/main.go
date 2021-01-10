@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gbaranski/houseflow/internal/emqxwh"
+	"github.com/gbaranski/houseflow/internal/emqx/webhooks"
 	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	s := emqxwh.NewServer(mongo)
+	s := webhooks.NewServer(mongo)
 
 	http.HandleFunc("/event", func(w http.ResponseWriter, req *http.Request) {
 		s.OnEvent(w, req)

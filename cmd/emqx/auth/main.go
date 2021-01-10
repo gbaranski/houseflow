@@ -6,7 +6,7 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"github.com/gbaranski/houseflow/internal/emqxauth"
+	"github.com/gbaranski/houseflow/internal/emqx/auth"
 )
 
 var (
@@ -28,6 +28,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	s := emqxauth.NewServer(mongo)
+	s := auth.NewServer(mongo)
 	s.Router.Run(":80")
 }
