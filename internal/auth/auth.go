@@ -110,7 +110,7 @@ func (s *Server) onLogin(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
-	passmatch := utils.ComparePasswordAndHash(form.Password, dbUser.Password)
+	passmatch := utils.ComparePasswordAndHash([]byte(form.Password), []byte(dbUser.Password))
 	if !passmatch {
 		c.JSON(http.StatusUnauthorized, "Invalid email or password")
 		return
