@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/gbaranski/houseflow/internal/emqx/auth"
 	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"github.com/gbaranski/houseflow/internal/emqx/auth"
 )
 
 var (
