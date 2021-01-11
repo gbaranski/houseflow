@@ -12,8 +12,8 @@ services:
       - 443:443
     restart: 'unless-stopped'
     volumes:
-      - ./certs/fullchain.pem:/etc/dockercerts/fullchain.pem
-      - ./certs/privkey.pem:/etc/dockercerts/privkey.pem
+      - ./deployment/certs/fullchain.pem:/etc/dockercerts/fullchain.pem
+      - ./deployment/certs/privkey.pem:/etc/dockercerts/privkey.pem
     networks:
       - backend
 
