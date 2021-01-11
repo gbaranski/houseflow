@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -19,7 +18,6 @@ var (
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	log.Println("Starting webhooks")
 	mongo, err := database.NewMongo(ctx, database.MongoOptions{
 		Username:     mongoUsername,
 		Password:     mongoPassword,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
-	"fmt"
 	"time"
 
 	"github.com/gbaranski/houseflow/internal/actions"
@@ -17,8 +16,6 @@ var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
 	privateKey    ed25519.PrivateKey
-	serviceName   = utils.MustGetEnv("SERVICE_NAME")
-	serviceID     = utils.MustGetEnv("SERVICE_ID")
 )
 
 func init() {
@@ -40,7 +37,7 @@ func main() {
 	})
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
-		ClientID:    fmt.Sprintf("%s-%s", serviceName, serviceID),
+		ClientID:    "actions",
 		BrokerURL:   "tcp://emqx:1883/mqtt",
 		KeepAlive:   time.Second * 30,
 		PingTimeout: time.Second * 5,

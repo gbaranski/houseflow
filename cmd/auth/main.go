@@ -12,11 +12,6 @@ import (
 var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
-	redisUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
-	redisPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
-	privateKey    = utils.MustGetEnv("SERVER_PRIVATE_KEY")
-	serviceName   = utils.MustGetEnv("SERVICE_NAME")
-	serviceID     = utils.MustGetEnv("SERVICE_ID")
 )
 
 func main() {
