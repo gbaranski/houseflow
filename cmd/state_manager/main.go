@@ -16,9 +16,6 @@ import (
 var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
-	databaseName  = utils.MustGetEnv("DB_NAME")
-	serviceName   = utils.MustGetEnv("SERVICE_NAME")
-	serviceID     = utils.MustGetEnv("SERVICE_ID")
 )
 
 func main() {
@@ -34,7 +31,7 @@ func main() {
   }
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
-		ClientID:    fmt.Sprintf("%s-%s", serviceName, serviceID),
+		ClientID:    "state_manager",
 		BrokerURL:   "tcp://emqx:1883/mqtt",
 		KeepAlive:   time.Second * 30,
 		PingTimeout: time.Second * 5,
