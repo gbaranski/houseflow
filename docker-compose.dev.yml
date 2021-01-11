@@ -68,14 +68,17 @@ services:
       - backend
 
   # My services
+
   emqx_webhooks:
     tty: true
     container_name: 'emqx_webhooks'
     env_file:
       - .env
     build:
-      context: ./cmd/emqx/webhooks
       dockerfile: $PWD/build/go/Dockerfile
+      context: .
+      args:
+        - MAIN_PATH=./cmd/emqx/webhooks
     depends_on:
       - emqx
       - mongo
@@ -88,8 +91,10 @@ services:
     env_file:
       - .env
     build:
-      context: ./cmd/emqx/auth
       dockerfile: $PWD/build/go/Dockerfile
+      context: .
+      args:
+        - MAIN_PATH=./cmd/emqx/auth
     networks:
       - backend
 
@@ -101,8 +106,10 @@ services:
       - mongo
       - redis
     build:
-      context: ./cmd/auth
       dockerfile: $PWD/build/go/Dockerfile
+      context: .
+      args:
+        - MAIN_PATH=./cmd/auth
     depends_on:
       - mongo
       - redis
@@ -119,8 +126,10 @@ services:
       - mongo
       - emqx
     build:
-      context: ./cmd/state_manager
       dockerfile: $PWD/build/go/Dockerfile
+      context: .
+      args:
+        - MAIN_PATH=./cmd/state_manager
     env_file:
       - .env
     networks:
@@ -134,8 +143,10 @@ services:
       - mongo
       - redis
     build:
-      context: ./cmd/actions
       dockerfile: $PWD/build/go/Dockerfile
+      context: .
+      args:
+        - MAIN_PATH=./cmd/actions
     env_file:
       - .env
     networks:
