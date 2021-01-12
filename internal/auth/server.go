@@ -32,7 +32,7 @@ func NewServer(mongo database.Mongo, redis database.Redis) *Server {
 	s.Router.POST("/logout", s.onLogout)
 	s.Router.POST("/token", s.onToken)
 	s.Router.GET("/auth", s.onAuth)
-	s.Router.LoadHTMLGlob("template/*")
+	s.Router.LoadHTMLGlob("/web/template/*")
 
 	return s
 }

@@ -21,6 +21,7 @@ services:
     image: mongo
     container_name: 'mongo'
     restart: 'unless-stopped'
+    command: --quiet
     env_file:
       - .env
     environment:
@@ -57,13 +58,13 @@ services:
       - EMQX_LOG__LEVEL=info
       - EMQX_ALLOW_ANONYMOUS=true
 
-      - EMQX_LOADED_PLUGINS=emqx_auth_http,emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+      - EMQX_LOADED_PLUGINS=emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
       - 18083:18083 # Dashboard
     volumes:
-      - ./emqx/plugins:/opt/emqx/etc/plugins
+      - ./build/emqx/plugins:/opt/emqx/etc/plugins
     networks:
       - backend
 
@@ -75,10 +76,8 @@ services:
     env_file:
       - .env
     build:
-      dockerfile: $PWD/build/go/Dockerfile
+      dockerfile: ./cmd/emqx/webhooks/dev.Dockerfile
       context: .
-      args:
-        - MAIN_PATH=./cmd/emqx/webhooks
     depends_on:
       - emqx
       - mongo
@@ -86,15 +85,13 @@ services:
       - backend
 
   emqx_auth:
-    tty: true
+    # tty: true
     container_name: 'emqx_auth'
     env_file:
       - .env
     build:
-      dockerfile: $PWD/build/go/Dockerfile
+      dockerfile: ./cmd/emqx/auth/dev.Dockerfile
       context: .
-      args:
-        - MAIN_PATH=./cmd/emqx/auth
     networks:
       - backend
 
@@ -106,15 +103,15 @@ services:
       - mongo
       - redis
     build:
-      dockerfile: $PWD/build/go/Dockerfile
+      dockerfile: ./cmd/auth/dev.Dockerfile
       context: .
-      args:
-        - MAIN_PATH=./cmd/auth
     depends_on:
       - mongo
       - redis
     env_file:
       - .env
+    volumes:
+      - ./web/template:/web/template
     networks:
       - backend
 
@@ -126,10 +123,8 @@ services:
       - mongo
       - emqx
     build:
-      dockerfile: $PWD/build/go/Dockerfile
+      dockerfile: ./cmd/state_manager/dev.Dockerfile
       context: .
-      args:
-        - MAIN_PATH=./cmd/state_manager
     env_file:
       - .env
     networks:
@@ -143,10 +138,8 @@ services:
       - mongo
       - redis
     build:
-      dockerfile: $PWD/build/go/Dockerfile
+      dockerfile: ./cmd/actions/dev.Dockerfile
       context: .
-      args:
-        - MAIN_PATH=./cmd/actions
     env_file:
       - .env
     networks:
