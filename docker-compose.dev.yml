@@ -147,6 +147,10 @@ services:
       - .env
     networks:
       - backend
+    volumes:
+      - ./cmd/actions:/app/cmd/actions
+      - ./internal/actions:/app/internal/actions
+      - ./pkg:/app/pkg
 
 networks:
   backend:
