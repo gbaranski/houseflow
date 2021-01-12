@@ -11,6 +11,7 @@ require (
 	github.com/go-redis/redis/v8 v8.4.8
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
+	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.4
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/klauspost/compress v1.11.6 // indirect
