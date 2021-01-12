@@ -55,10 +55,11 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		})
 		return
 	}
+  fmt.Println(form.Code)
 	token, err := utils.VerifyToken(form.Code, []byte(authorizationCodeKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_grant",
+			"error":             "invalid_code",
 			"error_description": err.Error(),
 		})
 		return
@@ -67,7 +68,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 	userID, err := primitive.ObjectIDFromHex(token.Audience)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_grant",
+			"error":             "invalid_token_audience",
 			"error_description": err.Error(),
 		})
 		return
