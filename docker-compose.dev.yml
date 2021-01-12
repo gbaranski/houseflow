@@ -46,6 +46,7 @@ services:
   redis:
     image: 'redis:latest'
     container_name: 'redis'
+    restart: 'unless-stopped'
     networks:
       - backend
 
@@ -53,6 +54,7 @@ services:
     tty: true
     image: 'emqx/emqx'
     container_name: 'emqx'
+    restart: 'unless-stopped'
     environment:
       - EMQX_NAME=emqx
       - EMQX_LOG__LEVEL=info
@@ -73,10 +75,11 @@ services:
   emqx_webhooks:
     tty: true
     container_name: 'emqx_webhooks'
+    restart: 'unless-stopped'
     env_file:
       - .env
     build:
-      dockerfile: ./cmd/emqx/webhooks/dev.Dockerfile
+      dockerfile: ./cmd/emqx/webhooks/Dockerfile
       context: .
     depends_on:
       - emqx
@@ -87,10 +90,11 @@ services:
   emqx_auth:
     # tty: true
     container_name: 'emqx_auth'
+    restart: 'unless-stopped'
     env_file:
       - .env
     build:
-      dockerfile: ./cmd/emqx/auth/dev.Dockerfile
+      dockerfile: ./cmd/emqx/auth/Dockerfile
       context: .
     networks:
       - backend
@@ -103,7 +107,7 @@ services:
       - mongo
       - redis
     build:
-      dockerfile: ./cmd/auth/dev.Dockerfile
+      dockerfile: ./cmd/auth/Dockerfile
       context: .
     depends_on:
       - mongo
@@ -112,9 +116,6 @@ services:
       - .env
     volumes:
       - ./web/template:/web/template
-      - ./cmd/auth:/app/cmd/auth
-      - ./internal/auth:/app/internal/auth
-      - ./pkg:/app/pkg
     networks:
       - backend
 
@@ -126,7 +127,7 @@ services:
       - mongo
       - emqx
     build:
-      dockerfile: ./cmd/state_manager/dev.Dockerfile
+      dockerfile: ./cmd/state_manager/Dockerfile
       context: .
     env_file:
       - .env
@@ -141,16 +142,12 @@ services:
       - mongo
       - redis
     build:
-      dockerfile: ./cmd/actions/dev.Dockerfile
+      dockerfile: ./cmd/actions/Dockerfile
       context: .
     env_file:
       - .env
     networks:
       - backend
-    volumes:
-      - ./cmd/actions:/app/cmd/actions
-      - ./internal/actions:/app/internal/actions
-      - ./pkg:/app/pkg
 
 networks:
   backend:
