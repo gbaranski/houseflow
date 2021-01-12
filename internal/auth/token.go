@@ -2,91 +2,113 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (a *Auth) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) {
+func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
 	fmt.Println("Requesting authorization code grant")
+
 	if !a.validateRedirectURI(form.RedirectURI) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":             "bad_request",
-			"error_description": "invalid_redirect_uri",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error": "invalid_redirect_uri",
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
-	fmt.Println(form.Code)
+
 	authorizationCode, err := url.QueryUnescape(form.Code)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":             "invalid_auth_code",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
 	token, err := utils.VerifyToken(authorizationCode, []byte(a.opts.AuthorizationCodeKey))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_auth_code",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
 
 	userID, err := primitive.ObjectIDFromHex(token.Audience)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_token_audience",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
 
 	rt, rtstr, err := a.newRefreshToken(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "rt_create_fail",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(json)
 		return
 	}
 
 	_, atstr, err := a.newAccessToken(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "at_create_fail",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(json)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
-	a.redis.AddToken(ctx, userID, rt)
+	err = a.redis.AddToken(r.Context(), userID, rt)
 
-	c.JSON(http.StatusOK, gin.H{
+	if err != nil {
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "fail_add_rt",
+			"error_description": err.Error(),
+		})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(json)
+		return
+	}
+
+	json, _ := json.Marshal(map[string]interface{}{
 		"token_type":    "Bearer",
 		"access_token":  atstr,
 		"refresh_token": rtstr,
 		"expires_in":    int(utils.AccessTokenDuration.Seconds()),
 	})
+	w.Write(json)
 }
 
-func (a *Auth) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
+func (a *Auth) onTokenAccessTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
 	fmt.Println("Requesting access token grant")
 	rt, err := utils.VerifyToken(form.RefreshToken, []byte(a.opts.RefreshKey))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
 
@@ -94,58 +116,88 @@ func (a *Auth) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 	defer cancel()
 	userID, err := a.redis.FetchToken(ctx, *rt)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
 
 	userIDObject, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		fmt.Println("Unable to parse userID to objectID")
-		c.JSON(http.StatusBadRequest, gin.H{
+		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
 	_, atstr, err := a.newAccessToken(userIDObject)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "at_create_fail",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "fail_create_at",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(json)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
+
+	json, _ := json.Marshal(map[string]interface{}{
 		"token_type":   "Bearer",
 		"access_token": atstr,
 		"expires_in":   int(utils.AccessTokenDuration.Seconds()),
 	})
+	w.Write(json)
 }
 
-func (a *Auth) onToken(c *gin.Context) {
+func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	err := r.ParseForm()
+	if err != nil {
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "fail_parse_form",
+			"error_description": err.Error(),
+		})
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write(json)
+		return
+	}
+
 	var form TokenQuery
-	if err := c.MustBindWith(&form, binding.FormPost); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+	if err = decoder.Decode(&form, r.PostForm); err != nil {
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "fail_parse_form",
+			"error_description": err.Error(),
+		})
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write(json)
 		return
 	}
+
 	if form.ClientID != a.opts.ClientID || form.ClientSecret != a.opts.ClientSecret {
-		c.JSON(http.StatusForbidden, gin.H{
-			"error":   "invalid_grant",
-			"message": "Invalid clientID or clientSecret",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error": "invalid_oauth_credentials",
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 		return
 	}
+
 	if form.GrantType == "authorization_code" {
-		a.onTokenAuthorizationCodeGrant(c, form)
+		a.onTokenAuthorizationCodeGrant(w, r, form)
 	} else if form.GrantType == "refresh_token" {
-		a.onTokenAccessTokenGrant(c, form)
+		a.onTokenAccessTokenGrant(w, r, form)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid_grant",
-			"message": "Invalid GrantType",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error": "unknown_grant_type",
 		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
 	}
 }
