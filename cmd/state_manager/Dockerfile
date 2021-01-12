@@ -1,11 +1,5 @@
 FROM golang:alpine as build
 
-RUN echo $COMPOSE_PROJECT_NAME
-
-ARG MAIN_PATH
-
-RUN if [[ -z "$MAIN_PATH" ]] ; then exit 1 ; fi
-
 # Set necessary environmet variables needed for our image
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
@@ -24,8 +18,9 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o /bin/app $MAIN_PATH
+RUN go build -o /bin/app ./cmd/state_manager/main.go
 
 FROM scratch
 COPY --from=build /bin/app  /
+
 ENTRYPOINT ["/app"]
