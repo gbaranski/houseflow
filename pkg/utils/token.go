@@ -82,7 +82,7 @@ func VerifyToken(strtoken string, key []byte) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if token.ExpiresAt < time.Now().Unix() {
+	if token.ExpiresAt != 0 && token.ExpiresAt < time.Now().Unix() {
 		return nil, fmt.Errorf("token is expired")
 	}
 	return &token, nil
