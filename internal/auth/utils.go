@@ -41,7 +41,7 @@ func (a Auth) newAccessToken(userID primitive.ObjectID) (token utils.Token, strt
 	return
 }
 
-func (a *Auth) createRedirectURI(q *LoginPageQuery, userID primitive.ObjectID) (string, error) {
+func (a *Auth) createRedirectURI(q LoginPageQuery, userID primitive.ObjectID) (string, error) {
 	token := utils.Token{
 		Audience:  userID.Hex(),
 		ExpiresAt: time.Now().Add(utils.AuthorizationCodeDuration).Unix(),

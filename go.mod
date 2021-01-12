@@ -7,12 +7,13 @@ require (
 	github.com/aws/aws-sdk-go v1.36.23 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-chi/chi v1.5.1
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-redis/redis/v8 v8.4.8
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/google/go-querystring v1.0.0
 	github.com/google/uuid v1.1.4
+	github.com/gorilla/schema v1.2.0
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/klauspost/compress v1.11.6 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect

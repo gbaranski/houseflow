@@ -3,9 +3,11 @@ package auth
 import (
 	"context"
 	"net/http"
+	"text/template"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/gorilla/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gbaranski/houseflow/pkg/types"
@@ -29,47 +31,54 @@ type Redis interface {
 type Auth struct {
 	mongo  Mongo
 	redis  Redis
-	Router *gin.Engine
+	Router *chi.Mux
 	opts   Options
 }
+
+var decoder = schema.NewDecoder()
+var encoder = schema.NewEncoder()
 
 // NewAuth creates server, it won't run till Auth.Router.Start
 func NewAuth(mongo Mongo, redis Redis, opts Options) Auth {
 	a := Auth{
 		mongo:  mongo,
 		redis:  redis,
-		Router: gin.Default(),
+		Router: chi.NewRouter(),
 		opts:   opts,
 	}
-	a.Router.LoadHTMLGlob("../../web/template/*")
+	a.Router.Use(middleware.Logger)
 
-	a.Router.GET("/auth", a.onLoginPage)
+	a.Router.Get("/auth", a.onAuthSite)
 
-	a.Router.POST("/login", a.onLogin)
-	a.Router.POST("/register", a.onRegister)
-	a.Router.POST("/logout", a.onLogout)
-	a.Router.POST("/token", a.onToken)
+	a.Router.Post("/login", a.onLogin)
+	a.Router.Post("/register", a.onRegister)
+	a.Router.Post("/token", a.onToken)
 
 	return a
 }
 
-func (a *Auth) onLoginPage(c *gin.Context) {
+func (a *Auth) onAuthSite(w http.ResponseWriter, r *http.Request) {
 	var query LoginPageQuery
-	if err := c.MustBindWith(&query, binding.Query); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
+
+	if err := decoder.Decode(&query, r.URL.Query()); err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
+
 	if query.ClientID != a.opts.ClientID {
-		c.String(http.StatusBadRequest, "ClientID is invalid")
+		http.Error(w, "ClientID is invalid", http.StatusForbidden)
 		return
 	}
 	if !a.validateRedirectURI(query.RedirectURI) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "redirect_uri is invalid",
-		})
+		http.Error(w, "redirect_uri is invalid", http.StatusBadRequest)
 		return
 	}
-	c.HTML(http.StatusOK, "auth.tmpl", gin.H{
+	tmpl, err := template.ParseFiles("../../web/template/auth.tmpl")
+	if err != nil {
+		http.Error(w, "Fail loading template", http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, map[string]string{
 		"redirect_uri": query.RedirectURI,
 		"state":        query.State,
 	})

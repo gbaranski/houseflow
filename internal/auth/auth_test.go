@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"github.com/google/go-querystring/query"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -93,12 +93,10 @@ func TestLoginInvalidPassword(t *testing.T) {
 		ResponseType: "code",
 		UserLocale:   "en_US",
 	}
-	v, err := query.Values(q)
-	if err != nil {
-		panic(err)
-	}
+	query := url.Values{}
+	encoder.Encode(q, query)
 
-	b := LoginRequest{
+	b := LoginCredentials{
 		Email:    realUser.Email,
 		Password: worldhello,
 	}
@@ -108,13 +106,42 @@ func TestLoginInvalidPassword(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", v.Encode()), strings.NewReader(string(jsonb)))
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", query.Encode()), strings.NewReader(string(jsonb)))
 	a.Router.ServeHTTP(w, req)
-
-	// restext, err := ioutil.ReadAll(w.Result().Body)
-	// fmt.Println(string(restext))
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected /login response %d", w.Code)
 	}
 }
+
+// func TestLoginValidPassword(t *testing.T) {
+// 	q := LoginPageQuery{
+// 		ClientID:     opts.ClientID,
+// 		RedirectURI:  fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", opts.ProjectID),
+// 		State:        utils.GenerateRandomString(20),
+// 		ResponseType: "code",
+// 		UserLocale:   "en_US",
+// 	}
+// 	v, err := query.Values(q)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	creds := LoginCredentials{
+// 		Email:    realUser.Email,
+// 		Password: "helloworld",
+// 	}
+// 	var data url.Values
+// 	encoder.Encode(creds, data)
+
+// 	w := httptest.NewRecorder()
+// 	r, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", v.Encode()), strings.NewReader(data.Encode()))
+// 	r.Header.Set("Content-Type", "application/json")
+// 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+// 	a.Router.ServeHTTP(w, r)
+
+// 	if w.Code != http.StatusSeeOther {
+// 		t.Fatalf("unexpected /login response %d", w.Code)
+// 	}
+// }
