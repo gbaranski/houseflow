@@ -12,30 +12,29 @@ import (
 
 // RedisOptions defines options for redis
 type RedisOptions struct {
-  // Username for redis
-  Username string
+	// Username for redis
+	Username string
 
-  // Password for redis
-  Password string
+	// Password for redis
+	Password string
 }
 
 // Parse parses the options and set the defaults
 func (opts *RedisOptions) Parse() {
 }
 
-
 // Redis contains db and client
 type Redis struct {
 	client *redis.Client
-  opts RedisOptions
+	opts   RedisOptions
 }
 
 // NewRedis creates Redis, connects to redisdb with given options
 func NewRedis(ctx context.Context, opts RedisOptions) (Redis, error) {
-  opts.Parse()
+	opts.Parse()
 	client := redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",
-    Username: opts.Username,
+		Username: opts.Username,
 		Password: opts.Password,
 		DB:       0,
 	})
@@ -43,7 +42,7 @@ func NewRedis(ctx context.Context, opts RedisOptions) (Redis, error) {
 	if err != nil {
 		return Redis{}, err
 	}
-  return Redis{client: client, opts: opts}, nil
+	return Redis{client: client, opts: opts}, nil
 }
 
 // AddToken adds token to Redis DB

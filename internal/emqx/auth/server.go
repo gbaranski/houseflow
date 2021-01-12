@@ -9,14 +9,14 @@ import (
 
 // Server holds state
 type Server struct {
-	mongo     database.Mongo
+	mongo  database.Mongo
 	Router *gin.Engine
 }
 
 // NewServer implements server
 func NewServer(mongo database.Mongo) Server {
 	s := Server{
-		mongo:     mongo,
+		mongo:  mongo,
 		Router: gin.Default()}
 
 	s.Router.POST("/user", s.onUser)

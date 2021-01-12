@@ -23,15 +23,15 @@ type Server struct {
 // NewServer creates server, it won't run till Server.Start
 func NewServer(mongo database.Mongo, redis database.Redis) *Server {
 	s := &Server{
-		mongo: mongo,
-    redis: redis,
-    Router: gin.Default(),
+		mongo:  mongo,
+		redis:  redis,
+		Router: gin.Default(),
 	}
 	s.Router.POST("/login", s.onLogin)
 	s.Router.POST("/register", s.onRegister)
 	s.Router.POST("/logout", s.onLogout)
 	s.Router.POST("/token", s.onToken)
-	s.Router.GET("/auth", s.onAuth)
+	s.Router.GET("/auth", s.onLoginPage)
 	s.Router.LoadHTMLGlob("/web/template/*")
 
 	return s

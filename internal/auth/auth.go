@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// AuthQuery sent by google
-type AuthQuery struct {
+// LoginPageQuery sent by google
+type LoginPageQuery struct {
 	ClientID     string `form:"client_id" binding:"required"`
 	RedirectURI  string `form:"redirect_uri" binding:"required"`
 	State        string `form:"state" binding:"required"`
@@ -44,8 +44,8 @@ func validateRedirectURI(uri string) bool {
 	return uri == fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", projectID) || uri == fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", projectID)
 }
 
-func (s *Server) onAuth(c *gin.Context) {
-	var query AuthQuery
+func (s *Server) onLoginPage(c *gin.Context) {
+	var query LoginPageQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -66,7 +66,7 @@ func (s *Server) onAuth(c *gin.Context) {
 	})
 }
 
-func (s *Server) createRedirectURI(q *AuthQuery, userID primitive.ObjectID) (string, error) {
+func (s *Server) createRedirectURI(q *LoginPageQuery, userID primitive.ObjectID) (string, error) {
 	token := utils.Token{
 		Audience:  userID.Hex(),
 		ExpiresAt: time.Now().Add(utils.AuthorizationCodeDuration).Unix(),
@@ -84,7 +84,7 @@ func (s *Server) onLogin(c *gin.Context) {
 		Email    string `form:"email"`
 		Password string `form:"password"`
 	}
-	var query AuthQuery
+	var query LoginPageQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -126,7 +126,7 @@ func (s *Server) onLogin(c *gin.Context) {
 
 func (s *Server) onRegister(c *gin.Context) {
 	var form types.User
-	var query AuthQuery
+	var query LoginPageQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return

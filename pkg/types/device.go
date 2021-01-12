@@ -1,8 +1,8 @@
 package types
 
 import (
-  "go.mongodb.org/mongo-driver/bson/primitive"
-  "github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/fulfillment"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Device is device from database

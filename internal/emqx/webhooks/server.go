@@ -21,6 +21,7 @@ type Server struct {
 	mongo database.Mongo
 }
 
+// NewServer creates new server
 func NewServer(db database.Mongo) Server {
 	return Server{
 		mongo: db,

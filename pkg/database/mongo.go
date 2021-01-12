@@ -51,7 +51,7 @@ type Collections struct {
 	Devices *mongo.Collection
 }
 
-//  Mongo contains db and client
+// Mongo contains db and client
 type Mongo struct {
 	db          *mongo.Database
 	Client      *mongo.Client
@@ -101,13 +101,12 @@ func NewMongo(ctx context.Context, opts MongoOptions) (Mongo, error) {
 
 }
 
-// GetUserbyEmail returns found user from DB, query by email
+// GetUserByEmail returns found user from DB, query by email
 func (m *Mongo) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
 	result := m.Collections.Users.FindOne(ctx, bson.M{"email": email})
 	if result.Err() != nil {
 		return types.User{}, result.Err()
 	}
-
 	var user types.User
 	if err := result.Decode(&user); err != nil {
 		return types.User{}, err
@@ -116,7 +115,7 @@ func (m *Mongo) GetUserByEmail(ctx context.Context, email string) (types.User, e
 	return user, nil
 }
 
-// GetUserbyEmail returns found user from DB, query by email
+// GetUserByID returns found user from DB, query by user ID
 func (m *Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error) {
 	result := m.Collections.Users.FindOne(ctx, bson.M{"_id": id})
 	if result.Err() != nil {
@@ -191,7 +190,7 @@ func (m *Mongo) UpdateDeviceOnlineState(ctx context.Context, deviceID primitive.
 	return nil
 }
 
-// GetUserDevices retreives user devices
+// GetDevicesByIDs retreives devices by array of IDs
 func (m *Mongo) GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.ObjectID) ([]types.Device, error) {
 	cur, err := m.Collections.Devices.Find(ctx,
 		bson.M{"_id": bson.M{

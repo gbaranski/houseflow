@@ -25,9 +25,9 @@ func main() {
 	})
 
 	redis, err := database.NewRedis(ctx, database.RedisOptions{})
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 
 	s := auth.NewServer(mongo, redis)
 	err = s.Router.Run(":80")

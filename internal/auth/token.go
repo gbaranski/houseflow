@@ -21,30 +21,30 @@ type tokenError struct {
 }
 
 func newRefreshToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
-  id, err := uuid.NewRandom()
+	id, err := uuid.NewRandom()
 	if err != nil {
-    return
+		return
 	}
 	token = utils.Token{
 		Audience: userID.Hex(),
 		ID:       id.String(),
 	}
-  strtoken, err = token.Sign([]byte(refreshKey))
-  return
+	strtoken, err = token.Sign([]byte(refreshKey))
+	return
 }
 
 func newAccessToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
-  id, err := uuid.NewRandom()
+	id, err := uuid.NewRandom()
 	if err != nil {
-    return
+		return
 	}
 	token = utils.Token{
-		Audience: userID.Hex(),
-		ID:       id.String(),
-    ExpiresAt: time.Now().Add(utils.AccessTokenDuration).Unix(),
+		Audience:  userID.Hex(),
+		ID:        id.String(),
+		ExpiresAt: time.Now().Add(utils.AccessTokenDuration).Unix(),
 	}
-  strtoken, err = token.Sign([]byte(accessKey))
-  return
+	strtoken, err = token.Sign([]byte(accessKey))
+	return
 }
 
 func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) {
@@ -55,7 +55,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		})
 		return
 	}
-  fmt.Println(form.Code)
+	fmt.Println(form.Code)
 	token, err := utils.VerifyToken(form.Code, []byte(authorizationCodeKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -74,7 +74,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-  rt, rtstr, err := newRefreshToken(userID)
+	rt, rtstr, err := newRefreshToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "rt_create_fail",
@@ -83,7 +83,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-  _, atstr, err := newAccessToken(userID)
+	_, atstr, err := newAccessToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "at_create_fail",
@@ -94,7 +94,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-  s.redis.AddToken(ctx, userID, rt)
+	s.redis.AddToken(ctx, userID, rt)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":    "Bearer",
