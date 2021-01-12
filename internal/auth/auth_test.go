@@ -2,12 +2,12 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -21,8 +21,6 @@ import (
 const (
 	// bcrypt hashed "helloworld"
 	helloworld = "$2y$12$sVtI/bYDQ3LWKcGlryQYzeo3IFjIYsl4f4bY6isfBaE3MnaPIcc2e"
-	// bcrypt hashed "worldhello"
-	worldhello = "$2y$12$w51zkqB1rX6ZkOVHUO6CAO8YOfZQZjxHRS/mfBvwVdB.5PSHbhu.W"
 )
 
 var userID = primitive.NewObjectIDFromTimestamp(time.Now())
@@ -96,52 +94,23 @@ func TestLoginInvalidPassword(t *testing.T) {
 	query := url.Values{}
 	encoder.Encode(q, query)
 
-	b := LoginCredentials{
+	form := LoginCredentials{
 		Email:    realUser.Email,
-		Password: worldhello,
+		Password: "jgjnjsnjgfnfsnfgngsfndkngf", // invalid password
 	}
-	jsonb, err := json.Marshal(b)
+	data := url.Values{}
+	err := encoder.Encode(form, data)
 	if err != nil {
 		panic(err)
 	}
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", query.Encode()), strings.NewReader(string(jsonb)))
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", query.Encode()), strings.NewReader(data.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	a.Router.ServeHTTP(w, req)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected /login response %d", w.Code)
 	}
 }
-
-// func TestLoginValidPassword(t *testing.T) {
-// 	q := LoginPageQuery{
-// 		ClientID:     opts.ClientID,
-// 		RedirectURI:  fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", opts.ProjectID),
-// 		State:        utils.GenerateRandomString(20),
-// 		ResponseType: "code",
-// 		UserLocale:   "en_US",
-// 	}
-// 	v, err := query.Values(q)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	creds := LoginCredentials{
-// 		Email:    realUser.Email,
-// 		Password: "helloworld",
-// 	}
-// 	var data url.Values
-// 	encoder.Encode(creds, data)
-
-// 	w := httptest.NewRecorder()
-// 	r, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", v.Encode()), strings.NewReader(data.Encode()))
-// 	r.Header.Set("Content-Type", "application/json")
-// 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
-
-// 	a.Router.ServeHTTP(w, r)
-
-// 	if w.Code != http.StatusSeeOther {
-// 		t.Fatalf("unexpected /login response %d", w.Code)
-// 	}
-// }
