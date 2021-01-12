@@ -2,19 +2,31 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
+	"github.com/google/go-querystring/query"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+const (
+	// bcrypt hashed "helloworld"
+	helloworld = "$2y$12$sVtI/bYDQ3LWKcGlryQYzeo3IFjIYsl4f4bY6isfBaE3MnaPIcc2e"
+	// bcrypt hashed "worldhello"
+	worldhello = "$2y$12$w51zkqB1rX6ZkOVHUO6CAO8YOfZQZjxHRS/mfBvwVdB.5PSHbhu.W"
 )
 
 var userID = primitive.NewObjectIDFromTimestamp(time.Now())
-var options = Options{
+var opts = Options{
 	ProjectID:            "houseflow",
 	ClientID:             "someRandomClientID",
 	ClientSecret:         "someRandomClientSecret",
@@ -24,6 +36,15 @@ var options = Options{
 }
 var a Auth
 
+var realUser = types.User{
+	ID:        userID,
+	FirstName: "John",
+	LastName:  "Smith",
+	Email:     "john.smith@gmail.com",
+	Password:  helloworld,
+	Devices:   []string{},
+}
+
 type TestMongo struct{}
 
 func (m TestMongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
@@ -31,14 +52,10 @@ func (m TestMongo) AddUser(ctx context.Context, user types.User) (primitive.Obje
 }
 
 func (m TestMongo) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
-	return types.User{
-		ID:        userID,
-		FirstName: "John",
-		LastName:  "Smith",
-		Email:     email,
-		Password:  "$2y$12$jKOPY8Ay3hQu2MbZ59BN2uXFouMooL.Fj0H.R.dy0YIYGhNzj4dby", // Some random password here
-		Devices:   []string{},
-	}, nil
+	if email == realUser.Email {
+		return realUser, nil
+	}
+	return types.User{}, mongo.ErrNoDocuments
 }
 
 type TestRedis struct{}
@@ -55,7 +72,7 @@ func (r TestRedis) FetchToken(ctx context.Context, token utils.Token) (string, e
 }
 
 func TestMain(m *testing.M) {
-	a = NewAuth(TestMongo{}, TestRedis{}, options)
+	a = NewAuth(TestMongo{}, TestRedis{}, opts)
 	os.Exit(m.Run())
 }
 
@@ -64,6 +81,40 @@ func TestLoginWithoutBody(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/login", nil)
 	a.Router.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected /login response %d", w.Code)
+	}
+}
+
+func TestLoginInvalidPassword(t *testing.T) {
+	q := LoginPageQuery{
+		ClientID:     opts.ClientID,
+		RedirectURI:  fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", opts.ProjectID),
+		State:        utils.GenerateRandomString(20),
+		ResponseType: "code",
+		UserLocale:   "en_US",
+	}
+	v, err := query.Values(q)
+	if err != nil {
+		panic(err)
+	}
+
+	b := LoginRequest{
+		Email:    realUser.Email,
+		Password: worldhello,
+	}
+	jsonb, err := json.Marshal(b)
+	if err != nil {
+		panic(err)
+	}
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/login?%s", v.Encode()), strings.NewReader(string(jsonb)))
+	a.Router.ServeHTTP(w, req)
+
+	// restext, err := ioutil.ReadAll(w.Result().Body)
+	// fmt.Println(string(restext))
+
+	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected /login response %d", w.Code)
 	}
 }
