@@ -112,6 +112,9 @@ services:
       - .env
     volumes:
       - ./web/template:/web/template
+      - ./cmd/auth:/app/cmd/auth
+      - ./internal/auth:/app/internal/auth
+      - ./pkg:/app/pkg
     networks:
       - backend
 
