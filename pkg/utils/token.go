@@ -24,8 +24,8 @@ const (
 // Token is some custom implementation ala JWT
 type Token struct {
 	Audience  string `json:"aud,omitempty"`
-	ExpiresAt int64  `json:"exp"`
-	ID        string `json:"id"`
+	ExpiresAt int64  `json:"exp,omitempty"`
+	ID        string `json:"id,omitempty"`
 }
 
 func (t *Token) Sign(key []byte) (string, error) {
@@ -42,6 +42,7 @@ func (t *Token) Sign(key []byte) (string, error) {
 	sig := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 
 	payloadEnc := base64.StdEncoding.EncodeToString(payload)
+
 	token := strings.Join([]string{sig, payloadEnc}, ".")
 
 	return token, nil
@@ -58,11 +59,11 @@ func VerifyToken(strtoken string, key []byte) (*Token, error) {
 	}
 	sig, err := base64.StdEncoding.DecodeString(tokenSplitted[0])
 	if err != nil {
-		return nil, err
+    return nil, fmt.Errorf("fail decode sig: %s", err.Error())
 	}
 	payload, err := base64.StdEncoding.DecodeString(tokenSplitted[1])
 	if err != nil {
-		return nil, err
+    return nil, fmt.Errorf("fail decode payload: %s", err.Error())
 	}
 	mac := hmac.New(sha256.New, key)
 	_, err = mac.Write(payload)
