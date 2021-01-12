@@ -39,3 +39,12 @@ type LoginCredentials struct {
 	Email    string `form:"email"`
 	Password string `form:"password"`
 }
+
+// AuthorizationCodeGrantResponse is struct which you get in response for authorization code grant if everything is successfull
+type AuthorizationCodeGrantResponse struct {
+	TokenType    string `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	// In seconds
+	ExpiresIn int `json:"expires_in"`
+}

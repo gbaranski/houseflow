@@ -38,7 +38,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "invalid_grant",
-			"error_description": err.Error(),
+			"error_description": fmt.Sprintf("authorization code %s", err.Error()),
 		})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(json)
@@ -90,11 +90,11 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	json, _ := json.Marshal(map[string]interface{}{
-		"token_type":    "Bearer",
-		"access_token":  atstr,
-		"refresh_token": rtstr,
-		"expires_in":    int(utils.AccessTokenDuration.Seconds()),
+	json, _ := json.Marshal(AuthorizationCodeGrantResponse{
+		TokenType:    "Bearer",
+		AccessToken:  atstr,
+		RefreshToken: rtstr,
+		ExpiresIn:    int(utils.AccessTokenDuration.Seconds()),
 	})
 	w.Write(json)
 }
