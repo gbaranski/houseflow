@@ -4,51 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var ()
-
-type tokenError struct {
-	InvalidGrant bool
-	Err          error
-}
-
-func newRefreshToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return
-	}
-	token = utils.Token{
-		Audience: userID.Hex(),
-		ID:       id.String(),
-	}
-	strtoken, err = token.Sign([]byte(refreshKey))
-	return
-}
-
-func newAccessToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return
-	}
-	token = utils.Token{
-		Audience:  userID.Hex(),
-		ID:        id.String(),
-		ExpiresAt: time.Now().Add(utils.AccessTokenDuration).Unix(),
-	}
-	strtoken, err = token.Sign([]byte(accessKey))
-	return
-}
-
-func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) {
-	if !validateRedirectURI(form.RedirectURI) {
+func (a *Auth) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) {
+	fmt.Println("Requesting authorization code grant")
+	if !a.validateRedirectURI(form.RedirectURI) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":             "bad_request",
 			"error_description": "invalid_redirect_uri",
@@ -56,10 +23,18 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 	fmt.Println(form.Code)
-	token, err := utils.VerifyToken(form.Code, []byte(authorizationCodeKey))
+	authorizationCode, err := url.QueryUnescape(form.Code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":             "invalid_auth_code",
+			"error_description": err.Error(),
+		})
+		return
+	}
+	token, err := utils.VerifyToken(authorizationCode, []byte(a.opts.AuthorizationCodeKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_code",
+			"error":             "invalid_auth_code",
 			"error_description": err.Error(),
 		})
 		return
@@ -74,7 +49,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-	rt, rtstr, err := newRefreshToken(userID)
+	rt, rtstr, err := a.newRefreshToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "rt_create_fail",
@@ -83,7 +58,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 		return
 	}
 
-	_, atstr, err := newAccessToken(userID)
+	_, atstr, err := a.newAccessToken(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "at_create_fail",
@@ -94,7 +69,7 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	s.redis.AddToken(ctx, userID, rt)
+	a.redis.AddToken(ctx, userID, rt)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token_type":    "Bearer",
@@ -104,8 +79,9 @@ func (s *Server) onTokenAuthorizationCodeGrant(c *gin.Context, form TokenQuery) 
 	})
 }
 
-func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
-	rt, err := utils.VerifyToken(form.RefreshToken, []byte(refreshKey))
+func (a *Auth) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
+	fmt.Println("Requesting access token grant")
+	rt, err := utils.VerifyToken(form.RefreshToken, []byte(a.opts.RefreshKey))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":             "invalid_grant",
@@ -116,7 +92,7 @@ func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	userID, err := s.redis.FetchToken(ctx, *rt)
+	userID, err := a.redis.FetchToken(ctx, *rt)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":             "invalid_grant",
@@ -134,7 +110,7 @@ func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 		})
 		return
 	}
-	_, atstr, err := newAccessToken(userIDObject)
+	_, atstr, err := a.newAccessToken(userIDObject)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "at_create_fail",
@@ -149,13 +125,13 @@ func (s *Server) onTokenAccessTokenGrant(c *gin.Context, form TokenQuery) {
 	})
 }
 
-func (s *Server) onToken(c *gin.Context) {
+func (a *Auth) onToken(c *gin.Context) {
 	var form TokenQuery
 	if err := c.MustBindWith(&form, binding.FormPost); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	if form.ClientID != clientID || form.ClientSecret != clientSecret {
+	if form.ClientID != a.opts.ClientID || form.ClientSecret != a.opts.ClientSecret {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error":   "invalid_grant",
 			"message": "Invalid clientID or clientSecret",
@@ -163,9 +139,9 @@ func (s *Server) onToken(c *gin.Context) {
 		return
 	}
 	if form.GrantType == "authorization_code" {
-		s.onTokenAuthorizationCodeGrant(c, form)
+		a.onTokenAuthorizationCodeGrant(c, form)
 	} else if form.GrantType == "refresh_token" {
-		s.onTokenAccessTokenGrant(c, form)
+		a.onTokenAccessTokenGrant(c, form)
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "invalid_grant",
