@@ -14,10 +14,7 @@ import (
 )
 
 func (a *Auth) onLogin(c *gin.Context) {
-	var form struct {
-		Email    string `form:"email"`
-		Password string `form:"password"`
-	}
+	var form LoginRequest
 	var query LoginPageQuery
 	if err := c.MustBindWith(&query, binding.Query); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
