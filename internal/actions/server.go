@@ -36,7 +36,46 @@ func NewServer(mongo database.Mongo, mqtt mqtt.MQTT) *Server {
 	}
 	s.Router.Use(utils.LogResponseBody)
 	s.Router.POST("/fulfillment", s.onFulfillment)
+	s.Router.GET("/addDevice", s.addDevice)
 	return s
+}
+
+// Only for testing purposes
+func (s *Server) addDevice(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+	s.mongo.AddDevice(ctx, types.Device{
+		Device: fulfillment.Device{
+			ID:   "5fef44d38948c2002ae590ab",
+			Type: "action.devices.types.LIGHT",
+			Traits: []string{
+				"action.devices.traits.OnOff",
+			},
+			Name: fulfillment.DeviceName{
+				Name: "Night lamp",
+				DefaultNames: []string{
+					"Night lamp",
+				},
+				Nicknames: []string{
+					"Night lamp",
+				},
+			},
+			WillReportState: true,
+			RoomHint:        "Bedroom",
+			DeviceInfo: &fulfillment.DeviceInfo{
+				Manufacturer: "gbaranski's garage",
+				Model:        "Nightlamp",
+				HwVersion:    "1.0.0",
+				SwVersion:    "0.1.1",
+			},
+		},
+		PublicKey: "jPcGACNcypUyO9T+lR3Y49s9JpxEuKS0/PMtC7g8AuU=",
+		State: map[string]interface{}{
+			"online": true,
+			"on":     false,
+		},
+	})
+
 }
 
 func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, userDevices []types.Device) {
