@@ -1,11 +1,12 @@
 package utils
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"bou.ke/monkey"
 	"github.com/google/uuid"
-  "bou.ke/monkey"
 )
 
 func TestValidCreateToken(t *testing.T) {
@@ -21,6 +22,7 @@ func TestValidCreateToken(t *testing.T) {
     ID: tokenID.String(),
   }
 	strtoken, err := token.Sign([]byte(key))
+  fmt.Printf("strtoken: %s\n", strtoken)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
