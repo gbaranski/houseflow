@@ -158,10 +158,11 @@ func TestLoginValidPassword(t *testing.T) {
 	if _, err = utils.VerifyToken(code, []byte(opts.AuthorizationCodeKey)); err != nil {
 		t.Fatalf("fail verify authorization code %s", err.Error())
 	}
-	GetAuthorizationCodeGrant(t, code)
+	res := GetAuthorizationCodeGrant(t, code)
+	GetRefreshTokenGrant(t, res.RefreshToken)
 }
 
-func GetAuthorizationCodeGrant(t *testing.T, code string) {
+func GetAuthorizationCodeGrant(t *testing.T, code string) AuthorizationCodeGrantResponse {
 	form := url.Values{}
 	encoder.Encode(TokenQuery{
 		ClientID:     opts.ClientID,
@@ -195,5 +196,37 @@ func GetAuthorizationCodeGrant(t *testing.T, code string) {
 	if _, err = utils.VerifyToken(res.RefreshToken, []byte(opts.RefreshKey)); err != nil {
 		t.Fatalf("fail verify refresh token %s", err.Error())
 	}
+	return res
+}
 
+func GetRefreshTokenGrant(t *testing.T, refreshToken string) RefreshTokenGrantResponse {
+	form := url.Values{}
+	encoder.Encode(TokenQuery{
+		ClientID:     opts.ClientID,
+		ClientSecret: opts.ClientSecret,
+		GrantType:    "refresh_token",
+		RefreshToken: refreshToken,
+	}, form)
+
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodPost, "/token", strings.NewReader(form.Encode()))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Length", strconv.Itoa(len(form.Encode())))
+	a.Router.ServeHTTP(w, req)
+
+	if w.Code != 200 {
+		t.Fatalf("unexpected response: %d, body: %s", w.Code, w.Body.String())
+	}
+	var res RefreshTokenGrantResponse
+	if err = json.Unmarshal(w.Body.Bytes(), &res); err != nil {
+		t.Fatalf("fail decode body response, err: %s, body: %s", err.Error(), w.Body.String())
+	}
+
+	if _, err = utils.VerifyToken(res.AccessToken, []byte(opts.AccessKey)); err != nil {
+		t.Fatalf("fail verify access token %s", err.Error())
+	}
+	return res
 }
