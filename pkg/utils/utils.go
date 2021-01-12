@@ -50,8 +50,7 @@ func HashPassword(pass []byte) ([]byte, error) {
 
 // ComparePasswordAndHash checks hash of password, returns true if they match, otherwise false
 func ComparePasswordAndHash(password, hash []byte) bool {
-	err := bcrypt.CompareHashAndPassword(hash, password)
-	return err == nil
+	return bcrypt.CompareHashAndPassword(hash, password) == nil
 }
 
 // MustGetEnv retreives the enviroment variable
