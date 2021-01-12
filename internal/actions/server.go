@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	AccessKey = utils.MustGetEnv("ACCESS_KEY")
+	accessKey = utils.MustGetEnv("ACCESS_KEY")
 )
 
 // Server hold root server state
@@ -93,7 +93,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	userID, err := utils.ExtractWithVerifyUserToken(c.Request, []byte(AccessKey))
+	userID, err := utils.ExtractWithVerifyUserToken(c.Request, []byte(accessKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_token",
@@ -121,7 +121,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-  deviceIDs := make([]primitive.ObjectID, len(user.Devices))
+	deviceIDs := make([]primitive.ObjectID, len(user.Devices))
 	for _, id := range user.Devices {
 		objID, err := primitive.ObjectIDFromHex(id)
 		if err != nil {

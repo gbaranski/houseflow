@@ -48,7 +48,7 @@ func HashPassword(pass []byte) ([]byte, error) {
 	return bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
 }
 
-// CheckPasswordHash checks hash of password, returns true if they match, otherwise false
+// ComparePasswordAndHash checks hash of password, returns true if they match, otherwise false
 func ComparePasswordAndHash(password, hash []byte) bool {
 	err := bcrypt.CompareHashAndPassword(hash, password)
 	return err == nil
@@ -58,11 +58,11 @@ func ComparePasswordAndHash(password, hash []byte) bool {
 //
 // Panics if doesn't exists
 func MustGetEnv(key string) string {
-  env, present := os.LookupEnv(key)
-  if !present {
-    panic(fmt.Errorf("%s enviroment variable is unset", key))
-  }
-  return env
+	env, present := os.LookupEnv(key)
+	if !present {
+		panic(fmt.Errorf("%s enviroment variable is unset", key))
+	}
+	return env
 }
 
 type responseBodyWriter struct {
@@ -82,4 +82,3 @@ func LogResponseBody(c *gin.Context) {
 	c.Next()
 	fmt.Println("Response body: " + w.body.String())
 }
-

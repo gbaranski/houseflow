@@ -28,6 +28,7 @@ type Token struct {
 	ID        string `json:"id,omitempty"`
 }
 
+// Sign signs token using passed key
 func (t *Token) Sign(key []byte) (string, error) {
 	payload, err := json.Marshal(t)
 	if err != nil {
@@ -48,10 +49,12 @@ func (t *Token) Sign(key []byte) (string, error) {
 	return token, nil
 }
 
+// Equal checks equality of the token
 func (t *Token) Equal(t2 Token) bool {
 	return t.Audience == t2.Audience && t.ExpiresAt == t2.ExpiresAt && t.ID == t2.ID
 }
 
+// VerifyToken verifies if token is valid, not expired and parses it returning Token
 func VerifyToken(strtoken string, key []byte) (*Token, error) {
 	tokenSplitted := strings.Split(strtoken, ".")
 	if len(tokenSplitted) != 2 {
@@ -59,11 +62,11 @@ func VerifyToken(strtoken string, key []byte) (*Token, error) {
 	}
 	sig, err := base64.StdEncoding.DecodeString(tokenSplitted[0])
 	if err != nil {
-    return nil, fmt.Errorf("fail decode sig: %s", err.Error())
+		return nil, fmt.Errorf("fail decode sig: %s", err.Error())
 	}
 	payload, err := base64.StdEncoding.DecodeString(tokenSplitted[1])
 	if err != nil {
-    return nil, fmt.Errorf("fail decode payload: %s", err.Error())
+		return nil, fmt.Errorf("fail decode payload: %s", err.Error())
 	}
 	mac := hmac.New(sha256.New, key)
 	_, err = mac.Write(payload)
@@ -96,6 +99,7 @@ func ExtractHeaderToken(r *http.Request) *string {
 	return nil
 }
 
+// ExtractWithVerifyUserToken extracts token from http requests, and also verifies it and creates UserID object from it
 func ExtractWithVerifyUserToken(r *http.Request, key []byte) (*primitive.ObjectID, error) {
 	strtoken := ExtractHeaderToken(r)
 	if strtoken == nil {
@@ -105,10 +109,10 @@ func ExtractWithVerifyUserToken(r *http.Request, key []byte) (*primitive.ObjectI
 	if err != nil {
 		return nil, err
 	}
-  userID, err := primitive.ObjectIDFromHex(token.Audience)
-  if err != nil {
-    return nil, err
-  }
+	userID, err := primitive.ObjectIDFromHex(token.Audience)
+	if err != nil {
+		return nil, err
+	}
 
 	return &userID, nil
 }

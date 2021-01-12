@@ -130,7 +130,7 @@ func TestCompareHash(t *testing.T) {
 	}
 	match := ComparePasswordAndHash(pass, hash)
 	if !match {
-    t.Fatalf("fail hash doesn't match")
+		t.Fatalf("fail hash doesn't match")
 	}
 }
 
@@ -142,7 +142,7 @@ func TestCompareHashInvalid(t *testing.T) {
 	}
 	match := ComparePasswordAndHash([]byte(GenerateRandomString(20)), hash)
 	if !match {
-    t.Fatalf("fail hash doesn't match")
+		t.Fatalf("fail hash doesn't match")
 	}
 }
 

@@ -18,6 +18,7 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
+// Options of the MQTT
 type Options struct {
 	// ClientID, required
 	ClientID string
@@ -35,11 +36,11 @@ type Options struct {
 	// Default: 5s
 	PingTimeout time.Duration
 
-  // PrivateKey is servers private key
-  PrivateKey ed25519.PrivateKey
+	// PrivateKey is servers private key
+	PrivateKey ed25519.PrivateKey
 }
 
-// Parses options to the defaults
+// Parse parses options to the defaults
 func (opts *Options) Parse() {
 	if opts.BrokerURL == "" {
 		opts.BrokerURL = "tcp://emqx:1883/mqtt"
@@ -53,11 +54,13 @@ func (opts *Options) Parse() {
 	}
 }
 
+// MQTT is some abstraction layer over paho mqtt
 type MQTT struct {
 	Client paho.Client
 	opts   Options
 }
 
+// NewMQTT is constructor for MQTT, connects to broker
 func NewMQTT(opts Options) (MQTT, error) {
 	paho.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	paho.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
@@ -74,7 +77,7 @@ func NewMQTT(opts Options) (MQTT, error) {
 
 	c := paho.NewClient(copts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
-    return MQTT{}, token.Error()
+		return MQTT{}, token.Error()
 	}
 	return MQTT{
 		Client: c,
@@ -82,9 +85,13 @@ func NewMQTT(opts Options) (MQTT, error) {
 	}, nil
 }
 
+// ErrDeviceTimeout indicates that device had timeout
 var ErrDeviceTimeout = errors.New("device timeout")
+
+// ErrInvalidSignature indicates that device sent back invalid singature of payload
 var ErrInvalidSignature = errors.New("invalid signature")
 
+// SendRequestWithResponse sends request and waits for response and returns it
 func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (*types.DeviceResponse, error) {
 	reqTopic := fmt.Sprintf("%s/command/request", device.ID.Hex())
 	resTopic := fmt.Sprintf("%s/command/response", device.ID.Hex())

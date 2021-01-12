@@ -13,4 +13,3 @@ type User struct {
 	Password  string             `json:"password" bson:"password" form:"password" binding:"required,min=8,max=20"`
 	Devices   []string           `bson:"devices"`
 }
-

@@ -26,9 +26,9 @@ func main() {
 		Password:     mongoPassword,
 		DatabaseName: "houseflowDB",
 	})
-  if err != nil {
-    panic(err)
-  }
+	if err != nil {
+		panic(err)
+	}
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
 		ClientID:    "state_manager",
@@ -41,26 +41,26 @@ func main() {
 	}
 
 	if token := mqtt.Client.Subscribe("+/reportState", 0, func(c paho.Client, m paho.Message) {
-    deviceID, err := primitive.ObjectIDFromHex(m.Topic()[:24])
-    if err != nil {
-      fmt.Println("fail update state, deviceID invalid: ", err.Error())
-      return
-    }
-    var state map[string]interface{}
-    err = json.Unmarshal(m.Payload(), &state)
-    if err != nil {
-      fmt.Println("fail marshal state: ", err.Error())
-      return
-    }
+		deviceID, err := primitive.ObjectIDFromHex(m.Topic()[:24])
+		if err != nil {
+			fmt.Println("fail update state, deviceID invalid: ", err.Error())
+			return
+		}
+		var state map[string]interface{}
+		err = json.Unmarshal(m.Payload(), &state)
+		if err != nil {
+			fmt.Println("fail marshal state: ", err.Error())
+			return
+		}
 
-  	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-    defer cancel()
-    err = mongo.UpdateDeviceState(ctx, deviceID, state)
-    if err != nil {
-      fmt.Println("fail update device state: ", err.Error())
-      return
-    }
-    fmt.Printf("Success updating state of Device ID: %s", deviceID.Hex())
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer cancel()
+		err = mongo.UpdateDeviceState(ctx, deviceID, state)
+		if err != nil {
+			fmt.Println("fail update device state: ", err.Error())
+			return
+		}
+		fmt.Printf("Success updating state of Device ID: %s", deviceID.Hex())
 	}); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
