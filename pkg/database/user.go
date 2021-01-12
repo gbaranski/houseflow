@@ -10,7 +10,7 @@ import (
 )
 
 // GetUserByEmail returns found user from DB, query by email
-func (m *Mongo) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
+func (m Mongo) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
 	result := m.Collections.Users.FindOne(ctx, bson.M{"email": email})
 	if result.Err() != nil {
 		return types.User{}, result.Err()
@@ -39,7 +39,7 @@ func (m *Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.U
 }
 
 // AddUser adds user to db
-func (m *Mongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
+func (m Mongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
 	password, err := utils.HashPassword([]byte(user.Password))
 	if err != nil {
 		return primitive.ObjectID{}, err

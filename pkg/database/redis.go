@@ -46,14 +46,14 @@ func NewRedis(ctx context.Context, opts RedisOptions) (Redis, error) {
 }
 
 // AddToken adds token to Redis DB
-func (r *Redis) AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error {
+func (r Redis) AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error {
 	exp := time.Unix(token.ExpiresAt, 0)
 
 	return r.client.Set(ctx, token.ID, userID.Hex(), time.Since(exp)).Err()
 }
 
 // DeleteToken removes token from redi
-func (r *Redis) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
+func (r Redis) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
 	deleted, err := r.client.Del(ctx, tokenID).Result()
 	if err != nil {
 		return 0, err
@@ -65,7 +65,7 @@ func (r *Redis) DeleteToken(ctx context.Context, tokenID string) (int64, error) 
 }
 
 // FetchToken fetches token and returns correspoding UserID
-func (r *Redis) FetchToken(ctx context.Context, token utils.Token) (string, error) {
+func (r Redis) FetchToken(ctx context.Context, token utils.Token) (string, error) {
 	userID, err := r.client.Get(ctx, token.ID).Result()
 	if err != nil {
 		if err == redis.Nil {
