@@ -86,7 +86,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 	w.Write(json)
 }
 
-func (a *Auth) onTokenAccessTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
+func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
 	rt, err := utils.VerifyToken(form.RefreshToken, []byte(a.opts.RefreshKey))
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
@@ -133,10 +133,10 @@ func (a *Auth) onTokenAccessTokenGrant(w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
-	json, _ := json.Marshal(map[string]interface{}{
-		"token_type":   "Bearer",
-		"access_token": atstr,
-		"expires_in":   int(utils.AccessTokenDuration.Seconds()),
+	json, _ := json.Marshal(RefreshTokenGrantResponse{
+		TokenType:   "Bearer",
+		AccessToken: atstr,
+		ExpiresIn:   int(utils.AccessTokenDuration.Seconds()),
 	})
 	w.Write(json)
 }
@@ -178,7 +178,7 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 	if form.GrantType == "authorization_code" {
 		a.onTokenAuthorizationCodeGrant(w, r, form)
 	} else if form.GrantType == "refresh_token" {
-		a.onTokenAccessTokenGrant(w, r, form)
+		a.onRefreshTokenGrant(w, r, form)
 	} else {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error": "unknown_grant_type",

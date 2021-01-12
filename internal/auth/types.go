@@ -48,3 +48,11 @@ type AuthorizationCodeGrantResponse struct {
 	// In seconds
 	ExpiresIn int `json:"expires_in"`
 }
+
+// RefreshTokenGrantResponse is struct which you get in response for refresh code grant if everything is successfull
+type RefreshTokenGrantResponse struct {
+	TokenType   string `json:"token_type"`
+	AccessToken string `json:"access_token"`
+	// In seconds
+	ExpiresIn int `json:"expires_in"`
+}
