@@ -121,7 +121,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	var deviceIDs []primitive.ObjectID
+  deviceIDs := make([]primitive.ObjectID, len(user.Devices))
 	for _, id := range user.Devices {
 		objID, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
