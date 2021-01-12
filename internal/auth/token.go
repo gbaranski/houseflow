@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -13,8 +12,6 @@ import (
 )
 
 func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
-	fmt.Println("Requesting authorization code grant")
-
 	if !a.validateRedirectURI(form.RedirectURI) {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error": "invalid_redirect_uri",
@@ -24,17 +21,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	authorizationCode, err := url.QueryUnescape(form.Code)
-	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
-		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
-		return
-	}
-	token, err := utils.VerifyToken(authorizationCode, []byte(a.opts.AuthorizationCodeKey))
+	token, err := utils.VerifyToken(form.Code, []byte(a.opts.AuthorizationCodeKey))
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "invalid_grant",
@@ -100,7 +87,6 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 }
 
 func (a *Auth) onTokenAccessTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
-	fmt.Println("Requesting access token grant")
 	rt, err := utils.VerifyToken(form.RefreshToken, []byte(a.opts.RefreshKey))
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
