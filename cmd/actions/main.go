@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/gbaranski/houseflow/internal/actions"
+	"github.com/gbaranski/houseflow/internal/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -15,6 +15,7 @@ import (
 var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
+	accessKey     = utils.MustGetEnv("ACCESS_KEY")
 	privateKey    ed25519.PrivateKey
 )
 
@@ -47,8 +48,10 @@ func main() {
 		panic(err)
 	}
 
-	s := actions.NewServer(mongo, mqtt)
-	err = s.Router.Run(":80")
+	f := fulfillment.NewFulfillment(mongo, mqtt, fulfillment.Options{
+		AccessKey: accessKey,
+	})
+	err = f.Router.Run(":80")
 	if err != nil {
 		panic(err)
 	}
