@@ -9,6 +9,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetDeviceByID retreives single device by single ID
+func (m Mongo) GetDeviceByID(ctx context.Context, deviceID primitive.ObjectID) (types.Device, error) {
+	res := m.Collections.Devices.FindOne(ctx,
+		bson.M{"_id": deviceID})
+	if res.Err() != nil {
+		return types.Device{}, res.Err()
+	}
+	var device types.Device
+	err := res.Decode(&device)
+	if err != nil {
+		return types.Device{}, err
+	}
+
+	return device, nil
+}
+
 // GetDevicesByIDs retreives devices by array of IDs
 func (m Mongo) GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.ObjectID) ([]types.Device, error) {
 	cur, err := m.Collections.Devices.Find(ctx,
