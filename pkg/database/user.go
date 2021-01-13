@@ -24,7 +24,7 @@ func (m Mongo) GetUserByEmail(ctx context.Context, email string) (types.User, er
 }
 
 // GetUserByID returns found user from DB, query by user ID
-func (m *Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error) {
+func (m Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error) {
 	result := m.Collections.Users.FindOne(ctx, bson.M{"_id": id})
 	if result.Err() != nil {
 		return types.User{}, result.Err()
