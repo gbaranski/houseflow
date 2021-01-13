@@ -13,7 +13,7 @@ import (
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
-func TestQueryUnauthorizedDevice(t *testing.T) {
+func TestQuery(t *testing.T) {
 	token := utils.Token{
 		Audience:  realUser.ID.Hex(),
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
