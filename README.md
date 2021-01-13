@@ -1,6 +1,6 @@
 # Houseflow
 
-[![build-status](https://img.shields.io/github/workflow/status/gbaranski/houseflow/CI)](https://github.com/gbaranski/houseflow/actions?query=workflow%3ACI)
+[![checks](https://img.shields.io/github/checks-status/gbaranski/houseflow/master)](https://github.com/gbaranski/houseflow/actions?query=workflow%3ACI)
 [![commit-weekly](https://img.shields.io/github/commit-activity/w/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
 [![lines-of-code](https://img.shields.io/tokei/lines/github/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
 [![stars](https://img.shields.io/github/stars/gbaranski/houseflow?style=social)](https://github.com/gbaranski/houseflow)
