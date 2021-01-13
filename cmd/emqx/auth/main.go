@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"net/http"
 	"time"
 
 	"github.com/gbaranski/houseflow/internal/emqx/auth"
@@ -12,6 +14,8 @@ import (
 var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
+
+	serverPublicKey = ed25519.PublicKey(utils.MustGetEnv("SERVER_PUBLIC_KEY"))
 )
 
 func main() {
@@ -25,6 +29,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	s := auth.NewServer(mongo)
-	s.Router.Run(":80")
+	s := auth.New(mongo, auth.Options{
+		ServerPublicKey: serverPublicKey,
+	})
+	err = http.ListenAndServe(":80", s.Router)
+	if err != nil {
+		panic(err)
+	}
 }
