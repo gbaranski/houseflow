@@ -13,7 +13,7 @@ import (
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
-func TestSyncUnauthorized(t *testing.T) {
+func TestSyncUnauthenticated(t *testing.T) {
 	body := ftypes.SyncRequest{
 		RequestID: utils.GenerateRandomString(10),
 		Inputs: []ftypes.SyncRequestInput{
