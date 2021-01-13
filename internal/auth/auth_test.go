@@ -44,34 +44,32 @@ var realUser = types.User{
 	Devices:   []string{},
 }
 
-type TestMongo struct{}
+type TestDatabase struct{}
 
-func (m TestMongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
+func (db TestDatabase) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
 	return primitive.NewObjectIDFromTimestamp(time.Now()), nil
 }
 
-func (m TestMongo) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
+func (db TestDatabase) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
 	if email == realUser.Email {
 		return realUser, nil
 	}
 	return types.User{}, mongo.ErrNoDocuments
 }
 
-type TestRedis struct{}
-
-func (r TestRedis) AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error {
+func (db TestDatabase) AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error {
 	return nil
 }
-func (r TestRedis) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
+func (db TestDatabase) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
 	return 1, nil
 }
 
-func (r TestRedis) FetchToken(ctx context.Context, token utils.Token) (string, error) {
+func (db TestDatabase) FetchToken(ctx context.Context, token utils.Token) (string, error) {
 	return userID.Hex(), nil
 }
 
 func TestMain(m *testing.M) {
-	a = NewAuth(TestMongo{}, TestRedis{}, opts)
+	a = NewAuth(TestDatabase{}, opts)
 	os.Exit(m.Run())
 }
 
