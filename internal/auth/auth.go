@@ -28,7 +28,7 @@ func (a *Auth) onLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbUser, err := a.mongo.GetUserByEmail(r.Context(), creds.Email)
+	dbUser, err := a.db.GetUserByEmail(r.Context(), creds.Email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
@@ -78,7 +78,7 @@ func (a *Auth) onRegister(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	id, err := a.mongo.AddUser(ctx, newUser)
+	id, err := a.db.AddUser(ctx, newUser)
 	if err != nil {
 		merr := err.(mongo.WriteException)
 		for _, werr := range merr.WriteErrors {

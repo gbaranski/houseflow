@@ -14,14 +14,10 @@ import (
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
-// Mongo is interface for mongoDB for auth server
-type Mongo interface {
+// Database is database interface
+type Database interface {
 	AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error)
 	GetUserByEmail(ctx context.Context, email string) (types.User, error)
-}
-
-// Redis is interface for Redis for auth server
-type Redis interface {
 	AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error
 	FetchToken(ctx context.Context, token utils.Token) (string, error)
 	DeleteToken(ctx context.Context, tokenID string) (int64, error)
@@ -29,8 +25,7 @@ type Redis interface {
 
 // Auth hold root server state
 type Auth struct {
-	mongo  Mongo
-	redis  Redis
+	db     Database
 	Router *chi.Mux
 	opts   Options
 }
@@ -39,10 +34,9 @@ var decoder = schema.NewDecoder()
 var encoder = schema.NewEncoder()
 
 // NewAuth creates server, it won't run till Auth.Router.Start
-func NewAuth(mongo Mongo, redis Redis, opts Options) Auth {
+func NewAuth(db Database, opts Options) Auth {
 	a := Auth{
-		mongo:  mongo,
-		redis:  redis,
+		db:     db,
 		Router: chi.NewRouter(),
 		opts:   opts,
 	}

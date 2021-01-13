@@ -65,7 +65,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = a.redis.AddToken(r.Context(), userID, rt)
+	err = a.db.AddToken(r.Context(), userID, rt)
 
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
@@ -100,7 +100,7 @@ func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form 
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	userID, err := a.redis.FetchToken(ctx, *rt)
+	userID, err := a.db.FetchToken(ctx, *rt)
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "invalid_grant",
