@@ -36,6 +36,9 @@ func main() {
 		Password:     mongoPassword,
 		DatabaseName: "houseflowDB",
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
 		ClientID:    "fulfillment",

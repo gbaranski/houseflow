@@ -86,9 +86,9 @@ func (a *Auth) onRegister(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Account already exists", http.StatusConflict)
 				return
 			}
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Write([]byte(fmt.Sprintf("Account created with ID: %s, now you can log in", id.Hex())))

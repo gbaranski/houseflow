@@ -69,7 +69,7 @@ func (m Mongo) UpdateDeviceOnlineState(ctx context.Context, deviceID primitive.O
 		return err
 	}
 	if res.ModifiedCount < 1 {
-		return fmt.Errorf("Not matched any devices")
+		return fmt.Errorf("not matched any devices")
 	}
 
 	return nil

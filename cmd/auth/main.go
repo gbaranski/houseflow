@@ -37,6 +37,9 @@ func main() {
 		Password:     mongoPassword,
 		DatabaseName: "houseflowDB",
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	redis, err := database.NewRedis(ctx, database.RedisOptions{})
 	if err != nil {

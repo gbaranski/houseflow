@@ -14,8 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const uuidLength = 36
-
 // Server struct which holds state of app
 type Server struct {
 	mongo database.Mongo
@@ -74,16 +72,13 @@ func (s *Server) OnEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if e.Action != "client_connected" && e.Action != "client_disconnected" {
-		msg := "Invalid action name"
-		fmt.Fprintf(w, msg)
-		log.Println(msg)
+		http.Error(w, "invalid action name", http.StatusBadRequest)
 		return
 	}
 
 	deviceID, err := primitive.ObjectIDFromHex(e.Username)
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		log.Printf("Error when parsing ObjectID: %s, err: %s", e.Username, err.Error())
+		http.Error(w, fmt.Sprintf("error when parsing objectID: %s, err: %s", e.Username, err.Error()), http.StatusBadRequest)
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -95,8 +90,8 @@ func (s *Server) OnEvent(w http.ResponseWriter, r *http.Request) {
 		err = s.mongo.UpdateDeviceOnlineState(ctx, deviceID, false)
 	}
 	if err != nil {
-		fmt.Fprintf(w, err.Error())
-		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	fmt.Fprintf(w, "Success!")
 }

@@ -146,7 +146,7 @@ func TestLoginValidPassword(t *testing.T) {
 	if w.Code != http.StatusSeeOther {
 		t.Fatalf("unexpected /login response %d", w.Code)
 	}
-	redirectURL := w.HeaderMap["Location"][0]
+	redirectURL := w.Header()["Location"][0]
 	url, err := url.Parse(redirectURL)
 	if err != nil {
 		t.Fatalf("redirected URL is invalid: %s", redirectURL)
