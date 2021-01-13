@@ -1,11 +1,10 @@
-package actions
+package fulfillment
 
 import (
 	"context"
 	"net/http"
 	"time"
 
-	"github.com/gbaranski/houseflow/pkg/database"
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/types"
@@ -16,35 +15,49 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var (
-	accessKey = utils.MustGetEnv("ACCESS_KEY")
-)
-
-// Server hold root server state
-type Server struct {
-	mongo  database.Mongo
-	Router *gin.Engine
-	mqtt   mqtt.MQTT
+// Options for fulfillment
+type Options struct {
+	// AccessKey is secret for signing access tokens
+	//
+	// *Required*
+	AccessKey string
 }
 
-// NewServer creates server, it won't run till Server.Start
-func NewServer(mongo database.Mongo, mqtt mqtt.MQTT) *Server {
-	s := &Server{
-		mongo:  mongo,
+// Database is interface for database
+type Database interface {
+	AddDevice(ctx context.Context, device types.Device) (primitive.ObjectID, error)
+	GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error)
+	GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.ObjectID) ([]types.Device, error)
+	UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectID, state map[string]interface{}) error
+}
+
+// Fulfillment hold root server state
+type Fulfillment struct {
+	Router *gin.Engine
+	mqtt   mqtt.MQTT
+	db     Database
+	opts   Options
+}
+
+// NewFulfillment creates server, it won't run till Server.Start
+func NewFulfillment(db Database, mqtt mqtt.MQTT, opts Options) *Fulfillment {
+	f := &Fulfillment{
+		db:     db,
 		Router: gin.Default(),
 		mqtt:   mqtt,
+		opts:   opts,
 	}
-	s.Router.Use(utils.LogResponseBody)
-	s.Router.POST("/fulfillment", s.onFulfillment)
-	s.Router.GET("/addDevice", s.addDevice)
-	return s
+	f.Router.Use(utils.LogResponseBody)
+	f.Router.POST("/fulfillment", f.onFulfillment)
+	f.Router.GET("/addDevice", f.onAddDevice)
+	return f
 }
 
 // Only for testing purposes
-func (s *Server) addDevice(c *gin.Context) {
+func (f *Fulfillment) onAddDevice(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	s.mongo.AddDevice(ctx, types.Device{
+	f.db.AddDevice(ctx, types.Device{
 		Device: fulfillment.Device{
 			ID:   "5fef44d38948c2002ae590ab",
 			Type: "action.devices.types.LIGHT",
@@ -78,7 +91,7 @@ func (s *Server) addDevice(c *gin.Context) {
 
 }
 
-func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, userDevices []types.Device) {
+func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.User, userDevices []types.Device) {
 	switch intent {
 	case fulfillment.SyncIntent:
 		var req fulfillment.SyncRequest
@@ -90,7 +103,7 @@ func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, 
 			})
 			return
 		}
-		s.onSync(c, req, user, userDevices)
+		f.onSync(c, req, user, userDevices)
 	case fulfillment.QueryIntent:
 		var req fulfillment.QueryRequest
 		err := c.ShouldBindBodyWith(&req, binding.JSON)
@@ -101,7 +114,7 @@ func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, 
 			})
 			return
 		}
-		s.OnQuery(c, req, user, userDevices)
+		f.onQuery(c, req, user, userDevices)
 	case fulfillment.ExecuteIntent:
 		var er fulfillment.ExecuteRequest
 		err := c.ShouldBindBodyWith(&er, binding.JSON)
@@ -112,7 +125,7 @@ func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, 
 			})
 			return
 		}
-		s.onExecute(c, er, user, userDevices)
+		f.onExecute(c, er, user, userDevices)
 	case fulfillment.DisconnectIntent:
 		c.JSON(http.StatusNotImplemented, gin.H{
 			"error": "not_implemented",
@@ -121,7 +134,7 @@ func (s *Server) redirectIntent(c *gin.Context, intent string, user types.User, 
 
 }
 
-func (s *Server) onFulfillment(c *gin.Context) {
+func (f *Fulfillment) onFulfillment(c *gin.Context) {
 	var base fulfillment.BaseRequest
 
 	if err := c.ShouldBindBodyWith(&base, binding.JSON); err != nil {
@@ -132,7 +145,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		return
 	}
 
-	userID, err := utils.ExtractWithVerifyUserToken(c.Request, []byte(accessKey))
+	userID, err := utils.ExtractWithVerifyUserToken(c.Request, []byte(f.opts.AccessKey))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":             "invalid_token",
@@ -143,7 +156,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	user, err := s.mongo.GetUserByID(ctx, *userID)
+	user, err := f.db.GetUserByID(ctx, *userID)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -172,7 +185,7 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		}
 		deviceIDs = append(deviceIDs, objID)
 	}
-	userDevices, err := s.mongo.GetDevicesByIDs(ctx, deviceIDs)
+	userDevices, err := f.db.GetDevicesByIDs(ctx, deviceIDs)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "get_devices_fail",
@@ -180,5 +193,5 @@ func (s *Server) onFulfillment(c *gin.Context) {
 		})
 		return
 	}
-	s.redirectIntent(c, base.Inputs[0].Intent, user, userDevices)
+	f.redirectIntent(c, base.Inputs[0].Intent, user, userDevices)
 }

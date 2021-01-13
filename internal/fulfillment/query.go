@@ -1,4 +1,4 @@
-package actions
+package fulfillment
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 )
 
 // OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
-func (s *Server) OnQuery(c *gin.Context, r fulfillment.QueryRequest, user types.User, userDevices []types.Device) {
+func (f *Fulfillment) onQuery(c *gin.Context, r fulfillment.QueryRequest, user types.User, userDevices []types.Device) {
 	payloadDevices := make(map[string]interface{})
 	for _, device := range r.Inputs[0].Payload.Devices {
 		// Check if user has proper permission to the specific device

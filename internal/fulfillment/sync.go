@@ -1,4 +1,4 @@
-package actions
+package fulfillment
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 )
 
 // OnSync handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
-func (s *Server) onSync(c *gin.Context, r fulfillment.SyncRequest, user types.User, userDevices []types.Device) {
+func (f *Fulfillment) onSync(c *gin.Context, r fulfillment.SyncRequest, user types.User, userDevices []types.Device) {
 	var fdevices []fulfillment.Device
 	for _, device := range userDevices {
 		fdevices = append(fdevices, fulfillment.Device{
