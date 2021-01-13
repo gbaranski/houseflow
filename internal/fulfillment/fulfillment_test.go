@@ -56,7 +56,6 @@ func (tdb TestDatabase) GetDevicesByIDs(ctx context.Context, deviceIDs []primiti
 	for _, e := range deviceIDs {
 		for _, v := range db.Devices {
 			if e == v.ID {
-				fmt.Println("Found for ", e.Hex())
 				found = append(found, v)
 				break
 			}
