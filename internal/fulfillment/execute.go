@@ -1,4 +1,4 @@
-package actions
+package fulfillment
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 )
 
 // OnExecute https://developers.google.com/assistant/smarthome/reference/intent/execute
-func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user types.User, userDevices []types.Device) {
+func (f *Fulfillment) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user types.User, userDevices []types.Device) {
 	var responseCommands []fulfillment.ExecuteResponseCommands
 	for _, command := range r.Inputs[0].Payload.Commands {
 		for _, execution := range command.Execution {
@@ -46,7 +46,7 @@ func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user ty
 				}
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 				defer cancel()
-				deviceResponse, err := s.mqtt.SendRequestWithResponse(ctx, *correspondingDBDevice, request)
+				deviceResponse, err := f.mqtt.SendRequestWithResponse(ctx, *correspondingDBDevice, request)
 				if err != nil {
 					fmt.Println("Error occured when executing on device: ", err.Error())
 					if err == mqtt.ErrDeviceTimeout {
@@ -84,7 +84,7 @@ func (s *Server) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user ty
 				})
 				ctx, cancel = context.WithTimeout(context.Background(), time.Second*3)
 				defer cancel()
-				err = s.mongo.UpdateDeviceState(ctx, correspondingDBDevice.ID, deviceResponse.State)
+				err = f.db.UpdateDeviceState(ctx, correspondingDBDevice.ID, deviceResponse.State)
 				if err != nil {
 					fmt.Println("failed updating state, ", err.Error())
 				}
