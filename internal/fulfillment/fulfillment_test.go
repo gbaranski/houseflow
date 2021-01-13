@@ -74,9 +74,12 @@ func (tdb TestDatabase) UpdateDeviceState(ctx context.Context, deviceID primitiv
 	return fmt.Errorf("no document modified")
 }
 
+var commands = make(chan string, 1)
+
 type TestDeviceManager struct{}
 
 func (dm TestDeviceManager) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error) {
+	commands <- req.Command
 	return types.DeviceResponse{
 		CorrelationData: req.CorrelationData,
 		State:           req.State,

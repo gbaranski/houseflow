@@ -82,6 +82,15 @@ func TestExecute(t *testing.T) {
 	if res.RequestID != body.RequestID {
 		t.Fatalf("requestID doesn't match")
 	}
+	select {
+	case cmd := <-commands:
+		if cmd != body.Inputs[0].Payload.Commands[0].Execution[0].Command {
+			t.Fatalf("fail command not equal, expected: %s, received: %s", cmd, body.Inputs[0].Payload.Commands[0].Execution[0].Command)
+		}
+	case <-time.After(1 * time.Second):
+		t.Fatalf("timeout waiting for msg")
+	}
+
 	for _, v := range res.Payload.Commands {
 		for _, id := range v.IDs {
 			if id == tdevice.ID.Hex() {
