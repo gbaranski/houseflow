@@ -24,14 +24,14 @@ type ConnectRequest struct {
 	Password string `json:"password"`
 }
 
-func (a *Auth) onServiceConnect(w http.ResponseWriter, req *http.Request, r ConnectRequest, pkey []byte) {
-	encodedSignature, err := base64.StdEncoding.DecodeString(r.Password)
+func (a *Auth) onServiceConnect(w http.ResponseWriter, req *http.Request, r ConnectRequest, pkey ed25519.PublicKey) {
+	decodedSignature, err := base64.StdEncoding.DecodeString(r.Password)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(err.Error()))
 	}
 
-	valid := ed25519.Verify(ed25519.PublicKey(a.opts.ServerPublicKey), pkey, encodedSignature)
+	valid := ed25519.Verify(ed25519.PublicKey(a.opts.ServerPublicKey), pkey, decodedSignature)
 	if valid {
 		w.Write([]byte("Authorized"))
 		log.Printf("Service '%s' successfully authenticated\n", r.ClientID)
@@ -42,8 +42,8 @@ func (a *Auth) onServiceConnect(w http.ResponseWriter, req *http.Request, r Conn
 	}
 }
 
-func (a *Auth) onDeviceConnect(w http.ResponseWriter, req *http.Request, r ConnectRequest) {
-	deviceID, err := primitive.ObjectIDFromHex(r.Username)
+func (a *Auth) onDeviceConnect(w http.ResponseWriter, req *http.Request, r ConnectRequest, pkey ed25519.PublicKey) {
+	deviceID, err := primitive.ObjectIDFromHex(r.ClientID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -55,7 +55,19 @@ func (a *Auth) onDeviceConnect(w http.ResponseWriter, req *http.Request, r Conne
 		w.Write([]byte(err.Error()))
 		return
 	}
-	valid := ed25519.Verify(ed25519.PublicKey(device.PublicKey), []byte(device.PublicKey), []byte(r.Password))
+	if device.PublicKey != r.Username {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("Username invalid"))
+		return
+	}
+	decodedSignature, err := base64.StdEncoding.DecodeString(r.Password)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	valid := ed25519.Verify(pkey, pkey, decodedSignature)
 	if valid {
 		w.Write([]byte("Authorized"))
 	} else {
@@ -90,7 +102,7 @@ func (a *Auth) onConnect(w http.ResponseWriter, req *http.Request) {
 		a.onServiceConnect(w, req, r, pkey)
 	} else {
 		fmt.Println("CHecking as for device")
-		a.onDeviceConnect(w, req, r)
+		a.onDeviceConnect(w, req, r, pkey)
 	}
 
 }
