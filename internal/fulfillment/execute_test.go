@@ -13,7 +13,7 @@ import (
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
-func TestQuery(t *testing.T) {
+func TestExecute(t *testing.T) {
 	token := utils.Token{
 		Audience:  realUser.ID.Hex(),
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
@@ -29,18 +29,30 @@ func TestQuery(t *testing.T) {
 		// Clear the slice
 		realUser.Devices = make([]string, 0)
 	}()
-	body := ftypes.QueryRequest{
+	body := ftypes.ExecuteRequest{
 		RequestID: utils.GenerateRandomString(10),
-		Inputs: []ftypes.QueryRequestInput{
+		Inputs: []ftypes.ExecuteRequestInput{
 			{
-				Intent: "action.devices.QUERY",
-				Payload: ftypes.QueryRequestPayload{
-					Devices: []ftypes.QueryRequestPayloadDevice{
+				Intent: "action.devices.EXECUTE",
+				Payload: ftypes.ExecuteRequestPayload{
+					Commands: []ftypes.ExecuteRequestCommands{
 						{
-							ID: tdevice.ID.Hex(), // User has access
-						},
-						{
-							ID: db.Devices[1].ID.Hex(), // User doesn't have access
+							Devices: []ftypes.QueryRequestPayloadDevice{
+								{
+									ID: tdevice.ID.Hex(), // with access
+								},
+								{
+									ID: db.Devices[1].ID.Hex(), // without acesss
+								},
+							},
+							Execution: []ftypes.ExecuteRequestExecution{
+								{
+									Command: "action.devices.commands.OnOff",
+									Params: map[string]interface{}{
+										"on": true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -62,7 +74,7 @@ func TestQuery(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("unexpected query response %d", w.Code)
 	}
-	var res ftypes.QueryResponse
+	var res ftypes.ExecuteResponse
 	err = json.Unmarshal(w.Body.Bytes(), &res)
 	if err != nil {
 		t.Fatalf("fail unmarshall query response %s", err.Error())
@@ -70,19 +82,19 @@ func TestQuery(t *testing.T) {
 	if res.RequestID != body.RequestID {
 		t.Fatalf("requestID doesn't match")
 	}
-	for k, v := range res.Payload.Devices {
-		obj := v.(map[string]interface{})
-
-		if k == tdevice.ID.Hex() {
-			if obj["status"] != "SUCCESS" {
-				t.Fatalf("unexpected status, expected %s, received %s", "SUCCESS", obj["status"])
-			}
-		} else {
-			if obj["status"] != "ERROR" {
-				t.Fatalf("unexpected status, expected %s, received %s", "ERROR", obj["status"])
-			}
-			if obj["errorCode"] != "relinkRequired" {
-				t.Fatalf("unexpected errorCode, expected %s, received %s", "relinkRequired", obj["status"])
+	for _, v := range res.Payload.Commands {
+		for _, id := range v.IDs {
+			if id == tdevice.ID.Hex() {
+				if v.Status != "SUCCESS" {
+					t.Fatalf("unexpected status, expected %s, received %s", "SUCCESS", v.Status)
+				}
+			} else {
+				if v.Status != "ERROR" {
+					t.Fatalf("unexpected status, expected %s, received %s", "ERROR", v.Status)
+				}
+				if v.ErrorCode != "relinkRequired" {
+					t.Fatalf("unexpected errorCode, expected %s, received %s", "relinkRequired", v.Status)
+				}
 			}
 		}
 
