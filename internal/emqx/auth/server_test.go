@@ -12,19 +12,23 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var a Auth
-var pkey, skey, _ = ed25519.GenerateKey(rand.Reader)
+var (
+	a                                    Auth
+	serverPublicKey, serverPrivateKey, _ = ed25519.GenerateKey(rand.Reader)
+	devicePublicKey, devicePrivateKey, _ = ed25519.GenerateKey(rand.Reader)
 
-var opts = Options{
-	ServerPublicKey: pkey,
-}
+	opts = Options{
+		ServerPublicKey: serverPublicKey,
+	}
+
+	devices []types.Device
+)
 
 type TestDatabase struct {
-	Devices []types.Device
 }
 
 func (tdb TestDatabase) GetDeviceByID(ctx context.Context, id primitive.ObjectID) (types.Device, error) {
-	for _, d := range tdb.Devices {
+	for _, d := range devices {
 		if d.ID == id {
 			return d, nil
 		}
