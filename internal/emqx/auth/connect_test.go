@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,7 +30,6 @@ func TestConnectAsService(t *testing.T) {
 	req.Header.Add("Content-Type", "application/json")
 	a.Router.ServeHTTP(w, req)
 
-	fmt.Println(w.Body.String())
 	if w.Code != http.StatusOK {
 		t.Fatalf("unexpected response code %d, expected %d", w.Code, http.StatusOK)
 	}
@@ -58,7 +56,6 @@ func TestConnectAsFakeService(t *testing.T) {
 	req.Header.Add("Content-Type", "application/json")
 	a.Router.ServeHTTP(w, req)
 
-	fmt.Println(w.Body.String())
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("unexpected response code %d, expected %d", w.Code, http.StatusOK)
 	}
@@ -89,7 +86,6 @@ func TestConnectAsDevice(t *testing.T) {
 	req.Header.Add("Content-Type", "application/json")
 	a.Router.ServeHTTP(w, req)
 
-	fmt.Println(w.Body.String())
 	if w.Code != http.StatusOK {
 		t.Fatalf("unexpected response code %d, expected %d", w.Code, http.StatusOK)
 	}

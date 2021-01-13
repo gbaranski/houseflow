@@ -34,11 +34,11 @@ func (a *Auth) onServiceConnect(w http.ResponseWriter, req *http.Request, r Conn
 	valid := ed25519.Verify(ed25519.PublicKey(a.opts.ServerPublicKey), pkey, decodedSignature)
 	if valid {
 		w.Write([]byte("Authorized"))
-		log.Printf("Service '%s' successfully authenticated\n", r.ClientID)
+		log.Printf("Connection: Service '%s' successfully authenticated\n", r.ClientID)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Unauthorized"))
-		log.Printf("Service '%s' attempted to connect with invalid signature\n", r.ClientID)
+		log.Printf("Connection: Service '%s' attempted to connect with invalid signature\n", r.ClientID)
 	}
 }
 
@@ -70,9 +70,11 @@ func (a *Auth) onDeviceConnect(w http.ResponseWriter, req *http.Request, r Conne
 	valid := ed25519.Verify(pkey, pkey, decodedSignature)
 	if valid {
 		w.Write([]byte("Authorized"))
+		log.Printf("Connection: Device %s authenticated\n", r.ClientID)
 	} else {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Unauthorized"))
+		log.Printf("Connection: Device %s attempted to connect with invalid signature\n", r.ClientID)
 	}
 }
 
@@ -90,7 +92,6 @@ func (a *Auth) onConnect(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Printf("User request: %+v\n", r)
 	pkey, err := base64.StdEncoding.DecodeString(r.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -98,10 +99,8 @@ func (a *Auth) onConnect(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if a.opts.ServerPublicKey.Equal(ed25519.PublicKey(pkey)) {
-		fmt.Println("CHecking as for service")
 		a.onServiceConnect(w, req, r, pkey)
 	} else {
-		fmt.Println("CHecking as for device")
 		a.onDeviceConnect(w, req, r, pkey)
 	}
 
