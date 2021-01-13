@@ -1,40 +1,42 @@
 package auth
 
 import (
-	"fmt"
+	"context"
+	"crypto/ed25519"
 
-	"github.com/gbaranski/houseflow/pkg/database"
-	"github.com/gin-gonic/gin"
+	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Server holds state
-type Server struct {
-	mongo  database.Mongo
-	Router *gin.Engine
+// Options of auth
+type Options struct {
+	ServerPublicKey ed25519.PublicKey
 }
 
-// NewServer implements server
-func NewServer(mongo database.Mongo) Server {
-	s := Server{
-		mongo:  mongo,
-		Router: gin.Default()}
-
-	s.Router.POST("/user", s.onUser)
-	s.Router.POST("/acl", s.onACL)
-	return s
+// Database is interface for database specifiacllyl for atuh
+type Database interface {
+	GetDeviceByID(ctx context.Context, ID primitive.ObjectID) (types.Device, error)
 }
 
-func (s *Server) onUser(c *gin.Context) {
-	fmt.Println(c.ContentType())
-	var r UserRequest
-	err := c.Bind(&r)
-	if err != nil {
-		panic(err)
+// Auth holds server state
+type Auth struct {
+	db     Database
+	Router *chi.Mux
+	opts   Options
+}
+
+// New returns auth
+func New(db Database, opts Options) Auth {
+	a := Auth{
+		db:     db,
+		Router: chi.NewRouter(),
+		opts:   opts,
 	}
-	fmt.Printf("User request: %+v\n", r)
-	c.Status(200)
-}
 
-func (s *Server) onACL(c *gin.Context) {
-	c.Status(200)
+	a.Router.Use(middleware.Logger)
+	a.Router.Post("/user", a.onConnect)
+	a.Router.Post("/acl", a.onACL)
+	return a
 }
