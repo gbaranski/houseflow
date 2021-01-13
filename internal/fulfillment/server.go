@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
-	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -31,20 +30,25 @@ type Database interface {
 	UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectID, state map[string]interface{}) error
 }
 
+// DeviceManager is interface
+type DeviceManager interface {
+	SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error)
+}
+
 // Fulfillment hold root server state
 type Fulfillment struct {
 	Router *gin.Engine
-	mqtt   mqtt.MQTT
+	dm     DeviceManager
 	db     Database
 	opts   Options
 }
 
 // NewFulfillment creates server, it won't run till Server.Start
-func NewFulfillment(db Database, mqtt mqtt.MQTT, opts Options) *Fulfillment {
+func NewFulfillment(db Database, dm DeviceManager, opts Options) *Fulfillment {
 	f := &Fulfillment{
 		db:     db,
+		dm:     dm,
 		Router: gin.Default(),
-		mqtt:   mqtt,
 		opts:   opts,
 	}
 	f.Router.Use(utils.LogResponseBody)

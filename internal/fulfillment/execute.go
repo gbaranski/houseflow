@@ -46,7 +46,7 @@ func (f *Fulfillment) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, us
 				}
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 				defer cancel()
-				deviceResponse, err := f.mqtt.SendRequestWithResponse(ctx, *correspondingDBDevice, request)
+				deviceResponse, err := f.dm.SendRequestWithResponse(ctx, *correspondingDBDevice, request)
 				if err != nil {
 					fmt.Println("Error occured when executing on device: ", err.Error())
 					if err == mqtt.ErrDeviceTimeout {
