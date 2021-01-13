@@ -44,8 +44,8 @@ type Fulfillment struct {
 }
 
 // NewFulfillment creates server, it won't run till Server.Start
-func NewFulfillment(db Database, dm DeviceManager, opts Options) *Fulfillment {
-	f := &Fulfillment{
+func NewFulfillment(db Database, dm DeviceManager, opts Options) Fulfillment {
+	f := Fulfillment{
 		db:     db,
 		dm:     dm,
 		Router: gin.Default(),
