@@ -92,7 +92,7 @@ var ErrDeviceTimeout = errors.New("device timeout")
 var ErrInvalidSignature = errors.New("invalid signature")
 
 // SendRequestWithResponse sends request and waits for response and returns it
-func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (*types.DeviceResponse, error) {
+func (m MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error) {
 	reqTopic := fmt.Sprintf("%s/command/request", device.ID.Hex())
 	resTopic := fmt.Sprintf("%s/command/response", device.ID.Hex())
 	msgc := make(chan paho.Message)
@@ -100,7 +100,7 @@ func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device,
 	if token := m.Client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
 		msgc <- m
 	}); token.Wait() && token.Error() != nil {
-		return nil, token.Error()
+		return types.DeviceResponse{}, token.Error()
 	}
 
 	defer func() {
@@ -109,7 +109,7 @@ func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device,
 
 	reqjson, err := json.Marshal(req)
 	if err != nil {
-		return nil, err
+		return types.DeviceResponse{}, err
 	}
 
 	ssig := ed25519.Sign(m.opts.PrivateKey, reqjson)
@@ -118,14 +118,14 @@ func (m *MQTT) SendRequestWithResponse(ctx context.Context, device types.Device,
 	reqp := strings.Join([]string{encssig, string(reqjson)}, ".")
 
 	if token := m.Client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
-		return nil, token.Error()
+		return types.DeviceResponse{}, token.Error()
 	}
 
 readMessages:
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, ErrDeviceTimeout
+			return types.DeviceResponse{}, ErrDeviceTimeout
 
 		case msg, ok := <-msgc:
 			fmt.Println("Received some message")
@@ -154,13 +154,13 @@ readMessages:
 			dpkey, err := base64.StdEncoding.DecodeString(device.PublicKey)
 			if err != nil {
 				fmt.Println("fail parsing device public key: ", err.Error())
-				return nil, fmt.Errorf("fail parsing device public key %s", err.Error())
+				return types.DeviceResponse{}, fmt.Errorf("fail parsing device public key %s", err.Error())
 			}
 			valid := ed25519.Verify(ed25519.PublicKey(dpkey), []byte(resjson), dsig)
 			if !valid {
-				return nil, ErrInvalidSignature
+				return types.DeviceResponse{}, ErrInvalidSignature
 			}
-			return &res, nil
+			return res, nil
 		}
 	}
 }
