@@ -38,7 +38,7 @@ func main() {
 	})
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
-		ClientID:    "actions",
+		ClientID:    "fulfillment",
 		BrokerURL:   "tcp://emqx:1883/mqtt",
 		KeepAlive:   time.Second * 30,
 		PingTimeout: time.Second * 5,
