@@ -29,20 +29,6 @@ services:
     networks:
       - backend
 
-  mongo-express:
-    image: mongo-express
-    restart: 'unless-stopped'
-    container_name: 'mongo-express'
-    env_file:
-      - .env
-    ports:
-      - 8081:8081
-    networks:
-      - backend
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=$MONGO_INITDB_ROOT_USERNAME
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=$MONGO_INITDB_ROOT_PASSWORD
-
   redis:
     image: 'redis:latest'
     container_name: 'redis'
