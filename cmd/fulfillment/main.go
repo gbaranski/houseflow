@@ -13,18 +13,25 @@ import (
 )
 
 var (
-	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
-	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
-	accessKey     = utils.MustGetEnv("ACCESS_KEY")
-	privateKey    ed25519.PrivateKey
+	mongoUsername    = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
+	mongoPassword    = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
+	accessKey        = utils.MustGetEnv("ACCESS_KEY")
+	serverPrivateKey ed25519.PrivateKey
+	serverPublicKey  ed25519.PublicKey
 )
 
 func init() {
+	pkey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PUBLIC_KEY"))
+	if err != nil {
+		panic(err)
+	}
+	serverPublicKey = ed25519.PublicKey(pkey)
+
 	skey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PRIVATE_KEY"))
 	if err != nil {
 		panic(err)
 	}
-	privateKey = ed25519.PrivateKey(skey)
+	serverPrivateKey = ed25519.PrivateKey(skey)
 }
 
 func main() {
@@ -41,11 +48,10 @@ func main() {
 	}
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
-		ClientID:    "fulfillment",
-		BrokerURL:   "tcp://emqx:1883/mqtt",
-		KeepAlive:   time.Second * 30,
-		PingTimeout: time.Second * 5,
-		PrivateKey:  []byte(privateKey),
+		ClientID:         "fulfillment",
+		BrokerURL:        "tcp://emqx:1883/mqtt",
+		ServerPrivateKey: serverPrivateKey,
+		ServerPublicKey:  serverPublicKey,
 	})
 	if err != nil {
 		panic(err)

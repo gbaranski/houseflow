@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -26,18 +25,15 @@ type Options struct {
 	// Default: "tcp://emqx:1883/mqtt"
 	BrokerURL string
 
-	// KeepAlive
+	// ServerPublicKey is servers public key
 	//
-	// Default: 30s
-	KeepAlive time.Duration
+	// *Required*
+	ServerPublicKey ed25519.PublicKey
 
-	// PingTimeout
+	// ServerPrivateKey is servers private key
 	//
-	// Default: 5s
-	PingTimeout time.Duration
-
-	// PrivateKey is servers private key
-	PrivateKey ed25519.PrivateKey
+	// *Required*
+	ServerPrivateKey ed25519.PrivateKey
 }
 
 // Parse parses options to the defaults
@@ -45,12 +41,11 @@ func (opts *Options) Parse() {
 	if opts.BrokerURL == "" {
 		opts.BrokerURL = "tcp://emqx:1883/mqtt"
 	}
-	if opts.KeepAlive == 0 {
-		opts.KeepAlive = time.Second * 30
+	if opts.ServerPublicKey == nil {
+		panic("ServerPublicKey option is required")
 	}
-
-	if opts.PingTimeout == 0 {
-		opts.PingTimeout = time.Second * 5
+	if opts.ServerPrivateKey == nil {
+		panic("ServerPrivateKey option is required")
 	}
 }
 
@@ -67,13 +62,17 @@ func NewMQTT(opts Options) (MQTT, error) {
 	paho.WARN = log.New(os.Stdout, "[WARN]  ", 0)
 	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 
-	// Add there some kind of password soon
+	username := base64.StdEncoding.EncodeToString(opts.ServerPublicKey)
+	password := base64.StdEncoding.EncodeToString(ed25519.Sign(opts.ServerPrivateKey, opts.ServerPublicKey))
+
 	copts := paho.
 		NewClientOptions().
 		AddBroker(opts.BrokerURL).
 		SetClientID(opts.ClientID).
-		SetKeepAlive(opts.KeepAlive).
-		SetPingTimeout(opts.PingTimeout)
+		SetUsername(username).
+		SetPassword(password).
+		SetAutoReconnect(true).
+		SetConnectRetry(true)
 
 	c := paho.NewClient(copts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
@@ -112,7 +111,7 @@ func (m MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, 
 		return types.DeviceResponse{}, err
 	}
 
-	ssig := ed25519.Sign(m.opts.PrivateKey, reqjson)
+	ssig := ed25519.Sign(m.opts.ServerPrivateKey, reqjson)
 	encssig := base64.StdEncoding.EncodeToString(ssig)
 
 	reqp := strings.Join([]string{encssig, string(reqjson)}, ".")

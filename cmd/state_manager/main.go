@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -16,7 +18,24 @@ import (
 var (
 	mongoUsername = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
 	mongoPassword = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
+
+	serverPrivateKey ed25519.PrivateKey
+	serverPublicKey  ed25519.PublicKey
 )
+
+func init() {
+	pkey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PUBLIC_KEY"))
+	if err != nil {
+		panic(err)
+	}
+	serverPublicKey = ed25519.PublicKey(pkey)
+
+	skey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PRIVATE_KEY"))
+	if err != nil {
+		panic(err)
+	}
+	serverPrivateKey = ed25519.PrivateKey(skey)
+}
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -31,10 +50,10 @@ func main() {
 	}
 
 	mqtt, err := mqtt.NewMQTT(mqtt.Options{
-		ClientID:    "state_manager",
-		BrokerURL:   "tcp://emqx:1883/mqtt",
-		KeepAlive:   time.Second * 30,
-		PingTimeout: time.Second * 5,
+		ClientID:         "state_manager",
+		BrokerURL:        "tcp://emqx:1883/mqtt",
+		ServerPublicKey:  serverPublicKey,
+		ServerPrivateKey: serverPrivateKey,
 	})
 	if err != nil {
 		panic(err)
