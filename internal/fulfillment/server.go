@@ -52,7 +52,7 @@ func NewFulfillment(db Database, dm DeviceManager, opts Options) Fulfillment {
 		opts:   opts,
 	}
 	f.Router.Use(utils.LogResponseBody)
-	f.Router.POST("/fulfillment", f.onFulfillment)
+	f.Router.POST("/webhook", f.onWebhook)
 	f.Router.GET("/addDevice", f.onAddDevice)
 	return f
 }
@@ -138,7 +138,7 @@ func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.U
 
 }
 
-func (f *Fulfillment) onFulfillment(c *gin.Context) {
+func (f *Fulfillment) onWebhook(c *gin.Context) {
 	var base fulfillment.BaseRequest
 
 	if err := c.ShouldBindBodyWith(&base, binding.JSON); err != nil {

@@ -66,7 +66,7 @@ func TestExecute(t *testing.T) {
 	}
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, "/fulfillment", bytes.NewReader(benc))
+	req, _ := http.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(benc))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", strtoken))
 	f.Router.ServeHTTP(w, req)
