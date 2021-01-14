@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"net/http"
-	"text/template"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -67,12 +66,7 @@ func (a *Auth) onAuthSite(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "redirect_uri is invalid", http.StatusBadRequest)
 		return
 	}
-	tmpl, err := template.ParseFiles("../../web/template/auth.tmpl")
-	if err != nil {
-		http.Error(w, "Fail loading template", http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, map[string]string{
+	a.opts.LoginSiteTemplate.Execute(w, map[string]string{
 		"redirect_uri": query.RedirectURI,
 		"state":        query.State,
 	})

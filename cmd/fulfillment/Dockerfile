@@ -18,7 +18,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o /bin/app ./cmd/actions/main.go
+RUN go build -o /bin/app ./cmd/fulfillment/main.go
 
 FROM scratch
 COPY --from=build /bin/app  /

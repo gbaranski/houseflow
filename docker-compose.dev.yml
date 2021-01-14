@@ -101,7 +101,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./web/template:/web/template
+      - ./web/templates:/templates
     networks:
       - backend
 
@@ -120,15 +120,15 @@ services:
     networks:
       - backend
 
-  actions:
+  fulfillment:
     tty: true
-    container_name: 'actions'
+    container_name: 'fulfillment'
     restart: 'unless-stopped'
     depends_on:
       - mongo
       - redis
     build:
-      dockerfile: ./cmd/actions/Dockerfile
+      dockerfile: ./cmd/fulfillment/Dockerfile
       context: .
     env_file:
       - .env

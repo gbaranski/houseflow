@@ -1,5 +1,7 @@
 package auth
 
+import "html/template"
+
 // Options defines options for auth
 type Options struct {
 	// ProjectID set in Google Cloud Console
@@ -31,6 +33,11 @@ type Options struct {
 	//
 	// *Required*
 	RefreshKey string
+
+	// Template of login site
+	//
+	// *Required*
+	LoginSiteTemplate *template.Template
 }
 
 // Parse parses to defaults, panics if some field is required but is not present
@@ -43,5 +50,8 @@ func (opts *Options) Parse() {
 	}
 	if opts.ClientSecret == "" {
 		panic("ClientSecret must be set")
+	}
+	if opts.LoginSiteTemplate == nil {
+		panic("LoginSiteTemplate is required")
 	}
 }

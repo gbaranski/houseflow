@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -38,6 +39,7 @@ func init() {
 }
 
 func main() {
+	log.Println("Starting state_manager service")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	mongo, err := database.NewMongo(ctx, database.MongoOptions{

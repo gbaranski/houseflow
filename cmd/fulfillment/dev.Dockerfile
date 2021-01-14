@@ -7,4 +7,4 @@ COPY . .
 
 RUN go get -u github.com/cosmtrek/air
 
-CMD ["air", "-c", "/app/cmd/actions/.air.toml"]
+CMD ["air", "-c", "/app/cmd/fulfillment/.air.toml"]
