@@ -26,6 +26,8 @@ services:
       - .env
     environment:
       - MONGO_INITDB_DATABASE=houseflowDB
+    ports: 
+      - 27017:27017
     networks:
       - backend
 
