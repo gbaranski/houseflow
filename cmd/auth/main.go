@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"html/template"
+	"log"
 	"net/http"
 	"time"
 
@@ -29,6 +31,12 @@ type mergedDatabases struct {
 }
 
 func main() {
+	log.Println("Starting auth service")
+	loginSiteTemplate, err := template.ParseFiles("/templates/auth.tmpl")
+	if err != nil {
+		panic("fail load login site template")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -56,6 +64,7 @@ func main() {
 		AccessKey:            accessKey,
 		AuthorizationCodeKey: authorizationCodeKey,
 		RefreshKey:           refreshKey,
+		LoginSiteTemplate:    loginSiteTemplate,
 	})
 	http.ListenAndServe(":80", s.Router)
 	if err != nil {

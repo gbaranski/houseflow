@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -16,6 +17,7 @@ var (
 )
 
 func main() {
+	log.Println("Starting emqx/webhooks service")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	mongo, err := database.NewMongo(ctx, database.MongoOptions{

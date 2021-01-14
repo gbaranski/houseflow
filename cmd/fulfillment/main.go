@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
+	"log"
 	"time"
 
 	"github.com/gbaranski/houseflow/internal/fulfillment"
@@ -35,6 +36,7 @@ func init() {
 }
 
 func main() {
+	log.Println("Starting fulfillment service")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

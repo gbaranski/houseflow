@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,6 +20,7 @@ var (
 )
 
 func main() {
+	log.Println("Starting emqx/auth service")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	mongo, err := database.NewMongo(ctx, database.MongoOptions{
