@@ -1,16 +1,16 @@
-version: '3.8'
+version: "3.8"
 services:
   # Vendor services
   nginx:
     tty: true
-    container_name: 'nginx'
+    container_name: "nginx"
     build:
       context: ./build/nginx
       dockerfile: Dockerfile.dev
     ports:
       - 80:80
       - 443:443
-    restart: 'unless-stopped'
+    restart: "unless-stopped"
     volumes:
       - ./deployment/certs/fullchain.pem:/etc/dockercerts/fullchain.pem
       - ./deployment/certs/privkey.pem:/etc/dockercerts/privkey.pem
@@ -19,30 +19,43 @@ services:
 
   mongo:
     image: mongo
-    container_name: 'mongo'
-    restart: 'unless-stopped'
-    command: --quiet
+    container_name: "mongo"
+    restart: "unless-stopped"
     env_file:
       - .env
     environment:
       - MONGO_INITDB_DATABASE=houseflowDB
-    ports: 
+    ports:
       - 27017:27017
     networks:
       - backend
 
+  mongo-express:
+    image: mongo-express
+    restart: "unless-stopped"
+    container_name: "mongo-express"
+    env_file:
+      - .env
+    ports:
+      - 8081:8081
+    networks:
+      - backend
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=$MONGO_INITDB_ROOT_USERNAME
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=$MONGO_INITDB_ROOT_PASSWORD
+
   redis:
-    image: 'redis:latest'
-    container_name: 'redis'
-    restart: 'unless-stopped'
+    image: "redis:latest"
+    container_name: "redis"
+    restart: "unless-stopped"
     networks:
       - backend
 
   emqx:
     tty: true
-    image: 'emqx/emqx'
-    container_name: 'emqx'
-    restart: 'unless-stopped'
+    image: "emqx/emqx"
+    container_name: "emqx"
+    restart: "unless-stopped"
     environment:
       - EMQX_NAME=emqx
       - EMQX_LOG__LEVEL=info
@@ -62,8 +75,8 @@ services:
 
   emqx_webhooks:
     tty: true
-    container_name: 'emqx_webhooks'
-    restart: 'unless-stopped'
+    container_name: "emqx_webhooks"
+    restart: "unless-stopped"
     env_file:
       - .env
     build:
@@ -77,8 +90,8 @@ services:
 
   emqx_auth:
     # tty: true
-    container_name: 'emqx_auth'
-    restart: 'unless-stopped'
+    container_name: "emqx_auth"
+    restart: "unless-stopped"
     env_file:
       - .env
     build:
@@ -89,17 +102,14 @@ services:
 
   auth:
     tty: true
-    container_name: 'auth'
-    restart: 'unless-stopped'
+    container_name: "auth"
+    restart: "unless-stopped"
     depends_on:
       - mongo
       - redis
     build:
       dockerfile: ./cmd/auth/Dockerfile
       context: .
-    depends_on:
-      - mongo
-      - redis
     env_file:
       - .env
     volumes:
@@ -109,8 +119,8 @@ services:
 
   state_manager:
     tty: true
-    container_name: 'state_manager'
-    restart: 'unless-stopped'
+    container_name: "state_manager"
+    restart: "unless-stopped"
     depends_on:
       - mongo
       - emqx
@@ -124,8 +134,8 @@ services:
 
   fulfillment:
     tty: true
-    container_name: 'fulfillment'
-    restart: 'unless-stopped'
+    container_name: "fulfillment"
+    restart: "unless-stopped"
     depends_on:
       - mongo
       - redis
