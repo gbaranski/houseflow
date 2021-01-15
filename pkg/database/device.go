@@ -44,7 +44,7 @@ func (m Mongo) GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.Object
 
 // UpdateDeviceState updates "state" property on device
 func (m Mongo) UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectID, state map[string]interface{}) error {
-	result, err := m.Collections.Users.UpdateOne(ctx,
+	result, err := m.Collections.Devices.UpdateOne(ctx,
 		bson.M{"_id": deviceID},
 		bson.M{
 			"$set": bson.M{
