@@ -18,6 +18,9 @@
 #include "nvs_flash.h"
 #include "sodium.h"
 
+// ED25519_BASE64_SIGNATURE_LENGTH + strlen('.') + strlen("{}") + \0
+#define MQTT_MIN_PAYLOAD_SIZE ED25519_BASE64_SIGNATURE_LENGTH + 1 + 2 + 1
+
 struct Keypair kp;
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
@@ -28,7 +31,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     case MQTT_EVENT_CONNECTED:
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_CONNECTED");
       msg_id = esp_mqtt_client_subscribe(
-          client, CONFIG_DEVICE_ID "/action1/request", 0);
+          client, CONFIG_DEVICE_ID "/command/request", 0);
       ESP_LOGI(MQTT_TAG, "sent subscribe successful, msg_id=%d", msg_id);
       break;
     case MQTT_EVENT_DISCONNECTED:
@@ -47,11 +50,32 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     case MQTT_EVENT_PUBLISHED:
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
       break;
-    case MQTT_EVENT_DATA:
+    case MQTT_EVENT_DATA: {
+
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
+
       printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
       printf("DATA=%.*s\r\n", event->data_len, event->data);
+
+      if (event->data_len < MQTT_MIN_PAYLOAD_SIZE) {
+        ESP_LOGE(MQTT_TAG, "payload is too small");
+        return ESP_ERR_INVALID_RESPONSE;
+      }
+
+      char sig[ED25519_BASE64_SIGNATURE_LENGTH + 1];
+      memcpy(sig, event->data, ED25519_BASE64_SIGNATURE_LENGTH);
+      sig[ED25519_BASE64_SIGNATURE_LENGTH] = '\0';
+
+      // length of msg = signature_len - len('.') + \0
+      char msg[strlen(event->data) - 88 - 1 + 1];
+      memcpy(msg, &(event->data[ED25519_BASE64_SIGNATURE_LENGTH + 1]), event->data_len - ED25519_BASE64_SIGNATURE_LENGTH + 1);
+      msg[event->data_len - ED25519_BASE64_SIGNATURE_LENGTH + 2] = '\0';
+
+
+      printf("signature: %s\n", sig);
+      printf("msg: %s\n", msg);
       break;
+    }
     case MQTT_EVENT_ERROR:
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_ERROR");
       if (event->error_handle->error_type == MQTT_ERROR_TYPE_ESP_TLS) {
