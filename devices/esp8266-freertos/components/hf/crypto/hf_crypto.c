@@ -18,49 +18,40 @@ const unsigned char private_key[] = CONFIG_DEVICE_PRIVATE_KEY;
 
 crypto_err_t get_public_key(struct Keypair *dst) {
   size_t olen;
-  int err = mbedtls_base64_decode(dst->pkey, ED25519_PKEY_LENGTH, &olen,
-                                  public_key, ED25519_BASE64_PKEY_LENGTH);
+  int err = mbedtls_base64_decode(dst->pkey, ED25519_PKEY_BYTES, &olen,
+                                  public_key, ED25519_BASE64_PKEY_BYTES);
 
   if (err == MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
     return CRYPTO_ERR_BASE64_INVALID_CHARACTER;
   else if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
     return CRYPTO_ERR_BASE64_BUFFER_TOO_SMALL;
-  if (olen != ED25519_PKEY_LENGTH) return CRYPTO_ERR_LENGTH_INVALID;
+  if (olen != ED25519_PKEY_BYTES) return CRYPTO_ERR_LENGTH_INVALID;
 
   return CRYPTO_ERR_OK;
 }
 
 crypto_err_t get_private_key(struct Keypair *dst) {
   size_t olen;
-  int err = mbedtls_base64_decode(dst->skey, ED25519_SKEY_LENGTH, &olen,
-                                  private_key, ED25519_BASE64_SKEY_LENGTH);
+  int err = mbedtls_base64_decode(dst->skey, ED25519_SKEY_BYTES, &olen,
+                                  private_key, ED25519_BASE64_SKEY_BYTES);
 
   if (err == MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
     return CRYPTO_ERR_BASE64_INVALID_CHARACTER;
   else if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
     return CRYPTO_ERR_BASE64_BUFFER_TOO_SMALL;
 
-  if (olen != ED25519_SKEY_LENGTH) return CRYPTO_ERR_LENGTH_INVALID;
+  if (olen != ED25519_SKEY_BYTES) return CRYPTO_ERR_LENGTH_INVALID;
   return CRYPTO_ERR_OK;
-}
-
-crypto_err_t sign_public_key(struct Keypair *kp, unsigned char *dst) {
-  return crypto_sign_ed25519(dst, NULL, kp->pkey, ED25519_PKEY_LENGTH,
-                             kp->skey);
-}
-
-crypto_err_t sign_message(struct Keypair *kp, const unsigned char *msg, unsigned long long msg_len, unsigned char* dst) {
-  return crypto_sign_ed25519(dst, NULL, msg, msg_len, kp->skey);
 }
 
 crypto_err_t encode_signature(const unsigned char *sig, unsigned char *dst) {
   size_t olen;
-  int err = mbedtls_base64_encode(dst, ED25519_BASE64_SIGNATURE_LENGTH + 1,
-                                  &olen, sig, ED25519_SIGNATURE_LENGTH);
+  int err = mbedtls_base64_encode(dst, ED25519_BASE64_SIGNATURE_BYTES + 1,
+                                  &olen, sig, ED25519_SIGNATURE_BYTES);
 
   if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
     return CRYPTO_ERR_BASE64_BUFFER_TOO_SMALL;
 
-  if (olen != ED25519_BASE64_SIGNATURE_LENGTH) return CRYPTO_ERR_LENGTH_INVALID;
+  if (olen != ED25519_BASE64_SIGNATURE_BYTES) return CRYPTO_ERR_LENGTH_INVALID;
   return CRYPTO_ERR_OK;
 }

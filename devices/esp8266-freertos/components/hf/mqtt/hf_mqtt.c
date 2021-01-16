@@ -24,7 +24,7 @@
 #define LED_PIN 5
 
 // ED25519_BASE64_SIGNATURE_LENGTH + strlen('.') + strlen("{}") + \0
-#define MQTT_MIN_PAYLOAD_SIZE ED25519_BASE64_SIGNATURE_LENGTH + 1 + 2 + 1
+#define MQTT_MIN_PAYLOAD_SIZE ED25519_BASE64_SIGNATURE_BYTES + 1 + 2 + 1
 
 struct Keypair kp;
 
@@ -55,12 +55,12 @@ static esp_err_t parse_payload(char *sig, char *msg, char *src, int src_len)
     return ESP_ERR_INVALID_RESPONSE;
   }
 
-  memcpy(sig, src, ED25519_BASE64_SIGNATURE_LENGTH);
-  sig[ED25519_BASE64_SIGNATURE_LENGTH] = '\0';
+  memcpy(sig, src, ED25519_BASE64_SIGNATURE_BYTES);
+  sig[ED25519_BASE64_SIGNATURE_BYTES] = '\0';
 
-  printf("msglen: %d\n", src_len - ED25519_BASE64_SIGNATURE_LENGTH);
+  printf("msglen: %d\n", src_len - ED25519_BASE64_SIGNATURE_BYTES);
 
-  memcpy(msg, &(src[ED25519_BASE64_SIGNATURE_LENGTH + 1]), src_len - ED25519_BASE64_SIGNATURE_LENGTH);
+  memcpy(msg, &(src[ED25519_BASE64_SIGNATURE_BYTES + 1]), src_len - ED25519_BASE64_SIGNATURE_BYTES);
   msg[strlen(msg) - 1] = '\0';
   return ESP_OK;
 }
@@ -171,10 +171,10 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
 
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
 
-      char sig[ED25519_BASE64_SIGNATURE_LENGTH + 1];
+      char sig[ED25519_BASE64_SIGNATURE_BYTES + 1];
 
       // length of msg = signature_len - len('.')
-      char msg[event->data_len - ED25519_BASE64_SIGNATURE_LENGTH];
+      char msg[event->data_len - ED25519_BASE64_SIGNATURE_BYTES];
       esp_err_t err = parse_payload(sig, msg, event->data, event->data_len);
       if (err != ESP_OK) {
         ESP_LOGI(MQTT_TAG, "err parsing payload %d\n", err);
@@ -202,13 +202,13 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       printf("stringified: %s\n", res_str);
 
       // fix this buffer later, not sure if we need that big buffer for just signature
-      unsigned char res_sig[ED25519_SIGNATURE_LENGTH];
+      unsigned char res_sig[ED25519_SIGNATURE_BYTES];
       int sign_err = crypto_sign_detached(res_sig, NULL, (const unsigned char*)res_str, strlen(res_str), kp.skey);
       if (sign_err != 0) {
         printf("fail sign code: %d\n", sign_err);
         return ESP_ERR_INVALID_RESPONSE;
       }
-      unsigned char res_sig_encoded[ED25519_BASE64_SIGNATURE_LENGTH ];
+      unsigned char res_sig_encoded[ED25519_BASE64_SIGNATURE_BYTES ];
       crypto_err_t crypto_err = encode_signature(res_sig, res_sig_encoded);
       if (crypto_err != CRYPTO_ERR_OK) {
         printf("fail encode response sig %d\n", crypto_err);
@@ -217,7 +217,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       }
       printf("response signature: %s\n", res_sig_encoded);
       
-      char full_response[strlen(res_str) + ED25519_SIGNATURE_LENGTH];
+      char full_response[strlen(res_str) + ED25519_SIGNATURE_BYTES];
       strcpy(full_response, (const char*)res_sig_encoded);
       strcat(full_response, ".");
       strcat(full_response, res_str);
@@ -270,13 +270,13 @@ void mqtt_connect() {
     return;
   }
 
-  unsigned char password[ED25519_SIGNATURE_LENGTH];
-  err = sign_public_key(&kp, password);
+  unsigned char password[ED25519_SIGNATURE_BYTES];
+  err = crypto_sign_ed25519_detached(password, NULL, kp.pkey, ED25519_PKEY_BYTES, kp.skey);
   if (err != 0) {
     ESP_LOGE(MQTT_TAG, "fail gen password err: %d", err);
     return;
   }
-  unsigned char encoded_password[ED25519_BASE64_SIGNATURE_LENGTH];
+  unsigned char encoded_password[ED25519_BASE64_SIGNATURE_BYTES];
   err = encode_signature(password, encoded_password);
   if (err != CRYPTO_ERR_OK) {
     ESP_LOGE(MQTT_TAG, "fail encode password err: %d", err);
