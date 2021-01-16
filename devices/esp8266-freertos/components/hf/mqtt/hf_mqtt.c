@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "hf_crypto.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_tls.h"
@@ -120,6 +121,25 @@ static esp_err_t parse_device_request(device_request *dst, char *msg)
   return parse_device_state(&(dst->state), stateItem);
 }
 
+static cJSON* stringify_device_response(const device_response *src) {
+  // Create "state" field
+  cJSON *state = cJSON_CreateObject();
+  // if device responds, it means its online
+  cJSON_AddBoolToObject(state, "online", true);
+  cJSON_AddBoolToObject(state, "on", src->state.on);
+
+  cJSON *root;
+  root = cJSON_CreateObject();
+  cJSON_AddStringToObject(root, "correlationData", src->correlation_data);
+  cJSON_AddStringToObject(root, "status", src->status);
+  if (src->error != NULL) {
+    cJSON_AddStringToObject(root, "error", src->error);
+  }
+  cJSON_AddItemToObject(root, "state", state);
+
+  return root;
+}
+
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
   esp_mqtt_client_handle_t client = event->client;
   int msg_id;
@@ -151,13 +171,8 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
 
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
 
-      printf("free heap: %d\n", esp_get_free_heap_size());
-      printf("datalen: %d\n", event->data_len);
-      // printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-      // printf("DATA=%.*s\r\n", event->data_len, event->data);
-
-
       char sig[ED25519_BASE64_SIGNATURE_LENGTH + 1];
+
       // length of msg = signature_len - len('.')
       char msg[event->data_len - ED25519_BASE64_SIGNATURE_LENGTH];
       esp_err_t err = parse_payload(sig, msg, event->data, event->data_len);
@@ -171,20 +186,46 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       ESP_LOGI(MQTT_TAG, "command: %s", req.command);
       ESP_LOGI(MQTT_TAG, "state.on: %d", req.state.on);
 
+      printf("signature: %s\n", sig);
+      printf("msg: %s\n", msg);
+
       gpio_set_level(LED_PIN, req.state.on);
 
       const device_response res = {
         .correlation_data = req.correlation_data,
         .status = "SUCCESS",
-        .error = "",
+        .error = NULL,
         .state = req.state,
       };
+      cJSON *resJSON = stringify_device_response(&res);
+      const char* res_str = cJSON_PrintUnformatted(resJSON);
+      printf("stringified: %s\n", res_str);
 
-      // Implement later
-      // esp_mqtt_client_publish(client, CONFIG_DEVICE_ID "/command/response", "");
-      printf("signature: %s\n", sig);
-      printf("msg: %s\n", msg);
-      printf("free heap: %d\n", esp_get_free_heap_size());
+      // fix this buffer later, not sure if we need that big buffer for just signature
+      unsigned char res_sig[ED25519_SIGNATURE_LENGTH + strlen(res_str)];
+      unsigned long long res_sig_len;
+      int sign_err = crypto_sign_ed25519(res_sig, &res_sig_len, (const unsigned char*)res_str, strlen(res_str)-1, kp.skey);
+      if (sign_err != 0) {
+        printf("fail sign code: %d\n", sign_err);
+        return ESP_ERR_INVALID_RESPONSE;
+      }
+
+      unsigned char res_sig_encoded[ED25519_BASE64_SIGNATURE_LENGTH ];
+      crypto_err_t crypto_err = encode_signature(res_sig, res_sig_encoded);
+      if (crypto_err != CRYPTO_ERR_OK) {
+        printf("fail encode response sig %d\n", crypto_err);
+        // ESP_LOGE("fail encode signature %d",(int)crypto_err);
+        return ESP_ERR_INVALID_RESPONSE;
+      }
+      printf("response signature: %s\n", res_sig_encoded);
+      
+      char full_response[strlen(res_str) + res_sig_len + 1];
+      strcpy(full_response, (const char*)res_sig_encoded);
+      strcat(full_response, ".");
+      strcat(full_response, res_str);
+
+      printf("full response: %s\n", full_response);
+      esp_mqtt_client_publish(client, CONFIG_DEVICE_ID "/command/response", full_response, strlen(full_response), 0, 0);
       break;
     }
     case MQTT_EVENT_ERROR:

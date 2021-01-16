@@ -1,7 +1,7 @@
 #ifndef HF_CRYPTO_H
 #define HF_CRYPTO_H
 
-typedef short int crypto_err_t;
+typedef int crypto_err_t;
 
 // Errors which are negative are about bad configuration.
 #define CRYPTO_ERR_OK 0
@@ -35,6 +35,8 @@ crypto_err_t get_public_key(struct Keypair *dst);
 crypto_err_t sign_public_key(struct Keypair *kp, unsigned char *dst);
 
 crypto_err_t encode_signature(const unsigned char *sig, unsigned char *dst);
+
+crypto_err_t sign_message(struct Keypair *kp, const unsigned char *msg, unsigned long long msg_len, unsigned char* dst);
 
 #define CRYPTO_OK
 

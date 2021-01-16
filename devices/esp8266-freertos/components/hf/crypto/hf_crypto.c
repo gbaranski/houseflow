@@ -49,6 +49,10 @@ crypto_err_t sign_public_key(struct Keypair *kp, unsigned char *dst) {
                              kp->skey);
 }
 
+crypto_err_t sign_message(struct Keypair *kp, const unsigned char *msg, unsigned long long msg_len, unsigned char* dst) {
+  return crypto_sign_ed25519(dst, NULL, msg, msg_len, kp->skey);
+}
+
 crypto_err_t encode_signature(const unsigned char *sig, unsigned char *dst) {
   size_t olen;
   int err = mbedtls_base64_encode(dst, ED25519_BASE64_SIGNATURE_LENGTH + 1,
