@@ -54,6 +54,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
 
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
 
+      printf("free heap: %d\n", esp_get_free_heap_size());
       printf("datalen: %d\n", event->data_len);
       printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
       printf("DATA=%.*s\r\n", event->data_len, event->data);
@@ -77,6 +78,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
 
       printf("signature: %s\n", sig);
       printf("msg: %s\n", msg);
+      printf("free heap: %d\n", esp_get_free_heap_size());
       break;
     }
     case MQTT_EVENT_ERROR:
