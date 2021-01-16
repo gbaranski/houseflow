@@ -54,6 +54,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
 
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
 
+      printf("datalen: %d\n", event->data_len);
       printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
       printf("DATA=%.*s\r\n", event->data_len, event->data);
 
@@ -66,10 +67,12 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       memcpy(sig, event->data, ED25519_BASE64_SIGNATURE_LENGTH);
       sig[ED25519_BASE64_SIGNATURE_LENGTH] = '\0';
 
-      // length of msg = signature_len - len('.') + \0
-      char msg[strlen(event->data) - 88 - 1 + 1];
-      memcpy(msg, &(event->data[ED25519_BASE64_SIGNATURE_LENGTH + 1]), event->data_len - ED25519_BASE64_SIGNATURE_LENGTH + 1);
-      msg[event->data_len - ED25519_BASE64_SIGNATURE_LENGTH + 2] = '\0';
+      printf("msglen: %d\n", event->data_len - ED25519_BASE64_SIGNATURE_LENGTH);
+
+      // length of msg = signature_len - len('.')
+      char msg[event->data_len - ED25519_BASE64_SIGNATURE_LENGTH];
+      memcpy(msg, &(event->data[ED25519_BASE64_SIGNATURE_LENGTH + 1]), event->data_len - ED25519_BASE64_SIGNATURE_LENGTH);
+      msg[strlen(msg) - 1] = '\0';
 
 
       printf("signature: %s\n", sig);
