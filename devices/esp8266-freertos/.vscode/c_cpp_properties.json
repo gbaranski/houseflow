@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "ESP8266",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/build/include/*",
+                "${IDF_PATH}/components/**",
+                "${IDF_PATH}/components/freertos/port/esp8266/include" // for some reason its required
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "defines": [
+                "__ESP_FILE__"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "intelliSenseMode": "${default}"
+        }
+    ],
+    "version": 4
+}
