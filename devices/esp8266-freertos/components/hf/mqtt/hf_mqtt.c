@@ -202,14 +202,12 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       printf("stringified: %s\n", res_str);
 
       // fix this buffer later, not sure if we need that big buffer for just signature
-      unsigned char res_sig[ED25519_SIGNATURE_LENGTH + strlen(res_str)];
-      unsigned long long res_sig_len;
-      int sign_err = crypto_sign_ed25519(res_sig, &res_sig_len, (const unsigned char*)res_str, strlen(res_str)-1, kp.skey);
+      unsigned char res_sig[ED25519_SIGNATURE_LENGTH];
+      int sign_err = crypto_sign_detached(res_sig, NULL, (const unsigned char*)res_str, strlen(res_str), kp.skey);
       if (sign_err != 0) {
         printf("fail sign code: %d\n", sign_err);
         return ESP_ERR_INVALID_RESPONSE;
       }
-
       unsigned char res_sig_encoded[ED25519_BASE64_SIGNATURE_LENGTH ];
       crypto_err_t crypto_err = encode_signature(res_sig, res_sig_encoded);
       if (crypto_err != CRYPTO_ERR_OK) {
@@ -219,7 +217,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       }
       printf("response signature: %s\n", res_sig_encoded);
       
-      char full_response[strlen(res_str) + res_sig_len + 1];
+      char full_response[strlen(res_str) + ED25519_SIGNATURE_LENGTH];
       strcpy(full_response, (const char*)res_sig_encoded);
       strcat(full_response, ".");
       strcat(full_response, res_str);
