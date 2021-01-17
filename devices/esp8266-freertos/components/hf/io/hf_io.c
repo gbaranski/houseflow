@@ -7,10 +7,10 @@
 #include "hf_types.h"
 
 static DeviceState g_state = {.on = 0};
-static IOConfig g_cfg = {.on_pin = 5};
+static IOConfig g_cfg = {.onoff_pin = 5};
 
 void io_init() {
-    gpio_set_direction(g_cfg.on_pin, GPIO_MODE_OUTPUT);
+    gpio_set_direction(g_cfg.onoff_pin, GPIO_MODE_OUTPUT);
 }
 
 // Handles command and writes to 
@@ -25,7 +25,8 @@ DeviceResponse io_handle_command(const char* cmd, DeviceRequest *req) {
     };
     
     if (strcmp(cmd, "action.devices.commands.OnOff") == 0) {
-        gpio_set_level(g_cfg.on_pin, req->state.on);
+        gpio_set_level(g_cfg.onoff_pin, req->state.on);
+        g_state.on = req->state.on;
     } else {
         ESP_LOGE(IO_TAG, "invalid cmd %s", cmd);
         res.error = "functionNotSupported";

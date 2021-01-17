@@ -8,7 +8,7 @@
 #define IO_TAG "io"
 
 typedef struct {
-    gpio_num_t on_pin;
+    gpio_num_t onoff_pin;
 } IOConfig;
 
 void io_init(void);
