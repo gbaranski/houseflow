@@ -78,9 +78,10 @@ func (f *Fulfillment) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, us
 					continue
 				}
 				responseCommands = append(responseCommands, fulfillment.ExecuteResponseCommands{
-					IDs:    []string{device.ID},
-					Status: "SUCCESS",
-					States: deviceResponse.State,
+					IDs:       []string{device.ID},
+					Status:    deviceResponse.Status,
+					States:    deviceResponse.State,
+					ErrorCode: deviceResponse.Error,
 				})
 				ctx, cancel = context.WithTimeout(context.Background(), time.Second*3)
 				defer cancel()
