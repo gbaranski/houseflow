@@ -1,13 +1,8 @@
 #ifndef HF_CRYPTO_H
 #define HF_CRYPTO_H
+#include "hf_types.h"
 
-typedef int crypto_err_t;
-
-// Errors which are negative are about bad configuration.
-#define CRYPTO_ERR_OK 0
-#define CRYPTO_ERR_BASE64_INVALID_CHARACTER -1
-#define CRYPTO_ERR_BASE64_BUFFER_TOO_SMALL -2
-#define CRYPTO_ERR_LENGTH_INVALID -3
+#define CRYPTO_TAG "crypto"
 
 #define ED25519_PKEY_BYTES 32U
 // 4 * ceil(ED25519_PKEY_LENGTH / 3) = 44
@@ -23,17 +18,17 @@ typedef int crypto_err_t;
 // 4 * ceil(ED25519_SIGNATURE_LENGTH / 3) = 88
 #define ED25519_BASE64_SIGNATURE_BYTES 88U
 
-struct Keypair {
+typedef struct {
   unsigned char pkey[ED25519_PKEY_BYTES];
   // Thats seed
   unsigned char skey[ED25519_SKEY_BYTES];
-};
+} Keypair;
 
-crypto_err_t get_private_key(struct Keypair *dst);
-crypto_err_t get_public_key(struct Keypair *dst);
 
-crypto_err_t encode_signature(const unsigned char *sig, unsigned char *dst);
+int crypto_init();
 
-#define CRYPTO_OK
+int crypto_encode_signature(const unsigned char *sig, unsigned char *dst);
+int crypto_generate_password(unsigned char* dst);
+int crypto_sign_response_combined(char* dst, DeviceResponse *res, const char* res_str);
 
 #endif

@@ -1,5 +1,16 @@
 {
     "files.associations": {
-        "freertos.h": "c"
+        "freertos.h": "c",
+        "__string": "c",
+        "memory": "c",
+        "utility": "c",
+        "cstring": "c",
+        "__config": "c",
+        "future": "c",
+        "ios": "c",
+        "locale": "c",
+        "optional": "c",
+        "string": "c",
+        "hf_crypto.h": "c"
     },
 }

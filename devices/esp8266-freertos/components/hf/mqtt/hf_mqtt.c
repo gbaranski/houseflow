@@ -10,134 +10,55 @@
 #include <stdbool.h>
 
 #include "hf_crypto.h"
-#include "esp_log.h"
-#include "esp_system.h"
-#include "esp_tls.h"
+#include "hf_utils.h"
+#include "hf_io.h"
+#include <esp_log.h>
+#include <esp_system.h>
+#include <esp_tls.h>
 #include "hf_crypto.h"
-#include "mbedtls/base64.h"
-#include "mqtt_client.h"
-#include "nvs_flash.h"
-#include "sodium.h"
-#include "driver/gpio.h"
-#include "cJSON.h"
+#include <mbedtls/base64.h>
+#include <mqtt_client.h>
+#include <nvs_flash.h>
+#include <sodium.h>
+#include <driver/gpio.h>
+#include <cJSON.h>
 
 #define LED_PIN 5
 
-// ED25519_BASE64_SIGNATURE_LENGTH + strlen('.') + strlen("{}") + \0
-#define MQTT_MIN_PAYLOAD_SIZE ED25519_BASE64_SIGNATURE_BYTES + 1 + 2 + 1
 
-struct Keypair kp;
-
-typedef struct {
-  bool on;
-} device_state;
-
-typedef struct {
-  const char* correlation_data;
-  const char* command;
-  device_state state;
-} device_request;
-
-typedef struct {
-  const char* correlation_data;
-  // SUCCESS | ERROR
-  const char* status;
-  // Present only if status == ERROR
-  const char* error;
-  device_state state;
-} device_response;
-
-static esp_err_t parse_payload(char *sig, char *msg, char *src, int src_len)
-{
-  if (src_len < MQTT_MIN_PAYLOAD_SIZE)
+static esp_err_t on_data(esp_mqtt_event_handle_t event)  {
+  char sig[ED25519_BASE64_SIGNATURE_BYTES + 1];
+  // length of msg = signature_len - len('.')
+  char msg[event->data_len - ED25519_BASE64_SIGNATURE_BYTES];
+  esp_err_t err = parse_mqtt_payload(sig, msg, event->data, event->data_len);
+  if (err != ESP_OK)
   {
-    ESP_LOGE(MQTT_TAG, "payload is too small");
-    return ESP_ERR_INVALID_RESPONSE;
+    ESP_LOGE(MQTT_TAG, "err parsing payload %d\n", err);
+    return err;
+  }
+  DeviceRequest req;
+  err = parse_device_request(&req, msg);
+  if (err != ESP_OK) {
+    ESP_LOGE(MQTT_TAG, "fail parse device_request %d\n", err);
+    return err;
   }
 
-  memcpy(sig, src, ED25519_BASE64_SIGNATURE_BYTES);
-  sig[ED25519_BASE64_SIGNATURE_BYTES] = '\0';
+  DeviceResponse device_res = io_handle_command(req.command, &req);
 
-  printf("msglen: %d\n", src_len - ED25519_BASE64_SIGNATURE_BYTES);
+  cJSON *device_res_json = stringify_device_response(&device_res);
+  const char *device_res_str = cJSON_PrintUnformatted(device_res_json);
 
-  memcpy(msg, &(src[ED25519_BASE64_SIGNATURE_BYTES + 1]), src_len - ED25519_BASE64_SIGNATURE_BYTES);
-  msg[strlen(msg) - 1] = '\0';
+  char res_payload[ED25519_BASE64_SIGNATURE_BYTES + strlen(device_res_str)];
+  err = crypto_sign_response_combined(res_payload, &device_res, device_res_str);
+  if (err != ESP_OK) {
+    ESP_LOGE(MQTT_TAG, "fail sign response %d\n", err);
+    return err;
+  }
+
+  printf("res_str: %s\n", device_res_str);
+  esp_mqtt_client_publish(event->client, CONFIG_DEVICE_ID "/command/response", res_payload, strlen(res_payload), 0, 0);
+  
   return ESP_OK;
-}
-
-static esp_err_t parse_device_state(device_state *dst, cJSON *json) {
-  cJSON *onItem = cJSON_GetObjectItemCaseSensitive(json, "on");
-  if (!cJSON_IsBool(onItem))
-  {
-    ESP_LOGE(MQTT_TAG, "state.on is not boolean");
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-
-  if (cJSON_IsTrue(onItem))
-    dst->on = true;
-  else if (cJSON_IsFalse(onItem))
-    dst->on = false;
-  else
-  {
-    ESP_LOGE(MQTT_TAG, "state.on != true && state.on != false");
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-
-  return ESP_OK;
-}
-
-static esp_err_t parse_device_request(device_request *dst, char *msg)
-{
-  cJSON *json = cJSON_Parse(msg);
-
-  if (json == NULL)
-  {
-    const char *error_ptr = cJSON_GetErrorPtr();
-    ESP_LOGE("fail parse json %s\n", error_ptr);
-
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-
-  cJSON *correlationDataItem = cJSON_GetObjectItemCaseSensitive(json, "correlationData");
-  cJSON *commandItem = cJSON_GetObjectItemCaseSensitive(json, "command");
-  if (!cJSON_IsString(correlationDataItem) || (correlationDataItem->valuestring == NULL)) {
-    ESP_LOGE(MQTT_TAG, "correlationData field is invalid string");
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-  if (!cJSON_IsString(commandItem) || (commandItem->valuestring == NULL)) {
-    ESP_LOGE(MQTT_TAG, "command field is invalid string");
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-
-  dst->command = commandItem->valuestring;
-  dst->correlation_data = correlationDataItem->valuestring;
-
-  cJSON *stateItem = cJSON_GetObjectItemCaseSensitive(json, "state");
-  if (!cJSON_IsObject(stateItem) || (stateItem == NULL))
-  {
-    ESP_LOGE(MQTT_TAG, "stateItem is not object or stateItem == NULL");
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-  return parse_device_state(&(dst->state), stateItem);
-}
-
-static cJSON* stringify_device_response(const device_response *src) {
-  // Create "state" field
-  cJSON *state = cJSON_CreateObject();
-  // if device responds, it means its online
-  cJSON_AddBoolToObject(state, "online", true);
-  cJSON_AddBoolToObject(state, "on", src->state.on);
-
-  cJSON *root;
-  root = cJSON_CreateObject();
-  cJSON_AddStringToObject(root, "correlationData", src->correlation_data);
-  cJSON_AddStringToObject(root, "status", src->status);
-  if (src->error != NULL) {
-    cJSON_AddStringToObject(root, "error", src->error);
-  }
-  cJSON_AddItemToObject(root, "state", state);
-
-  return root;
 }
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
@@ -168,62 +89,8 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
       break;
     case MQTT_EVENT_DATA: {
-
       ESP_LOGI(MQTT_TAG, "MQTT_EVENT_DATA");
-
-      char sig[ED25519_BASE64_SIGNATURE_BYTES + 1];
-
-      // length of msg = signature_len - len('.')
-      char msg[event->data_len - ED25519_BASE64_SIGNATURE_BYTES];
-      esp_err_t err = parse_payload(sig, msg, event->data, event->data_len);
-      if (err != ESP_OK) {
-        ESP_LOGI(MQTT_TAG, "err parsing payload %d\n", err);
-        return err;
-      }
-      device_request req;
-      err = parse_device_request(&req, msg);
-      ESP_LOGI(MQTT_TAG, "correlationData: %s", req.correlation_data);
-      ESP_LOGI(MQTT_TAG, "command: %s", req.command);
-      ESP_LOGI(MQTT_TAG, "state.on: %d", req.state.on);
-
-      printf("signature: %s\n", sig);
-      printf("msg: %s\n", msg);
-
-      gpio_set_level(LED_PIN, req.state.on);
-
-      const device_response res = {
-        .correlation_data = req.correlation_data,
-        .status = "SUCCESS",
-        .error = NULL,
-        .state = req.state,
-      };
-      cJSON *resJSON = stringify_device_response(&res);
-      const char* res_str = cJSON_PrintUnformatted(resJSON);
-      printf("stringified: %s\n", res_str);
-
-      // fix this buffer later, not sure if we need that big buffer for just signature
-      unsigned char res_sig[ED25519_SIGNATURE_BYTES];
-      int sign_err = crypto_sign_detached(res_sig, NULL, (const unsigned char*)res_str, strlen(res_str), kp.skey);
-      if (sign_err != 0) {
-        printf("fail sign code: %d\n", sign_err);
-        return ESP_ERR_INVALID_RESPONSE;
-      }
-      unsigned char res_sig_encoded[ED25519_BASE64_SIGNATURE_BYTES ];
-      crypto_err_t crypto_err = encode_signature(res_sig, res_sig_encoded);
-      if (crypto_err != CRYPTO_ERR_OK) {
-        printf("fail encode response sig %d\n", crypto_err);
-        // ESP_LOGE("fail encode signature %d",(int)crypto_err);
-        return ESP_ERR_INVALID_RESPONSE;
-      }
-      printf("response signature: %s\n", res_sig_encoded);
-      
-      char full_response[strlen(res_str) + ED25519_SIGNATURE_BYTES];
-      strcpy(full_response, (const char*)res_sig_encoded);
-      strcat(full_response, ".");
-      strcat(full_response, res_str);
-
-      printf("full response: %s\n", full_response);
-      esp_mqtt_client_publish(client, CONFIG_DEVICE_ID "/command/response", full_response, strlen(full_response), 0, 0);
+      on_data(event);
       break;
     }
     case MQTT_EVENT_ERROR:
@@ -256,30 +123,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
   mqtt_event_handler_cb(event_data);
 }
 
-void mqtt_connect() {
-  gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
-  
-  crypto_err_t err = get_public_key(&kp);
-  if (err != CRYPTO_ERR_OK) {
-    ESP_LOGE(MQTT_TAG, "fail read public_key err: %d", err);
-    return;
-  }
-  err = get_private_key(&kp);
-  if (err != CRYPTO_ERR_OK) {
-    ESP_LOGE(MQTT_TAG, "fail read private_key err: %d", err);
-    return;
-  }
-
-  unsigned char password[ED25519_SIGNATURE_BYTES];
-  err = crypto_sign_ed25519_detached(password, NULL, kp.pkey, ED25519_PKEY_BYTES, kp.skey);
-  if (err != 0) {
-    ESP_LOGE(MQTT_TAG, "fail gen password err: %d", err);
-    return;
-  }
-  unsigned char encoded_password[ED25519_BASE64_SIGNATURE_BYTES];
-  err = encode_signature(password, encoded_password);
-  if (err != CRYPTO_ERR_OK) {
-    ESP_LOGE(MQTT_TAG, "fail encode password err: %d", err);
+void mqtt_init(void) {
+  unsigned char password[ED25519_BASE64_SIGNATURE_BYTES];
+  int err = crypto_generate_password(password);
+  if(err != 0) {
+    ESP_LOGE(MQTT_TAG, "fail gen password %d", err);
     return;
   }
 
@@ -287,7 +135,7 @@ void mqtt_connect() {
       .uri = CONFIG_BROKER_URL,
       .client_id = CONFIG_DEVICE_ID,
       .username = CONFIG_DEVICE_PUBLIC_KEY,
-      .password = (const char *)&encoded_password,
+      .password = (const char *)&password,
   };
   ESP_LOGI(MQTT_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
   esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);

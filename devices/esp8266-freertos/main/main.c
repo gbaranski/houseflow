@@ -1,13 +1,13 @@
-#include "esp_event.h"
-#include "esp_log.h"
-#include "esp_netif.h"
-#include "esp_system.h"
-#include "esp_types.h"
+#include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <esp_system.h>
+#include <esp_netif.h>
+#include <nvs_flash.h>
+#include <esp_event.h>
+#include "hf_io.h"
 #include "hf_crypto.h"
 #include "hf_mqtt.h"
 #include "hf_wifi.h"
-#include "nvs.h"
-#include "nvs_flash.h"
 
 static const char *TAG = "app";
 
@@ -19,7 +19,14 @@ __unused void app_main() {
   ESP_ERROR_CHECK(nvs_flash_init());
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
+  int err = crypto_init();
+  if (err != ESP_OK) {
+    return;
+  }
 
+  io_init();
+  
   wifi_init_sta();
-  mqtt_connect();
+
+  mqtt_init();
 }

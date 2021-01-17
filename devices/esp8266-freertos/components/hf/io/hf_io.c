@@ -1,0 +1,37 @@
+#include "hf_io.h"
+
+#include <esp_err.h>
+#include <string.h>
+#include <esp_log.h>
+
+#include "hf_types.h"
+
+static DeviceState g_state = {.on = 0};
+static IOConfig g_cfg = {.on_pin = 5};
+
+void io_init() {
+    gpio_set_direction(g_cfg.on_pin, GPIO_MODE_OUTPUT);
+}
+
+// Handles command and writes to 
+DeviceResponse io_handle_command(const char* cmd, DeviceRequest *req) {
+    // If everything went okay, just return this struct, otherwise modify
+    DeviceResponse res = {
+        .correlation_data = req->correlation_data,
+        // NULL by default
+        .state = req->state,
+        .error = NULL,
+        .status = "SUCCESS",
+    };
+    
+    if (strcmp(cmd, "action.devices.commands.OnOff") == 0) {
+        gpio_set_level(g_cfg.on_pin, req->state.on);
+    } else {
+        ESP_LOGE(IO_TAG, "invalid cmd %s", cmd);
+        res.error = "functionNotSupported";
+        res.status = "ERROR";
+        res.state = g_state;
+    }
+
+    return res;
+}
