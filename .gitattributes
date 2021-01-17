@@ -1,12 +1,2 @@
-*.ts linguist-detectable=true
-*.h linguist-language=C++
-devices/esp32-archive/src/sounds/jingleWin.h linguist-detectable=false
-*.m linguist-detectable=false
-*.java linguist-detectable=false
-*.bzl linguist-detectable=false
-app_mobile/ios/Podfile linguist-detectable=false
-app_web/public/index.html linguist-generated
 *.go linguist-detectable=true
 *.go linguist-languague=golang
-
-
