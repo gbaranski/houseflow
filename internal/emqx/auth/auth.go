@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/ed25519"
+	"time"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/go-chi/chi"
@@ -12,6 +13,9 @@ import (
 
 // Options of auth
 type Options struct {
+	// Public key of server
+	//
+	// *Required*
 	ServerPublicKey ed25519.PublicKey
 }
 
@@ -36,6 +40,10 @@ func New(db Database, opts Options) Auth {
 	}
 
 	a.Router.Use(middleware.Logger)
+	a.Router.Use(middleware.Recoverer)
+	a.Router.Use(middleware.RealIP)
+	a.Router.Use(middleware.Heartbeat("/ping"))
+	a.Router.Use(middleware.Timeout(time.Second * 10))
 	a.Router.Post("/user", a.onConnect)
 	a.Router.Post("/acl", a.onACL)
 	return a
