@@ -8,7 +8,6 @@ import (
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Options of auth
@@ -21,7 +20,7 @@ type Options struct {
 
 // Database is interface for database specifiacllyl for atuh
 type Database interface {
-	GetDeviceByID(ctx context.Context, ID primitive.ObjectID) (types.Device, error)
+	GetDeviceByID(ctx context.Context, ID string) (types.Device, error)
 }
 
 // Auth holds server state

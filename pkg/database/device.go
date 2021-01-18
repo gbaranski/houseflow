@@ -10,14 +10,18 @@ import (
 )
 
 // GetDeviceByID retreives single device by single ID
-func (m Mongo) GetDeviceByID(ctx context.Context, deviceID primitive.ObjectID) (types.Device, error) {
+func (m Mongo) GetDeviceByID(ctx context.Context, deviceID string) (types.Device, error) {
+	deviceObjectID, err := primitive.ObjectIDFromHex(deviceID)
+	if err != nil {
+		return types.Device{}, err
+	}
 	res := m.Collections.Devices.FindOne(ctx,
-		bson.M{"_id": deviceID})
+		bson.M{"_id": deviceObjectID})
 	if res.Err() != nil {
 		return types.Device{}, res.Err()
 	}
 	var device types.Device
-	err := res.Decode(&device)
+	err = res.Decode(&device)
 	if err != nil {
 		return types.Device{}, err
 	}
@@ -26,10 +30,19 @@ func (m Mongo) GetDeviceByID(ctx context.Context, deviceID primitive.ObjectID) (
 }
 
 // GetDevicesByIDs retreives devices by array of IDs
-func (m Mongo) GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.ObjectID) ([]types.Device, error) {
+func (m Mongo) GetDevicesByIDs(ctx context.Context, deviceIDs []string) ([]types.Device, error) {
+	var deviceObjectIDs []primitive.ObjectID
+	for _, id := range deviceIDs {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, fmt.Errorf("fail ObjectIDFromHex ID: %s", id)
+		}
+		deviceObjectIDs = append(deviceObjectIDs, objectID)
+	}
+
 	cur, err := m.Collections.Devices.Find(ctx,
 		bson.M{"_id": bson.M{
-			"$in": deviceIDs,
+			"$in": deviceObjectIDs,
 		},
 		})
 	if err != nil {
@@ -43,9 +56,14 @@ func (m Mongo) GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.Object
 }
 
 // UpdateDeviceState updates "state" property on device
-func (m Mongo) UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectID, state map[string]interface{}) error {
+func (m Mongo) UpdateDeviceState(ctx context.Context, deviceID string, state map[string]interface{}) error {
+	deviceObjectID, err := primitive.ObjectIDFromHex(deviceID)
+	if err != nil {
+		return err
+	}
+
 	result, err := m.Collections.Devices.UpdateOne(ctx,
-		bson.M{"_id": deviceID},
+		bson.M{"_id": deviceObjectID},
 		bson.M{
 			"$set": bson.M{
 				"state": state,
@@ -61,8 +79,12 @@ func (m Mongo) UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectI
 }
 
 // UpdateDeviceOnlineState modifies only the state.online property to "online" arg
-func (m Mongo) UpdateDeviceOnlineState(ctx context.Context, deviceID primitive.ObjectID, online bool) error {
-	res, err := m.Collections.Devices.UpdateOne(ctx, bson.M{"_id": deviceID}, bson.M{
+func (m Mongo) UpdateDeviceOnlineState(ctx context.Context, deviceID string, online bool) error {
+	deviceObjectID, err := primitive.ObjectIDFromHex(deviceID)
+	if err != nil {
+		return err
+	}
+	res, err := m.Collections.Devices.UpdateOne(ctx, bson.M{"_id": deviceObjectID}, bson.M{
 		"$set": bson.M{
 			"state.online": online}})
 	if err != nil {
@@ -76,11 +98,11 @@ func (m Mongo) UpdateDeviceOnlineState(ctx context.Context, deviceID primitive.O
 }
 
 // AddDevice adds device to mongoDB
-func (m Mongo) AddDevice(ctx context.Context, device types.Device) (primitive.ObjectID, error) {
+func (m Mongo) AddDevice(ctx context.Context, device types.Device) (id string, err error) {
 	res, err := m.Collections.Devices.InsertOne(ctx, device)
 	if err != nil {
-		return primitive.ObjectID{}, err
+		return "", err
 	}
-	id := res.InsertedID.(primitive.ObjectID)
+	id = res.InsertedID.(primitive.ObjectID).Hex()
 	return id, nil
 }

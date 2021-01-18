@@ -24,8 +24,12 @@ func (m Mongo) GetUserByEmail(ctx context.Context, email string) (types.User, er
 }
 
 // GetUserByID returns found user from DB, query by user ID
-func (m Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error) {
-	result := m.Collections.Users.FindOne(ctx, bson.M{"_id": id})
+func (m Mongo) GetUserByID(ctx context.Context, id string) (types.User, error) {
+	userObjectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return types.User{}, nil
+	}
+	result := m.Collections.Users.FindOne(ctx, bson.M{"_id": userObjectID})
 	if result.Err() != nil {
 		return types.User{}, result.Err()
 	}
@@ -39,10 +43,10 @@ func (m Mongo) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.Us
 }
 
 // AddUser adds user to db
-func (m Mongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
+func (m Mongo) AddUser(ctx context.Context, user types.User) (id string, err error) {
 	password, err := utils.HashPassword([]byte(user.Password))
 	if err != nil {
-		return primitive.ObjectID{}, err
+		return
 	}
 
 	user.Password = string(password)
@@ -50,8 +54,8 @@ func (m Mongo) AddUser(ctx context.Context, user types.User) (primitive.ObjectID
 
 	res, err := m.Collections.Users.InsertOne(ctx, user)
 	if err != nil {
-		return primitive.ObjectID{}, err
+		return
 	}
-	id := res.InsertedID.(primitive.ObjectID)
+	id = res.InsertedID.(primitive.ObjectID).Hex()
 	return id, nil
 }

@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -43,15 +41,9 @@ func (a *Auth) onServiceConnect(w http.ResponseWriter, req *http.Request, r Conn
 }
 
 func (a *Auth) onDeviceConnect(w http.ResponseWriter, req *http.Request, r ConnectRequest, pkey ed25519.PublicKey) {
-	deviceID, err := primitive.ObjectIDFromHex(r.ClientID)
+	device, err := a.db.GetDeviceByID(req.Context(), r.ClientID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		return
-	}
-	device, err := a.db.GetDeviceByID(req.Context(), deviceID)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
 		return
 	}

@@ -27,9 +27,10 @@ var (
 type TestDatabase struct {
 }
 
-func (tdb TestDatabase) GetDeviceByID(ctx context.Context, id primitive.ObjectID) (types.Device, error) {
+func (tdb TestDatabase) GetDeviceByID(ctx context.Context, id string) (types.Device, error) {
+	did, _ := primitive.ObjectIDFromHex(id)
 	for _, d := range devices {
-		if d.ID == id {
+		if d.ID == did {
 			return d, nil
 		}
 	}
