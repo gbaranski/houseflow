@@ -17,32 +17,16 @@ services:
     networks:
       - backend
 
-  mongo:
-    image: mongo
-    container_name: "mongo"
+  postgres:
+    image: postgres
+    container_name: "postgres"
     restart: "unless-stopped"
     env_file:
       - .env
-    environment:
-      - MONGO_INITDB_DATABASE=houseflowDB
     ports:
-      - 27017:27017
+      - 5432:5432
     networks:
       - backend
-
-  mongo-express:
-    image: mongo-express
-    restart: "unless-stopped"
-    container_name: "mongo-express"
-    env_file:
-      - .env
-    ports:
-      - 8081:8081
-    networks:
-      - backend
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=$MONGO_INITDB_ROOT_USERNAME
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=$MONGO_INITDB_ROOT_PASSWORD
 
   redis:
     image: "redis:latest"
@@ -73,21 +57,6 @@ services:
 
   # My services
 
-  emqx_webhooks:
-    tty: true
-    container_name: "emqx_webhooks"
-    restart: "unless-stopped"
-    env_file:
-      - .env
-    build:
-      dockerfile: ./cmd/emqx/webhooks/Dockerfile
-      context: .
-    depends_on:
-      - emqx
-      - mongo
-    networks:
-      - backend
-
   emqx_auth:
     # tty: true
     container_name: "emqx_auth"
@@ -105,7 +74,7 @@ services:
     container_name: "auth"
     restart: "unless-stopped"
     depends_on:
-      - mongo
+      - postgres
       - redis
     build:
       dockerfile: ./cmd/auth/Dockerfile
@@ -122,7 +91,7 @@ services:
     container_name: "state_manager"
     restart: "unless-stopped"
     depends_on:
-      - mongo
+      - postgres
       - emqx
     build:
       dockerfile: ./cmd/state_manager/Dockerfile
@@ -137,7 +106,7 @@ services:
     container_name: "fulfillment"
     restart: "unless-stopped"
     depends_on:
-      - mongo
+      - postgres
       - redis
     build:
       dockerfile: ./cmd/fulfillment/Dockerfile
