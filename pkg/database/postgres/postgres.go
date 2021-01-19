@@ -1,4 +1,4 @@
-package database
+package postgres
 
 import (
 	"context"
@@ -11,8 +11,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// PostgresOptions defines options for postgres, fields supports https://github.com/caarlos0/env tags
-type PostgresOptions struct {
+// Options defines options for postgres, fields supports https://github.com/caarlos0/env tags
+type Options struct {
 	// Password for Postgres
 	Password string `env:"POSTGRES_PASSWORD,required"`
 
@@ -25,8 +25,8 @@ type Postgres struct {
 	conn *pgxpool.Pool
 }
 
-// NewPostgres connect to pgxpool and returns Postgres stuct
-func NewPostgres(ctx context.Context, opts PostgresOptions) (Postgres, error) {
+// New connect to pgxpool and returns Postgres stuct
+func New(ctx context.Context, opts Options) (Postgres, error) {
 	conn, err := pgxpool.ConnectConfig(ctx, &pgxpool.Config{
 		ConnConfig: &pgx.ConnConfig{
 			Config: pgconn.Config{
