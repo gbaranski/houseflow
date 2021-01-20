@@ -139,9 +139,9 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err := json.NewDecoder(io.TeeReader(r.Body, &bodybuf)).Decode(&base); err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "fail_parse_json",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "fail_parse_json",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write(json)
@@ -150,9 +150,9 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := utils.ExtractWithVerifyUserToken(r, []byte(f.opts.AccessKey))
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "invalid_grant",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write(json)
@@ -164,17 +164,17 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	user, err := f.db.GetUserByID(ctx, userID)
 
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "fail_get_user",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "fail_get_user",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(json)
 		return
 	}
 	if user == nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error": "user_not_found",
+		json, _ := json.Marshal(types.ResponseError{
+			Name: "user_not_found",
 		})
 		w.WriteHeader(http.StatusNotFound)
 		w.Write(json)

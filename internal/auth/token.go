@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
 func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
 	if !a.validateRedirectURI(form.RedirectURI) {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error": "invalid_redirect_uri",
+		json, _ := json.Marshal(types.ResponseError{
+			Name: "invalid_redirect_uri",
 		})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(json)
@@ -20,9 +21,9 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 
 	token, err := utils.VerifyToken(form.Code, []byte(a.opts.AuthorizationCodeKey))
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": fmt.Sprintf("authorization code %s", err.Error()),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "invalid_grant",
+			Description: fmt.Sprintf("authorization code %s", err.Error()),
 		})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(json)
@@ -31,9 +32,9 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 
 	_, rtstr, err := a.newRefreshToken(token.Audience)
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "rt_create_fail",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "rt_create_fail",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(json)
@@ -42,9 +43,9 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 
 	_, atstr, err := a.newAccessToken(token.Audience)
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "at_create_fail",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "at_create_fail",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(json)
@@ -63,9 +64,9 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
 	rt, err := utils.VerifyToken(form.RefreshToken, []byte(a.opts.RefreshKey))
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "invalid_grant",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(json)
@@ -74,9 +75,9 @@ func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form 
 
 	_, atstr, err := a.newAccessToken(rt.Audience)
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "fail_create_at",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "fail_create_at",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(json)
@@ -96,9 +97,9 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "fail_parse_form",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "fail_parse_form",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write(json)
@@ -107,9 +108,9 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 
 	var form TokenQuery
 	if err = decoder.Decode(&form, r.PostForm); err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "fail_parse_form",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "fail_parse_form",
+			Description: err.Error(),
 		})
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		w.Write(json)
@@ -117,8 +118,8 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if form.ClientID != a.opts.ClientID || form.ClientSecret != a.opts.ClientSecret {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error": "invalid_oauth_credentials",
+		json, _ := json.Marshal(types.ResponseError{
+			Name: "invalid_oauth_credentials",
 		})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(json)
@@ -130,8 +131,8 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 	} else if form.GrantType == "refresh_token" {
 		a.onRefreshTokenGrant(w, r, form)
 	} else {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error": "unknown_grant_type",
+		json, _ := json.Marshal(types.ResponseError{
+			Name: "unknown_grant_type",
 		})
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(json)
