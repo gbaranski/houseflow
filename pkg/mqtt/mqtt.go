@@ -92,8 +92,8 @@ var ErrInvalidSignature = errors.New("invalid signature")
 
 // SendRequestWithResponse sends request and waits for response and returns it
 func (m MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error) {
-	reqTopic := fmt.Sprintf("%s/command/request", device.ID.Hex())
-	resTopic := fmt.Sprintf("%s/command/response", device.ID.Hex())
+	reqTopic := fmt.Sprintf("%s/command/request", device.ID)
+	resTopic := fmt.Sprintf("%s/command/response", device.ID)
 	msgc := make(chan paho.Message)
 
 	if token := m.Client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
