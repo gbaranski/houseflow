@@ -7,51 +7,35 @@ type Options struct {
 	// ProjectID set in Google Cloud Console
 	//
 	// *Required*
-	ProjectID string
+	ProjectID string `env:"PROJECT_ID,required"`
 
 	// ClientID set Actions account linking tab
 	//
 	// *Required*
-	ClientID string
+	ClientID string `env:"OAUTH_CLIENT_ID,required"`
 
 	// ClientSecret set Actions account linking tab
 	//
 	// *Required*
-	ClientSecret string
+	ClientSecret string `env:"OAUTH_CLIENT_SECRET,required"`
 
 	// AccessKey is secret for signing access tokens
 	//
 	// *Required*
-	AccessKey string
+	AccessKey string `env:"ACCESS_KEY,required"`
 
 	// AuthorizationCodeKey is secret for signing authorization codes
 	//
 	// *Required*
-	AuthorizationCodeKey string
+	AuthorizationCodeKey string `env:"AUTHORIZATION_CODE_KEY,required"`
 
 	// RefreshKey is secret for signing refresh tokens
 	//
 	// *Required*
-	RefreshKey string
+	RefreshKey string `env:"REFRESH_KEY,required"`
 
 	// Template of login site
 	//
 	// *Required*
 	LoginSiteTemplate *template.Template
-}
-
-// Parse parses to defaults, panics if some field is required but is not present
-func (opts *Options) Parse() {
-	if opts.ProjectID == "" {
-		panic("ProjectID must be set")
-	}
-	if opts.ClientID == "" {
-		panic("ClientID must be set")
-	}
-	if opts.ClientSecret == "" {
-		panic("ClientSecret must be set")
-	}
-	if opts.LoginSiteTemplate == nil {
-		panic("LoginSiteTemplate is required")
-	}
 }
