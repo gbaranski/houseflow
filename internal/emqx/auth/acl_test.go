@@ -9,17 +9,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 func TestACLAsDevice(t *testing.T) {
-	deviceID := primitive.NewObjectID()
+	deviceID := uuid.New()
 	p := ACLRequest{
 		Access:   1,
 		Username: base64.StdEncoding.EncodeToString(devicePublicKey),
-		ClientID: deviceID.Hex(),
+		ClientID: deviceID.String(),
 		IP:       "80.21.12.18",
-		Topic:    fmt.Sprintf("%s/command/something", deviceID.Hex()),
+		Topic:    fmt.Sprintf("%s/command/something", deviceID.String()),
 	}
 	pjson, err := json.Marshal(p)
 	if err != nil {
@@ -36,14 +36,14 @@ func TestACLAsDevice(t *testing.T) {
 }
 
 func TestACLAsFakeDevice(t *testing.T) {
-	fakeDeviceID := primitive.NewObjectID()
-	targetDeviceID := primitive.NewObjectID()
+	fakeDeviceID := uuid.New()
+	targetDeviceID := uuid.New()
 	p := ACLRequest{
 		Access:   1,
 		Username: base64.StdEncoding.EncodeToString(devicePublicKey),
-		ClientID: fakeDeviceID.Hex(),
+		ClientID: fakeDeviceID.String(),
 		IP:       "80.21.12.18",
-		Topic:    fmt.Sprintf("%s/command/something", targetDeviceID.Hex()),
+		Topic:    fmt.Sprintf("%s/command/something", targetDeviceID.String()),
 	}
 	pjson, err := json.Marshal(p)
 	if err != nil {
