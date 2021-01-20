@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/gbaranski/houseflow/pkg/types"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -27,14 +25,13 @@ var (
 type TestDatabase struct {
 }
 
-func (tdb TestDatabase) GetDeviceByID(ctx context.Context, id string) (types.Device, error) {
-	did, _ := primitive.ObjectIDFromHex(id)
+func (tdb TestDatabase) GetDeviceByID(ctx context.Context, id string) (*types.Device, error) {
 	for _, d := range devices {
-		if d.ID == did {
-			return d, nil
+		if d.ID == id {
+			return &d, nil
 		}
 	}
-	return types.Device{}, mongo.ErrNoDocuments
+	return nil, nil
 }
 
 func TestMain(m *testing.M) {

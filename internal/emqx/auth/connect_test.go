@@ -10,8 +10,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 func TestConnectAsService(t *testing.T) {
@@ -63,7 +64,9 @@ func TestConnectAsFakeService(t *testing.T) {
 
 func TestConnectAsDevice(t *testing.T) {
 	device := types.Device{
-		ID:        primitive.NewObjectID(),
+		Device: fulfillment.Device{
+			ID: uuid.New().String(),
+		},
 		PublicKey: base64.StdEncoding.EncodeToString(devicePublicKey),
 	}
 	devices = append(devices, device)
@@ -72,7 +75,7 @@ func TestConnectAsDevice(t *testing.T) {
 	}()
 
 	p := ConnectRequest{
-		ClientID: device.ID.Hex(),
+		ClientID: device.ID,
 		IP:       "80.21.12.18",
 		Username: base64.StdEncoding.EncodeToString(devicePublicKey),
 		Password: base64.StdEncoding.EncodeToString(ed25519.Sign(devicePrivateKey, devicePublicKey)),
