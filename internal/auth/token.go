@@ -1,11 +1,9 @@
 package auth
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
@@ -31,7 +29,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	rt, rtstr, err := a.newRefreshToken(token.Audience)
+	_, rtstr, err := a.newRefreshToken(token.Audience)
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "rt_create_fail",
@@ -46,18 +44,6 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "at_create_fail",
-			"error_description": err.Error(),
-		})
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(json)
-		return
-	}
-
-	err = a.db.AddToken(r.Context(), token.Audience, rt)
-
-	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "fail_add_rt",
 			"error_description": err.Error(),
 		})
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,20 +72,7 @@ func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form 
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
-	userID, err := a.db.FetchToken(ctx, *rt)
-	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
-		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
-		return
-	}
-
-	_, atstr, err := a.newAccessToken(userID)
+	_, atstr, err := a.newAccessToken(rt.Audience)
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "fail_create_at",

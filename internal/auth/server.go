@@ -9,17 +9,12 @@ import (
 	"github.com/gorilla/schema"
 
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
 // Database is database interface
 type Database interface {
 	AddUser(ctx context.Context, user types.User) (id string, err error)
-	GetUserByEmail(ctx context.Context, email string) (types.User, error)
-
-	AddToken(ctx context.Context, userID string, token utils.Token) error
-	FetchToken(ctx context.Context, token utils.Token) (string, error)
-	DeleteToken(ctx context.Context, tokenID string) (int64, error)
+	GetUserByEmail(ctx context.Context, email string) (*types.User, error)
 }
 
 // Auth hold root server state
