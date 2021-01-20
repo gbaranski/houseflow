@@ -81,3 +81,17 @@ func LogResponseBody(c *gin.Context) {
 	c.Next()
 	fmt.Println("Response body: " + w.body.String())
 }
+
+// MustParseEnvKey parses base64 encoded public key, usefull when you load it from ENV
+//
+// Panics when ENV does not exists, or length is invalid
+func MustParseEnvKey(env string, size int) []byte {
+	key, err := base64.StdEncoding.DecodeString(MustGetEnv(env))
+	if err != nil {
+		panic(fmt.Errorf("fail decode %s key from env", env))
+	}
+	if len(key) < size {
+		panic(fmt.Errorf("invalid length of %s", env))
+	}
+	return key
+}
