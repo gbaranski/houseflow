@@ -20,7 +20,7 @@ type Options struct {
 
 // Database is interface for database specifiacllyl for atuh
 type Database interface {
-	GetDeviceByID(ctx context.Context, ID string) (types.Device, error)
+	GetDeviceByID(ctx context.Context, ID string) (*types.Device, error)
 }
 
 // Auth holds server state
