@@ -41,13 +41,20 @@ func (f *Fulfillment) executeCommand(
 			ErrorCode: "hardError",
 		}
 	}
+	if device == nil {
+		return fulfillment.ExecuteResponseCommands{
+			IDs:       []string{targetDevice.ID},
+			Status:    "ERROR",
+			ErrorCode: "relinkRequired",
+		}
+	}
 
 	req := types.DeviceRequest{
 		CorrelationData: utils.GenerateRandomString(16),
 		State:           execution.Params,
 		Command:         execution.Command,
 	}
-	response, err := f.dm.SendRequestWithResponse(ctx, device, req)
+	response, err := f.dm.SendRequestWithResponse(ctx, *device, req)
 	if err != nil {
 		if err == mqtt.ErrDeviceTimeout {
 			return fulfillment.ExecuteResponseCommands{
@@ -71,14 +78,15 @@ func (f *Fulfillment) executeCommand(
 	}
 
 	return fulfillment.ExecuteResponseCommands{
-		IDs:    []string{targetDevice.ID},
-		Status: "SUCCESS",
-		States: response.State,
+		IDs:       []string{targetDevice.ID},
+		Status:    response.Status,
+		States:    response.State,
+		ErrorCode: response.Error,
 	}
 }
 
 // OnExecute https://developers.google.com/assistant/smarthome/reference/intent/execute
-func (f *Fulfillment) onExecute(c *gin.Context, r fulfillment.ExecuteRequest, user types.User) {
+func (f *Fulfillment) onExecuteIntent(c *gin.Context, r fulfillment.ExecuteRequest, user types.User) {
 	var responseCommands []fulfillment.ExecuteResponseCommands
 	for _, command := range r.Inputs[0].Payload.Commands {
 		for _, execution := range command.Execution {

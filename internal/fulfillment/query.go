@@ -1,40 +1,65 @@
 package fulfillment
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gin-gonic/gin"
 )
 
-// OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
-func (f *Fulfillment) onQuery(c *gin.Context, r fulfillment.QueryRequest, user types.User, userDevices []types.Device) {
-	payloadDevices := make(map[string]interface{})
-	for _, device := range r.Inputs[0].Payload.Devices {
-		// Check if user has proper permission to the specific device
-		var correspondingDBDevice *types.Device
-		for _, userDevice := range userDevices {
-			if userDevice.ID.Hex() == device.ID {
-				correspondingDBDevice = &userDevice
-				break
+func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID string) (devices map[string]interface{}) {
+	perm, err := f.db.GetUserDevicePermissions(ctx, user.ID, deviceID)
+	if err != nil {
+		return map[string]interface{}{
+			"status":    fulfillment.StatusError,
+			"errorCode": "hardError",
+		}
+	}
+	if !perm.Read {
+		return map[string]interface{}{
+			"status":      fulfillment.StatusError,
+			"errorCode":   "authFailure",
+			"debugString": "missing execute permission",
+		}
+	}
+	res, err := f.dm.FetchDeviceState(ctx, deviceID)
+	if err != nil {
+		if err == mqtt.ErrDeviceTimeout {
+			return map[string]interface{}{
+				"status": fulfillment.StatusOffline,
 			}
 		}
-		if correspondingDBDevice == nil {
-			payloadDevices[device.ID] = gin.H{
+		if err == mqtt.ErrInvalidSignature {
+			return map[string]interface{}{
 				"status":    fulfillment.StatusError,
-				"errorCode": "relinkRequired",
+				"errorCode": "transientError",
 			}
-			continue
 		}
+		return map[string]interface{}{
+			"status":    fulfillment.StatusError,
+			"errorCode": "hardError",
+		}
+	}
+	mapResponse := map[string]interface{}{
+		"status": fulfillment.StatusSuccess,
+	}
+	for k, v := range res.State {
+		mapResponse[k] = v
+	}
+	return mapResponse
 
-		payloadDevice := gin.H{
-			"status": fulfillment.StatusSuccess,
-		}
-		for k, v := range correspondingDBDevice.State {
-			payloadDevice[k] = v
-		}
-		payloadDevices[device.ID] = payloadDevice
+}
+
+// OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
+func (f *Fulfillment) onQueryIntent(c *gin.Context, r fulfillment.QueryRequest, user types.User) {
+	payloadDevices := make(map[string]interface{})
+	// Fix it later with waitgroups and goroutines
+	for _, device := range r.Inputs[0].Payload.Devices {
+		res := f.queryState(c.Request.Context(), user, device.ID)
+		payloadDevices[device.ID] = res
 	}
 
 	response := fulfillment.QueryResponse{

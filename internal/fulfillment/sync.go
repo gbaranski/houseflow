@@ -9,11 +9,20 @@ import (
 )
 
 // OnSync handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
-func (f *Fulfillment) onSync(c *gin.Context, r fulfillment.SyncRequest, user types.User, userDevices []types.Device) {
+func (f *Fulfillment) onSyncIntent(c *gin.Context, r fulfillment.SyncRequest, user types.User) {
+	devices, err := f.db.GetUserDevices(c.Request.Context(), user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":             "fail_retreive_devices",
+			"error_description": err.Error(),
+		})
+		return
+	}
+
 	var fdevices []fulfillment.Device
-	for _, device := range userDevices {
+	for _, device := range devices {
 		fdevices = append(fdevices, fulfillment.Device{
-			ID:              device.ID.Hex(),
+			ID:              device.ID,
 			Type:            device.Type,
 			Traits:          device.Traits,
 			Name:            device.Name,
@@ -29,7 +38,7 @@ func (f *Fulfillment) onSync(c *gin.Context, r fulfillment.SyncRequest, user typ
 	response := fulfillment.SyncResponse{
 		RequestID: r.RequestID,
 		Payload: fulfillment.SyncResponsePayload{
-			AgentUserID: user.ID.Hex(),
+			AgentUserID: user.ID,
 			Devices:     fdevices,
 		},
 	}

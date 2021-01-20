@@ -10,8 +10,6 @@ import (
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Options for fulfillment
@@ -24,15 +22,19 @@ type Options struct {
 
 // Database is interface for database
 type Database interface {
-	AddDevice(ctx context.Context, device types.Device) (primitive.ObjectID, error)
-	GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error)
-	GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.ObjectID) ([]types.Device, error)
-	UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectID, state map[string]interface{}) error
+	AddDevice(ctx context.Context, device types.Device) (string, error)
+	GetDeviceByID(ctx context.Context, deviceID string) (*types.Device, error)
+	GetDevicesByIDs(ctx context.Context, deviceIDs []string) ([]types.Device, error)
+
+	GetUserDevicePermissions(ctx context.Context, userID string, deviceID string) (perms types.DevicePermissions, err error)
+	GetUserDevices(ctx context.Context, userID string) ([]types.Device, error)
+	GetUserByID(ctx context.Context, id string) (*types.User, error)
 }
 
 // DeviceManager is interface
 type DeviceManager interface {
 	SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error)
+	FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error)
 }
 
 // Fulfillment hold root server state
@@ -95,7 +97,7 @@ func (f *Fulfillment) onAddDevice(c *gin.Context) {
 
 }
 
-func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.User, userDevices []types.Device) {
+func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.User) {
 	switch intent {
 	case fulfillment.SyncIntent:
 		var req fulfillment.SyncRequest
@@ -107,7 +109,7 @@ func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.U
 			})
 			return
 		}
-		f.onSync(c, req, user, userDevices)
+		f.onSyncIntent(c, req, user)
 	case fulfillment.QueryIntent:
 		var req fulfillment.QueryRequest
 		err := c.ShouldBindBodyWith(&req, binding.JSON)
@@ -118,7 +120,7 @@ func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.U
 			})
 			return
 		}
-		f.onQuery(c, req, user, userDevices)
+		f.onQueryIntent(c, req, user)
 	case fulfillment.ExecuteIntent:
 		var er fulfillment.ExecuteRequest
 		err := c.ShouldBindBodyWith(&er, binding.JSON)
@@ -129,7 +131,7 @@ func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.U
 			})
 			return
 		}
-		f.onExecute(c, er, user, userDevices)
+		f.onExecuteIntent(c, er, user)
 	case fulfillment.DisconnectIntent:
 		c.JSON(http.StatusNotImplemented, gin.H{
 			"error": "not_implemented",
@@ -160,42 +162,22 @@ func (f *Fulfillment) onWebhook(c *gin.Context) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	user, err := f.db.GetUserByID(ctx, *userID)
+	user, err := f.db.GetUserByID(ctx, userID)
 
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error":             "user_not_found",
-				"error_description": err.Error(),
-			})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":             "unable_retreive_user",
-				"error_description": err.Error(),
-			})
-		}
-		return
-	}
-
-	deviceIDs := make([]primitive.ObjectID, len(user.Devices))
-	for _, id := range user.Devices {
-		objID, err := primitive.ObjectIDFromHex(id)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":             "convert_object_id_fail",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		deviceIDs = append(deviceIDs, objID)
-	}
-	userDevices, err := f.db.GetDevicesByIDs(ctx, deviceIDs)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "get_devices_fail",
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":             "fail_get_user",
 			"error_description": err.Error(),
 		})
 		return
 	}
-	f.redirectIntent(c, base.Inputs[0].Intent, user, userDevices)
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":             "user_not_found",
+			"error_description": err.Error(),
+		})
+		return
+	}
+
+	f.redirectIntent(c, base.Inputs[0].Intent, *user)
 }
