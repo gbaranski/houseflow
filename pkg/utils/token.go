@@ -10,8 +10,6 @@ import (
 
 	"crypto/hmac"
 	"crypto/sha256"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -100,19 +98,19 @@ func ExtractHeaderToken(r *http.Request) *string {
 }
 
 // ExtractWithVerifyUserToken extracts token from http requests, and also verifies it and creates UserID object from it
-func ExtractWithVerifyUserToken(r *http.Request, key []byte) (*primitive.ObjectID, error) {
+func ExtractWithVerifyUserToken(r *http.Request, key []byte) (string, error) {
 	strtoken := ExtractHeaderToken(r)
 	if strtoken == nil {
-		return nil, fmt.Errorf("token header is missing")
+		return "", fmt.Errorf("token header is missing")
 	}
 	token, err := VerifyToken(*strtoken, key)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	userID, err := primitive.ObjectIDFromHex(token.Audience)
-	if err != nil {
-		return nil, err
+	if token.Audience == "" {
+		return "", fmt.Errorf("invalid audience header")
+
 	}
 
-	return &userID, nil
+	return token.Audience, nil
 }
