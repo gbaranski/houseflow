@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gbaranski/houseflow/pkg/devmgmt"
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
-	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gin-gonic/gin"
 )
@@ -25,14 +25,14 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 			"debugString": "missing execute permission",
 		}
 	}
-	res, err := f.dm.FetchDeviceState(ctx, deviceID)
+	res, err := f.devmgmt.FetchDeviceState(ctx, deviceID)
 	if err != nil {
-		if err == mqtt.ErrDeviceTimeout {
+		if err == devmgmt.ErrDeviceTimeout {
 			return map[string]interface{}{
 				"status": fulfillment.StatusOffline,
 			}
 		}
-		if err == mqtt.ErrInvalidSignature {
+		if err == devmgmt.ErrInvalidSignature {
 			return map[string]interface{}{
 				"status":    fulfillment.StatusError,
 				"errorCode": "transientError",

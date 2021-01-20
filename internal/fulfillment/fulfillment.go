@@ -17,7 +17,7 @@ type Options struct {
 	// AccessKey is secret for signing access tokens
 	//
 	// *Required*
-	AccessKey string
+	AccessKey string `env:"ACCESS_KEY,required"`
 }
 
 // Database is interface for database
@@ -31,27 +31,27 @@ type Database interface {
 	GetUserByID(ctx context.Context, id string) (*types.User, error)
 }
 
-// DeviceManager is interface
-type DeviceManager interface {
-	SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error)
+// Devmgmt is shortcut for DeviceManager
+type Devmgmt interface {
+	SendCommand(ctx context.Context, device types.Device, comamnd string, params map[string]interface{}) (types.DeviceResponse, error)
 	FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error)
 }
 
 // Fulfillment hold root server state
 type Fulfillment struct {
-	Router *gin.Engine
-	dm     DeviceManager
-	db     Database
-	opts   Options
+	Router  *gin.Engine
+	devmgmt Devmgmt
+	db      Database
+	opts    Options
 }
 
-// NewFulfillment creates server, it won't run till Server.Start
-func NewFulfillment(db Database, dm DeviceManager, opts Options) Fulfillment {
+// New creates server, it won't run till Server.Start
+func New(db Database, devmgmt Devmgmt, opts Options) Fulfillment {
 	f := Fulfillment{
-		db:     db,
-		dm:     dm,
-		Router: gin.Default(),
-		opts:   opts,
+		db:      db,
+		devmgmt: devmgmt,
+		Router:  gin.Default(),
+		opts:    opts,
 	}
 	f.Router.Use(utils.LogResponseBody)
 	f.Router.POST("/webhook", f.onWebhook)

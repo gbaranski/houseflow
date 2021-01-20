@@ -4,10 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gbaranski/houseflow/pkg/devmgmt"
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
-	"github.com/gbaranski/houseflow/pkg/mqtt"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -49,21 +48,16 @@ func (f *Fulfillment) executeCommand(
 		}
 	}
 
-	req := types.DeviceRequest{
-		CorrelationData: utils.GenerateRandomString(16),
-		State:           execution.Params,
-		Command:         execution.Command,
-	}
-	response, err := f.dm.SendRequestWithResponse(ctx, *device, req)
+	response, err := f.devmgmt.SendCommand(ctx, *device, execution.Command, execution.Params)
 	if err != nil {
-		if err == mqtt.ErrDeviceTimeout {
+		if err == devmgmt.ErrDeviceTimeout {
 			return fulfillment.ExecuteResponseCommands{
 				IDs:       []string{targetDevice.ID},
 				Status:    fulfillment.StatusOffline,
 				ErrorCode: "offline",
 			}
 		}
-		if err == mqtt.ErrInvalidSignature {
+		if err == devmgmt.ErrInvalidSignature {
 			return fulfillment.ExecuteResponseCommands{
 				IDs:       []string{targetDevice.ID},
 				Status:    fulfillment.StatusError,
