@@ -15,7 +15,7 @@ import (
 
 func TestExecute(t *testing.T) {
 	token := utils.Token{
-		Audience:  realUser.ID.Hex(),
+		Audience:  realUser.ID,
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 	}
 	strtoken, err := token.Sign([]byte(opts.AccessKey))
@@ -23,11 +23,17 @@ func TestExecute(t *testing.T) {
 		t.Fatalf("fail when signing token %s", err.Error())
 	}
 
-	tdevice := db.Devices[0]
-	realUser.Devices = append(realUser.Devices, tdevice.ID.Hex())
+	tdevice := devices[0]
+	userDevices = append(userDevices, userDevice{
+		UserID:   realUser.ID,
+		DeviceID: tdevice.ID,
+		Read:     true,
+		Write:    false,
+		Execute:  true,
+	})
 	defer func() {
 		// Clear the slice
-		realUser.Devices = make([]string, 0)
+		userDevices = make([]userDevice, 0)
 	}()
 	body := ftypes.ExecuteRequest{
 		RequestID: utils.GenerateRandomString(10),
@@ -39,10 +45,10 @@ func TestExecute(t *testing.T) {
 						{
 							Devices: []ftypes.QueryRequestPayloadDevice{
 								{
-									ID: tdevice.ID.Hex(), // with access
+									ID: tdevice.ID, // with access
 								},
 								{
-									ID: db.Devices[1].ID.Hex(), // without acesss
+									ID: devices[1].ID, // without acesss
 								},
 							},
 							Execution: []ftypes.ExecuteRequestExecution{
@@ -93,7 +99,7 @@ func TestExecute(t *testing.T) {
 
 	for _, v := range res.Payload.Commands {
 		for _, id := range v.IDs {
-			if id == tdevice.ID.Hex() {
+			if id == tdevice.ID {
 				if v.Status != "SUCCESS" {
 					t.Fatalf("unexpected status, expected %s, received %s", "SUCCESS", v.Status)
 				}
@@ -101,8 +107,8 @@ func TestExecute(t *testing.T) {
 				if v.Status != "ERROR" {
 					t.Fatalf("unexpected status, expected %s, received %s", "ERROR", v.Status)
 				}
-				if v.ErrorCode != "relinkRequired" {
-					t.Fatalf("unexpected errorCode, expected %s, received %s", "relinkRequired", v.Status)
+				if v.ErrorCode != "authFailure" {
+					t.Fatalf("unexpected errorCode, expected %s, received %s", "authFailure", v.ErrorCode)
 				}
 			}
 		}

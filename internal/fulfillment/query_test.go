@@ -15,7 +15,7 @@ import (
 
 func TestQuery(t *testing.T) {
 	token := utils.Token{
-		Audience:  realUser.ID.Hex(),
+		Audience:  realUser.ID,
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 	}
 	strtoken, err := token.Sign([]byte(opts.AccessKey))
@@ -23,11 +23,17 @@ func TestQuery(t *testing.T) {
 		t.Fatalf("fail when signing token %s", err.Error())
 	}
 
-	tdevice := db.Devices[0]
-	realUser.Devices = append(realUser.Devices, tdevice.ID.Hex())
+	tdevice := devices[0]
+	userDevices = append(userDevices, userDevice{
+		UserID:   realUser.ID,
+		DeviceID: tdevice.ID,
+		Read:     true,
+		Write:    false,
+		Execute:  false,
+	})
 	defer func() {
 		// Clear the slice
-		realUser.Devices = make([]string, 0)
+		userDevices = make([]userDevice, 0)
 	}()
 	body := ftypes.QueryRequest{
 		RequestID: utils.GenerateRandomString(10),
@@ -37,10 +43,10 @@ func TestQuery(t *testing.T) {
 				Payload: ftypes.QueryRequestPayload{
 					Devices: []ftypes.QueryRequestPayloadDevice{
 						{
-							ID: tdevice.ID.Hex(), // User has access
+							ID: tdevice.ID, // User has access
 						},
 						{
-							ID: db.Devices[1].ID.Hex(), // User doesn't have access
+							ID: devices[1].ID, // User doesn't have access
 						},
 					},
 				},
@@ -73,7 +79,7 @@ func TestQuery(t *testing.T) {
 	for k, v := range res.Payload.Devices {
 		obj := v.(map[string]interface{})
 
-		if k == tdevice.ID.Hex() {
+		if k == tdevice.ID {
 			if obj["status"] != "SUCCESS" {
 				t.Fatalf("unexpected status, expected %s, received %s", "SUCCESS", obj["status"])
 			}
@@ -81,8 +87,8 @@ func TestQuery(t *testing.T) {
 			if obj["status"] != "ERROR" {
 				t.Fatalf("unexpected status, expected %s, received %s", "ERROR", obj["status"])
 			}
-			if obj["errorCode"] != "relinkRequired" {
-				t.Fatalf("unexpected errorCode, expected %s, received %s", "relinkRequired", obj["status"])
+			if obj["errorCode"] != "authFailure" {
+				t.Fatalf("unexpected errorCode, expected %s, received %s", "authFailure", obj["status"])
 			}
 		}
 

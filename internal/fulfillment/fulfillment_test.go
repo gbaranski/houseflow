@@ -2,14 +2,12 @@ package fulfillment
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/google/uuid"
 )
 
 const (
@@ -17,44 +15,45 @@ const (
 	helloworld = "$2y$12$sVtI/bYDQ3LWKcGlryQYzeo3IFjIYsl4f4bY6isfBaE3MnaPIcc2e"
 )
 
-var opts = Options{
-	AccessKey: "someAccessKey",
+type userDevice struct {
+	UserID   string
+	DeviceID string
+	Read     bool
+	Write    bool
+	Execute  bool
 }
 
-var f Fulfillment
-var db = TestDatabase{}
-var dm = TestDeviceManager{}
-var realUser = types.User{
-	ID:        primitive.NewObjectID(),
-	FirstName: "John",
-	LastName:  "Smith",
-	Email:     "john.smith@gmail.com",
-	Password:  helloworld,
-	Devices:   []string{},
-}
+var (
+	opts = Options{
+		AccessKey: "someAccessKey",
+	}
+	f           Fulfillment
+	devices     = []types.Device{}
+	userDevices = []userDevice{}
+	realUser    = types.User{
+		ID:        uuid.New().String(),
+		FirstName: "John",
+		LastName:  "Smith",
+		Email:     "john.smith@gmail.com",
+		Password:  helloworld,
+	}
+)
 
 type TestDatabase struct {
-	Devices []types.Device
 }
 
-func (tdb TestDatabase) AddDevice(ctx context.Context, device types.Device) (primitive.ObjectID, error) {
-	device.ID = primitive.NewObjectID()
-	db.Devices = append(db.Devices, device)
-
-	return device.ID, nil
+func (tdb TestDatabase) AddDevice(ctx context.Context, device types.Device) (string, error) {
+	id := uuid.New().String()
+	device.ID = id
+	devices = append(devices, device)
+	return id, nil
 }
 
-func (tdb TestDatabase) GetUserByID(ctx context.Context, id primitive.ObjectID) (types.User, error) {
-	if id == realUser.ID {
-		return realUser, nil
-	}
-	return types.User{}, mongo.ErrNoDocuments
-}
-func (tdb TestDatabase) GetDevicesByIDs(ctx context.Context, deviceIDs []primitive.ObjectID) ([]types.Device, error) {
+func (tdb TestDatabase) GetDevicesByIDs(ctx context.Context, deviceIDs []string) ([]types.Device, error) {
 	found := make([]types.Device, 0)
 
 	for _, e := range deviceIDs {
-		for _, v := range db.Devices {
+		for _, v := range devices {
 			if e == v.ID {
 				found = append(found, v)
 				break
@@ -64,14 +63,53 @@ func (tdb TestDatabase) GetDevicesByIDs(ctx context.Context, deviceIDs []primiti
 	return found, nil
 }
 
-func (tdb TestDatabase) UpdateDeviceState(ctx context.Context, deviceID primitive.ObjectID, state map[string]interface{}) error {
-	for _, e := range db.Devices {
-		if e.ID == deviceID {
-			e.State = state
-			return nil
+func (tdb TestDatabase) GetUserDevicePermissions(ctx context.Context, userID string, deviceID string) (perms types.DevicePermissions, err error) {
+	for _, ud := range userDevices {
+		if ud.UserID == userID && ud.DeviceID == deviceID {
+			return types.DevicePermissions{
+				Read:    ud.Read,
+				Write:   ud.Write,
+				Execute: ud.Execute,
+			}, nil
 		}
 	}
-	return fmt.Errorf("no document modified")
+	return types.DevicePermissions{
+		Read:    false,
+		Write:   false,
+		Execute: false,
+	}, nil
+}
+
+func (tdb TestDatabase) GetDeviceByID(ctx context.Context, deviceID string) (*types.Device, error) {
+	for _, device := range devices {
+		if device.ID == deviceID {
+			return &device, nil
+		}
+	}
+	return nil, nil
+}
+
+func (tdb TestDatabase) GetUserDevices(ctx context.Context, userID string) (devices []types.Device, err error) {
+	for _, ud := range userDevices {
+		if ud.UserID == userID && ud.Read {
+			device, err := tdb.GetDeviceByID(ctx, ud.DeviceID)
+			if err != nil {
+				return nil, err
+			}
+			if device == nil {
+				continue
+			}
+			devices = append(devices, *device)
+		}
+	}
+	return devices, nil
+}
+
+func (tdb TestDatabase) GetUserByID(ctx context.Context, id string) (*types.User, error) {
+	if id == realUser.ID {
+		return &realUser, nil
+	}
+	return nil, nil
 }
 
 var commands = make(chan string, 1)
@@ -85,11 +123,22 @@ func (dm TestDeviceManager) SendRequestWithResponse(ctx context.Context, device 
 		State:           req.State,
 		Status:          "SUCCESS",
 	}, nil
+}
+
+func (dm TestDeviceManager) FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error) {
+	return types.DeviceResponse{
+		CorrelationData: "sjsdsklfdksjaasjk",
+		State: map[string]interface{}{
+			"online": true,
+			"on":     true,
+		},
+		Status: "SUCCESS",
+	}, nil
 
 }
 
 func TestMain(m *testing.M) {
-	f = NewFulfillment(db, dm, opts)
+	f = NewFulfillment(TestDatabase{}, TestDeviceManager{}, opts)
 
 	f.db.AddDevice(context.Background(), types.Device{
 		Device: fulfillment.Device{

@@ -41,7 +41,7 @@ func TestSyncUnauthenticated(t *testing.T) {
 
 func TestSyncNoDevices(t *testing.T) {
 	token := utils.Token{
-		Audience:  realUser.ID.Hex(),
+		Audience:  realUser.ID,
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 	}
 	strtoken, err := token.Sign([]byte(opts.AccessKey))
@@ -84,14 +84,20 @@ func TestSyncNoDevices(t *testing.T) {
 }
 
 func TestSync(t *testing.T) {
-	device := db.Devices[0]
-	realUser.Devices = append(realUser.Devices, device.ID.Hex())
+	tdevice := devices[0]
+	userDevices = append(userDevices, userDevice{
+		UserID:   realUser.ID,
+		DeviceID: tdevice.ID,
+		Read:     true,
+		Write:    false,
+		Execute:  false,
+	})
 	defer func() {
 		// Clear the slice
-		realUser.Devices = make([]string, 0)
+		userDevices = make([]userDevice, 0)
 	}()
 	token := utils.Token{
-		Audience:  realUser.ID.Hex(),
+		Audience:  realUser.ID,
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 	}
 	strtoken, err := token.Sign([]byte(opts.AccessKey))
@@ -132,8 +138,8 @@ func TestSync(t *testing.T) {
 		t.Fatalf("expected one from response, received %d devices", len(res.Payload.Devices))
 	}
 	pdevice := res.Payload.Devices[0]
-	if pdevice.ID != device.ID.Hex() {
-		t.Fatalf("device ids doesn't match, expected: %s, received: %s", device.ID, pdevice.ID)
+	if pdevice.ID != tdevice.ID {
+		t.Fatalf("device ids doesn't match, expected: %s, received: %s", tdevice.ID, pdevice.ID)
 
 	}
 }
