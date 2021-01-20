@@ -1,15 +1,20 @@
 package fulfillment
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 // Options for fulfillment
@@ -39,7 +44,7 @@ type Devmgmt interface {
 
 // Fulfillment hold root server state
 type Fulfillment struct {
-	Router  *gin.Engine
+	Router  *chi.Mux
 	devmgmt Devmgmt
 	db      Database
 	opts    Options
@@ -50,17 +55,22 @@ func New(db Database, devmgmt Devmgmt, opts Options) Fulfillment {
 	f := Fulfillment{
 		db:      db,
 		devmgmt: devmgmt,
-		Router:  gin.Default(),
+		Router:  chi.NewRouter(),
 		opts:    opts,
 	}
-	f.Router.Use(utils.LogResponseBody)
-	f.Router.POST("/webhook", f.onWebhook)
-	f.Router.GET("/addDevice", f.onAddDevice)
+	f.Router.Use(middleware.Logger)
+	f.Router.Use(middleware.Recoverer)
+	f.Router.Use(middleware.RealIP)
+	f.Router.Use(middleware.Heartbeat("/ping"))
+	f.Router.Use(middleware.Timeout(time.Second * 10))
+
+	f.Router.Post("/webhook", f.onWebhook)
+	f.Router.Get("/addDevice", f.onAddDevice)
 	return f
 }
 
 // Only for testing purposes
-func (f *Fulfillment) onAddDevice(c *gin.Context) {
+func (f *Fulfillment) onAddDevice(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 	f.db.AddDevice(ctx, types.Device{
@@ -97,66 +107,55 @@ func (f *Fulfillment) onAddDevice(c *gin.Context) {
 
 }
 
-func (f *Fulfillment) redirectIntent(c *gin.Context, intent string, user types.User) {
-	switch intent {
-	case fulfillment.SyncIntent:
-		var req fulfillment.SyncRequest
-		err := c.ShouldBindBodyWith(&req, binding.JSON)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":             "sync_invalid_json",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		f.onSyncIntent(c, req, user)
-	case fulfillment.QueryIntent:
-		var req fulfillment.QueryRequest
-		err := c.ShouldBindBodyWith(&req, binding.JSON)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":             "query_invalid_json",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		f.onQueryIntent(c, req, user)
-	case fulfillment.ExecuteIntent:
-		var er fulfillment.ExecuteRequest
-		err := c.ShouldBindBodyWith(&er, binding.JSON)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error":             "execute_invalid_json",
-				"error_description": err.Error(),
-			})
-			return
-		}
-		f.onExecuteIntent(c, er, user)
-	case fulfillment.DisconnectIntent:
-		c.JSON(http.StatusNotImplemented, gin.H{
-			"error": "not_implemented",
-		})
-	}
-
+type intentRequest struct {
+	r    *http.Request
+	w    http.ResponseWriter
+	base fulfillment.BaseRequest
+	user types.User
 }
 
-func (f *Fulfillment) onWebhook(c *gin.Context) {
-	var base fulfillment.BaseRequest
+// IntentHandler is type of handler, each of them MUST return something that is json marhsallable
+type intentHandler = func(r intentRequest) interface{}
 
-	if err := c.ShouldBindBodyWith(&base, binding.JSON); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":             "init_parse_invalid_json",
+func (f *Fulfillment) getIntentHandler(intent string) (intentHandler, error) {
+	switch intent {
+	case fulfillment.SyncIntent:
+		return f.onSyncIntent, nil
+	case fulfillment.QueryIntent:
+		return f.onQueryIntent, nil
+	case fulfillment.ExecuteIntent:
+		return f.onExecuteIntent, nil
+	case fulfillment.DisconnectIntent:
+		return nil, fmt.Errorf("not implemented yet")
+	default:
+		return nil, fmt.Errorf("unrecognized intent")
+	}
+}
+
+func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
+	var (
+		bodybuf bytes.Buffer
+		base    fulfillment.BaseRequest
+	)
+
+	if err := json.NewDecoder(io.TeeReader(r.Body, &bodybuf)).Decode(&base); err != nil {
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "fail_parse_json",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.Write(json)
 		return
 	}
 
-	userID, err := utils.ExtractWithVerifyUserToken(c.Request, []byte(f.opts.AccessKey))
+	userID, err := utils.ExtractWithVerifyUserToken(r, []byte(f.opts.AccessKey))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":             "invalid_token",
+		json, _ := json.Marshal(map[string]interface{}{
+			"error":             "invalid_grant",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write(json)
 		return
 	}
 
@@ -165,19 +164,48 @@ func (f *Fulfillment) onWebhook(c *gin.Context) {
 	user, err := f.db.GetUserByID(ctx, userID)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "fail_get_user",
 			"error_description": err.Error(),
 		})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(json)
 		return
 	}
 	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":             "user_not_found",
-			"error_description": err.Error(),
+		json, _ := json.Marshal(map[string]interface{}{
+			"error": "user_not_found",
 		})
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(json)
 		return
 	}
-
-	f.redirectIntent(c, base.Inputs[0].Intent, *user)
+	handler, err := f.getIntentHandler(base.Inputs[0].Intent)
+	if err != nil {
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "invalid_intent",
+			Description: err.Error(),
+		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
+		return
+	}
+	r.Body = ioutil.NopCloser(&bodybuf)
+	res := handler(intentRequest{
+		r:    r,
+		w:    w,
+		base: base,
+		user: *user,
+	})
+	resjson, err := json.Marshal(res)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "fail_marshall_response",
+			Description: err.Error(),
+		})
+		w.Write(json)
+		return
+	}
+	w.Write(resjson)
 }

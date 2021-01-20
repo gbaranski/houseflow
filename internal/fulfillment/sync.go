@@ -1,27 +1,24 @@
 package fulfillment
 
 import (
-	"net/http"
-
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gin-gonic/gin"
 )
 
-// OnSync handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
-func (f *Fulfillment) onSyncIntent(c *gin.Context, r fulfillment.SyncRequest, user types.User) {
-	devices, err := f.db.GetUserDevices(c.Request.Context(), user.ID)
+// onSyncIntent handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
+func (f *Fulfillment) onSyncIntent(r intentRequest) interface{} {
+	devices, err := f.db.GetUserDevices(r.r.Context(), r.user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":             "fail_retreive_devices",
-			"error_description": err.Error(),
-		})
-		return
+		return types.ResponseError{
+			Name:        "fail_retreive_devices",
+			Description: err.Error(),
+		}
 	}
 
-	var fdevices []fulfillment.Device
-	for _, device := range devices {
-		fdevices = append(fdevices, fulfillment.Device{
+	resdev := make([]fulfillment.Device, len(devices))
+	for i, device := range devices {
+		resdev[i] = fulfillment.Device{
+
 			ID:              device.ID,
 			Type:            device.Type,
 			Traits:          device.Traits,
@@ -32,15 +29,14 @@ func (f *Fulfillment) onSyncIntent(c *gin.Context, r fulfillment.SyncRequest, us
 			// Attributes:      device.Attributes, // unused atm
 			// CustomData:      device.CustomData, // unused atm
 			// OtherDevicesIDs: device.OtherDevicesIDs, // unused atm
-		})
+		}
 	}
 
-	response := fulfillment.SyncResponse{
-		RequestID: r.RequestID,
+	return fulfillment.SyncResponse{
+		RequestID: r.base.RequestID,
 		Payload: fulfillment.SyncResponsePayload{
-			AgentUserID: user.ID,
-			Devices:     fdevices,
+			AgentUserID: r.user.ID,
+			Devices:     resdev,
 		},
 	}
-	c.JSON(http.StatusOK, response)
 }

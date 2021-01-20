@@ -2,12 +2,11 @@ package fulfillment
 
 import (
 	"context"
-	"net/http"
+	"encoding/json"
 
 	"github.com/gbaranski/houseflow/pkg/devmgmt"
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gin-gonic/gin"
 )
 
 func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID string) (devices map[string]interface{}) {
@@ -54,19 +53,29 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 }
 
 // OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
-func (f *Fulfillment) onQueryIntent(c *gin.Context, r fulfillment.QueryRequest, user types.User) {
+func (f *Fulfillment) onQueryIntent(r intentRequest) interface{} {
+	var queryRequest fulfillment.QueryRequest
+	if err := json.NewDecoder(r.r.Body).Decode(&queryRequest); err != nil {
+		return fulfillment.QueryResponse{
+			RequestID: r.base.RequestID,
+			Payload: fulfillment.QueryResponsePayload{
+				ErrorCode:   "invalid_payload",
+				DebugString: err.Error(),
+			},
+		}
+	}
+
 	payloadDevices := make(map[string]interface{})
 	// Fix it later with waitgroups and goroutines
-	for _, device := range r.Inputs[0].Payload.Devices {
-		res := f.queryState(c.Request.Context(), user, device.ID)
+	for _, device := range queryRequest.Inputs[0].Payload.Devices {
+		res := f.queryState(r.r.Context(), r.user, device.ID)
 		payloadDevices[device.ID] = res
 	}
 
-	response := fulfillment.QueryResponse{
-		RequestID: r.RequestID,
+	return fulfillment.QueryResponse{
+		RequestID: r.base.RequestID,
 		Payload: fulfillment.QueryResponsePayload{
 			Devices: payloadDevices,
 		},
 	}
-	c.JSON(http.StatusOK, response)
 }

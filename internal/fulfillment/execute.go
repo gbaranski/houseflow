@@ -1,23 +1,19 @@
 package fulfillment
 
 import (
-	"context"
-	"net/http"
+	"encoding/json"
 
 	"github.com/gbaranski/houseflow/pkg/devmgmt"
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
-	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gin-gonic/gin"
 )
 
 func (f *Fulfillment) executeCommand(
-	ctx context.Context,
-	user types.User,
+	r intentRequest,
 	targetDevice fulfillment.QueryRequestPayloadDevice,
 	execution fulfillment.ExecuteRequestExecution,
 ) fulfillment.ExecuteResponseCommands {
 
-	perms, err := f.db.GetUserDevicePermissions(ctx, user.ID, targetDevice.ID)
+	perms, err := f.db.GetUserDevicePermissions(r.r.Context(), r.user.ID, targetDevice.ID)
 	if err != nil {
 		return fulfillment.ExecuteResponseCommands{
 			IDs:       []string{targetDevice.ID},
@@ -32,7 +28,7 @@ func (f *Fulfillment) executeCommand(
 			ErrorCode: "authFailure",
 		}
 	}
-	device, err := f.db.GetDeviceByID(ctx, targetDevice.ID)
+	device, err := f.db.GetDeviceByID(r.r.Context(), targetDevice.ID)
 	if err != nil {
 		return fulfillment.ExecuteResponseCommands{
 			IDs:       []string{targetDevice.ID},
@@ -48,7 +44,7 @@ func (f *Fulfillment) executeCommand(
 		}
 	}
 
-	response, err := f.devmgmt.SendCommand(ctx, *device, execution.Command, execution.Params)
+	response, err := f.devmgmt.SendCommand(r.r.Context(), *device, execution.Command, execution.Params)
 	if err != nil {
 		if err == devmgmt.ErrDeviceTimeout {
 			return fulfillment.ExecuteResponseCommands{
@@ -80,22 +76,33 @@ func (f *Fulfillment) executeCommand(
 }
 
 // OnExecute https://developers.google.com/assistant/smarthome/reference/intent/execute
-func (f *Fulfillment) onExecuteIntent(c *gin.Context, r fulfillment.ExecuteRequest, user types.User) {
+func (f *Fulfillment) onExecuteIntent(r intentRequest) interface{} {
+	var executeRequest fulfillment.ExecuteRequest
+
+	if err := json.NewDecoder(r.r.Body).Decode(&executeRequest); err != nil {
+		return fulfillment.ExecuteResponse{
+			RequestID: r.base.RequestID,
+			Payload: fulfillment.ExecuteResponsePayload{
+				ErrorCode:   "invalid_payload",
+				DebugString: err.Error(),
+			},
+		}
+	}
+
 	var responseCommands []fulfillment.ExecuteResponseCommands
-	for _, command := range r.Inputs[0].Payload.Commands {
+	for _, command := range executeRequest.Inputs[0].Payload.Commands {
 		for _, execution := range command.Execution {
 			for _, device := range command.Devices {
-				exec := f.executeCommand(c.Request.Context(), user, device, execution)
+				exec := f.executeCommand(r, device, execution)
 				responseCommands = append(responseCommands, exec)
 			}
 		}
 	}
 
-	response := fulfillment.ExecuteResponse{
-		RequestID: r.RequestID,
+	return fulfillment.ExecuteResponse{
+		RequestID: r.base.RequestID,
 		Payload: fulfillment.ExecuteResponsePayload{
 			Commands: responseCommands,
 		},
 	}
-	c.JSON(http.StatusOK, response)
 }
