@@ -76,6 +76,9 @@ func TestQuery(t *testing.T) {
 	if res.RequestID != body.RequestID {
 		t.Fatalf("requestID doesn't match")
 	}
+	if res.Payload.ErrorCode != "" {
+		t.Fatalf("non empty errorcode: %s, debugstr: %s", res.Payload.DebugString, res.Payload.ErrorCode)
+	}
 	for k, v := range res.Payload.Devices {
 		obj := v.(map[string]interface{})
 

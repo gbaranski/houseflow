@@ -88,6 +88,10 @@ func TestExecute(t *testing.T) {
 	if res.RequestID != body.RequestID {
 		t.Fatalf("requestID doesn't match")
 	}
+	if res.Payload.ErrorCode != "" {
+		t.Fatalf("non empty errorCode: %s, debugstr: %s", res.Payload.ErrorCode, res.Payload.DebugString)
+	}
+
 	select {
 	case cmd := <-commands:
 		if cmd != body.Inputs[0].Payload.Commands[0].Execution[0].Command {
