@@ -2,13 +2,11 @@ package types
 
 import (
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Device is device from database
 type Device struct {
 	fulfillment.Device `bson:",inline"`
-	ID                 primitive.ObjectID     `bson:"_id,omitempty" binding:"-"`
 	PublicKey          string                 `bson:"publickey"`
 	State              map[string]interface{} `bson:"state"`
 }
@@ -26,4 +24,11 @@ type DeviceRequest struct {
 	CorrelationData string                 `json:"correlationData"`
 	State           map[string]interface{} `json:"state"`
 	Command         string                 `json:"command"`
+}
+
+// DevicePermissions defines what user can and cannot
+type DevicePermissions struct {
+	Read    bool
+	Write   bool
+	Execute bool
 }
