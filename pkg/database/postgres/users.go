@@ -117,5 +117,5 @@ func (p Postgres) AddUser(ctx context.Context, user types.User) (id string, err 
 		return "", fmt.Errorf("fail hash password %s", err.Error())
 	}
 	_, err = p.conn.Exec(ctx, sql, userID.String(), user.FirstName, user.LastName, user.Email, passwordHash)
-	return userID.String(), nil
+	return userID.String(), err
 }
