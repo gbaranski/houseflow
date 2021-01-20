@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // ACLRequest is sub/pub req
@@ -44,7 +45,7 @@ func (a *Auth) onACL(w http.ResponseWriter, req *http.Request) {
 		log.Printf("ACL: Service %s authorized topic %s\n", r.ClientID, r.Topic)
 		return
 	}
-	topicClientID := r.Topic[0:24]
+	topicClientID := r.Topic[0:strings.IndexRune(r.Topic, '/')]
 	if topicClientID != r.ClientID {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("Unauthorized for this topic"))
