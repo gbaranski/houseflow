@@ -3,66 +3,51 @@ package main
 import (
 	"context"
 	"crypto/ed25519"
-	"encoding/base64"
+	"fmt"
 	"log"
+	"net/http"
 	"time"
 
+	"github.com/caarlos0/env/v6"
+
 	"github.com/gbaranski/houseflow/internal/fulfillment"
-	"github.com/gbaranski/houseflow/pkg/database"
-	"github.com/gbaranski/houseflow/pkg/mqtt"
+	"github.com/gbaranski/houseflow/pkg/database/postgres"
+	"github.com/gbaranski/houseflow/pkg/devmgmt"
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
-var (
-	mongoUsername    = utils.MustGetEnv("MONGO_INITDB_ROOT_USERNAME")
-	mongoPassword    = utils.MustGetEnv("MONGO_INITDB_ROOT_PASSWORD")
-	accessKey        = utils.MustGetEnv("ACCESS_KEY")
-	serverPrivateKey ed25519.PrivateKey
-	serverPublicKey  ed25519.PublicKey
-)
-
-func init() {
-	pkey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PUBLIC_KEY"))
-	if err != nil {
-		panic(err)
-	}
-	serverPublicKey = ed25519.PublicKey(pkey)
-
-	skey, err := base64.StdEncoding.DecodeString(utils.MustGetEnv("SERVER_PRIVATE_KEY"))
-	if err != nil {
-		panic(err)
-	}
-	serverPrivateKey = ed25519.PrivateKey(skey)
-}
-
 func main() {
 	log.Println("Starting fulfillment service")
+	var (
+		postgresOptions    postgres.Options
+		fulfillmentOptions fulfillment.Options
+		devmgmtOptions     = devmgmt.Options{
+			ClientID:         utils.MustGetEnv("SERVICE_NAME"),
+			ServerPublicKey:  utils.MustParseEnvKey("SERVER_PUBLIC_KEY", ed25519.PrivateKeySize),
+			ServerPrivateKey: utils.MustParseEnvKey("SERVER_PRIVATE_KEY", ed25519.PrivateKeySize),
+		}
+	)
+	if err := env.Parse(&postgresOptions); err != nil {
+		panic(fmt.Errorf("fail load postgres opts %s", err.Error()))
+	}
+	if err := env.Parse(&fulfillmentOptions); err != nil {
+		panic(fmt.Errorf("fail load fulfillment opts %s", err.Error()))
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	mongo, err := database.NewMongo(ctx, database.MongoOptions{
-		Username:     mongoUsername,
-		Password:     mongoPassword,
-		DatabaseName: "houseflowDB",
-	})
+	postgres, err := postgres.New(ctx, postgresOptions)
+	if err != nil {
+		panic(err)
+	}
+	devmgmt, err := devmgmt.New(devmgmtOptions)
 	if err != nil {
 		panic(err)
 	}
 
-	mqtt, err := mqtt.NewMQTT(mqtt.Options{
-		ClientID:         "fulfillment",
-		BrokerURL:        "tcp://emqx:1883/mqtt",
-		ServerPrivateKey: serverPrivateKey,
-		ServerPublicKey:  serverPublicKey,
-	})
-	if err != nil {
-		panic(err)
-	}
+	fulfillment := fulfillment.New(postgres, devmgmt, fulfillmentOptions)
 
-	f := fulfillment.NewFulfillment(mongo, mqtt, fulfillment.Options{
-		AccessKey: accessKey,
-	})
-	err = f.Router.Run(":80")
+	http.ListenAndServe(":80", fulfillment.Router)
 	if err != nil {
 		panic(err)
 	}
