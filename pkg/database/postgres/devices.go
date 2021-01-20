@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS devices (
 `
 
 // GetDeviceByID retreives device with given ID
-func (p Postgres) GetDeviceByID(ctx context.Context, id string) (device types.Device, err error) {
+func (p Postgres) GetDeviceByID(ctx context.Context, id string) (device *types.Device, err error) {
 	const sql = `
 		SELECT publickey,type,will_report_state,room_hint,manufacturer,model,hw_version,sw_version 
 		FROM devices 
