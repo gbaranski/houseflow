@@ -11,11 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -24,7 +23,7 @@ const (
 	helloworld = "$2y$12$sVtI/bYDQ3LWKcGlryQYzeo3IFjIYsl4f4bY6isfBaE3MnaPIcc2e"
 )
 
-var userID = primitive.NewObjectIDFromTimestamp(time.Now())
+var userID = uuid.New().String()
 var opts = Options{
 	ProjectID:            "houseflow",
 	ClientID:             "someRandomClientID",
@@ -41,13 +40,12 @@ var realUser = types.User{
 	LastName:  "Smith",
 	Email:     "john.smith@gmail.com",
 	Password:  helloworld,
-	Devices:   []string{},
 }
 
 type TestDatabase struct{}
 
-func (db TestDatabase) AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error) {
-	return primitive.NewObjectIDFromTimestamp(time.Now()), nil
+func (db TestDatabase) AddUser(ctx context.Context, user types.User) (string, error) {
+	return uuid.New().String(), nil
 }
 
 func (db TestDatabase) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
@@ -57,7 +55,7 @@ func (db TestDatabase) GetUserByEmail(ctx context.Context, email string) (types.
 	return types.User{}, mongo.ErrNoDocuments
 }
 
-func (db TestDatabase) AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error {
+func (db TestDatabase) AddToken(ctx context.Context, userID string, token utils.Token) error {
 	return nil
 }
 func (db TestDatabase) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
@@ -65,11 +63,11 @@ func (db TestDatabase) DeleteToken(ctx context.Context, tokenID string) (int64, 
 }
 
 func (db TestDatabase) FetchToken(ctx context.Context, token utils.Token) (string, error) {
-	return userID.Hex(), nil
+	return userID, nil
 }
 
 func TestMain(m *testing.M) {
-	a = NewAuth(TestDatabase{}, opts)
+	a = New(TestDatabase{}, opts)
 	os.Exit(m.Run())
 }
 
