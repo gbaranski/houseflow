@@ -1,4 +1,4 @@
-package mqtt
+package devmgmt
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
-// Options of the MQTT
+// Options of the Devmgmt
 type Options struct {
 	// ClientID, required
 	ClientID string
@@ -49,14 +49,14 @@ func (opts *Options) Parse() {
 	}
 }
 
-// MQTT is some abstraction layer over paho mqtt
-type MQTT struct {
+// Devmgmt is some abstraction layer over paho mqtt
+type Devmgmt struct {
 	Client paho.Client
 	opts   Options
 }
 
-// NewMQTT is constructor for MQTT, connects to broker
-func NewMQTT(opts Options) (MQTT, error) {
+// New is constructor for MQTT, connects to broker
+func New(opts Options) (Devmgmt, error) {
 	paho.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	paho.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
 	paho.WARN = log.New(os.Stdout, "[WARN]  ", 0)
@@ -76,9 +76,9 @@ func NewMQTT(opts Options) (MQTT, error) {
 
 	c := paho.NewClient(copts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		return MQTT{}, token.Error()
+		return Devmgmt{}, token.Error()
 	}
-	return MQTT{
+	return Devmgmt{
 		Client: c,
 		opts:   opts,
 	}, nil
@@ -90,33 +90,43 @@ var ErrDeviceTimeout = errors.New("device timeout")
 // ErrInvalidSignature indicates that device sent back invalid singature of payload
 var ErrInvalidSignature = errors.New("invalid signature")
 
-// SendRequestWithResponse sends request and waits for response and returns it
-func (m MQTT) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error) {
+// FetchDeviceState sends rqeuest to device with question about his device state
+func (d Devmgmt) FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// SendCommand sends request and waits for response and returns it
+func (d Devmgmt) SendCommand(ctx context.Context, device types.Device, command string, params map[string]interface{}) (types.DeviceResponse, error) {
 	reqTopic := fmt.Sprintf("%s/command/request", device.ID)
 	resTopic := fmt.Sprintf("%s/command/response", device.ID)
 	msgc := make(chan paho.Message)
 
-	if token := m.Client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
+	if token := d.Client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
 		msgc <- m
 	}); token.Wait() && token.Error() != nil {
 		return types.DeviceResponse{}, token.Error()
 	}
 
 	defer func() {
-		m.Client.Unsubscribe(resTopic)
+		d.Client.Unsubscribe(resTopic)
 	}()
 
+	req := types.DeviceRequest{
+		CorrelationData: utils.GenerateRandomString(16),
+		State:           params,
+		Command:         command,
+	}
 	reqjson, err := json.Marshal(req)
 	if err != nil {
 		return types.DeviceResponse{}, err
 	}
 
-	ssig := ed25519.Sign(m.opts.ServerPrivateKey, reqjson)
+	ssig := ed25519.Sign(d.opts.ServerPrivateKey, reqjson)
 	encssig := base64.StdEncoding.EncodeToString(ssig)
 
 	reqp := strings.Join([]string{encssig, string(reqjson)}, ".")
 
-	if token := m.Client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
+	if token := d.Client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
 		return types.DeviceResponse{}, token.Error()
 	}
 
