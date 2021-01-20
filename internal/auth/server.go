@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -35,6 +36,10 @@ func New(db Database, opts Options) Auth {
 		opts:   opts,
 	}
 	a.Router.Use(middleware.Logger)
+	a.Router.Use(middleware.Recoverer)
+	a.Router.Use(middleware.RealIP)
+	a.Router.Use(middleware.Heartbeat("/ping"))
+	a.Router.Use(middleware.Timeout(time.Second * 10))
 
 	a.Router.Get("/auth", a.onAuthSite)
 
