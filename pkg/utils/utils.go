@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
 	"math/rand"
@@ -10,8 +9,6 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
-
-	"github.com/gin-gonic/gin"
 )
 
 // ParseSignedPayload parses payload, returns respectively message and signature
@@ -62,24 +59,6 @@ func MustGetEnv(key string) string {
 		panic(fmt.Errorf("%s enviroment variable is unset", key))
 	}
 	return env
-}
-
-type responseBodyWriter struct {
-	gin.ResponseWriter
-	body *bytes.Buffer
-}
-
-func (r responseBodyWriter) Write(b []byte) (int, error) {
-	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
-}
-
-// LogResponseBody is middleware for Gin to log response
-func LogResponseBody(c *gin.Context) {
-	w := &responseBodyWriter{body: &bytes.Buffer{}, ResponseWriter: c.Writer}
-	c.Writer = w
-	c.Next()
-	fmt.Println("Response body: " + w.body.String())
 }
 
 // MustParseEnvKey parses base64 encoded public key, usefull when you load it from ENV
