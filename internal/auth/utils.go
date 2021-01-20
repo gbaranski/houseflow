@@ -7,33 +7,32 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (a Auth) validateRedirectURI(uri string) bool {
 	return uri == fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", a.opts.ProjectID) || uri == fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", a.opts.ProjectID)
 }
 
-func (a Auth) newRefreshToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
+func (a Auth) newRefreshToken(userID string) (token utils.Token, strtoken string, err error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return
 	}
 	token = utils.Token{
-		Audience: userID.Hex(),
+		Audience: userID,
 		ID:       id.String(),
 	}
 	strtoken, err = token.Sign([]byte(a.opts.RefreshKey))
 	return
 }
 
-func (a Auth) newAccessToken(userID primitive.ObjectID) (token utils.Token, strtoken string, err error) {
+func (a Auth) newAccessToken(userID string) (token utils.Token, strtoken string, err error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return
 	}
 	token = utils.Token{
-		Audience:  userID.Hex(),
+		Audience:  userID,
 		ID:        id.String(),
 		ExpiresAt: time.Now().Add(utils.AccessTokenDuration).Unix(),
 	}
@@ -41,9 +40,9 @@ func (a Auth) newAccessToken(userID primitive.ObjectID) (token utils.Token, strt
 	return
 }
 
-func (a *Auth) createRedirectURI(q LoginPageQuery, userID primitive.ObjectID) (string, error) {
+func (a *Auth) createRedirectURI(q LoginPageQuery, userID string) (string, error) {
 	token := utils.Token{
-		Audience:  userID.Hex(),
+		Audience:  userID,
 		ExpiresAt: time.Now().Add(utils.AuthorizationCodeDuration).Unix(),
 	}
 	strtoken, err := token.Sign([]byte(a.opts.AuthorizationCodeKey))

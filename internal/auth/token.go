@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
@@ -32,18 +31,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	userID, err := primitive.ObjectIDFromHex(token.Audience)
-	if err != nil {
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
-		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
-		return
-	}
-
-	rt, rtstr, err := a.newRefreshToken(userID)
+	rt, rtstr, err := a.newRefreshToken(token.Audience)
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "rt_create_fail",
@@ -54,7 +42,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	_, atstr, err := a.newAccessToken(userID)
+	_, atstr, err := a.newAccessToken(token.Audience)
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "at_create_fail",
@@ -65,7 +53,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = a.db.AddToken(r.Context(), userID, rt)
+	err = a.db.AddToken(r.Context(), token.Audience, rt)
 
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
@@ -111,18 +99,7 @@ func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form 
 		return
 	}
 
-	userIDObject, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		fmt.Println("Unable to parse userID to objectID")
-		json, _ := json.Marshal(map[string]interface{}{
-			"error":             "invalid_grant",
-			"error_description": err.Error(),
-		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
-		return
-	}
-	_, atstr, err := a.newAccessToken(userIDObject)
+	_, atstr, err := a.newAccessToken(userID)
 	if err != nil {
 		json, _ := json.Marshal(map[string]interface{}{
 			"error":             "fail_create_at",

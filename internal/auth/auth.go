@@ -8,7 +8,6 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (a *Auth) onLogin(w http.ResponseWriter, r *http.Request) {
@@ -30,11 +29,7 @@ func (a *Auth) onLogin(w http.ResponseWriter, r *http.Request) {
 
 	dbUser, err := a.db.GetUserByEmail(r.Context(), creds.Email)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 
@@ -80,16 +75,9 @@ func (a *Auth) onRegister(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	id, err := a.db.AddUser(ctx, newUser)
 	if err != nil {
-		merr := err.(mongo.WriteException)
-		for _, werr := range merr.WriteErrors {
-			if werr.Code == 11000 {
-				http.Error(w, "Account already exists", http.StatusConflict)
-				return
-			}
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Account already exists", http.StatusConflict)
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("Account created with ID: %s, now you can log in", id.Hex())))
+	w.Write([]byte(fmt.Sprintf("Account created with ID: %s, now you can log in", id)))
 }

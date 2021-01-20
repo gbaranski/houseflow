@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/gorilla/schema"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -15,9 +14,10 @@ import (
 
 // Database is database interface
 type Database interface {
-	AddUser(ctx context.Context, user types.User) (primitive.ObjectID, error)
+	AddUser(ctx context.Context, user types.User) (id string, err error)
 	GetUserByEmail(ctx context.Context, email string) (types.User, error)
-	AddToken(ctx context.Context, userID primitive.ObjectID, token utils.Token) error
+
+	AddToken(ctx context.Context, userID string, token utils.Token) error
 	FetchToken(ctx context.Context, token utils.Token) (string, error)
 	DeleteToken(ctx context.Context, tokenID string) (int64, error)
 }
@@ -32,8 +32,8 @@ type Auth struct {
 var decoder = schema.NewDecoder()
 var encoder = schema.NewEncoder()
 
-// NewAuth creates server, it won't run till Auth.Router.Start
-func NewAuth(db Database, opts Options) Auth {
+// New creates server, it won't run till Auth.Router.Start
+func New(db Database, opts Options) Auth {
 	a := Auth{
 		db:     db,
 		Router: chi.NewRouter(),
