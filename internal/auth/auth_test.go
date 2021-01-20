@@ -15,7 +15,6 @@ import (
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -48,22 +47,11 @@ func (db TestDatabase) AddUser(ctx context.Context, user types.User) (string, er
 	return uuid.New().String(), nil
 }
 
-func (db TestDatabase) GetUserByEmail(ctx context.Context, email string) (types.User, error) {
+func (db TestDatabase) GetUserByEmail(ctx context.Context, email string) (*types.User, error) {
 	if email == realUser.Email {
-		return realUser, nil
+		return &realUser, nil
 	}
-	return types.User{}, mongo.ErrNoDocuments
-}
-
-func (db TestDatabase) AddToken(ctx context.Context, userID string, token utils.Token) error {
-	return nil
-}
-func (db TestDatabase) DeleteToken(ctx context.Context, tokenID string) (int64, error) {
-	return 1, nil
-}
-
-func (db TestDatabase) FetchToken(ctx context.Context, token utils.Token) (string, error) {
-	return userID, nil
+	return nil, nil
 }
 
 func TestMain(m *testing.M) {
