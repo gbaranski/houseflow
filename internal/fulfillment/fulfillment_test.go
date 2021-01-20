@@ -7,6 +7,7 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/google/uuid"
 )
 
@@ -116,11 +117,11 @@ var commands = make(chan string, 1)
 
 type TestDeviceManager struct{}
 
-func (dm TestDeviceManager) SendRequestWithResponse(ctx context.Context, device types.Device, req types.DeviceRequest) (types.DeviceResponse, error) {
-	commands <- req.Command
+func (dm TestDeviceManager) SendCommand(ctx context.Context, device types.Device, command string, params map[string]interface{}) (types.DeviceResponse, error) {
+	commands <- command
 	return types.DeviceResponse{
-		CorrelationData: req.CorrelationData,
-		State:           req.State,
+		CorrelationData: utils.GenerateRandomString(16),
+		State:           params,
 		Status:          "SUCCESS",
 	}, nil
 }
@@ -138,7 +139,7 @@ func (dm TestDeviceManager) FetchDeviceState(ctx context.Context, deviceID strin
 }
 
 func TestMain(m *testing.M) {
-	f = NewFulfillment(TestDatabase{}, TestDeviceManager{}, opts)
+	f = New(TestDatabase{}, TestDeviceManager{}, opts)
 
 	f.db.AddDevice(context.Background(), types.Device{
 		Device: fulfillment.Device{
