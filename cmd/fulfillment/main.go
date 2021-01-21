@@ -22,7 +22,7 @@ func main() {
 		postgresOptions    postgres.Options
 		fulfillmentOptions fulfillment.Options
 		devmgmtOptions     = devmgmt.Options{
-			ClientID:         utils.MustGetEnv("SERVICE_NAME"),
+			ClientID:         "fulfillment",
 			ServerPublicKey:  utils.MustParseEnvKey("SERVER_PUBLIC_KEY", ed25519.PrivateKeySize),
 			ServerPrivateKey: utils.MustParseEnvKey("SERVER_PRIVATE_KEY", ed25519.PrivateKeySize),
 		}
