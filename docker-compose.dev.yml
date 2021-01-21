@@ -28,13 +28,6 @@ services:
     networks:
       - backend
 
-  redis:
-    image: "redis:latest"
-    container_name: "redis"
-    restart: "unless-stopped"
-    networks:
-      - backend
-
   emqx:
     tty: true
     image: "emqx/emqx"
@@ -45,7 +38,7 @@ services:
       - EMQX_LOG__LEVEL=info
       - EMQX_ALLOW_ANONYMOUS=true
 
-      - EMQX_LOADED_PLUGINS=emqx_management,emqx_recon,emqx_retainer,emqx_dashboard
+      - EMQX_LOADED_PLUGINS=
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
@@ -75,7 +68,6 @@ services:
     restart: "unless-stopped"
     depends_on:
       - postgres
-      - redis
     build:
       dockerfile: ./cmd/auth/Dockerfile
       context: .
@@ -86,28 +78,12 @@ services:
     networks:
       - backend
 
-  state_manager:
-    tty: true
-    container_name: "state_manager"
-    restart: "unless-stopped"
-    depends_on:
-      - postgres
-      - emqx
-    build:
-      dockerfile: ./cmd/state_manager/Dockerfile
-      context: .
-    env_file:
-      - .env
-    networks:
-      - backend
-
   fulfillment:
     tty: true
     container_name: "fulfillment"
     restart: "unless-stopped"
     depends_on:
       - postgres
-      - redis
     build:
       dockerfile: ./cmd/fulfillment/Dockerfile
       context: .
