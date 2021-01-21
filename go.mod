@@ -9,7 +9,6 @@ require (
 	github.com/go-chi/chi v1.5.1
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/schema v1.2.0
-	github.com/jackc/pgconn v1.8.0
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
