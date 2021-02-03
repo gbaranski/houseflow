@@ -5,12 +5,13 @@ add_library(${PROJECT_NAME} SHARED ${PROJECT_NAME}.c)
 
 set(MOSQUITTO_DIR "/Users/gbaranski/mosquitto-2.0.6")
 set(LIBPQ_DIR "/usr/local/opt/libpq")
+set(LIBSODIUM_DIR "/usr/local/opt/libsodium")
 
 target_include_directories(${PROJECT_NAME} 
   PRIVATE
-    ${MOSQUITTO_DIR}
     ${MOSQUITTO_DIR}/include
     ${LIBPQ_DIR}/include
+    ${LIBSODIUM_DIR}/include
 )
 
 add_compile_options(-Wall -Wextra -pedantic -Werror -fPIC -shared)
