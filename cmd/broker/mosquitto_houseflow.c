@@ -9,8 +9,11 @@
 #include <sodium.h>
 
 
-#define ED25519_PKEY_BASE64_BYTES 44
-#define ED25519_PKEY_BYTES 32
+#define SIG_BYTES 64U
+#define SIG_BASE64_BYTES 88U
+
+#define PKEY_BASE64_BYTES 44U
+#define PKEY_BYTES 32U
 
 static mosquitto_plugin_id_t *mosq_pid = NULL;
 static PGconn *pgconn = NULL;
@@ -19,11 +22,54 @@ static int auth_cb(int event, void *event_data, void *userdata)
 {
   printf("basic_auth_callback()\n");
 	struct mosquitto_evt_basic_auth *ed = event_data;
-  if(strlen(ed->username) != ED25519_PKEY_BASE64_BYTES) {
+  if(strlen(ed->username) != PKEY_BASE64_BYTES) {
     printf("invalid username len: %lu\n", strlen(ed->username));
     return MOSQ_ERR_AUTH;
   }
+  printf("username: %s\n", ed->username);
 
+
+  unsigned char pkey[PKEY_BYTES];
+
+  size_t pkey_size;
+  int err = sodium_base642bin(
+      pkey, PKEY_BYTES,  // OUTPUT
+      ed->username, PKEY_BASE64_BYTES, // INPUT
+      "", &pkey_size, // SOMETHING
+      NULL, sodium_base64_VARIANT_ORIGINAL
+      );
+  if ( err != 0 )  {
+    printf("fail decoding pkey, err: %d\n", err);
+    return MOSQ_ERR_AUTH;
+  }
+  if ( pkey_size != PKEY_BYTES ) {
+    printf("invalid decoded pkey size: %zu\n", pkey_size);
+    return MOSQ_ERR_AUTH;
+  }
+
+  unsigned char sig[SIG_BASE64_BYTES];
+  size_t sig_size;
+  err = sodium_base642bin(
+      sig, SIG_BYTES,  // OUTPUT
+      ed->password, SIG_BASE64_BYTES, // INPUT
+      "", &sig_size, // SOMETHING
+      NULL, sodium_base64_VARIANT_ORIGINAL
+      );
+  if ( err != 0 )  {
+    printf("fail decoding signature, err: %d\n", err);
+    return MOSQ_ERR_AUTH;
+  }
+  if ( sig_size != SIG_BYTES ) {
+    printf("invalid decoded signature size: %zu\n", sig_size);
+    return MOSQ_ERR_AUTH;
+  }
+
+  err = crypto_sign_verify_detached(sig, pkey, PKEY_BYTES, pkey);
+  if ( err != 0 ) {
+    printf("invalid signature\n");
+    return MOSQ_ERR_AUTH;
+  }
+  printf("valid signature\n");
 	return MOSQ_ERR_SUCCESS;
 }
 
