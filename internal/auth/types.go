@@ -40,7 +40,7 @@ type LoginCredentials struct {
 	Password string `form:"password"`
 }
 
-// AuthorizationCodeGrantResponse is struct which you get in response for authorization code grant if everything is successfull
+// AuthorizationCodeGrantResponse is struct which you get in response for authorization code grant if everything is successful
 type AuthorizationCodeGrantResponse struct {
 	TokenType    string `json:"token_type"`
 	AccessToken  string `json:"access_token"`
@@ -49,7 +49,7 @@ type AuthorizationCodeGrantResponse struct {
 	ExpiresIn int `json:"expires_in"`
 }
 
-// RefreshTokenGrantResponse is struct which you get in response for refresh code grant if everything is successfull
+// RefreshTokenGrantResponse is struct which you get in response for refresh code grant if everything is successful
 type RefreshTokenGrantResponse struct {
 	TokenType   string `json:"token_type"`
 	AccessToken string `json:"access_token"`

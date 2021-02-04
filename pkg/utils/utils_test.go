@@ -154,7 +154,7 @@ func TestMustGetEnv(t *testing.T) {
 
 	env := MustGetEnv("testingvar")
 	if env != "helloworld" {
-		t.Fatalf("enviroment variable doesnt match")
+		t.Fatalf("environment variable doesnt match")
 	}
 }
 

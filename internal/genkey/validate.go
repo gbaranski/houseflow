@@ -7,7 +7,7 @@ import (
 	mrand "math/rand"
 )
 
-// ValidateKeypairsEquality checks if key are equal, key means pkey or skey, it must have Equal() property whcih returns boolean
+// ValidateKeypairsEquality checks if key are equal, key means pkey or skey, it must have Equal() property which returns boolean
 func ValidateKeypairsEquality(pair1 Keypair, pair2 Keypair) {
 	if !pair1.PublicKey.Equal(pair2.PublicKey) {
 		panic(fmt.Errorf("public keys are not equal"))

@@ -50,18 +50,18 @@ func ComparePasswordAndHash(password, hash []byte) bool {
 	return bcrypt.CompareHashAndPassword(hash, password) == nil
 }
 
-// MustGetEnv retreives the enviroment variable
+// MustGetEnv retrieves the environment variable
 //
 // Panics if doesn't exists
 func MustGetEnv(key string) string {
 	env, present := os.LookupEnv(key)
 	if !present {
-		panic(fmt.Errorf("%s enviroment variable is unset", key))
+		panic(fmt.Errorf("%s environment variable is unset", key))
 	}
 	return env
 }
 
-// MustParseEnvKey parses base64 encoded public key, usefull when you load it from ENV
+// MustParseEnvKey parses base64 encoded public key, useful when you load it from ENV
 //
 // Panics when ENV does not exists, or length is invalid
 func MustParseEnvKey(env string, size int) []byte {

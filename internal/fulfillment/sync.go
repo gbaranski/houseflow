@@ -10,7 +10,7 @@ func (f *Fulfillment) onSyncIntent(r intentRequest) interface{} {
 	devices, err := f.db.GetUserDevices(r.r.Context(), r.user.ID)
 	if err != nil {
 		return types.ResponseError{
-			Name:        "fail_retreive_devices",
+			Name:        "fail_retrieve_devices",
 			Description: err.Error(),
 		}
 	}

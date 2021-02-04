@@ -57,7 +57,7 @@ type Devmgmt struct {
 
 // New is constructor for MQTT, connects to broker
 func New(opts Options) (Devmgmt, error) {
-  opts.Parse()
+	opts.Parse()
 	paho.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	paho.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
 	paho.WARN = log.New(os.Stdout, "[WARN]  ", 0)
@@ -88,7 +88,7 @@ func New(opts Options) (Devmgmt, error) {
 // ErrDeviceTimeout indicates that device had timeout
 var ErrDeviceTimeout = errors.New("device timeout")
 
-// ErrInvalidSignature indicates that device sent back invalid singature of payload
+// ErrInvalidSignature indicates that device sent back invalid signature of payload
 var ErrInvalidSignature = errors.New("invalid signature")
 
 // FetchDeviceState sends rqeuest to device with question about his device state
