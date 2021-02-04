@@ -123,8 +123,8 @@ func TestHashPassword(t *testing.T) {
 }
 
 func TestCompareHash(t *testing.T) {
-	pass := []byte(GenerateRandomString(20))
-	hash, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
+	pass := GenerateRandomString(20)
+	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -140,7 +140,7 @@ func TestCompareHashInvalid(t *testing.T) {
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
-	match := ComparePasswordAndHash([]byte(GenerateRandomString(20)), hash)
+	match := ComparePasswordAndHash(GenerateRandomString(20), hash)
 	if !match {
 		t.Fatalf("fail hash doesn't match")
 	}
