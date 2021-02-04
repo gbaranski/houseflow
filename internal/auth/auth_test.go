@@ -34,11 +34,11 @@ var opts = Options{
 var a Auth
 
 var realUser = types.User{
-	ID:        userID,
-	FirstName: "John",
-	LastName:  "Smith",
-	Email:     "john.smith@gmail.com",
-	Password:  helloworld,
+	ID:           userID,
+	FirstName:    "John",
+	LastName:     "Smith",
+	Email:        "john.smith@gmail.com",
+	PasswordHash: []byte(helloworld),
 }
 
 type TestDatabase struct{}
