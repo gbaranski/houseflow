@@ -36,11 +36,18 @@ CREATE TABLE IF NOT EXISTS user_devices (
 )
 `
 
-func (p Postgres) getUser(ctx context.Context, field string, value string) (user *types.User, err error) {
+func (p Postgres) getUser(ctx context.Context, field string, value string) (*types.User, error) {
 	sql := fmt.Sprintf("SELECT first_name, last_name, email, password_hash FROM users WHERE %s=$1", field)
 	row := p.conn.QueryRow(ctx, sql, value)
-	err = row.Scan(&user.FirstName, &user.LastName, &user.Email, &user.PasswordHash)
-	return user, err
+	user := types.User{}
+	err := row.Scan(&user.FirstName, &user.LastName, &user.Email, &user.PasswordHash)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, err
 }
 
 // GetUserByID queries user
