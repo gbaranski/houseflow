@@ -1,27 +1,13 @@
 package auth
 
-import "net/url"
-
 // LoginPageQuery sent by google
 type LoginPageQuery struct {
-	ClientID     string `form:"client_id" binding:"required" url:"client_id"`
-	RedirectURI  string `form:"redirect_uri" binding:"required" url:"redirect_uri"`
-	State        string `form:"state" binding:"required" url:"state"`
-	Scope        string `form:"scope" url:"scope"`
-	ResponseType string `form:"response_type" binding:"required" url:"response_type"`
-	UserLocale   string `form:"user_locale" url:"user_locale"`
-}
-
-// DecodeLoginPageQuery decodes login page query from url query
-func DecodeLoginPageQuery(u url.Values) LoginPageQuery {
-	return LoginPageQuery{
-		ClientID:     u.Get("client_id"),
-		RedirectURI:  u.Get("redirect_uri"),
-		State:        u.Get("state"),
-		Scope:        u.Get("scope"),
-		ResponseType: u.Get("response_type"),
-		UserLocale:   u.Get("user_locale"),
-	}
+	ClientID     string `schema:"client_id" binding:"required"`
+	RedirectURI  string `schema:"redirect_uri" binding:"required"`
+	State        string `schema:"state" binding:"required"`
+	Scope        string `schema:"scope"`
+	ResponseType string `schema:"response_type" binding:"required"`
+	UserLocale   string `schema:"user_locale"`
 }
 
 // TokenQuery sent by google
