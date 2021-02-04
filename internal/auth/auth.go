@@ -38,7 +38,8 @@ func (a *Auth) onLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
-	passmatch := utils.ComparePasswordAndHash([]byte(creds.Password), []byte(dbUser.Password))
+
+	passmatch := utils.ComparePasswordAndHash(creds.Password, dbUser.PasswordHash)
 	if !passmatch {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
