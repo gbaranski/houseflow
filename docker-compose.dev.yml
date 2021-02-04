@@ -1,6 +1,5 @@
 version: "3.9"
 services:
-  # Vendor services
   nginx:
     tty: true
     build:
@@ -13,8 +12,6 @@ services:
     volumes:
       - ./deployment/certs/fullchain.pem:/etc/dockercerts/fullchain.pem
       - ./deployment/certs/privkey.pem:/etc/dockercerts/privkey.pem
-    networks:
-      - backend
 
   postgres:
     image: postgres
@@ -23,8 +20,6 @@ services:
       - .env
     ports:
       - 5432:5432
-    networks:
-      - backend
 
   broker:
     tty: true
@@ -39,10 +34,6 @@ services:
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
-    networks:
-      - backend
-
-  # My services
 
   auth:
     tty: true
@@ -56,8 +47,6 @@ services:
       - .env
     volumes:
       - ./web/templates:/templates
-    networks:
-      - backend
 
   fulfillment:
     tty: true
@@ -69,8 +58,3 @@ services:
       context: .
     env_file:
       - .env
-    networks:
-      - backend
-
-networks:
-  backend:
