@@ -13,11 +13,13 @@ import (
 // UsersSchema is SQL schema for users
 const UsersSchema = `
 CREATE TABLE IF NOT EXISTS users (
-    id              UUID    PRIMARY KEY,
+    id              UUID,
     first_name      TEXT    NOT NULL,
     last_name       TEXT    NOT NULL,
     email           TEXT    NOT NULL,
-    password_hash   TEXT    NOT NULL -- bcrypted password
+	password_hash   TEXT    NOT NULL, -- bcrypted password
+	
+	PRIMARY KEY (id)
 )
 `
 

@@ -12,7 +12,7 @@ import (
 // DevicesSchema is SQL schema for devices
 const DevicesSchema = `
 CREATE TABLE IF NOT EXISTS devices (
-    id                  UUID        PRIMARY KEY,
+    id                  UUID,
     publickey           CHAR(44)    NOT NULL, -- Base64 encoded ed25519 public key, size = 4 * ceil(PKEY_BYTES / 3) = 44
     type                TEXT        NOT NULL, -- Type of the device, must be one of those https://developers.google.com/assistant/smarthome/guides
     will_report_state   BOOL        NOT NULL, -- True if device will report it state, false if use polling
@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS devices (
     manufacturer        TEXT        NOT NULL, -- e.g gbaranski's garage
     model               TEXT        NOT NULL, -- e.g nightlamp
     hw_version          TEXT        NOT NULL, -- e.g 2.0.5
-    sw_version          TEXT        NOT NULL, -- e.g 3.2.0
+	sw_version          TEXT        NOT NULL, -- e.g 3.2.0
+	
+	PRIMARY KEY (id)
 )
 `
 
@@ -29,7 +31,9 @@ const DeviceTraitsSchema = `
 CREATE TABLE IF NOT EXISTS devices (
     id          UUID PRIMARY KEY,
     device_id   UUID REFERENCES devices (id),
-    name        TEXT NOT NULL, -- Name of the trait, must be one of those https://developers.google.com/assistant/smarthome/traits
+	name        TEXT NOT NULL, -- Name of the trait, must be one of those https://developers.google.com/assistant/smarthome/traits
+
+	PRIMARY KEY (id)
 )
 `
 

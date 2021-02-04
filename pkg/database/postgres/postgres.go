@@ -65,6 +65,19 @@ func New(ctx context.Context, opts Options) (Postgres, error) {
 		return Postgres{}, err
 	}
 
+	if _, err := conn.Exec(ctx, DevicesSchema); err != nil {
+		return Postgres{}, fmt.Errorf("fail execute DevicesSchema, err: %s", err.Error())
+	}
+	if _, err := conn.Exec(ctx, DeviceTraitsSchema); err != nil {
+		return Postgres{}, fmt.Errorf("fail execute DevicesTraitsSchema, err: %s", err.Error())
+	}
+	if _, err := conn.Exec(ctx, UsersSchema); err != nil {
+		return Postgres{}, fmt.Errorf("fail execute UsersSchema, err: %s", err.Error())
+	}
+	if _, err := conn.Exec(ctx, UserDevicesSchema); err != nil {
+		return Postgres{}, fmt.Errorf("fail execute UserDevicesSchema, err: %s", err.Error())
+	}
+
 	fmt.Println("Connected to PostgreSQL")
 	return Postgres{
 		conn: conn,
