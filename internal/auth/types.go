@@ -22,8 +22,8 @@ type TokenQuery struct {
 
 // LoginCredentials is body of the request sent to /login
 type LoginCredentials struct {
-	Email    string `form:"email"`
-	Password string `form:"password"`
+	Email    string `schema:"email"`
+	Password string `schema:"password"`
 }
 
 // AuthorizationCodeGrantResponse is struct which you get in response for authorization code grant if everything is successful
