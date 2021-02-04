@@ -109,7 +109,7 @@ int init_postgres() {
   sprintf(params, "host=%s port=%s user=postgres password=%s dbname=%s", host, port, password, dbname);
 
   PGPing ping_response = PQPING_NO_ATTEMPT;
-  for(uint retry = 0; retry < ping_response != PQPING_OK; retry++) {
+  for(uint retry = 0; ping_response != PQPING_OK; retry++) {
     printf( "checking if postgres is active\n" );
     if (retry > POSTGRES_MAX_ATTEMPTS) {
       printf( "max attempts exceeded\n" );
@@ -126,7 +126,6 @@ int init_postgres() {
       case PQPING_NO_ATTEMPT:
         printf( "waiting postgres status: %x, retry: %d, left: %d\n", ping_response, retry, POSTGRES_MAX_ATTEMPTS-retry );
         sleep( 1 );
-        break;
     }
   }
 
