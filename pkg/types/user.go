@@ -7,5 +7,5 @@ type User struct {
 	LastName     string `json:"lastName" form:"lastName" binding:"required"`
 	Email        string `json:"email" houseflow:"email" form:"email" binding:"required,email"`
 	Password     string `json:"password" form:"password" binding:"required,min=8,max=20"`
-	PasswordHash string `json:"-" form:"-"`
+	PasswordHash []byte `json:"-" form:"-"`
 }
