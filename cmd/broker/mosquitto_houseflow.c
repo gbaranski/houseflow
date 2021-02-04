@@ -1,5 +1,8 @@
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <libpq-fe.h>
 #include <mosquitto_broker.h>
@@ -84,23 +87,72 @@ int mosquitto_plugin_version(int supported_version_count, const int *supported_v
 	return -1;
 }
 
-int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, struct mosquitto_opt *opts, int opt_count)
-{
-  printf("mosquitto_plugin_init()\n");
-	mosq_pid = identifier;
-
-  if(sodium_init() == -1) {
-    return 1;
+char* must_getenv(const char* key) {
+  char* env = getenv(key);
+  if (env == NULL) {
+    printf("%s env not found\n", key);
+    return NULL;
   }
-  printf("Sodium initialized\n");
+  return env;
+}
 
-  pgconn = PQconnectdb("user=postgres dbname=gbaranski");
+#define POSTGRES_MAX_ATTEMPTS 10
+
+int init_postgres() {
+  char* host = must_getenv("POSTGRES_HOST");
+  char* port = getenv("POSTGRES_PORT");
+  char* password = getenv("POSTGRES_PASSWORD");
+  char* dbname = getenv("POSTGRES_DB");
+  if (host == NULL || password == NULL || dbname == NULL || port == NULL) return 1;
+
+  char params[1000];
+  sprintf(params, "host=%s port=%s user=postgres password=%s dbname=%s", host, port, password, dbname);
+
+  PGPing ping_response = PQPING_NO_ATTEMPT;
+  for(uint retry = 0; retry < ping_response != PQPING_OK; retry++) {
+    printf( "checking if postgres is active\n" );
+    if (retry > POSTGRES_MAX_ATTEMPTS) {
+      printf( "max attempts exceeded\n" );
+      return 1;
+    }
+
+    ping_response = PQping(params);
+    switch (ping_response) {
+      case PQPING_OK:
+        printf("postgres active, connecting\n");
+        break;
+      case PQPING_REJECT:
+      case PQPING_NO_RESPONSE:
+      case PQPING_NO_ATTEMPT:
+        printf( "waiting postgres status: %x, retry: %d, left: %d\n", ping_response, retry, POSTGRES_MAX_ATTEMPTS-retry );
+        sleep( 1 );
+        break;
+    }
+  }
+
+  pgconn = PQconnectdb(params);
   if (PQstatus(pgconn) != CONNECTION_OK) {
     printf("Connection to database failed: %s\n", PQerrorMessage(pgconn));
     PQfinish(pgconn);
     return 1;
   }
   printf("Connected to PostgreSQL\n");
+
+  return 0;
+}
+
+int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, struct mosquitto_opt *opts, int opt_count)
+{
+  printf("mosquitto_plugin_init()\n");
+	mosq_pid = identifier;
+
+  if(sodium_init() == -1) return 1;
+  printf("Sodium initialized\n");
+
+  if (init_postgres() != 0) {
+    printf("failed initializing postgres\n");
+    return 1;
+  }
 
 	return mosquitto_callback_register(mosq_pid, MOSQ_EVT_BASIC_AUTH, auth_cb, NULL, NULL);
 }
