@@ -1,9 +1,8 @@
-version: "3.8"
+version: "3.9"
 services:
   # Vendor services
   nginx:
     tty: true
-    container_name: "nginx"
     build:
       context: ./build/nginx
       dockerfile: Dockerfile.dev
@@ -19,7 +18,6 @@ services:
 
   postgres:
     image: postgres
-    container_name: "postgres"
     restart: "unless-stopped"
     env_file:
       - .env
@@ -28,43 +26,26 @@ services:
     networks:
       - backend
 
-  emqx:
+  broker:
     tty: true
-    image: "emqx/emqx"
-    container_name: "emqx"
     restart: "unless-stopped"
-    environment:
-      - EMQX_NAME=emqx
-      - EMQX_LOG__LEVEL=info
-      - EMQX_ALLOW_ANONYMOUS=true
-
-      - EMQX_LOADED_PLUGINS=
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    build:
+      dockerfile: Dockerfile
+      context: ./cmd/broker
     ports:
       - 1883:1883 # MQTT
       - 8083:8083 # MQTT/WS
-      - 18083:18083 # Dashboard
-    volumes:
-      - ./build/emqx/plugins:/opt/emqx/etc/plugins
     networks:
       - backend
 
   # My services
 
-  emqx_auth:
-    # tty: true
-    container_name: "emqx_auth"
-    restart: "unless-stopped"
-    env_file:
-      - .env
-    build:
-      dockerfile: ./cmd/emqx/auth/Dockerfile
-      context: .
-    networks:
-      - backend
-
   auth:
     tty: true
-    container_name: "auth"
     restart: "unless-stopped"
     depends_on:
       - postgres
@@ -80,7 +61,6 @@ services:
 
   fulfillment:
     tty: true
-    container_name: "fulfillment"
     restart: "unless-stopped"
     depends_on:
       - postgres
