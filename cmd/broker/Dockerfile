@@ -30,4 +30,4 @@ RUN \
 
 COPY --from=builder /build/mosquitto_houseflow.so /mosquitto/mosquitto_houseflow.so
 
-RUN echo "plugin /mosquitto/mosquitto_houseflow.so" >> /mosquitto/config/mosquitto.conf
+COPY mosquitto.conf /mosquitto/config/mosquitto.conf
