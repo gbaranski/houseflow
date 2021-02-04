@@ -23,7 +23,7 @@ func main() {
 		fulfillmentOptions fulfillment.Options
 		devmgmtOptions     = devmgmt.Options{
 			ClientID:         "fulfillment",
-			ServerPublicKey:  utils.MustParseEnvKey("SERVER_PUBLIC_KEY", ed25519.PrivateKeySize),
+			ServerPublicKey:  utils.MustParseEnvKey("SERVER_PUBLIC_KEY", ed25519.PublicKeySize),
 			ServerPrivateKey: utils.MustParseEnvKey("SERVER_PRIVATE_KEY", ed25519.PrivateKeySize),
 		}
 	)

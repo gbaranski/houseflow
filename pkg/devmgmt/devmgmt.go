@@ -22,7 +22,7 @@ type Options struct {
 	// ClientID, required
 	ClientID string
 
-	// Default: "tcp://emqx:1883/mqtt"
+	// Default: "tcp://broker:1883"
 	BrokerURL string
 
 	// ServerPublicKey is servers public key
@@ -39,7 +39,7 @@ type Options struct {
 // Parse parses options to the defaults
 func (opts *Options) Parse() {
 	if opts.BrokerURL == "" {
-		opts.BrokerURL = "tcp://emqx:1883/mqtt"
+		opts.BrokerURL = "tcp://broker:1883"
 	}
 	if opts.ServerPublicKey == nil {
 		panic("ServerPublicKey option is required")
@@ -57,6 +57,7 @@ type Devmgmt struct {
 
 // New is constructor for MQTT, connects to broker
 func New(opts Options) (Devmgmt, error) {
+  opts.Parse()
 	paho.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
 	paho.CRITICAL = log.New(os.Stdout, "[CRIT] ", 0)
 	paho.WARN = log.New(os.Stdout, "[WARN]  ", 0)
