@@ -53,7 +53,7 @@ func TestValidCreateToken(t *testing.T) {
 		t.Fatalf("fail signature from base64 %s", err.Error())
 	}
 	if !signatureFromBase64.Equal(signed.Signature()) || !signatureFromBase64.Equal(signed.Signature()) {
-		t.Fatalf("invlaid signature after base64 %s", err.Error())
+		t.Fatalf("invalid signature after base64 %s", err.Error())
 	}
 
 	payloadFromBase64, err := PayloadFromBase64(signed.Payload().Base64())
@@ -61,7 +61,7 @@ func TestValidCreateToken(t *testing.T) {
 		t.Fatalf("fail payload from base64 %s", err.Error())
 	}
 	if !payloadFromBase64.Parse().Equal(validToken) || !payloadFromBase64.Equal(validToken.Payload()) {
-		t.Fatalf("invlaid payload after base64 %s", err.Error())
+		t.Fatalf("invalid payload after base64 %s", err.Error())
 	}
 
 }
