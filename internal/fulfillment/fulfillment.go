@@ -39,8 +39,13 @@ type Database interface {
 
 // Devmgmt is shortcut for DeviceManager
 type Devmgmt interface {
-	SendCommand(ctx context.Context, device types.Device, comamnd string, params map[string]interface{}) (types.DeviceResponse, error)
-	FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error)
+	FetchDeviceState(ctx context.Context, device types.Device) (types.DeviceResponse, error)
+	SendActionCommand(
+		ctx context.Context,
+		device types.Device,
+		command string,
+		params map[string]interface{},
+	) (types.DeviceResponse, error)
 }
 
 // Fulfillment hold root server state
@@ -166,7 +171,7 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := signedToken.Parse().Audience
-	user, err := f.db.GetUserByID(r.Context(), string(userID[:]))
+	user, err := f.db.GetUserByID(r.Context(), string(userID))
 	if err != nil {
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "fail_get_user",
@@ -178,10 +183,9 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		utils.ReturnError(w, types.ResponseError{
-			Name:        "user_not_found",
-			Description: err.Error(),
-			StatusCode:  http.StatusNotFound,
-			Log:         true,
+			Name:       "user_not_found",
+			StatusCode: http.StatusNotFound,
+			Log:        true,
 		})
 		return
 	}
