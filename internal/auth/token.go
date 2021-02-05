@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gbaranski/houseflow/pkg/token"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
 func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
@@ -19,7 +19,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	token, err := utils.VerifyToken(form.Code, []byte(a.opts.AuthorizationCodeKey))
+	signedCode, err := token.NewSignedFromBase64([]byte(form.Code))
 	if err != nil {
 		json, _ := json.Marshal(types.ResponseError{
 			Name:        "invalid_grant",
@@ -29,8 +29,18 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		w.Write(json)
 		return
 	}
+	if err = signedCode.Verify([]byte(a.opts.AuthorizationCodeKey)); err != nil {
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "invalid_grant",
+			Description: fmt.Sprintf("authorization code %s", err.Error()),
+		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
+		return
+	}
+	parsed := signedCode.Parse()
 
-	_, rtstr, err := a.newRefreshToken(token.Audience)
+	rt, err := a.newRefreshToken(parsed.Audience)
 	if err != nil {
 		json, _ := json.Marshal(types.ResponseError{
 			Name:        "rt_create_fail",
@@ -41,7 +51,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	_, atstr, err := a.newAccessToken(token.Audience)
+	at, err := a.newAccessToken(parsed.Audience)
 	if err != nil {
 		json, _ := json.Marshal(types.ResponseError{
 			Name:        "at_create_fail",
@@ -54,15 +64,15 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 
 	json, _ := json.Marshal(AuthorizationCodeGrantResponse{
 		TokenType:    "Bearer",
-		AccessToken:  atstr,
-		RefreshToken: rtstr,
-		ExpiresIn:    int(utils.AccessTokenDuration.Seconds()),
+		AccessToken:  string(at.Base64()),
+		RefreshToken: string(rt.Base64()),
+		ExpiresIn:    int(token.AccessTokenDuration.Seconds()),
 	})
 	w.Write(json)
 }
 
 func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
-	rt, err := utils.VerifyToken(form.RefreshToken, []byte(a.opts.RefreshKey))
+	signedRT, err := token.NewSignedFromBase64WithVerify([]byte(a.opts.RefreshKey), []byte(form.RefreshToken))
 	if err != nil {
 		json, _ := json.Marshal(types.ResponseError{
 			Name:        "invalid_grant",
@@ -73,7 +83,7 @@ func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form 
 		return
 	}
 
-	_, atstr, err := a.newAccessToken(rt.Audience)
+	signedAT, err := a.newAccessToken(signedRT.Parse().Audience)
 	if err != nil {
 		json, _ := json.Marshal(types.ResponseError{
 			Name:        "fail_create_at",
@@ -86,8 +96,8 @@ func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form 
 
 	json, _ := json.Marshal(RefreshTokenGrantResponse{
 		TokenType:   "Bearer",
-		AccessToken: atstr,
-		ExpiresIn:   int(utils.AccessTokenDuration.Seconds()),
+		AccessToken: string(signedAT.Base64()),
+		ExpiresIn:   int(token.AccessTokenDuration.Seconds()),
 	})
 	w.Write(json)
 }

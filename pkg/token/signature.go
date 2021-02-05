@@ -23,14 +23,15 @@ func (s Signature) Equal(s2 Signature) bool {
 }
 
 // Base64 encodes signature to base64 format
-func (s Signature) Base64() (b64 [SignatureBase64Size]byte) {
-	base64.StdEncoding.Encode(b64[:], s[:])
-	return
+func (s Signature) Base64() []byte {
+	b64 := make([]byte, SignatureBase64Size)
+	base64.StdEncoding.Encode(b64, s[:])
+	return b64
 }
 
 // NewSignatureFromBase64 parses base64 signature and returns Signature
-func NewSignatureFromBase64(b64 [SignatureBase64Size]byte) (s Signature, err error) {
-	n, err := base64.StdEncoding.Decode(s[:], b64[:])
+func NewSignatureFromBase64(b64 []byte) (s Signature, err error) {
+	n, err := base64.StdEncoding.Decode(s[:], b64)
 	if err != nil {
 		return Signature{}, err
 	}

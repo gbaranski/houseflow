@@ -60,14 +60,15 @@ func (s Signed) Equal(s2 Signed) bool {
 }
 
 // Base64 encodes signed token to base64 format
-func (s Signed) Base64() (b64 [SignedBase64Size]byte) {
-	base64.RawStdEncoding.Encode(b64[:SignedBase64Size], s[:])
-	return
+func (s Signed) Base64() []byte {
+	b64 := make([]byte, SignedBase64Size)
+	base64.RawStdEncoding.Encode(b64, s[:])
+	return b64
 }
 
 // NewSignedFromBase64 parses base64 and returns it in signed format
-func NewSignedFromBase64(b64 [SignedBase64Size]byte) (s Signed, err error) {
-	n, err := base64.StdEncoding.Decode(s[:], b64[:])
+func NewSignedFromBase64(b64 []byte) (s Signed, err error) {
+	n, err := base64.StdEncoding.Decode(s[:], b64)
 	if err != nil {
 		return Signed{}, err
 	}
@@ -75,4 +76,13 @@ func NewSignedFromBase64(b64 [SignedBase64Size]byte) (s Signed, err error) {
 		return Signed{}, fmt.Errorf("invalid token size: %d", n)
 	}
 	return s, nil
+}
+
+// NewSignedFromBase64WithVerify parses base64 and returns it in signed format and also verifies if its valid
+func NewSignedFromBase64WithVerify(key []byte, b64 []byte) (s Signed, err error) {
+	s, err = NewSignedFromBase64(b64)
+	if err != nil {
+		return s, err
+	}
+	return s, s.Verify(key)
 }

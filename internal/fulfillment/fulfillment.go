@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/token"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -148,8 +148,27 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := utils.ExtractWithVerifyUserToken(r, []byte(f.opts.AccessKey))
+	signedTokenBase64 := token.ExtractHeaderToken(r)
+	if signedTokenBase64 == nil {
+		json, _ := json.Marshal(types.ResponseError{
+			Name: "missing_token",
+		})
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(json)
+		return
+	}
+	signedToken, err := token.NewSignedFromBase64([]byte(*signedTokenBase64))
 	if err != nil {
+		fmt.Println("invalid token", err.Error())
+		json, _ := json.Marshal(types.ResponseError{
+			Name:        "invalid_grant",
+			Description: err.Error(),
+		})
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write(json)
+		return
+	}
+	if err := signedToken.Verify([]byte(f.opts.AccessKey)); err != nil {
 		json, _ := json.Marshal(types.ResponseError{
 			Name:        "invalid_grant",
 			Description: err.Error(),
@@ -159,9 +178,11 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := signedToken.Parse().Audience
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
-	user, err := f.db.GetUserByID(ctx, userID)
+	user, err := f.db.GetUserByID(ctx, string(userID[:]))
 
 	if err != nil {
 		json, _ := json.Marshal(types.ResponseError{

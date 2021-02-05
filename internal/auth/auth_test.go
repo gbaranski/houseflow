@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gbaranski/houseflow/pkg/token"
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/google/uuid"
@@ -137,22 +138,25 @@ func TestLoginValidPassword(t *testing.T) {
 	if err != nil {
 		t.Fatalf("redirected URL is invalid: %s", redirectURL)
 	}
-	code := url.Query().Get("code")
-
-	if _, err = utils.VerifyToken(code, []byte(opts.AuthorizationCodeKey)); err != nil {
+	signedcode, err := token.NewSignedFromBase64([]byte(url.Query().Get("code")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = signedcode.Verify([]byte(opts.AuthorizationCodeKey)); err != nil {
 		t.Fatalf("fail verify authorization code %s", err.Error())
 	}
-	res := GetAuthorizationCodeGrant(t, code)
+	res := GetAuthorizationCodeGrant(t, signedcode)
 	GetRefreshTokenGrant(t, res.RefreshToken)
 }
 
-func GetAuthorizationCodeGrant(t *testing.T, code string) AuthorizationCodeGrantResponse {
+func GetAuthorizationCodeGrant(t *testing.T, signedcode token.Signed) AuthorizationCodeGrantResponse {
 	form := url.Values{}
+	codeb64 := signedcode.Base64()
 	encoder.Encode(TokenQuery{
 		ClientID:     opts.ClientID,
 		ClientSecret: opts.ClientSecret,
 		GrantType:    "authorization_code",
-		Code:         code,
+		Code:         string(codeb64[:]),
 		RedirectURI:  fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", opts.ProjectID),
 	}, form)
 
@@ -166,18 +170,26 @@ func GetAuthorizationCodeGrant(t *testing.T, code string) AuthorizationCodeGrant
 	a.Router.ServeHTTP(w, req)
 
 	if w.Code != 200 {
-		t.Fatalf("unexpected response: %d, body: %s", w.Code, w.Body.String())
+		t.Fatalf("authorization code grant unexpected response: %d, body: %s", w.Code, w.Body.String())
 	}
 	var res AuthorizationCodeGrantResponse
 	if err = json.Unmarshal(w.Body.Bytes(), &res); err != nil {
 		t.Fatalf("fail decode body response, err: %s, body: %s", err.Error(), w.Body.String())
 	}
 
-	if _, err = utils.VerifyToken(res.AccessToken, []byte(opts.AccessKey)); err != nil {
+	signedAT, err := token.NewSignedFromBase64([]byte(res.AccessToken))
+	if err != nil {
+		t.Fatalf("fail parse access token %s", err.Error())
+	}
+	if err := signedAT.Verify([]byte(opts.AccessKey)); err != nil {
 		t.Fatalf("fail verify access token %s", err.Error())
 	}
 
-	if _, err = utils.VerifyToken(res.RefreshToken, []byte(opts.RefreshKey)); err != nil {
+	signedRT, err := token.NewSignedFromBase64([]byte(res.RefreshToken))
+	if err != nil {
+		t.Fatalf("fail parse refresh token %s", err.Error())
+	}
+	if err := signedRT.Verify([]byte(opts.RefreshKey)); err != nil {
 		t.Fatalf("fail verify refresh token %s", err.Error())
 	}
 	return res
@@ -202,14 +214,18 @@ func GetRefreshTokenGrant(t *testing.T, refreshToken string) RefreshTokenGrantRe
 	a.Router.ServeHTTP(w, req)
 
 	if w.Code != 200 {
-		t.Fatalf("unexpected response: %d, body: %s", w.Code, w.Body.String())
+		t.Fatalf("refresh token grant unexpected response: %d, body: %s", w.Code, w.Body.String())
 	}
 	var res RefreshTokenGrantResponse
 	if err = json.Unmarshal(w.Body.Bytes(), &res); err != nil {
 		t.Fatalf("fail decode body response, err: %s, body: %s", err.Error(), w.Body.String())
 	}
 
-	if _, err = utils.VerifyToken(res.AccessToken, []byte(opts.AccessKey)); err != nil {
+	signedAT, err := token.NewSignedFromBase64([]byte(res.AccessToken))
+	if err != nil {
+		t.Fatalf("fail parse access token %s", err.Error())
+	}
+	if signedAT.Verify([]byte(opts.AccessKey)); err != nil {
 		t.Fatalf("fail verify access token %s", err.Error())
 	}
 	return res

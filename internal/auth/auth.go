@@ -44,7 +44,7 @@ func (a *Auth) onLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
-	redirectURI, err := a.createRedirectURI(query, dbUser.ID)
+	redirectURI, err := a.createRedirectURI(query, []byte(dbUser.ID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

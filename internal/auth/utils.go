@@ -5,50 +5,38 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gbaranski/houseflow/pkg/utils"
-	"github.com/google/uuid"
+	"github.com/gbaranski/houseflow/pkg/token"
 )
 
 func (a Auth) validateRedirectURI(uri string) bool {
 	return uri == fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", a.opts.ProjectID) || uri == fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", a.opts.ProjectID)
 }
 
-func (a Auth) newRefreshToken(userID string) (token utils.Token, strtoken string, err error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return
+func (a Auth) newRefreshToken(aud [36]byte) (token.Signed, error) {
+	token := token.Parsed{
+		Audience:  aud,
+		ExpiresAt: uint32(time.Now().Add(token.AccessTokenDuration).Unix()),
 	}
-	token = utils.Token{
-		Audience: userID,
-		ID:       id.String(),
-	}
-	strtoken, err = token.Sign([]byte(a.opts.RefreshKey))
-	return
+	return token.Sign([]byte(a.opts.RefreshKey))
 }
 
-func (a Auth) newAccessToken(userID string) (token utils.Token, strtoken string, err error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return
+func (a Auth) newAccessToken(aud [36]byte) (token.Signed, error) {
+	token := token.Parsed{
+		Audience:  aud,
+		ExpiresAt: uint32(time.Now().Add(token.AccessTokenDuration).Unix()),
 	}
-	token = utils.Token{
-		Audience:  userID,
-		ID:        id.String(),
-		ExpiresAt: time.Now().Add(utils.AccessTokenDuration).Unix(),
-	}
-	strtoken, err = token.Sign([]byte(a.opts.AccessKey))
-	return
+	return token.Sign([]byte(a.opts.AccessKey))
 }
 
-func (a *Auth) createRedirectURI(q LoginPageQuery, userID string) (string, error) {
-	token := utils.Token{
-		Audience:  userID,
-		ExpiresAt: time.Now().Add(utils.AuthorizationCodeDuration).Unix(),
+func (a *Auth) createRedirectURI(q LoginPageQuery, aud []byte) (string, error) {
+	token := token.Parsed{
+		ExpiresAt: uint32(time.Now().Add(token.AuthorizationCodeDuration).Unix()),
 	}
+	copy(token.Audience[:], aud)
 	strtoken, err := token.Sign([]byte(a.opts.AuthorizationCodeKey))
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s?code=%s&state=%s", q.RedirectURI, url.QueryEscape(strtoken), q.State), nil
+	return fmt.Sprintf("%s?code=%s&state=%s", q.RedirectURI, url.QueryEscape(string(strtoken.Base64())), q.State), nil
 }

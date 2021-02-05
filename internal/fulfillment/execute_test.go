@@ -10,15 +10,16 @@ import (
 	"time"
 
 	ftypes "github.com/gbaranski/houseflow/pkg/fulfillment"
+	"github.com/gbaranski/houseflow/pkg/token"
 	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
 func TestExecute(t *testing.T) {
-	token := utils.Token{
-		Audience:  realUser.ID,
-		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+	token := token.Parsed{
+		ExpiresAt: uint32(time.Now().Add(time.Hour).Unix()),
 	}
-	strtoken, err := token.Sign([]byte(opts.AccessKey))
+	copy(token.Audience[:], realUser.ID)
+	signedToken, err := token.Sign([]byte(opts.AccessKey))
 	if err != nil {
 		t.Fatalf("fail when signing token %s", err.Error())
 	}
@@ -74,7 +75,7 @@ func TestExecute(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/webhook", bytes.NewReader(benc))
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", strtoken))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", signedToken.Base64()))
 	f.Router.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
