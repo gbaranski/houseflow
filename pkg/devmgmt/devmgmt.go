@@ -1,15 +1,14 @@
 package devmgmt
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -17,37 +16,10 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
-// Options of the Devmgmt
-type Options struct {
-	// ClientID, required
-	ClientID string
-
-	// Default: "tcp://broker:1883"
-	BrokerURL string
-
-	// ServerPublicKey is servers public key
-	//
-	// *Required*
-	ServerPublicKey ed25519.PublicKey
-
-	// ServerPrivateKey is servers private key
-	//
-	// *Required*
-	ServerPrivateKey ed25519.PrivateKey
-}
-
-// Parse parses options to the defaults
-func (opts *Options) Parse() {
-	if opts.BrokerURL == "" {
-		opts.BrokerURL = "tcp://broker:1883"
-	}
-	if opts.ServerPublicKey == nil {
-		panic("ServerPublicKey option is required")
-	}
-	if opts.ServerPrivateKey == nil {
-		panic("ServerPrivateKey option is required")
-	}
-}
+const (
+	// RequestIDSize is size of RequestID
+	RequestIDSize = 16
+)
 
 // Devmgmt is some abstraction layer over paho mqtt
 type Devmgmt struct {
@@ -85,92 +57,106 @@ func New(opts Options) (Devmgmt, error) {
 	}, nil
 }
 
-// ErrDeviceTimeout indicates that device had timeout
-var ErrDeviceTimeout = errors.New("device timeout")
-
-// ErrInvalidSignature indicates that device sent back invalid signature of payload
-var ErrInvalidSignature = errors.New("invalid signature")
-
-// FetchDeviceState sends rqeuest to device with question about his device state
-func (d Devmgmt) FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// SendCommand sends request and waits for response and returns it
-func (d Devmgmt) SendCommand(ctx context.Context, device types.Device, command string, params map[string]interface{}) (types.DeviceResponse, error) {
-	reqTopic := fmt.Sprintf("%s/command/request", device.ID)
-	resTopic := fmt.Sprintf("%s/command/response", device.ID)
+// PublishWithResponse publishes message and waits for response and returns its body
+func (d Devmgmt) PublishWithResponse(ctx context.Context, body []byte, topic ResponseTopic, pkey ed25519.PublicKey) ([]byte, error) {
 	msgc := make(chan paho.Message)
 
-	if token := d.Client.Subscribe(resTopic, 0, func(c paho.Client, m paho.Message) {
+	if token := d.Client.Subscribe(topic.Response, 0, func(c paho.Client, m paho.Message) {
 		msgc <- m
 	}); token.Wait() && token.Error() != nil {
-		return types.DeviceResponse{}, token.Error()
+		return nil, token.Error()
 	}
-
 	defer func() {
-		d.Client.Unsubscribe(resTopic)
+		d.Client.Unsubscribe(topic.Response)
 	}()
-
-	req := types.DeviceRequest{
-		CorrelationData: utils.GenerateRandomString(16),
-		State:           params,
-		Command:         command,
+	requestID, err := utils.NewRequestID(RequestIDSize)
+	if err != nil {
+		return nil, fmt.Errorf("fail gen requestID %s", err.Error())
 	}
-	reqjson, err := json.Marshal(req)
+
+	p := make([]byte, ed25519.SignatureSize+RequestIDSize+len(body))
+	copy(p[0:ed25519.SignatureSize], ed25519.Sign(d.opts.ServerPrivateKey, append(requestID, body...)))
+	copy(p[ed25519.SignatureSize:ed25519.SignatureSize+RequestIDSize], requestID)
+	copy(p[ed25519.SignatureSize+RequestIDSize:], body)
+
+	if token := d.Client.Publish(topic.Request, 0, false, p); token.Wait() && token.Error() != nil {
+		return nil, token.Error()
+	}
+
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ErrDeviceTimeout
+		case msg, ok := <-msgc:
+			{
+				if !ok {
+					continue loop
+				}
+				msgPayload := msg.Payload()
+				msgSig := msgPayload[0:ed25519.SignatureSize]
+				msgRequestID := msgPayload[ed25519.SignatureSize : ed25519.SignatureSize+RequestIDSize]
+				msgBody := msgPayload[ed25519.SignatureSize+RequestIDSize:]
+				if !bytes.Equal(msgRequestID, requestID) {
+					continue loop
+				}
+				valid := ed25519.Verify(pkey, msgBody, msgSig)
+				if !valid {
+					return nil, fmt.Errorf("invalid message signature")
+				}
+				return msgBody, nil
+			}
+		}
+	}
+}
+
+// FetchDeviceState sends rqeuest to device with question about his device state
+func (d Devmgmt) FetchDeviceState(ctx context.Context, device types.Device) (types.DeviceResponse, error) {
+	res, err := d.PublishWithResponse(ctx, nil, ResponseTopic{
+		Request:  fmt.Sprintf("%s/state/request", device.ID),
+		Response: fmt.Sprintf("%s/state/response", device.ID),
+	}, ed25519.PublicKey(device.PublicKey))
 	if err != nil {
 		return types.DeviceResponse{}, err
 	}
 
-	ssig := ed25519.Sign(d.opts.ServerPrivateKey, reqjson)
-	encssig := base64.StdEncoding.EncodeToString(ssig)
-
-	reqp := strings.Join([]string{encssig, string(reqjson)}, ".")
-
-	if token := d.Client.Publish(reqTopic, 0, false, reqp); token.Wait() && token.Error() != nil {
-		return types.DeviceResponse{}, token.Error()
+	var parsedResponse types.DeviceResponse
+	if err = json.Unmarshal(res, &parsedResponse); err != nil {
+		return types.DeviceResponse{}, fmt.Errorf("fail unmarshall device resp %s", err.Error())
 	}
 
-readMessages:
-	for {
-		select {
-		case <-ctx.Done():
-			return types.DeviceResponse{}, ErrDeviceTimeout
+	return parsedResponse, nil
+}
 
-		case msg, ok := <-msgc:
-			fmt.Println("Received some message")
-			if !ok {
-				fmt.Println("Failed waiting for msg for unknown reason")
-				continue readMessages
-			}
-
-			resp := msg.Payload()
-			resjson, dsig, err := utils.ParseSignedPayload(resp)
-			if err != nil {
-				fmt.Println("Failed parsing payload to json and sig: ", err.Error())
-				continue readMessages
-			}
-			var res types.DeviceResponse
-			err = json.Unmarshal([]byte(resjson), &res)
-			if err != nil {
-				fmt.Println("Failed unmarshalling json: ", err.Error())
-				continue readMessages
-			}
-			if res.CorrelationData != req.CorrelationData {
-				fmt.Println("Correlation data doesn't match, skipping")
-				continue readMessages
-			}
-			// TODO: make database store raw bin
-			dpkey, err := base64.StdEncoding.DecodeString(device.PublicKey)
-			if err != nil {
-				fmt.Println("fail parsing device public key: ", err.Error())
-				return types.DeviceResponse{}, fmt.Errorf("fail parsing device public key %s", err.Error())
-			}
-			valid := ed25519.Verify(ed25519.PublicKey(dpkey), []byte(resjson), dsig)
-			if !valid {
-				return types.DeviceResponse{}, ErrInvalidSignature
-			}
-			return res, nil
-		}
+// SendActionCommand sends action command and returns device response to it
+func (d Devmgmt) SendActionCommand(
+	ctx context.Context,
+	device types.Device,
+	command string,
+	params map[string]interface{},
+) (types.DeviceResponse, error) {
+	req := types.DeviceRequest{
+		State:   params,
+		Command: command,
 	}
+	r, err := json.Marshal(req)
+	if err != nil {
+		return types.DeviceResponse{}, nil
+	}
+	b, err := d.PublishWithResponse(ctx, r, ResponseTopic{
+		Request:  fmt.Sprintf("%s/request", device.ID),
+		Response: fmt.Sprintf("%s/response", device.ID),
+	}, ed25519.PublicKey(device.PublicKey))
+
+	if err != nil {
+		return types.DeviceResponse{}, err
+	}
+
+	var res types.DeviceResponse
+	err = json.Unmarshal(b, &res)
+	if err != nil {
+		return types.DeviceResponse{}, fmt.Errorf("invalid json %s", err.Error())
+	}
+
+	return res, nil
 }
