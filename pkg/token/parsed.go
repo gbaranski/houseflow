@@ -8,8 +8,8 @@ type Parsed struct {
 	ExpiresAt uint32
 }
 
-// Bytes converts token to bytes and returns it
-func (t Parsed) Bytes() (b Bytes) {
+// Payload retursn payload of the token
+func (t Parsed) Payload() (b Payload) {
 	b[0] = byte(t.ExpiresAt >> 24)
 	b[1] = byte(t.ExpiresAt >> 16)
 	b[2] = byte(t.ExpiresAt >> 8)
@@ -19,20 +19,29 @@ func (t Parsed) Bytes() (b Bytes) {
 	return b
 }
 
-// Sign converts token to bytes and then signs it and returns the signed token
+// Sign takes token Payload and then signs it and returns the signed token
 func (t Parsed) Sign(key []byte) (token Signed, err error) {
-	b := t.Bytes()
-	sig, err := b.Sign(key)
+	p := t.Payload()
+	sig, err := p.Sign(key)
+
+	if err != nil {
+		return Signed{}, err
+	}
 
 	copy(token[:SignatureSize], sig[:])
-	copy(token[SignatureSize:SignedSize], b[:])
+	copy(token[SignatureSize:SignedSize], p[:])
 
 	return token, nil
 }
 
+// Signed takes payload at appends it after signature
+func (t Parsed) Signed(sig Signature) (s Signed) {
+	return t.Payload().Signed(sig)
+}
+
 // Verify verifies if parsed token is signed by signature passed via argument
 func (t Parsed) Verify(key []byte, sig Signature) error {
-	return t.Bytes().Signed(sig).Verify(key)
+	return t.Payload().Signed(sig).Verify(key)
 }
 
 // Equal checks equality of tokens

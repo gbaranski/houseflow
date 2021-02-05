@@ -37,6 +37,33 @@ func TestValidCreateToken(t *testing.T) {
 	if !signed.Parse().Equal(validToken) {
 		t.Fatalf("tokens are not equal")
 	}
+	if !signed.Parse().Payload().Signed(signed.Signature()).Equal(signed) {
+		t.Fatalf("token malformed after multiple conversions")
+	}
+	signedFromBase64, err := SignedFromBase64(signed.Base64())
+	if err != nil {
+		t.Fatalf("fail signed token from base64 %s", err.Error())
+	}
+	if !signedFromBase64.Equal(signed) {
+		t.Fatalf("tokens not equal after b64 conv")
+	}
+
+	signatureFromBase64, err := SignatureFromBase64(signed.Signature().Base64())
+	if err != nil {
+		t.Fatalf("fail signature from base64 %s", err.Error())
+	}
+	if !signatureFromBase64.Equal(signed.Signature()) || !signatureFromBase64.Equal(signed.Signature()) {
+		t.Fatalf("invlaid signature after base64 %s", err.Error())
+	}
+
+	payloadFromBase64, err := PayloadFromBase64(signed.Payload().Base64())
+	if err != nil {
+		t.Fatalf("fail payload from base64 %s", err.Error())
+	}
+	if !payloadFromBase64.Parse().Equal(validToken) || !payloadFromBase64.Equal(validToken.Payload()) {
+		t.Fatalf("invlaid payload after base64 %s", err.Error())
+	}
+
 }
 
 func TestExpiredCreateToken(t *testing.T) {
