@@ -2,12 +2,16 @@ package utils
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -73,4 +77,14 @@ func MustParseEnvKey(env string, size int) []byte {
 		panic(fmt.Errorf("invalid length of %s", env))
 	}
 	return key
+}
+
+// ReturnError takes http.ResponseWriter and writes err to it
+func ReturnError(w http.ResponseWriter, err types.ResponseError) {
+	str, _ := json.Marshal(err)
+	w.WriteHeader(err.StatusCode)
+	w.Write(str)
+	if err.LogError {
+		logrus.Errorf("%s - %s", err.Name, err.Description)
+	}
 }

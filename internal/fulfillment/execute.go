@@ -16,14 +16,12 @@ func (f *Fulfillment) executeCommand(
 	perms, err := f.db.GetUserDevicePermissions(r.r.Context(), r.user.ID, targetDevice.ID)
 	if err != nil {
 		return fulfillment.ExecuteResponseCommands{
-			IDs:       []string{targetDevice.ID},
 			Status:    "ERROR",
 			ErrorCode: "hardError",
 		}
 	}
 	if !perms.Execute {
 		return fulfillment.ExecuteResponseCommands{
-			IDs:       []string{targetDevice.ID},
 			Status:    fulfillment.StatusError,
 			ErrorCode: "authFailure",
 		}
@@ -31,14 +29,12 @@ func (f *Fulfillment) executeCommand(
 	device, err := f.db.GetDeviceByID(r.r.Context(), targetDevice.ID)
 	if err != nil {
 		return fulfillment.ExecuteResponseCommands{
-			IDs:       []string{targetDevice.ID},
 			Status:    "ERROR",
 			ErrorCode: "hardError",
 		}
 	}
 	if device == nil {
 		return fulfillment.ExecuteResponseCommands{
-			IDs:       []string{targetDevice.ID},
 			Status:    "ERROR",
 			ErrorCode: "relinkRequired",
 		}
@@ -48,27 +44,23 @@ func (f *Fulfillment) executeCommand(
 	if err != nil {
 		if err == devmgmt.ErrDeviceTimeout {
 			return fulfillment.ExecuteResponseCommands{
-				IDs:       []string{targetDevice.ID},
 				Status:    fulfillment.StatusOffline,
 				ErrorCode: "offline",
 			}
 		}
 		if err == devmgmt.ErrInvalidSignature {
 			return fulfillment.ExecuteResponseCommands{
-				IDs:       []string{targetDevice.ID},
 				Status:    fulfillment.StatusError,
 				ErrorCode: "transientError",
 			}
 		}
 		return fulfillment.ExecuteResponseCommands{
-			IDs:       []string{targetDevice.ID},
 			Status:    fulfillment.StatusError,
 			ErrorCode: "hardError",
 		}
 	}
 
 	return fulfillment.ExecuteResponseCommands{
-		IDs:       []string{targetDevice.ID},
 		Status:    response.Status,
 		States:    response.State,
 		ErrorCode: response.Error,
@@ -94,6 +86,7 @@ func (f *Fulfillment) onExecuteIntent(r intentRequest) interface{} {
 		for _, execution := range command.Execution {
 			for _, device := range command.Devices {
 				exec := f.executeCommand(r, device, execution)
+				exec.IDs = []string{device.ID}
 				responseCommands = append(responseCommands, exec)
 			}
 		}

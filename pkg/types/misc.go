@@ -4,4 +4,6 @@ package types
 type ResponseError struct {
 	Name        string `json:"error"`
 	Description string `json:"error_description,omitempty"`
+	StatusCode  int    `json:"-"`
+	Log         bool   `json:"-"`
 }

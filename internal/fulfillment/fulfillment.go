@@ -13,6 +13,7 @@ import (
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/token"
 	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -71,9 +72,7 @@ func New(db Database, devmgmt Devmgmt, opts Options) Fulfillment {
 
 // Only for testing purposes
 func (f *Fulfillment) onAddDevice(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
-	f.db.AddDevice(ctx, types.Device{
+	f.db.AddDevice(r.Context(), types.Device{
 		Device: fulfillment.Device{
 			ID:   "5fef44d38948c2002ae590ab",
 			Type: "action.devices.types.LIGHT",
@@ -139,76 +138,60 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err := json.NewDecoder(io.TeeReader(r.Body, &bodybuf)).Decode(&base); err != nil {
-		json, _ := json.Marshal(types.ResponseError{
-			Name:        "fail_parse_json",
+		utils.ReturnError(w, types.ResponseError{
+			Name:        "invalid_json",
 			Description: err.Error(),
+			StatusCode:  http.StatusUnprocessableEntity,
 		})
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		w.Write(json)
 		return
 	}
 
 	signedTokenBase64 := token.ExtractHeaderToken(r)
 	if signedTokenBase64 == nil {
-		json, _ := json.Marshal(types.ResponseError{
-			Name: "missing_token",
+		utils.ReturnError(w, types.ResponseError{
+			Name:       "missing_token",
+			StatusCode: http.StatusBadRequest,
 		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
 		return
 	}
-	signedToken, err := token.NewSignedFromBase64([]byte(*signedTokenBase64))
+	signedToken, err := token.NewSignedFromBase64WithVerify([]byte(f.opts.AccessKey), []byte(*signedTokenBase64))
 	if err != nil {
-		fmt.Println("invalid token", err.Error())
-		json, _ := json.Marshal(types.ResponseError{
+		utils.ReturnError(w, types.ResponseError{
 			Name:        "invalid_grant",
 			Description: err.Error(),
+			StatusCode:  http.StatusForbidden,
+			Log:         true,
 		})
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write(json)
-		return
-	}
-	if err := signedToken.Verify([]byte(f.opts.AccessKey)); err != nil {
-		json, _ := json.Marshal(types.ResponseError{
-			Name:        "invalid_grant",
-			Description: err.Error(),
-		})
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write(json)
 		return
 	}
 
 	userID := signedToken.Parse().Audience
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	defer cancel()
-	user, err := f.db.GetUserByID(ctx, string(userID[:]))
-
+	user, err := f.db.GetUserByID(r.Context(), string(userID[:]))
 	if err != nil {
-		json, _ := json.Marshal(types.ResponseError{
+		utils.ReturnError(w, types.ResponseError{
 			Name:        "fail_get_user",
 			Description: err.Error(),
+			StatusCode:  http.StatusInternalServerError,
+			Log:         true,
 		})
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(json)
 		return
 	}
 	if user == nil {
-		json, _ := json.Marshal(types.ResponseError{
-			Name: "user_not_found",
+		utils.ReturnError(w, types.ResponseError{
+			Name:        "user_not_found",
+			Description: err.Error(),
+			StatusCode:  http.StatusNotFound,
+			Log:         true,
 		})
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(json)
 		return
 	}
 	handler, err := f.getIntentHandler(base.Inputs[0].Intent)
 	if err != nil {
-		json, _ := json.Marshal(types.ResponseError{
+		utils.ReturnError(w, types.ResponseError{
 			Name:        "invalid_intent",
 			Description: err.Error(),
+			StatusCode:  http.StatusBadRequest,
 		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
 		return
 	}
 	r.Body = ioutil.NopCloser(&bodybuf)
@@ -220,12 +203,11 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	})
 	resjson, err := json.Marshal(res)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json, _ := json.Marshal(types.ResponseError{
+		utils.ReturnError(w, types.ResponseError{
 			Name:        "fail_marshall_response",
 			Description: err.Error(),
+			StatusCode:  http.StatusInternalServerError,
 		})
-		w.Write(json)
 		return
 	}
 	w.Write(resjson)
