@@ -52,7 +52,7 @@ func TestValidCreateToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fail signature from base64 %s", err.Error())
 	}
-	if !signatureFromBase64.Equal(signed.Signature()) || !signatureFromBase64.Equal(signed.Signature()) {
+	if !signatureFromBase64.Equal(signed.Signature()) {
 		t.Fatalf("invalid signature after base64 %s", err.Error())
 	}
 
