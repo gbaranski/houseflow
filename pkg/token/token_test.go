@@ -12,15 +12,15 @@ var (
 	key        = []byte(utils.GenerateRandomString(20))
 	validToken = Parsed{
 		ExpiresAt: uint32(time.Now().Add(time.Hour).Unix()),
+		Audience:  []byte(utils.GenerateRandomString(36)),
 	}
 	expiredToken = Parsed{
 		ExpiresAt: uint32(time.Now().Unix() - 3600),
+		Audience:  []byte(utils.GenerateRandomString(36)),
 	}
 )
 
 func TestMain(m *testing.M) {
-	copy(validToken.Audience[:], utils.GenerateRandomString(36))
-	copy(expiredToken.Audience[:], utils.GenerateRandomString(36))
 	os.Exit(m.Run())
 }
 

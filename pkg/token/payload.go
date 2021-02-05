@@ -38,10 +38,11 @@ func (p Payload) Equal(p2 Payload) bool {
 }
 
 // Parse parses token to struct
-func (p Payload) Parse() (parsed Parsed) {
-	parsed.ExpiresAt = binary.BigEndian.Uint32(p[:4])
-	copy(parsed.Audience[:], p[4:])
-	return parsed
+func (p Payload) Parse() Parsed {
+	return Parsed{
+		ExpiresAt: binary.BigEndian.Uint32(p[:4]),
+		Audience:  p[4:],
+	}
 }
 
 // Signed converts Payload to Signed token

@@ -12,7 +12,7 @@ func (a Auth) validateRedirectURI(uri string) bool {
 	return uri == fmt.Sprintf("https://oauth-redirect.googleusercontent.com/r/%s", a.opts.ProjectID) || uri == fmt.Sprintf("https://oauth-redirect-sandbox.googleusercontent.com/r/%s", a.opts.ProjectID)
 }
 
-func (a Auth) newRefreshToken(aud [36]byte) (token.Signed, error) {
+func (a Auth) newRefreshToken(aud []byte) (token.Signed, error) {
 	token := token.Parsed{
 		Audience:  aud,
 		ExpiresAt: uint32(time.Now().Add(token.AccessTokenDuration).Unix()),
@@ -20,7 +20,7 @@ func (a Auth) newRefreshToken(aud [36]byte) (token.Signed, error) {
 	return token.Sign([]byte(a.opts.RefreshKey))
 }
 
-func (a Auth) newAccessToken(aud [36]byte) (token.Signed, error) {
+func (a Auth) newAccessToken(aud []byte) (token.Signed, error) {
 	token := token.Parsed{
 		Audience:  aud,
 		ExpiresAt: uint32(time.Now().Add(token.AccessTokenDuration).Unix()),
@@ -30,9 +30,9 @@ func (a Auth) newAccessToken(aud [36]byte) (token.Signed, error) {
 
 func (a *Auth) createRedirectURI(q LoginPageQuery, aud []byte) (string, error) {
 	token := token.Parsed{
+		Audience:  aud,
 		ExpiresAt: uint32(time.Now().Add(token.AuthorizationCodeDuration).Unix()),
 	}
-	copy(token.Audience[:], aud)
 	strtoken, err := token.Sign([]byte(a.opts.AuthorizationCodeKey))
 	if err != nil {
 		return "", err

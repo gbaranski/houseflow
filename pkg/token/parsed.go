@@ -1,9 +1,13 @@
 package token
 
+import (
+	"bytes"
+)
+
 // Parsed is parsed token
 type Parsed struct {
-	// Must have fixed size of TokenAudienceSize
-	Audience [TokenAudienceSize]byte
+	// Audience Must have fixed size of TokenAudienceSize
+	Audience []byte
 	// ExpiresAt is unix timestamp
 	ExpiresAt uint32
 }
@@ -46,5 +50,5 @@ func (t Parsed) Verify(key []byte, sig Signature) error {
 
 // Equal checks equality of tokens
 func (t Parsed) Equal(t2 Parsed) bool {
-	return t.Audience == t2.Audience && t.ExpiresAt == t2.ExpiresAt
+	return bytes.Equal(t.Audience, t2.Audience) && t.ExpiresAt == t2.ExpiresAt
 }
