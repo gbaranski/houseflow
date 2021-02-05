@@ -6,20 +6,14 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/google/uuid"
 )
 
 func TestValidCreateToken(t *testing.T) {
 	key := GenerateRandomString(20)
 	aud := GenerateRandomString(20)
-	tokenID, err := uuid.NewRandom()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
 	token := Token{
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 		Audience:  aud,
-		ID:        tokenID.String(),
 	}
 	strtoken, err := token.Sign([]byte(key))
 	fmt.Printf("strtoken: %s\n", strtoken)
@@ -38,14 +32,9 @@ func TestValidCreateToken(t *testing.T) {
 func TestExpiredCreateToken(t *testing.T) {
 	key := GenerateRandomString(20)
 	aud := GenerateRandomString(20)
-	tokenID, err := uuid.NewRandom()
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
 	token := Token{
 		ExpiresAt: time.Now().Add(time.Hour).Unix(),
 		Audience:  aud,
-		ID:        tokenID.String(),
 	}
 	now := time.Now()
 	monkey.Patch(time.Now, func() time.Time {
