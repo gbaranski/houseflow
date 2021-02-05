@@ -88,3 +88,17 @@ func ReturnError(w http.ResponseWriter, err types.ResponseError) {
 		logrus.Errorf("%s - %s", err.Name, err.Description)
 	}
 }
+
+// NewRequestID creates new random RequestID and returns it
+func NewRequestID(len int) ([]byte, error) {
+	id := make([]byte, len)
+	n, err := rand.Read(id)
+	if err != nil {
+		return nil, err
+	}
+	if n != len {
+		return nil, fmt.Errorf("invalid written bytes")
+	}
+
+	return id, nil
+}
