@@ -84,7 +84,7 @@ func ReturnError(w http.ResponseWriter, err types.ResponseError) {
 	str, _ := json.Marshal(err)
 	w.WriteHeader(err.StatusCode)
 	w.Write(str)
-	if err.LogError {
+	if err.Log {
 		logrus.Errorf("%s - %s", err.Name, err.Description)
 	}
 }

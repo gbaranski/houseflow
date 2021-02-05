@@ -7,6 +7,7 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/token"
 	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/gbaranski/houseflow/pkg/utils"
 )
 
 func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
@@ -107,32 +108,27 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		json, _ := json.Marshal(types.ResponseError{
-			Name:        "fail_parse_form",
-			Description: err.Error(),
+		utils.ReturnError(w, types.ResponseError{
+			Name:       "fail_parse_form",
+			StatusCode: http.StatusUnprocessableEntity,
 		})
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		w.Write(json)
 		return
 	}
 
 	var form TokenQuery
 	if err = decoder.Decode(&form, r.PostForm); err != nil {
-		json, _ := json.Marshal(types.ResponseError{
-			Name:        "fail_parse_form",
-			Description: err.Error(),
+		utils.ReturnError(w, types.ResponseError{
+			Name:       "fail_decode_form",
+			StatusCode: http.StatusUnprocessableEntity,
 		})
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		w.Write(json)
 		return
 	}
 
 	if form.ClientID != a.opts.ClientID || form.ClientSecret != a.opts.ClientSecret {
-		json, _ := json.Marshal(types.ResponseError{
-			Name: "invalid_oauth_credentials",
+		utils.ReturnError(w, types.ResponseError{
+			Name:       "invalid_oauth_credentials",
+			StatusCode: http.StatusBadRequest,
 		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
 		return
 	}
 
@@ -141,10 +137,9 @@ func (a *Auth) onToken(w http.ResponseWriter, r *http.Request) {
 	} else if form.GrantType == "refresh_token" {
 		a.onRefreshTokenGrant(w, r, form)
 	} else {
-		json, _ := json.Marshal(types.ResponseError{
-			Name: "unknown_grant_type",
+		utils.ReturnError(w, types.ResponseError{
+			Name:       "unknown_grant_type",
+			StatusCode: http.StatusBadRequest,
 		})
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(json)
 	}
 }
