@@ -79,3 +79,58 @@ func TestExpiredCreateToken(t *testing.T) {
 		t.Fatalf("tokens are not equal")
 	}
 }
+
+func BenchmarkSignToken(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := validToken.Sign(key)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkVerifyToken(b *testing.B) {
+	b.StopTimer()
+	signed, err := validToken.Sign(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		if err := signed.Verify(key); err != nil {
+			b.Fatalf("fail verify %s", err.Error())
+		}
+	}
+}
+
+func BenchmarkSignVerifyToken(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		signed, err := validToken.Sign(key)
+		if err != nil {
+			b.Fatalf("fail sig %s", err.Error())
+		}
+		if err = signed.Verify(key); err != nil {
+			b.Fatalf("fail verify %s", err.Error())
+		}
+	}
+}
+
+func BenchmarkVerifySignedBase64(b *testing.B) {
+	b.StopTimer()
+	signed, err := validToken.Sign(key)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		s, err := SignedFromBase64(signed.Base64())
+		if err != nil {
+			b.Fatalf("fail convert signed from base64")
+		}
+		if s.Verify(key) != nil {
+			b.Fatalf("fail verify token %s", err.Error())
+		}
+	}
+}
