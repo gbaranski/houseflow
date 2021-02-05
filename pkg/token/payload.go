@@ -63,8 +63,8 @@ func (p Payload) Base64() (b64 [PayloadBase64Size]byte) {
 	return
 }
 
-// PayloadFromBase64 parses base64 payload and returns Payload
-func PayloadFromBase64(b64 [PayloadBase64Size]byte) (p Payload, err error) {
+// NewPayloadFromBase64 parses base64 payload and returns Payload
+func NewPayloadFromBase64(b64 [PayloadBase64Size]byte) (p Payload, err error) {
 	n, err := base64.StdEncoding.Decode(p[:], b64[:])
 	if err != nil {
 		return Payload{}, err

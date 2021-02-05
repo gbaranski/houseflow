@@ -28,8 +28,8 @@ func (s Signature) Base64() (b64 [SignatureBase64Size]byte) {
 	return
 }
 
-// SignatureFromBase64 parses base64 signature and returns Signature
-func SignatureFromBase64(b64 [SignatureBase64Size]byte) (s Signature, err error) {
+// NewSignatureFromBase64 parses base64 signature and returns Signature
+func NewSignatureFromBase64(b64 [SignatureBase64Size]byte) (s Signature, err error) {
 	n, err := base64.StdEncoding.Decode(s[:], b64[:])
 	if err != nil {
 		return Signature{}, err

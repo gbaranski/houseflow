@@ -40,7 +40,7 @@ func TestValidCreateToken(t *testing.T) {
 	if !signed.Parse().Payload().Signed(signed.Signature()).Equal(signed) {
 		t.Fatalf("token malformed after multiple conversions")
 	}
-	signedFromBase64, err := SignedFromBase64(signed.Base64())
+	signedFromBase64, err := NewSignedFromBase64(signed.Base64())
 	if err != nil {
 		t.Fatalf("fail signed token from base64 %s", err.Error())
 	}
@@ -48,7 +48,7 @@ func TestValidCreateToken(t *testing.T) {
 		t.Fatalf("tokens not equal after b64 conv")
 	}
 
-	signatureFromBase64, err := SignatureFromBase64(signed.Signature().Base64())
+	signatureFromBase64, err := NewSignatureFromBase64(signed.Signature().Base64())
 	if err != nil {
 		t.Fatalf("fail signature from base64 %s", err.Error())
 	}
@@ -56,7 +56,7 @@ func TestValidCreateToken(t *testing.T) {
 		t.Fatalf("invalid signature after base64 %s", err.Error())
 	}
 
-	payloadFromBase64, err := PayloadFromBase64(signed.Payload().Base64())
+	payloadFromBase64, err := NewPayloadFromBase64(signed.Payload().Base64())
 	if err != nil {
 		t.Fatalf("fail payload from base64 %s", err.Error())
 	}
@@ -125,7 +125,7 @@ func BenchmarkVerifySignedBase64(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		s, err := SignedFromBase64(signed.Base64())
+		s, err := NewSignedFromBase64(signed.Base64())
 		if err != nil {
 			b.Fatalf("fail convert signed from base64")
 		}

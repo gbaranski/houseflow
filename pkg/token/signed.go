@@ -65,8 +65,8 @@ func (s Signed) Base64() (b64 [SignedBase64Size]byte) {
 	return
 }
 
-// SignedFromBase64 parses base64 and returns it in signed format
-func SignedFromBase64(b64 [SignedBase64Size]byte) (s Signed, err error) {
+// NewSignedFromBase64 parses base64 and returns it in signed format
+func NewSignedFromBase64(b64 [SignedBase64Size]byte) (s Signed, err error) {
 	n, err := base64.StdEncoding.Decode(s[:], b64[:])
 	if err != nil {
 		return Signed{}, err
