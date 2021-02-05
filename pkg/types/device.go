@@ -13,17 +13,15 @@ type Device struct {
 
 // DeviceResponse is type of response coming out of the device
 type DeviceResponse struct {
-	CorrelationData string                 `json:"correlationData"`
-	State           map[string]interface{} `json:"state"`
-	Status          string                 `json:"status"`
-	Error           string                 `json:"error,omitempty"`
+	State  map[string]interface{} `json:"state"`
+	Status string                 `json:"status"`
+	Error  string                 `json:"error,omitempty"`
 }
 
 // DeviceRequest is type of request incoming to the device
 type DeviceRequest struct {
-	CorrelationData string                 `json:"correlationData"`
-	State           map[string]interface{} `json:"state"`
-	Command         string                 `json:"command"`
+	State   map[string]interface{} `json:"state,omitempty"`
+	Command string                 `json:"command"`
 }
 
 // DevicePermissions defines what user can and cannot
