@@ -43,8 +43,8 @@ func TestSyncWithoutToken(t *testing.T) {
 func TestSyncNoDevices(t *testing.T) {
 	token := token.Parsed{
 		ExpiresAt: uint32(time.Now().Add(time.Hour).Unix()),
+		Audience:  []byte(realUser.ID),
 	}
-	copy(token.Audience[:], realUser.ID)
 	signedToken, err := token.Sign([]byte(opts.AccessKey))
 	if err != nil {
 		t.Fatalf("fail when signing token %s", err.Error())
@@ -99,8 +99,8 @@ func TestSync(t *testing.T) {
 	}()
 	token := token.Parsed{
 		ExpiresAt: uint32(time.Now().Add(time.Hour).Unix()),
+		Audience:  []byte(realUser.ID),
 	}
-	copy(token.Audience[:], realUser.ID)
 	signedToken, err := token.Sign([]byte(opts.AccessKey))
 	if err != nil {
 		t.Fatalf("fail when signing token %s", err.Error())

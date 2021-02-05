@@ -7,7 +7,6 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
-	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/google/uuid"
 )
 
@@ -117,18 +116,16 @@ var commands = make(chan string, 1)
 
 type TestDeviceManager struct{}
 
-func (dm TestDeviceManager) SendCommand(ctx context.Context, device types.Device, command string, params map[string]interface{}) (types.DeviceResponse, error) {
+func (dm TestDeviceManager) SendActionCommand(ctx context.Context, device types.Device, command string, params map[string]interface{}) (types.DeviceResponse, error) {
 	commands <- command
 	return types.DeviceResponse{
-		CorrelationData: utils.GenerateRandomString(16),
-		State:           params,
-		Status:          "SUCCESS",
+		State:  params,
+		Status: "SUCCESS",
 	}, nil
 }
 
-func (dm TestDeviceManager) FetchDeviceState(ctx context.Context, deviceID string) (types.DeviceResponse, error) {
+func (dm TestDeviceManager) FetchDeviceState(ctx context.Context, device types.Device) (types.DeviceResponse, error) {
 	return types.DeviceResponse{
-		CorrelationData: "sjsdsklfdksjaasjk",
 		State: map[string]interface{}{
 			"online": true,
 			"on":     true,
