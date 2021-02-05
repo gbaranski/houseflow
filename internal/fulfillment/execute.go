@@ -40,7 +40,7 @@ func (f *Fulfillment) executeCommand(
 		}
 	}
 
-	response, err := f.devmgmt.SendCommand(r.r.Context(), *device, execution.Command, execution.Params)
+	response, err := f.devmgmt.SendActionCommand(r.r.Context(), *device, execution.Command, execution.Params)
 	if err != nil {
 		if err == devmgmt.ErrDeviceTimeout {
 			return fulfillment.ExecuteResponseCommands{
