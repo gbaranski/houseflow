@@ -3,7 +3,6 @@ module github.com/gbaranski/houseflow
 go 1.15
 
 require (
-	bou.ke/monkey v1.0.2
 	github.com/caarlos0/env/v6 v6.4.0
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/go-chi/chi v1.5.1
@@ -13,6 +12,7 @@ require (
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rs/zerolog v1.15.0
 	github.com/sirupsen/logrus v1.7.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
