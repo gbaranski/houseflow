@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gbaranski/houseflow/pkg/token"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -79,19 +80,19 @@ func TestParseSignedPayload(t *testing.T) {
 }
 
 func TestExtractHeaderToken(t *testing.T) {
-	token := GenerateRandomString(64)
+	tok := GenerateRandomString(64)
 	req := http.Request{Header: http.Header{}}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	str := ExtractHeaderToken(&req)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tok))
+	str := token.ExtractHeaderToken(&req)
 	if str == nil {
 		t.Fatalf("unexpected nil token")
 	}
-	if *str != token {
-		t.Fatalf("tokens doesn't match, received: %s, expected: %s", *str, token)
+	if *str != tok {
+		t.Fatalf("tokens doesn't match, received: %s, expected: %s", *str, tok)
 	}
 
 	req.Header.Del("Authorization")
-	str = ExtractHeaderToken(&req)
+	str = token.ExtractHeaderToken(&req)
 	if str != nil {
 		t.Fatalf("expected token to be nil")
 	}
@@ -141,8 +142,8 @@ func TestCompareHashInvalid(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	match := ComparePasswordAndHash(GenerateRandomString(20), hash)
-	if !match {
-		t.Fatalf("fail hash doesn't match")
+	if match {
+		t.Fatalf("unexpected hash match")
 	}
 }
 
