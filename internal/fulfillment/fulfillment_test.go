@@ -137,8 +137,7 @@ func (dm TestDeviceManager) FetchDeviceState(ctx context.Context, device types.D
 
 func TestMain(m *testing.M) {
 	f = New(TestDatabase{}, TestDeviceManager{}, opts)
-
-	f.db.AddDevice(context.Background(), types.Device{
+	device1 := types.Device{
 		Device: fulfillment.Device{
 			Type: "action.devices.types.LIGHT",
 			Traits: []string{
@@ -155,20 +154,16 @@ func TestMain(m *testing.M) {
 			},
 			WillReportState: true,
 			RoomHint:        "Bedroom",
-			DeviceInfo: &fulfillment.DeviceInfo{
+			DeviceInfo: fulfillment.DeviceInfo{
 				Manufacturer: "gbaranski's garage",
 				Model:        "Nightlamp",
 				HwVersion:    "1.0.0",
 				SwVersion:    "0.1.1",
 			},
 		},
-		PublicKey: "jPcGACNcypUyO9T+lR3Y49s9JpxEuKS0/PMtC7g8AuU=",
-		State: map[string]interface{}{
-			"online": true,
-			"on":     false,
-		},
-	})
-	f.db.AddDevice(context.Background(), types.Device{
+		PublicKeyBase64: "jPcGACNcypUyO9T+lR3Y49s9JpxEuKS0/PMtC7g8AuU=",
+	}
+	device2 := types.Device{
 		Device: fulfillment.Device{
 			Type: "action.devices.types.GATE",
 			Traits: []string{
@@ -185,18 +180,17 @@ func TestMain(m *testing.M) {
 			},
 			WillReportState: true,
 			RoomHint:        "Garage",
-			DeviceInfo: &fulfillment.DeviceInfo{
+			DeviceInfo: fulfillment.DeviceInfo{
 				Manufacturer: "gbaranski's garage",
 				Model:        "Gate",
 				HwVersion:    "1.0.0",
 				SwVersion:    "0.1.1",
 			},
 		},
-		PublicKey: "jPcGACNcypUyO9T+lR3Y49s9JpxEuKS0/PMtC7g8AuU=",
-		State: map[string]interface{}{
-			"online": true,
-			"on":     false,
-		},
-	})
+		PublicKeyBase64: "jPcGACNcypUyO9T+lR3Y49s9JpxEuKS0/PMtC7g8AuU=",
+	}
+
+	f.db.AddDevice(context.Background(), device1)
+	f.db.AddDevice(context.Background(), device2)
 	os.Exit(m.Run())
 }
