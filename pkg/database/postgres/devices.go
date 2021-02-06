@@ -79,6 +79,9 @@ func (p Postgres) GetDeviceByID(ctx context.Context, id string) (*types.Device, 
 		&device.DeviceInfo.HwVersion,
 		&device.DeviceInfo.SwVersion,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	device.Traits, err = p.GetDeviceTraits(ctx, id)
 	if err != nil {
