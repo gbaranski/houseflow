@@ -16,7 +16,8 @@
                 "__ESP_FILE__"
             ],
             "compilerPath": "/usr/bin/gcc",
-            "intelliSenseMode": "${default}"
+            "intelliSenseMode": "${default}",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
         }
     ],
     "version": 4
