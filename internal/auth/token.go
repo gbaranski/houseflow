@@ -77,7 +77,7 @@ func (a *Auth) onTokenAuthorizationCodeGrant(w http.ResponseWriter, r *http.Requ
 func (a *Auth) onRefreshTokenGrant(w http.ResponseWriter, r *http.Request, form TokenQuery) {
 	signedRT, err := token.NewSignedFromBase64WithVerify([]byte(a.opts.RefreshKey), []byte(form.RefreshToken))
 	if err != nil {
-		logrus.Errorf("Failed verifying signed token: %s\n", err.Error())
+		logrus.Errorf("Failed verifying refresh token: %s\n", err.Error())
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "invalid_grant",
 			Description: err.Error(),
