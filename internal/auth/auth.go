@@ -32,6 +32,10 @@ func (a *Auth) onLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
+	if dbUser == nil {
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
+	}
 
 	//compare the user from the request, with the one we defined:
 	if dbUser.Email != creds.Email {
