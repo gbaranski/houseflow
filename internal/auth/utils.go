@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"time"
 
@@ -15,7 +16,7 @@ func (a Auth) validateRedirectURI(uri string) bool {
 func (a Auth) newRefreshToken(aud []byte) (token.Signed, error) {
 	token := token.Parsed{
 		Audience:  aud,
-		ExpiresAt: uint32(time.Now().Add(token.AccessTokenDuration).Unix()),
+		ExpiresAt: math.MaxUint32,
 	}
 	return token.Sign([]byte(a.opts.RefreshKey))
 }
