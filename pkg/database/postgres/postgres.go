@@ -58,7 +58,7 @@ func New(ctx context.Context, opts Options) (Postgres, error) {
 	config.ConnConfig.Password = opts.Password
 	config.ConnConfig.User = opts.Username
 	config.ConnConfig.Logger = logrusadapter.NewLogger(log.StandardLogger())
-	config.ConnConfig.LogLevel = pgx.LogLevelInfo
+	config.ConnConfig.LogLevel = pgx.LogLevelError
 
 	conn, err := pgxpool.ConnectConfig(ctx, config)
 	if err != nil {
