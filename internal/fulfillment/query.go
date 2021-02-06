@@ -13,7 +13,7 @@ import (
 func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID string) (devices map[string]interface{}) {
 	device, err := f.db.GetDeviceByID(ctx, deviceID)
 	if err != nil {
-		logrus.Errorf("fail retrieve device %s", err.Error())
+		logrus.Errorf("fail retrieving device ID: %s from database %s\n", deviceID, err.Error())
 		return map[string]interface{}{
 			"status":           fulfillment.StatusError,
 			"errorCode":        "hardError",
@@ -21,6 +21,7 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 		}
 	}
 	if device == nil {
+		logrus.Errorf("device ID: %s not found in database\n", deviceID)
 		return map[string]interface{}{
 			"status":    fulfillment.StatusError,
 			"errorCode": "deviceNotFound",
@@ -29,14 +30,14 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 
 	perm, err := f.db.GetUserDevicePermissions(ctx, user.ID, deviceID)
 	if err != nil {
-		logrus.Errorf("fail retrieve device permission%s", err.Error())
+		logrus.Errorf("fail retrieve device permission for Device ID: %s from UserID: %s, err: \n", deviceID, user.ID, err.Error())
 		return map[string]interface{}{
 			"status":    fulfillment.StatusError,
 			"errorCode": "hardError",
 		}
 	}
 	if !perm.Read {
-		logrus.Errorf("user doesn't have read permission to device")
+		logrus.Errorf("user ID: %s doesnt have read permissions to device ID: %s", user.ID, deviceID)
 		return map[string]interface{}{
 			"status":    fulfillment.StatusError,
 			"errorCode": "authFailure",
@@ -46,35 +47,42 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 	res, err := f.devmgmt.FetchDeviceState(ctx, *device)
 	if err != nil {
 		if err == devmgmt.ErrDeviceTimeout {
+			logrus.Errorf("device ID: %s timed out\n", device.ID)
 			return map[string]interface{}{
 				"status": fulfillment.StatusOffline,
 			}
 		}
 		if err == devmgmt.ErrInvalidSignature {
+			logrus.Errorf("device ID: %s returned invalid signature\n", device.ID)
 			return map[string]interface{}{
 				"status":    fulfillment.StatusError,
 				"errorCode": "transientError",
 			}
 		}
+		logrus.Errorf("device ID: %s returned unrecognized error\n", device.ID)
 		return map[string]interface{}{
 			"status":    fulfillment.StatusError,
 			"errorCode": "hardError",
 		}
 	}
 	mapResponse := map[string]interface{}{
-		"status": fulfillment.StatusSuccess,
+		"status":    res.Status,
+		"errorCode": res.Error,
 	}
 	for k, v := range res.State {
 		mapResponse[k] = v
 	}
+	logrus.Infof("device ID: %s responsed to Query request with Status: %s and State: %+v\n", device.ID, res.Status, res.State)
 	return mapResponse
 
 }
 
 // OnQuery https://developers.google.com/assistant/smarthome/reference/intent/query
 func (f *Fulfillment) onQueryIntent(r intentRequest) interface{} {
+	logrus.Infof("Received Query intent from User ID:%s\n", r.user.ID)
 	var queryRequest fulfillment.QueryRequest
 	if err := json.NewDecoder(r.r.Body).Decode(&queryRequest); err != nil {
+		logrus.Errorf("fail decoding query request body\n", err.Error())
 		return fulfillment.QueryResponse{
 			RequestID: r.base.RequestID,
 			Payload: fulfillment.QueryResponsePayload{

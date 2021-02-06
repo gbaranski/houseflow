@@ -16,6 +16,7 @@ import (
 	"github.com/gbaranski/houseflow/pkg/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/sirupsen/logrus"
 )
 
 // Options for fulfillment
@@ -77,7 +78,7 @@ func New(db Database, devmgmt Devmgmt, opts Options) Fulfillment {
 
 // Only for testing purposes
 func (f *Fulfillment) onAddDevice(w http.ResponseWriter, r *http.Request) {
-	f.db.AddDevice(r.Context(), types.Device{
+	device := types.Device{
 		Device: fulfillment.Device{
 			ID:   "5fef44d38948c2002ae590ab",
 			Type: "action.devices.types.LIGHT",
@@ -95,19 +96,15 @@ func (f *Fulfillment) onAddDevice(w http.ResponseWriter, r *http.Request) {
 			},
 			WillReportState: true,
 			RoomHint:        "Bedroom",
-			DeviceInfo: &fulfillment.DeviceInfo{
+			DeviceInfo: fulfillment.DeviceInfo{
 				Manufacturer: "gbaranski's garage",
 				Model:        "Nightlamp",
 				HwVersion:    "1.0.0",
 				SwVersion:    "0.1.1",
 			},
 		},
-		PublicKey: "jPcGACNcypUyO9T+lR3Y49s9JpxEuKS0/PMtC7g8AuU=",
-		State: map[string]interface{}{
-			"online": true,
-			"on":     false,
-		},
-	})
+	}
+	f.db.AddDevice(r.Context(), device)
 
 }
 
@@ -143,6 +140,7 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err := json.NewDecoder(io.TeeReader(r.Body, &bodybuf)).Decode(&base); err != nil {
+		logrus.Errorf("fail decoding body %s\n", err.Error())
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "invalid_json",
 			Description: err.Error(),
@@ -153,6 +151,7 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 
 	signedTokenBase64 := token.ExtractHeaderToken(r)
 	if signedTokenBase64 == nil {
+		logrus.Errorf("missing token in headers\n")
 		utils.ReturnError(w, types.ResponseError{
 			Name:       "missing_token",
 			StatusCode: http.StatusBadRequest,
@@ -161,11 +160,11 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	signedToken, err := token.NewSignedFromBase64WithVerify([]byte(f.opts.AccessKey), []byte(*signedTokenBase64))
 	if err != nil {
+		logrus.Errorf("fail decoding signed token %s\n", err.Error())
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "invalid_grant",
 			Description: err.Error(),
 			StatusCode:  http.StatusForbidden,
-			Log:         true,
 		})
 		return
 	}
@@ -173,24 +172,25 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	userID := signedToken.Parse().Audience
 	user, err := f.db.GetUserByID(r.Context(), string(userID))
 	if err != nil {
+		logrus.Errorf("fail retrieving user from database %s\n", err.Error())
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "fail_get_user",
 			Description: err.Error(),
 			StatusCode:  http.StatusInternalServerError,
-			Log:         true,
 		})
 		return
 	}
 	if user == nil {
+		logrus.Errorf("user not found in database\n")
 		utils.ReturnError(w, types.ResponseError{
 			Name:       "user_not_found",
 			StatusCode: http.StatusNotFound,
-			Log:        true,
 		})
 		return
 	}
 	handler, err := f.getIntentHandler(base.Inputs[0].Intent)
 	if err != nil {
+		logrus.Errorf("invalid intent\n")
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "invalid_intent",
 			Description: err.Error(),
@@ -207,6 +207,7 @@ func (f *Fulfillment) onWebhook(w http.ResponseWriter, r *http.Request) {
 	})
 	resjson, err := json.Marshal(res)
 	if err != nil {
+		logrus.Errorf("fail marshalling response %s\n", err.Error())
 		utils.ReturnError(w, types.ResponseError{
 			Name:        "fail_marshall_response",
 			Description: err.Error(),

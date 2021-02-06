@@ -3,12 +3,15 @@ package fulfillment
 import (
 	"github.com/gbaranski/houseflow/pkg/fulfillment"
 	"github.com/gbaranski/houseflow/pkg/types"
+	"github.com/sirupsen/logrus"
 )
 
 // onSyncIntent handles sync intent https://developers.google.com/assistant/smarthome/reference/intent/sync
 func (f *Fulfillment) onSyncIntent(r intentRequest) interface{} {
+	logrus.Infof("Received Sync intent from User ID:%s\n", r.user.ID)
 	devices, err := f.db.GetUserDevices(r.r.Context(), r.user.ID)
 	if err != nil {
+		logrus.Errorf("Fail retrieving user devices:%s\n", err.Error())
 		return types.ResponseError{
 			Name:        "fail_retrieve_devices",
 			Description: err.Error(),
