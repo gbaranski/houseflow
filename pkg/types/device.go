@@ -7,8 +7,7 @@ import (
 // Device is device from database
 type Device struct {
 	fulfillment.Device `bson:",inline"`
-	PublicKey          string                 `bson:"publickey"`
-	State              map[string]interface{} `bson:"state"`
+	PublicKeyBase64    string `bson:"publickey"`
 }
 
 // DeviceResponse is type of response coming out of the device
