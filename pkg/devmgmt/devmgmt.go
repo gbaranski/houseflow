@@ -12,6 +12,7 @@ import (
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
+	"github.com/sirupsen/logrus"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 )
@@ -58,28 +59,28 @@ func New(opts Options) (Devmgmt, error) {
 }
 
 // PublishWithResponse publishes message and waits for response and returns its body
-func (d Devmgmt) PublishWithResponse(ctx context.Context, body []byte, topic ResponseTopic, pkey ed25519.PublicKey) ([]byte, error) {
-	msgc := make(chan paho.Message)
+func (devmgmt Devmgmt) PublishWithResponse(ctx context.Context, body []byte, topic ResponseTopic, pkey ed25519.PublicKey) ([]byte, error) {
+	msgCh := make(chan paho.Message)
 
-	if token := d.Client.Subscribe(topic.Response, 0, func(c paho.Client, m paho.Message) {
-		msgc <- m
+	if token := devmgmt.Client.Subscribe(topic.Response, 0, func(c paho.Client, m paho.Message) {
+		msgCh <- m
 	}); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
 	}
 	defer func() {
-		d.Client.Unsubscribe(topic.Response)
+		devmgmt.Client.Unsubscribe(topic.Response)
 	}()
 	requestID, err := utils.NewRequestID(RequestIDSize)
 	if err != nil {
 		return nil, fmt.Errorf("fail gen requestID %s", err.Error())
 	}
 
-	p := make([]byte, ed25519.SignatureSize+RequestIDSize+len(body))
-	copy(p[0:ed25519.SignatureSize], ed25519.Sign(d.opts.ServerPrivateKey, append(requestID, body...)))
-	copy(p[ed25519.SignatureSize:ed25519.SignatureSize+RequestIDSize], requestID)
-	copy(p[ed25519.SignatureSize+RequestIDSize:], body)
+	payload := make([]byte, ed25519.SignatureSize+RequestIDSize+len(body))
+	copy(payload[0:ed25519.SignatureSize], ed25519.Sign(devmgmt.opts.ServerPrivateKey, append(requestID, body...)))
+	copy(payload[ed25519.SignatureSize:ed25519.SignatureSize+RequestIDSize], requestID)
+	copy(payload[ed25519.SignatureSize+RequestIDSize:], body)
 
-	if token := d.Client.Publish(topic.Request, 0, false, p); token.Wait() && token.Error() != nil {
+	if token := devmgmt.Client.Publish(topic.Request, 0, false, payload); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
 	}
 
@@ -88,20 +89,23 @@ loop:
 		select {
 		case <-ctx.Done():
 			return nil, ErrDeviceTimeout
-		case msg, ok := <-msgc:
+		case msg, ok := <-msgCh:
 			{
 				if !ok {
+					logrus.Infoln("fail on message channel")
 					continue loop
 				}
-				msgPayload := msg.Payload()
-				msgSig := msgPayload[0:ed25519.SignatureSize]
-				msgRequestID := msgPayload[ed25519.SignatureSize : ed25519.SignatureSize+RequestIDSize]
-				msgBody := msgPayload[ed25519.SignatureSize+RequestIDSize:]
-				if !bytes.Equal(msgRequestID, requestID) {
+				responsePayload := msg.Payload()
+				responseSignature := responsePayload[0:ed25519.SignatureSize]
+				responseRequestID := responsePayload[ed25519.SignatureSize : ed25519.SignatureSize+RequestIDSize]
+				msgBody := responsePayload[ed25519.SignatureSize+RequestIDSize:]
+				if !bytes.Equal(responseRequestID, requestID) {
+					logrus.Infof("skipping message due to requestID mismatch exp: %s, rec: %s\n", requestID, responseRequestID)
 					continue loop
 				}
-				valid := ed25519.Verify(pkey, msgBody, msgSig)
+				valid := ed25519.Verify(pkey, msgBody, responseSignature)
 				if !valid {
+					logrus.Infoln("server sent invalid message signature")
 					return nil, fmt.Errorf("invalid message signature")
 				}
 				return msgBody, nil
@@ -111,52 +115,61 @@ loop:
 }
 
 // FetchDeviceState sends rqeuest to device with question about his device state
-func (d Devmgmt) FetchDeviceState(ctx context.Context, device types.Device) (types.DeviceResponse, error) {
-	res, err := d.PublishWithResponse(ctx, nil, ResponseTopic{
+func (devmgmt Devmgmt) FetchDeviceState(ctx context.Context, device types.Device) (types.DeviceResponse, error) {
+	publicKey, err := base64.StdEncoding.DecodeString(device.PublicKeyBase64)
+	if err != nil {
+		return types.DeviceResponse{}, fmt.Errorf("fail decode public key %s", err.Error())
+	}
+
+	deviceResponseJSON, err := devmgmt.PublishWithResponse(ctx, nil, ResponseTopic{
 		Request:  fmt.Sprintf("%s/state/request", device.ID),
 		Response: fmt.Sprintf("%s/state/response", device.ID),
-	}, ed25519.PublicKey(device.PublicKey))
+	}, ed25519.PublicKey(publicKey))
 	if err != nil {
 		return types.DeviceResponse{}, err
 	}
 
-	var parsedResponse types.DeviceResponse
-	if err = json.Unmarshal(res, &parsedResponse); err != nil {
-		return types.DeviceResponse{}, fmt.Errorf("fail unmarshall device resp %s", err.Error())
+	var deviceResponse types.DeviceResponse
+	if err = json.Unmarshal(deviceResponseJSON, &deviceResponse); err != nil {
+		return types.DeviceResponse{}, fmt.Errorf("fail unmarshall device response %s", err.Error())
 	}
 
-	return parsedResponse, nil
+	return deviceResponse, nil
 }
 
 // SendActionCommand sends action command and returns device response to it
-func (d Devmgmt) SendActionCommand(
+func (devmgmt Devmgmt) SendActionCommand(
 	ctx context.Context,
 	device types.Device,
 	command string,
 	params map[string]interface{},
 ) (types.DeviceResponse, error) {
-	req := types.DeviceRequest{
+	deviceRequest := types.DeviceRequest{
 		State:   params,
 		Command: command,
 	}
-	r, err := json.Marshal(req)
+	deviceRequestJSON, err := json.Marshal(deviceRequest)
 	if err != nil {
 		return types.DeviceResponse{}, nil
 	}
-	b, err := d.PublishWithResponse(ctx, r, ResponseTopic{
-		Request:  fmt.Sprintf("%s/request", device.ID),
-		Response: fmt.Sprintf("%s/response", device.ID),
-	}, ed25519.PublicKey(device.PublicKey))
+	publicKey, err := base64.StdEncoding.DecodeString(device.PublicKeyBase64)
+	if err != nil {
+		return types.DeviceResponse{}, fmt.Errorf("fail decode public key %s", err.Error())
+	}
+	deviceResponseJSON, err := devmgmt.PublishWithResponse(ctx, deviceRequestJSON, ResponseTopic{
+		Request:  fmt.Sprintf("%s/command/request", device.ID),
+		Response: fmt.Sprintf("%s/command/response", device.ID),
+	}, ed25519.PublicKey(publicKey))
 
 	if err != nil {
 		return types.DeviceResponse{}, err
 	}
 
-	var res types.DeviceResponse
-	err = json.Unmarshal(b, &res)
+	var deviceResponse types.DeviceResponse
+	err = json.Unmarshal(deviceResponseJSON, &deviceResponse)
 	if err != nil {
 		return types.DeviceResponse{}, fmt.Errorf("invalid json %s", err.Error())
 	}
 
-	return res, nil
+	return deviceResponse, nil
 }
