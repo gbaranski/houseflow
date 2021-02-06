@@ -63,34 +63,34 @@ type DeviceName struct {
 // Device metadata.
 type Device struct {
 	// The ID of the device in the developer's cloud. This must be unique for the user and for the developer, as in cases of sharing we may use this to dedupe multiple views of the same device. It should be immutable for the device; if it changes, the Assistant will treat it as a new device.
-	ID string `json:"id" bson:"-" binding:"required"`
+	ID string `json:"id" binding:"required"`
 
 	// The hardware type of device.
-	Type string `json:"type" binding:"required" bson:"type"`
+	Type string `json:"type" binding:"required"`
 
 	// List of traits this device has. This defines the commands, attributes, and states that the device supports.
-	Traits []string `json:"traits" binding:"required" bson:"traits"`
+	Traits []string `json:"traits" binding:"required"`
 
 	// Names of this device.
-	Name DeviceName `json:"name" binding:"required" bson:"name"`
+	Name DeviceName `json:"name" binding:"required"`
 
 	// Indicates whether this device will have its states updated by the Real Time Feed. (true to use the Real Time Feed for reporting state, and false to use the polling model.)
-	WillReportState bool `json:"willReportState" binding:"required" bson:"willReportState"`
+	WillReportState bool `json:"willReportState" binding:"required"`
 
 	// Provides the current room of the device in the user's home to simplify setup.
-	RoomHint string `json:"roomHint,omitempty" bson:"roomHint,omitempty"`
+	RoomHint string `json:"roomHint,omitempty"`
 
 	// Contains fields describing the device for use in one-off logic if needed (e.g. 'broken firmware version X of light Y requires adjusting color', or 'security flaw requires notifying all users of firmware Z').
-	DeviceInfo *DeviceInfo `json:"deviceInfo,omitempty" bson:"deviceInfo,omitempty"`
+	DeviceInfo DeviceInfo `json:"deviceInfo"`
 
 	// Aligned with per-trait attributes described in each trait schema reference.
-	Attributes map[string]interface{} `json:"attributes,omitempty" bson:"attributes,omitempty"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
 
 	// This is a special object defined by the developer which will be attached to future QUERY and EXECUTE requests. Developers can use this object to store additional information about the device to improve performance or routing within their cloud, such as the global region of the device. Data in this object has a few constraints: No Personally Identifiable Information. Data should change rarely, akin to other attributes -- so this should not contain real-time state. The total object is limited to 512 bytes per device.
-	CustomData map[string]interface{} `json:"customData,omitempty" bson:"customData,omitempty"`
+	CustomData map[string]interface{} `json:"customData,omitempty"`
 
 	// List of alternate IDs used to identify a cloud synced device for local execution.
-	OtherDeviceIDs []OtherDeviceID `json:"otherDeviceIds,omitempty" bson:"otherDeviceIds,omitempty"`
+	OtherDeviceIDs []OtherDeviceID `json:"otherDeviceIds,omitempty"`
 }
 
 // BaseRequestInput ...
