@@ -11,7 +11,7 @@ func main() {
 		panic(err)
 	}
 	dev := device.CreateDevice(config)
-	_, err = dev.StartMQTT()
+	err = dev.StartMQTT()
 	if err != nil {
 		panic(err)
 	}

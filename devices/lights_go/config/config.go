@@ -22,6 +22,7 @@ type Config struct {
 	DeviceID        string
 	BrokerURL       string
 	CommandTopic    topic
+	StateTopic      topic
 }
 
 // Load loads config and returns it
@@ -76,9 +77,7 @@ func Load() (*Config, error) {
 		ServerPublicKey: serverPkey,
 		DeviceID:        deviceID,
 		BrokerURL:       brokerURL,
-		CommandTopic: topic{
-			Request:  deviceID + "/command/request",
-			Response: deviceID + "/command/response",
-		},
+		CommandTopic:    topic{Request: deviceID + "/command/request", Response: deviceID + "/command/response"},
+		StateTopic:      topic{Request: deviceID + "/state/request", Response: deviceID + "/state/response"},
 	}, nil
 }
