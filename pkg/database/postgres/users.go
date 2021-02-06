@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name      TEXT    NOT NULL,
     last_name       TEXT    NOT NULL,
     email           TEXT    NOT NULL,
-	password_hash   TEXT    NOT NULL, -- bcrypted password
+	password_hash   TEXT    NOT NULL,
 	
 	PRIMARY KEY (id)
 )
@@ -28,9 +28,9 @@ const UserDevicesSchema = `
 CREATE TABLE IF NOT EXISTS user_devices (
     user_id     UUID    REFERENCES users   (id) ON DELETE CASCADE,
     device_id   UUID    REFERENCES devices (id) ON DELETE CASCADE,
-    read        BOOL    NOT NULL, -- determines if user can do query intent
-    write       BOOL    NOT NULL, -- unused at the moment, probably cna be used to tell if user can invite someone
-    execute     BOOL    NOT NULL, -- determines if user can do execute intent
+    read        BOOL    NOT NULL,
+    write       BOOL    NOT NULL,
+    execute     BOOL    NOT NULL,
 
     PRIMARY KEY (user_id, device_id)
 )
@@ -87,11 +87,7 @@ func (p Postgres) GetUserDevicePermissions(ctx context.Context, userID string, d
 	row := p.conn.QueryRow(ctx, sql, userID, deviceID)
 	err = row.Scan(&perms.Read, &perms.Write, &perms.Execute)
 	if err == pgx.ErrNoRows {
-		return types.DevicePermissions{
-			Read:    false,
-			Write:   false,
-			Execute: false,
-		}, nil
+		return types.DevicePermissions{}, nil
 	}
 
 	if err != nil {
@@ -103,7 +99,7 @@ func (p Postgres) GetUserDevicePermissions(ctx context.Context, userID string, d
 
 // AddUser inserts new user to database
 func (p Postgres) AddUser(ctx context.Context, user types.User) (id string, err error) {
-	const sql = "INSERT INTO users VALUES ($1, $2, $3, $4, $5)"
+	const sql = "INSERT INTO users (id, first_name, last_name, email, password_hash) VALUES ($1, $2, $3, $4, $5)"
 	userID, err := uuid.NewRandom()
 	if err != nil {
 		return "", fmt.Errorf("fail gen uuid %s", err.Error())
