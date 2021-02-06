@@ -85,14 +85,14 @@ func (d *Device) onFetchState(c mqtt.Client, m mqtt.Message) {
 		},
 		Status: "SUCCESS",
 	}
-	responeJSON, err := json.Marshal(deviceResponse)
+	responseJSON, err := json.Marshal(deviceResponse)
 	if err != nil {
-		logrus.Error("fail marshall response", responeJSON)
+		logrus.Error("fail marshall response", responseJSON)
 		return
 	}
 
-	responseSignature := ed25519.Sign(d.config.PrivateKey, responeJSON)
-	response := append(responseSignature, append(requestID, responeJSON...)...)
+	responseSignature := ed25519.Sign(d.config.PrivateKey, append(requestID, responseJSON...))
+	response := append(responseSignature, append(requestID, responseJSON...)...)
 
 	token := d.client.Publish(d.config.StateTopic.Response, 0, false, response)
 	if token.Wait(); token.Error() != nil {
@@ -149,7 +149,7 @@ func (d *Device) onCommand(c mqtt.Client, m mqtt.Message) {
 	}
 
 	responeSignature := ed25519.Sign(d.config.PrivateKey, append(requestID, resjson...))
-	response := append(append(responeSignature, requestID...), resjson...)
+	response := append(responeSignature, append(requestID, resjson...)...)
 
 	token := c.Publish(d.config.CommandTopic.Response, 0, false, response)
 	token.Wait()
@@ -157,5 +157,5 @@ func (d *Device) onCommand(c mqtt.Client, m mqtt.Message) {
 		logrus.Errorf("Fail publishing response %s", token.Error().Error())
 		return
 	}
-	logrus.WithField("json", resjson).Info("Sent response")
+	logrus.WithField("json", string(resjson)).Info("Sent response")
 }
