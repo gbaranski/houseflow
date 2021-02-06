@@ -30,7 +30,7 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 
 	perm, err := f.db.GetUserDevicePermissions(ctx, user.ID, deviceID)
 	if err != nil {
-		logrus.Errorf("fail retrieve device permission for Device ID: %s from UserID: %s, err: \n", deviceID, user.ID, err.Error())
+		logrus.Errorf("fail retrieve device permission for Device ID: %s from UserID: %s, err: %s\n", deviceID, user.ID, err.Error())
 		return map[string]interface{}{
 			"status":    fulfillment.StatusError,
 			"errorCode": "hardError",
@@ -82,7 +82,7 @@ func (f *Fulfillment) onQueryIntent(r intentRequest) interface{} {
 	logrus.Infof("Received Query intent from User ID:%s\n", r.user.ID)
 	var queryRequest fulfillment.QueryRequest
 	if err := json.NewDecoder(r.r.Body).Decode(&queryRequest); err != nil {
-		logrus.Errorf("fail decoding query request body\n", err.Error())
+		logrus.Errorf("fail decoding query request body err: %s\n", err.Error())
 		return fulfillment.QueryResponse{
 			RequestID: r.base.RequestID,
 			Payload: fulfillment.QueryResponsePayload{
