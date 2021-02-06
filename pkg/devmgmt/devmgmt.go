@@ -103,10 +103,9 @@ loop:
 					logrus.Infof("skipping message due to requestID mismatch exp: %s, rec: %s\n", requestID, responseRequestID)
 					continue loop
 				}
-				valid := ed25519.Verify(pkey, msgBody, responseSignature)
+				valid := ed25519.Verify(pkey, append(responseRequestID, msgBody...), responseSignature)
 				if !valid {
-					logrus.Infoln("server sent invalid message signature")
-					return nil, fmt.Errorf("invalid message signature")
+					return nil, ErrInvalidSignature
 				}
 				return msgBody, nil
 			}
