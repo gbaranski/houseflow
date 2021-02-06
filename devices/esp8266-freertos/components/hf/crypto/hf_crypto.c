@@ -19,11 +19,13 @@ const unsigned char private_key[] = CONFIG_DEVICE_PRIVATE_KEY;
 
 static Keypair g_kp;
 
-int crypto_init() {
+int crypto_init()
+{
   // Set public key here
   size_t pkey_len;
   int err = mbedtls_base64_decode(g_kp.pkey, ED25519_PKEY_BYTES, &pkey_len, public_key, ED25519_BASE64_PKEY_BYTES);
-  if (err != 0) {
+  if (err != 0)
+  {
     ESP_LOGE(CRYPTO_TAG, "fail decode pkey err: %d", err);
     return err;
   }
@@ -31,7 +33,8 @@ int crypto_init() {
   // Set private key here
   size_t skey_len;
   err = mbedtls_base64_decode(g_kp.skey, ED25519_SKEY_BYTES, &skey_len, private_key, ED25519_BASE64_SKEY_BYTES);
-  if (err != 0) {
+  if (err != 0)
+  {
     ESP_LOGE(CRYPTO_TAG, "fail decode skey err: %d", err);
     return err;
   }
@@ -39,31 +42,34 @@ int crypto_init() {
   return ESP_OK;
 }
 
-int crypto_encode_signature(const unsigned char *sig, unsigned char *dst) {
+int crypto_encode_signature(const unsigned char *sig, unsigned char *dst)
+{
   size_t olen;
   int err = mbedtls_base64_encode(dst, ED25519_BASE64_SIGNATURE_BYTES + 1,
                                   &olen, sig, ED25519_SIGNATURE_BYTES);
 
-
   if (err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
     return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
 
-  if (olen != ED25519_BASE64_SIGNATURE_BYTES) return ESP_ERR_INVALID_SIZE;
+  if (olen != ED25519_BASE64_SIGNATURE_BYTES)
+    return ESP_ERR_INVALID_SIZE;
 
   return ESP_OK;
 }
 
-
-int crypto_generate_password(unsigned char* dst) {
+int crypto_generate_password(unsigned char *dst)
+{
   unsigned char password[ED25519_SIGNATURE_BYTES];
   int err = crypto_sign_ed25519_detached(dst, NULL, g_kp.pkey, ED25519_PKEY_BYTES, g_kp.skey);
-  if (err != 0) {
+  if (err != 0)
+  {
     return err;
   }
   return crypto_encode_signature(password, dst);
 }
 
-int crypto_sign_response_combined(char* dst, DeviceResponse *res, const char* res_str) {
+int crypto_sign_response_combined(char *dst, DeviceResponse *res, const char *res_str)
+{
 
   // fix this buffer later, not sure if we need that big buffer for just signature
   unsigned char res_sig[ED25519_SIGNATURE_BYTES];

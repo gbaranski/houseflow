@@ -9,4 +9,4 @@
 
 void wifi_init_sta();
 
-#endif  // ESP8266_FREERTOS_HF_WIFI_H
+#endif // ESP8266_FREERTOS_HF_WIFI_H

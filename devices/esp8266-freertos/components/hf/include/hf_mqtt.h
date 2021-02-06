@@ -9,4 +9,4 @@
 
 void mqtt_init(void);
 
-#endif  // ESP8266_FREERTOS_HF_MQTT_H
+#endif // ESP8266_FREERTOS_HF_MQTT_H

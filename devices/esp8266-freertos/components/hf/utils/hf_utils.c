@@ -7,7 +7,6 @@
 #include "hf_crypto.h"
 #include "hf_types.h"
 
-
 esp_err_t parse_mqtt_payload(char *sig, char *msg, char *src, int src_len)
 {
   memcpy(sig, src, ED25519_BASE64_SIGNATURE_BYTES);
@@ -20,7 +19,8 @@ esp_err_t parse_mqtt_payload(char *sig, char *msg, char *src, int src_len)
   return ESP_OK;
 }
 
-static esp_err_t parse_device_state(DeviceState *dst, cJSON *json) {
+static esp_err_t parse_device_state(DeviceState *dst, cJSON *json)
+{
   cJSON *onItem = cJSON_GetObjectItemCaseSensitive(json, "on");
   if (!cJSON_IsBool(onItem))
   {
@@ -55,11 +55,13 @@ esp_err_t parse_device_request(DeviceRequest *dst, char *msg)
 
   cJSON *correlationDataItem = cJSON_GetObjectItemCaseSensitive(json, "correlationData");
   cJSON *commandItem = cJSON_GetObjectItemCaseSensitive(json, "command");
-  if (!cJSON_IsString(correlationDataItem) || (correlationDataItem->valuestring == NULL)) {
+  if (!cJSON_IsString(correlationDataItem) || (correlationDataItem->valuestring == NULL))
+  {
     ESP_LOGE(UTILS_TAG, "correlationData field is invalid string");
     return ESP_ERR_INVALID_RESPONSE;
   }
-  if (!cJSON_IsString(commandItem) || (commandItem->valuestring == NULL)) {
+  if (!cJSON_IsString(commandItem) || (commandItem->valuestring == NULL))
+  {
     ESP_LOGE(UTILS_TAG, "command field is invalid string");
     return ESP_ERR_INVALID_RESPONSE;
   }
@@ -76,7 +78,8 @@ esp_err_t parse_device_request(DeviceRequest *dst, char *msg)
   return parse_device_state(&(dst->state), stateItem);
 }
 
-cJSON* stringify_device_response(const DeviceResponse *src) {
+cJSON *stringify_device_response(const DeviceResponse *src)
+{
   // Create "state" field
   cJSON *state = cJSON_CreateObject();
   // if device responds, it means its online
@@ -87,7 +90,8 @@ cJSON* stringify_device_response(const DeviceResponse *src) {
   root = cJSON_CreateObject();
   cJSON_AddStringToObject(root, "correlationData", src->correlation_data);
   cJSON_AddStringToObject(root, "status", src->status);
-  if (src->error != NULL) {
+  if (src->error != NULL)
+  {
     cJSON_AddStringToObject(root, "error", src->error);
   }
   cJSON_AddItemToObject(root, "state", state);

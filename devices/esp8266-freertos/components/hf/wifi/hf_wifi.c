@@ -28,20 +28,29 @@ static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 
 static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id, void *event_data) {
-  if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+                          int32_t event_id, void *event_data)
+{
+  if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+  {
     esp_wifi_connect();
-  } else if (event_base == WIFI_EVENT &&
-             event_id == WIFI_EVENT_STA_DISCONNECTED) {
-    if (s_retry_num < MAX_RETRY) {
+  }
+  else if (event_base == WIFI_EVENT &&
+           event_id == WIFI_EVENT_STA_DISCONNECTED)
+  {
+    if (s_retry_num < MAX_RETRY)
+    {
       esp_wifi_connect();
       s_retry_num++;
       ESP_LOGI(WIFI_TAG, "retry to connect to the AP");
-    } else {
+    }
+    else
+    {
       xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
     }
     ESP_LOGI(WIFI_TAG, "connect to the AP fail");
-  } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+  }
+  else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+  {
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(WIFI_TAG, "got ip:%s", ip4addr_ntoa(&event->ip_info.ip));
     s_retry_num = 0;
@@ -49,7 +58,8 @@ static void event_handler(void *arg, esp_event_base_t event_base,
   }
 }
 
-void wifi_init_sta() {
+void wifi_init_sta()
+{
   ESP_LOGI(WIFI_TAG, "Starting WiFI station");
   s_wifi_event_group = xEventGroupCreate();
 
@@ -74,7 +84,8 @@ void wifi_init_sta() {
    * be used. Incase your Access point doesn't support WPA2, these mode can be
    * enabled by commenting below line */
 
-  if (strlen((char *)wifi_config.sta.password)) {
+  if (strlen((char *)wifi_config.sta.password))
+  {
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
   }
 
@@ -93,13 +104,18 @@ void wifi_init_sta() {
 
   /* xEventGroupWaitBits() returns the bits before the call returned, hence we
    * can test which event actually happened. */
-  if (bits & WIFI_CONNECTED_BIT) {
+  if (bits & WIFI_CONNECTED_BIT)
+  {
     ESP_LOGI(WIFI_TAG, "connected to ap SSID:%s password:%s",
              CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
-  } else if (bits & WIFI_FAIL_BIT) {
+  }
+  else if (bits & WIFI_FAIL_BIT)
+  {
     ESP_LOGI(WIFI_TAG, "Failed to connect to SSID:%s, password:%s",
              CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
-  } else {
+  }
+  else
+  {
     ESP_LOGE(WIFI_TAG, "UNEXPECTED EVENT");
   }
 

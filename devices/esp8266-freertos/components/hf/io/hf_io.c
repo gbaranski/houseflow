@@ -9,12 +9,14 @@
 static DeviceState g_state = {.on = 0};
 static IOConfig g_cfg = {.onoff_pin = 5};
 
-void io_init() {
+void io_init()
+{
     gpio_set_direction(g_cfg.onoff_pin, GPIO_MODE_OUTPUT);
 }
 
-// Handles command and writes to 
-DeviceResponse io_handle_command(const char* cmd, DeviceRequest *req) {
+// Handles command and writes to
+DeviceResponse io_handle_command(const char *cmd, DeviceRequest *req)
+{
     // If everything went okay, just return this struct, otherwise modify
     DeviceResponse res = {
         .correlation_data = req->correlation_data,
@@ -23,11 +25,14 @@ DeviceResponse io_handle_command(const char* cmd, DeviceRequest *req) {
         .error = NULL,
         .status = "SUCCESS",
     };
-    
-    if (strcmp(cmd, "action.devices.commands.OnOff") == 0) {
+
+    if (strcmp(cmd, "action.devices.commands.OnOff") == 0)
+    {
         gpio_set_level(g_cfg.onoff_pin, req->state.on);
         g_state.on = req->state.on;
-    } else {
+    }
+    else
+    {
         ESP_LOGE(IO_TAG, "invalid cmd %s", cmd);
         res.error = "functionNotSupported";
         res.status = "ERROR";

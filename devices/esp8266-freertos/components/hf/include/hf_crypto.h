@@ -18,17 +18,17 @@
 // 4 * ceil(ED25519_SIGNATURE_LENGTH / 3) = 88
 #define ED25519_BASE64_SIGNATURE_BYTES 88U
 
-typedef struct {
+typedef struct
+{
   unsigned char pkey[ED25519_PKEY_BYTES];
   // Thats seed
   unsigned char skey[ED25519_SKEY_BYTES];
 } Keypair;
 
-
 int crypto_init();
 
 int crypto_encode_signature(const unsigned char *sig, unsigned char *dst);
-int crypto_generate_password(unsigned char* dst);
-int crypto_sign_response_combined(char* dst, DeviceResponse *res, const char* res_str);
+int crypto_generate_password(unsigned char *dst);
+int crypto_sign_response_combined(char *dst, DeviceResponse *res, const char *res_str);
 
 #endif

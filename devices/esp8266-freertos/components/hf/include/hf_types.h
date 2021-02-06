@@ -3,24 +3,25 @@
 #include <driver/gpio.h>
 #include <stdbool.h>
 
-
-typedef struct {
-    bool on;
+typedef struct
+{
+  bool on;
 } DeviceState;
 
-
-typedef struct {
-  const char* correlation_data;
-  const char* command;
+typedef struct
+{
+  const char *correlation_data;
+  const char *command;
   DeviceState state;
 } DeviceRequest;
 
-typedef struct {
-  const char* correlation_data;
+typedef struct
+{
+  const char *correlation_data;
   // SUCCESS | ERROR
-  const char* status;
+  const char *status;
   // Present only if status == ERROR
-  const char* error;
+  const char *error;
   DeviceState state;
 } DeviceResponse;
 
