@@ -61,7 +61,7 @@ func (f *Fulfillment) executeCommand(
 				ErrorCode: "transientError",
 			}
 		}
-		logrus.Errorf("device ID: %s returned unrecognized error\n", device.ID)
+		logrus.Errorf("device ID: %s returned unrecognized error: %s\n", device.ID, err.Error())
 		return fulfillment.ExecuteResponseCommands{
 			Status:    fulfillment.StatusError,
 			ErrorCode: "hardError",

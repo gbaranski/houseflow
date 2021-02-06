@@ -59,7 +59,7 @@ func (f *Fulfillment) queryState(ctx context.Context, user types.User, deviceID 
 				"errorCode": "transientError",
 			}
 		}
-		logrus.Errorf("device ID: %s returned unrecognized error\n", device.ID)
+		logrus.Errorf("device ID: %s returned unrecognized error: %s\n", device.ID, err.Error())
 		return map[string]interface{}{
 			"status":    fulfillment.StatusError,
 			"errorCode": "hardError",
