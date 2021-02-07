@@ -73,7 +73,7 @@ int crypto_sign_payload(unsigned char *dst, const char *payload, const size_t pa
   int err = crypto_sign_detached(dst, NULL, (const unsigned char *)payload, payload_len, g_kp.skey);
   if (err != 0)
   {
-    printf("fail sign payload: %d\n", err);
+    ESP_LOGE(CRYPTO_TAG, "fail sign payload\n");
     return ESP_ERR_INVALID_RESPONSE;
   }
 

@@ -39,12 +39,13 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
   memcpy(sig, event->data, ED25519_SIGNATURE_BYTES);
   memcpy(requestID, &event->data[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE);
   memcpy(body, &event->data[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE], body_len);
+  ESP_LOGI(MQTT_TAG, "req_body: %.*s", body_len, body);
 
   DeviceRequestBody req_body;
   esp_err_t err = parse_device_request_body(&req_body, body);
   if (err != ESP_OK)
   {
-    ESP_LOGE(MQTT_TAG, "fail parse device_request %d\n", err);
+    ESP_LOGE(MQTT_TAG, "fail parse device_request %d", err);
     return err;
   }
 
@@ -53,7 +54,7 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
   cJSON *res_body_json = stringify_device_response(&res_body);
   const char *res_body_str = cJSON_PrintUnformatted(res_body_json);
   size_t res_body_str_len = strlen(res_body_str);
-  printf("res_body_str: %s\n", res_body_str);
+  ESP_LOGI(MQTT_TAG, "res_body: %s\n", res_body_str);
 
   char res_payload[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE + res_body_str_len];
   // Add requestID to res payload
@@ -66,7 +67,7 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
   err = crypto_sign_payload((unsigned char *)res_payload, &res_payload[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE + res_body_str_len);
   if (err != ESP_OK)
   {
-    ESP_LOGE(MQTT_TAG, "fail sign payload with base64 encoding code: %d\n", err);
+    ESP_LOGE(MQTT_TAG, "fail sign payload with base64 encoding code: %d", err);
     return err;
   }
 
@@ -94,7 +95,7 @@ static esp_err_t on_fetch_state(esp_mqtt_event_handle_t event)
   cJSON *res_body_json = stringify_device_response(&res_body);
   const char *res_body_str = cJSON_PrintUnformatted(res_body_json);
   size_t res_body_str_len = strlen(res_body_str);
-  printf("res_body_str: %s\n", res_body_str);
+  ESP_LOGI(MQTT_TAG, "res_body: %s\n", res_body_str);
 
   char res_payload[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE + res_body_str_len];
   // Add requestID to res payload
@@ -107,7 +108,7 @@ static esp_err_t on_fetch_state(esp_mqtt_event_handle_t event)
   esp_err_t err = crypto_sign_payload((unsigned char *)res_payload, &res_payload[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE + res_body_str_len);
   if (err != ESP_OK)
   {
-    ESP_LOGE(MQTT_TAG, "fail sign payload with base64 encoding code: %d\n", err);
+    ESP_LOGE(MQTT_TAG, "fail sign payload with base64 encoding code: %d", err);
     return err;
   }
 
