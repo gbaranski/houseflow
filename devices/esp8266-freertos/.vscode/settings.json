@@ -13,6 +13,10 @@
         "string": "c",
         "hf_crypto.h": "c",
         "hf_utils.h": "c",
-        "nvs_flash.h": "c"
+        "nvs_flash.h": "c",
+        "hf_io.h": "c",
+        "hf_types.h": "c",
+        "stdbool.h": "c",
+        "gpio.h": "c"
     },
 }

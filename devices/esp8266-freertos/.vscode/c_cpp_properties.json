@@ -7,6 +7,8 @@
                 "${workspaceFolder}/build/include/*",
                 "${IDF_PATH}/components/**",
                 "${IDF_PATH}/components/freertos/port/esp8266/include" // for some reason its required
+                ,
+                "${IDF_PATH}/components/json/cJSON"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
@@ -16,8 +18,7 @@
                 "__ESP_FILE__"
             ],
             "compilerPath": "/usr/bin/gcc",
-            "intelliSenseMode": "${default}",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+            "intelliSenseMode": "${default}"
         }
     ],
     "version": 4
