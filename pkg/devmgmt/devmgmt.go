@@ -100,7 +100,7 @@ loop:
 				responseRequestID := responsePayload[ed25519.SignatureSize : ed25519.SignatureSize+RequestIDSize]
 				msgBody := responsePayload[ed25519.SignatureSize+RequestIDSize:]
 				if !bytes.Equal(responseRequestID, requestID) {
-					logrus.Infof("skipping message due to requestID mismatch exp: %s, rec: %s\n", requestID, responseRequestID)
+					logrus.Infof("skipping message due to requestID mismatch exp: %v, rec: %v\n", requestID, responseRequestID)
 					continue loop
 				}
 				valid := ed25519.Verify(pkey, append(responseRequestID, msgBody...), responseSignature)
