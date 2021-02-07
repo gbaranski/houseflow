@@ -36,7 +36,7 @@ esp_err_t parse_device_request_body(DeviceRequestBody *dst, char *msg)
   if (json == NULL)
   {
     const char *error_ptr = cJSON_GetErrorPtr();
-    ESP_LOGE("fail parse json %s\n", error_ptr);
+    ESP_LOGE(UTILS_TAG, "fail parse json %s\n", error_ptr);
 
     return ESP_ERR_INVALID_RESPONSE;
   }

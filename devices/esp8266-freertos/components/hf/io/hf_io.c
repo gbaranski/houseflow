@@ -40,3 +40,12 @@ DeviceResponseBody io_handle_command(const char *cmd, DeviceRequestBody *req)
 
     return res;
 }
+
+DeviceResponseBody io_handle_fetch_state()
+{
+    DeviceResponseBody res = {
+        .state = g_state,
+        .error = NULL,
+        .status = "SUCCESS"};
+    return res;
+}
