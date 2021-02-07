@@ -10,19 +10,17 @@ typedef struct
 
 typedef struct
 {
-  const char *correlation_data;
   const char *command;
   DeviceState state;
-} DeviceRequest;
+} DeviceRequestBody;
 
 typedef struct
 {
-  const char *correlation_data;
   // SUCCESS | ERROR
   const char *status;
   // Present only if status == ERROR
   const char *error;
   DeviceState state;
-} DeviceResponse;
+} DeviceResponseBody;
 
 #endif

@@ -23,42 +23,62 @@
 #include <driver/gpio.h>
 #include <cJSON.h>
 
-#define LED_PIN 5
+static void parse_payload(char *sig, uint8_t *requestID, char *body, size_t body_len, char *src)
+{
+  memcpy(sig, src, ED25519_SIGNATURE_BYTES);
+  src += ED25519_SIGNATURE_BYTES;
+  memcpy(requestID, src, REQUEST_ID_SIZE);
+  src += REQUEST_ID_SIZE;
+  memcpy(body, src, body_len);
+  src += body_len;
+}
 
 static esp_err_t on_data(esp_mqtt_event_handle_t event)
 {
-  char sig[ED25519_BASE64_SIGNATURE_BYTES + 1];
-  // length of msg = signature_len - len('.')
-  char msg[event->data_len - ED25519_BASE64_SIGNATURE_BYTES];
-  esp_err_t err = parse_mqtt_payload(sig, msg, event->data, event->data_len);
-  if (err != ESP_OK)
-  {
-    ESP_LOGE(MQTT_TAG, "err parsing payload %d\n", err);
-    return err;
-  }
-  DeviceRequest req;
-  err = parse_device_request(&req, msg);
+  uint16_t body_len = event->data_len - ED25519_SIGNATURE_BYTES - REQUEST_ID_SIZE;
+  char sig[ED25519_SIGNATURE_BYTES];
+  uint8_t requestID[REQUEST_ID_SIZE];
+  char body[body_len];
+
+  parse_payload(sig, requestID, body, body_len, event->data);
+
+  DeviceRequestBody req_body;
+  esp_err_t err = parse_device_request_body(&req_body, body);
   if (err != ESP_OK)
   {
     ESP_LOGE(MQTT_TAG, "fail parse device_request %d\n", err);
     return err;
   }
 
-  DeviceResponse device_res = io_handle_command(req.command, &req);
+  DeviceResponseBody res_body = io_handle_command(req_body.command, &req_body);
 
-  cJSON *device_res_json = stringify_device_response(&device_res);
-  const char *device_res_str = cJSON_PrintUnformatted(device_res_json);
+  cJSON *res_body_json = stringify_device_response(&res_body);
+  const char *res_body_str = cJSON_PrintUnformatted(res_body_json);
+  size_t res_body_str_len = strlen(res_body_str);
+  printf("res_body_str: %s\n", res_body_str);
 
-  char res_payload[ED25519_BASE64_SIGNATURE_BYTES + strlen(device_res_str)];
-  err = crypto_sign_response_combined(res_payload, &device_res, device_res_str);
+  char res_payload[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE + res_body_str_len];
+  // Add requestID to res payload
+  memcpy(&res_payload[ED25519_SIGNATURE_BYTES], requestID, REQUEST_ID_SIZE);
+  // Add JSON to res payload
+  memcpy(&res_payload[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE], res_body_str, res_body_str_len);
+
+  // Sign the above data(requestID, JSON)
+  // Destination is the beginning of the payload
+  err = crypto_sign_payload((unsigned char *)res_payload, &res_payload[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE + res_body_str_len);
   if (err != ESP_OK)
   {
-    ESP_LOGE(MQTT_TAG, "fail sign response %d\n", err);
+    ESP_LOGE(MQTT_TAG, "fail sign payload with base64 encoding code: %d\n", err);
     return err;
   }
 
-  printf("res_str: %s\n", device_res_str);
-  esp_mqtt_client_publish(event->client, CONFIG_DEVICE_ID "/command/response", res_payload, strlen(res_payload), 0, 0);
+  esp_mqtt_client_publish(
+      event->client,
+      CONFIG_DEVICE_ID "/command/response",
+      res_payload,
+      ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE + res_body_str_len,
+      0,
+      0);
 
   return ESP_OK;
 }
@@ -148,7 +168,7 @@ void mqtt_init(void)
       .uri = CONFIG_BROKER_URL,
       .client_id = CONFIG_DEVICE_ID,
       .username = CONFIG_DEVICE_PUBLIC_KEY,
-      .password = (const char *)&password,
+      .password = (const char *)password,
   };
   ESP_LOGI(MQTT_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
   esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);

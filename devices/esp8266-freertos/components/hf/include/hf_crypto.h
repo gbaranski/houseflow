@@ -18,6 +18,8 @@
 // 4 * ceil(ED25519_SIGNATURE_LENGTH / 3) = 88
 #define ED25519_BASE64_SIGNATURE_BYTES 88U
 
+#define REQUEST_ID_SIZE 16U
+
 typedef struct
 {
   unsigned char pkey[ED25519_PKEY_BYTES];
@@ -27,8 +29,8 @@ typedef struct
 
 int crypto_init();
 
-int crypto_encode_signature(const unsigned char *sig, unsigned char *dst);
+int crypto_encode_signature(unsigned char *dst, const unsigned char *sig);
 int crypto_generate_password(unsigned char *dst);
-int crypto_sign_response_combined(char *dst, DeviceResponse *res, const char *res_str);
+int crypto_sign_payload(unsigned char *dst, const char *payload, const size_t payload_len);
 
 #endif

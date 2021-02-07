@@ -14,6 +14,6 @@ typedef struct
 
 void io_init(void);
 
-DeviceResponse io_handle_command(const char *cmd, DeviceRequest *req);
+DeviceResponseBody io_handle_command(const char *cmd, DeviceRequestBody *req);
 
 #endif

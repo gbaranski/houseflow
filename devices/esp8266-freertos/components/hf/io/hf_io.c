@@ -15,11 +15,10 @@ void io_init()
 }
 
 // Handles command and writes to
-DeviceResponse io_handle_command(const char *cmd, DeviceRequest *req)
+DeviceResponseBody io_handle_command(const char *cmd, DeviceRequestBody *req)
 {
     // If everything went okay, just return this struct, otherwise modify
-    DeviceResponse res = {
-        .correlation_data = req->correlation_data,
+    DeviceResponseBody res = {
         // NULL by default
         .state = req->state,
         .error = NULL,

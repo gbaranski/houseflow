@@ -42,7 +42,7 @@ int crypto_init()
   return ESP_OK;
 }
 
-int crypto_encode_signature(const unsigned char *sig, unsigned char *dst)
+int crypto_encode_signature(unsigned char *dst, const unsigned char *sig)
 {
   size_t olen;
   int err = mbedtls_base64_encode(dst, ED25519_BASE64_SIGNATURE_BYTES + 1,
@@ -59,38 +59,23 @@ int crypto_encode_signature(const unsigned char *sig, unsigned char *dst)
 
 int crypto_generate_password(unsigned char *dst)
 {
-  unsigned char password[ED25519_SIGNATURE_BYTES];
-  int err = crypto_sign_ed25519_detached(dst, NULL, g_kp.pkey, ED25519_PKEY_BYTES, g_kp.skey);
+  unsigned char sig[ED25519_SIGNATURE_BYTES];
+  int err = crypto_sign_ed25519_detached(sig, NULL, g_kp.pkey, ED25519_PKEY_BYTES, g_kp.skey);
   if (err != 0)
   {
     return err;
   }
-  return crypto_encode_signature(password, dst);
+  return crypto_encode_signature(dst, sig);
 }
 
-int crypto_sign_response_combined(char *dst, DeviceResponse *res, const char *res_str)
+int crypto_sign_payload(unsigned char *dst, const char *payload, const size_t payload_len)
 {
-
-  // fix this buffer later, not sure if we need that big buffer for just signature
-  unsigned char res_sig[ED25519_SIGNATURE_BYTES];
-  int err = crypto_sign_detached(res_sig, NULL, (const unsigned char *)res_str, strlen(res_str), g_kp.skey);
+  int err = crypto_sign_detached(dst, NULL, (const unsigned char *)payload, payload_len, g_kp.skey);
   if (err != 0)
   {
-    printf("fail sign code: %d\n", err);
+    printf("fail sign payload: %d\n", err);
     return ESP_ERR_INVALID_RESPONSE;
   }
-  unsigned char res_sig_encoded[ED25519_BASE64_SIGNATURE_BYTES];
-  err = crypto_encode_signature(res_sig, res_sig_encoded);
-  if (err != ESP_OK)
-  {
-    printf("fail encode response sig %d\n", err);
-    // ESP_LOGE("fail encode signature %d",(int)crypto_err);
-    return ESP_ERR_INVALID_RESPONSE;
-  }
-  printf("response signature: %s\n", res_sig_encoded);
 
-  strcpy(dst, (const char *)res_sig_encoded);
-  strcat(dst, ".");
-  strcat(dst, res_str);
   return ESP_OK;
 }
