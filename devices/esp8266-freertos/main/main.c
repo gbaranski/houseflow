@@ -11,7 +11,7 @@
 
 static const char *TAG = "app";
 
-__unused void app_main()
+void app_main()
 {
   ESP_LOGI(TAG, "[APP] Startup..");
   ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
