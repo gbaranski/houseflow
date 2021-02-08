@@ -34,7 +34,7 @@ const DeviceTraitsSchema = `
 CREATE TABLE IF NOT EXISTS device_traits (
     id          UUID,
     device_id   UUID REFERENCES devices (id) ON DELETE CASCADE NOT NULL,
-	name        TEXT NOT NULL,
+	  name        TEXT NOT NULL,
 
 	PRIMARY KEY (id)
 )
@@ -139,16 +139,13 @@ func (p Postgres) GetDevicesByIDs(ctx context.Context, ids []string) (devices []
 }
 
 // AddDevice adds device to database
-func (p Postgres) AddDevice(ctx context.Context, device types.Device) (id string, err error) {
+func (p Postgres) AddDevice(ctx context.Context, device types.Device) (string, error) {
 	const sql = `
 	INSERT INTO devices (id, publickey, type, name, will_report_state, room_hint, manufacturer, model, hw_version, sw_version)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
-	deviceID, err := uuid.NewRandom()
-	if err != nil {
-		return "", fmt.Errorf("fail gen uuid %s", err.Error())
-	}
-	_, err = p.conn.Exec(ctx, sql,
+	deviceID := uuid.New()
+	_, err := p.conn.Exec(ctx, sql,
 		deviceID.String(),
 		device.PublicKeyBase64,
 		device.Type,
@@ -160,6 +157,17 @@ func (p Postgres) AddDevice(ctx context.Context, device types.Device) (id string
 		device.DeviceInfo.HwVersion,
 		device.DeviceInfo.SwVersion,
 	)
+	if err != nil {
+		return "", err
+	}
+
+	for _, trait := range device.Traits {
+		const add_trait_sql = `INSERT INTO device_traits (id, device_id, name) VALUES ($1, $2, $3)`
+		_, err := p.conn.Exec(ctx, add_trait_sql, uuid.New().String(), deviceID, trait)
+		if err != nil {
+			return "", fmt.Errorf("fail adding trait %s", err.Error())
+		}
+	}
 
 	return deviceID.String(), err
 }
