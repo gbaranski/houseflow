@@ -1,4 +1,5 @@
 #include "hf_crypto.h"
+#include "sdkconfig.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -15,10 +16,6 @@
 #include <sodium.h>
 #include <cJSON.h>
 
-static const unsigned char public_key_base64[] = CONFIG_DEVICE_PUBLIC_KEY;
-static const unsigned char private_key_base64[] = CONFIG_DEVICE_PRIVATE_KEY;
-static const unsigned char server_public_key_base64[] = CONFIG_SERVER_PUBLIC_KEY;
-
 static unsigned char server_public_key[ED25519_PKEY_BYTES];
 static unsigned char public_key[ED25519_PKEY_BYTES];
 static unsigned char private_key[ED25519_SKEY_BYTES];
@@ -27,7 +24,7 @@ int crypto_init()
 {
   // Set public key here
   size_t pkey_len;
-  int err = mbedtls_base64_decode(public_key, ED25519_PKEY_BYTES, &pkey_len, public_key_base64, ED25519_BASE64_PKEY_BYTES);
+  int err = mbedtls_base64_decode(public_key, ED25519_PKEY_BYTES, &pkey_len, (const unsigned char*)CONFIG_DEVICE_PUBLIC_KEY, ED25519_BASE64_PKEY_BYTES);
   if (err != 0)
   {
     ESP_LOGE(CRYPTO_TAG, "fail decode pkey err: %d", err);
@@ -40,7 +37,7 @@ int crypto_init()
 
   // Set private key here
   size_t skey_len;
-  err = mbedtls_base64_decode(private_key, ED25519_SKEY_BYTES, &skey_len, private_key_base64, ED25519_BASE64_SKEY_BYTES);
+  err = mbedtls_base64_decode(private_key, ED25519_SKEY_BYTES, &skey_len, (const unsigned char*)CONFIG_DEVICE_PRIVATE_KEY, ED25519_BASE64_SKEY_BYTES);
   if (err != 0)
   {
     ESP_LOGE(CRYPTO_TAG, "fail decode skey err: %d", err);
@@ -53,7 +50,7 @@ int crypto_init()
 
   // Set public key here
   size_t server_pkey_len;
-  err = mbedtls_base64_decode(server_public_key, ED25519_PKEY_BYTES, &server_pkey_len, server_public_key_base64, ED25519_BASE64_PKEY_BYTES);
+  err = mbedtls_base64_decode(server_public_key, ED25519_PKEY_BYTES, &server_pkey_len, (const unsigned char*)CONFIG_SERVER_PUBLIC_KEY, ED25519_BASE64_PKEY_BYTES);
   if (err != 0)
   {
     ESP_LOGE(CRYPTO_TAG, "fail decode server pkey err: %d", err);
