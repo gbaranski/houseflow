@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "hf_crypto.h"
+#include "esp_err.h"
 #include "hf_utils.h"
 #include "hf_io.h"
 #include <esp_log.h>
@@ -40,6 +41,13 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
   memcpy(requestID, &event->data[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE);
   memcpy(body, &event->data[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE], body_len);
   ESP_LOGI(MQTT_TAG, "req_body: %.*s", body_len, body);
+
+  bool valid = crypto_verify_server_payload(sig, requestID, body, body_len);
+  if ( !valid ) {
+    ESP_LOGE(MQTT_TAG, "server sent invalid signature");
+    return ESP_ERR_INVALID_RESPONSE;
+  }
+  ESP_LOGI(MQTT_TAG, "signature verified");
 
   DeviceRequestBody req_body;
   esp_err_t err = parse_device_request_body(&req_body, body);
@@ -89,6 +97,13 @@ static esp_err_t on_fetch_state(esp_mqtt_event_handle_t event)
 
   memcpy(sig, event->data, ED25519_SIGNATURE_BYTES);
   memcpy(requestID, &event->data[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE);
+
+  bool valid = crypto_verify_server_payload(sig, requestID, NULL, 0);
+  if ( !valid ) {
+    ESP_LOGE(MQTT_TAG, "server sent invalid signature");
+    return ESP_ERR_INVALID_RESPONSE;
+  }
+  ESP_LOGI(MQTT_TAG, "signature verified");
 
   DeviceResponseBody res_body = io_handle_fetch_state();
 

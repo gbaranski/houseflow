@@ -20,17 +20,13 @@
 
 #define REQUEST_ID_SIZE 16U
 
-typedef struct
-{
-  unsigned char pkey[ED25519_PKEY_BYTES];
-  // Thats seed
-  unsigned char skey[ED25519_SKEY_BYTES];
-} Keypair;
-
 int crypto_init();
 
 int crypto_encode_signature(unsigned char *dst, const unsigned char *sig);
 int crypto_generate_password(unsigned char *dst);
 int crypto_sign_payload(unsigned char *dst, const char *payload, const size_t payload_len);
+
+// verifies if requestID with Data is valid by checking with signature, data can be NULL
+bool crypto_verify_server_payload( const char* sig, const uint8_t* requestID, const char* body, const size_t body_len ); 
 
 #endif
