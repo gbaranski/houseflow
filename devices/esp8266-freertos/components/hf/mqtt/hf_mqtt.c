@@ -236,7 +236,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 
 void mqtt_init(void)
 {
-  unsigned char password[ED25519_BASE64_SIGNATURE_BYTES];
+  unsigned char password[PASSWORD_BYTES];
   int err = crypto_generate_password(password);
   if (err != 0)
   {
@@ -244,11 +244,19 @@ void mqtt_init(void)
     return;
   }
 
+  unsigned char password_base64[PASSWORD_BASE64_BYTES + 1];
+  err = crypto_encode_password(password_base64, password);
+  if (err != 0) {
+    ESP_LOGE(MQTT_TAG, "fail encode password %d", err);
+    return;
+  }
+
+
   const esp_mqtt_client_config_t mqtt_cfg = {
       .uri = CONFIG_BROKER_URL,
       .client_id = CONFIG_DEVICE_ID,
       .username = CONFIG_DEVICE_PUBLIC_KEY,
-      .password = (const char *)password,
+      .password = (const char *)password_base64,
   };
   ESP_LOGI(MQTT_TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
   esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);

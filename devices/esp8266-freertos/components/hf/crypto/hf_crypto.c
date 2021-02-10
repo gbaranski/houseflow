@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <FreeRTOS.h>
 
 #include <esp_log.h>
 #include <esp_err.h>
@@ -15,6 +16,7 @@
 #include <nvs_flash.h>
 #include <sodium.h>
 #include <cJSON.h>
+#include <lwip/apps/sntp.h>
 
 static unsigned char server_public_key[ED25519_PKEY_BYTES];
 static unsigned char public_key[ED25519_PKEY_BYTES];
@@ -61,6 +63,39 @@ int crypto_init()
     return ESP_ERR_INVALID_SIZE;
   }
 
+  ESP_LOGI(CRYPTO_TAG, "Initializng SNTP");
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0, "pool.ntp.org");
+  sntp_init();
+  setenv("TZ", "UTC+1", 1);
+  tzset();
+
+  while(true) {
+    time_t now;
+    time_t nowUTC;
+    struct tm nowtm;
+    struct tm nowtmUTC;
+    time(&now);
+    localtime_r(&now, &nowtm);
+    gmtime_r(&nowUTC, &nowtmUTC);
+    ESP_LOGI(CRYPTO_TAG, "waiting for time");
+    ESP_LOGI(CRYPTO_TAG, "timestamp: %ld", now);
+    ESP_LOGI(CRYPTO_TAG, "UTC timestamp: %ld", nowUTC);
+    ESP_LOGI(CRYPTO_TAG, "time(): %ld", time(NULL));
+
+    ESP_LOGI(CRYPTO_TAG, "year: %d", nowtm.tm_year);
+    ESP_LOGI(CRYPTO_TAG, "month: %d", nowtm.tm_mon);
+    ESP_LOGI(CRYPTO_TAG, "day: %d", nowtm.tm_yday);
+    ESP_LOGI(CRYPTO_TAG, "hour: %d", nowtm.tm_hour);
+    ESP_LOGI(CRYPTO_TAG, "minute: %d", nowtm.tm_min);
+    vTaskDelay(1000 / portTICK_RATE_MS);
+  }
+
+  time_t now;
+  struct tm time;
+  localtime_r(&now, &time);
+  ESP_LOGI(CRYPTO_TAG, "timestamp: %ld now: %ld", mktime(&time), now);
+
   return ESP_OK;
 }
 
@@ -79,15 +114,33 @@ int crypto_encode_signature(unsigned char *dst, const unsigned char *sig)
   return ESP_OK;
 }
 
-int crypto_generate_password(unsigned char *dst)
+int crypto_generate_password( unsigned char* dst )
 {
+  time_t now = 0;
+  time(&now);
+  ESP_LOGI(CRYPTO_TAG, "timestamp: %ld", now);
+
+  uint8_t ts[4];
+  ts[0] = (now >> 24) & 0xFF;
+  ts[1] = (now >> 16) & 0xFF;
+  ts[2] = (now >> 8) & 0xFF;
+  ts[3] = now & 0xFF;
+
   unsigned char sig[ED25519_SIGNATURE_BYTES];
-  int err = crypto_sign_ed25519_detached(sig, NULL, public_key, ED25519_PKEY_BYTES, private_key);
-  if (err != 0)
-  {
-    return err;
-  }
-  return crypto_encode_signature(dst, sig);
+  int err = crypto_sign_ed25519_detached( sig, NULL, ts, sizeof(ts), private_key );
+  if (err != 0) return err;
+
+  memcpy( dst, sig, ED25519_SIGNATURE_BYTES );
+  memcpy( &dst[ED25519_SIGNATURE_BYTES], ts, sizeof(ts) );
+
+  return 0;
+}
+
+int crypto_encode_password( unsigned char* dst, const unsigned char* const src ) 
+{
+  size_t olen;
+  return mbedtls_base64_encode(dst, PASSWORD_BASE64_BYTES + 1,
+                                  &olen, src, PASSWORD_BYTES);
 }
 
 int crypto_sign_payload(unsigned char *dst, const char *payload, const size_t payload_len)
