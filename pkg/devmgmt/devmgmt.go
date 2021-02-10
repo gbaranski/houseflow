@@ -5,10 +5,12 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/gbaranski/houseflow/pkg/types"
 	"github.com/gbaranski/houseflow/pkg/utils"
@@ -37,14 +39,18 @@ func New(opts Options) (Devmgmt, error) {
 	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 
 	username := base64.StdEncoding.EncodeToString(opts.ServerPublicKey)
-	password := base64.StdEncoding.EncodeToString(ed25519.Sign(opts.ServerPrivateKey, opts.ServerPublicKey))
+	ts := make([]byte, 32/8)
+	binary.BigEndian.PutUint32(ts, uint32(time.Now().Unix()))
+	password := make([]byte, ed25519.SignatureSize+32/8)
+	copy(password, ed25519.Sign(opts.ServerPrivateKey, ts))
+	copy(password[ed25519.SignatureSize:], ts)
 
 	copts := paho.
 		NewClientOptions().
 		AddBroker(opts.BrokerURL).
 		SetClientID(opts.ClientID).
 		SetUsername(username).
-		SetPassword(password).
+		SetPassword(base64.StdEncoding.EncodeToString(password)).
 		SetAutoReconnect(true).
 		SetConnectRetry(true)
 

@@ -1,8 +1,11 @@
+#include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
+#include <arpa/inet.h>
 
 #include <libpq-fe.h>
 #include <mosquitto_broker.h>
@@ -11,27 +14,105 @@
 #include <mqtt_protocol.h>
 #include <sodium.h>
 
+static const unsigned int SIG_BYTES = 64;
+static const unsigned int SIG_BASE64_BYTES = ((4 * SIG_BYTES / 3) + 3) & ~3;
 
-#define SIG_BYTES 64U
-#define SIG_BASE64_BYTES 88U
+static const unsigned int PKEY_BYTES = 32;
+static const unsigned int PKEY_BASE64_BYTES = ((4 * PKEY_BYTES / 3) + 3) & ~3;
 
-#define PKEY_BASE64_BYTES 44U
-#define PKEY_BYTES 32U
+static const unsigned int PASSWORD_BYTES = SIG_BYTES + sizeof(uint32_t);
+static const unsigned int PASSWORD_BASE64_BYTES = ((4 * PASSWORD_BYTES / 3) + 3) & ~3;
+
+static const unsigned int MAX_TIMESTAMP_DIFFERENCE = 3600;
+
 
 static mosquitto_plugin_id_t *mosq_pid = NULL;
 static PGconn *pgconn = NULL;
 
-static int auth_cb(int event, void *event_data, void *userdata)
+static int decode_signature( unsigned char* dst, const char *ptr ) {
+  size_t sig_size;
+  int err = sodium_base642bin(
+      dst, SIG_BYTES,  // OUTPUT
+      ptr, SIG_BASE64_BYTES, // INPUT
+      "", &sig_size, // SOMETHING
+      NULL, sodium_base64_VARIANT_ORIGINAL
+      );
+  if ( err != 0 )  {
+    printf("fail decoding signature, err: %d\n", err);
+    return 1;
+  }
+  if (sig_size != SIG_BYTES) {
+    printf("invalid signature size: %zu\n", sig_size);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int decode_password( unsigned char* sig, uint8_t* timestamp, const char* const src ) {
+  unsigned char pass[PASSWORD_BYTES];
+  size_t pass_size;
+  int err = sodium_base642bin(
+      pass, PASSWORD_BYTES,
+      src, PASSWORD_BASE64_BYTES,
+      "", &pass_size,
+      NULL, sodium_base64_VARIANT_ORIGINAL
+      );
+  if (err != 0) {
+    printf("fail decoding password, err: %d\n", err);
+    return 1;
+  }
+  if (pass_size != PASSWORD_BYTES) {
+    printf("invalid signature size: %zu\n", pass_size);
+    return 1;
+  }
+  memcpy(sig, pass, SIG_BYTES);
+  memcpy(timestamp, &pass[SIG_BYTES], sizeof(uint32_t));
+  
+
+  return 0;
+}
+
+static int verify_password( 
+    const unsigned char* const sig, 
+    const uint8_t* ts, 
+    const unsigned char* const pkey 
+) 
 {
-  printf("basic_auth_callback()\n");
+  const uint32_t timestamp = 
+    ts[3]         |
+    (ts[2] << 8)  |
+    (ts[1] << 16) |
+    (ts[0] << 24);
+
+  const int now = time(NULL);
+  if ( timestamp > now ) {
+    printf( "signature is not valid yet, too early by: %d\n", timestamp - now);
+    return 1;
+  }
+  if ( ( now - timestamp ) > MAX_TIMESTAMP_DIFFERENCE ) {
+    printf( "signature has expired by %d\n", now - timestamp - MAX_TIMESTAMP_DIFFERENCE);
+    return 1;
+  }
+
+
+  int err = crypto_sign_verify_detached( sig, ts, sizeof( uint32_t ), pkey );
+  if ( err != 0 ) {
+    printf( "invalid signature\n" );
+    return 1;
+  }
+
+  return 0;
+}
+
+
+static int auth_cb( int event, void *event_data, void *userdata )
+{
 	struct mosquitto_evt_basic_auth *ed = event_data;
   if(strlen(ed->username) != PKEY_BASE64_BYTES) {
     printf("invalid username len: %lu\n", strlen(ed->username));
     return MOSQ_ERR_AUTH;
   }
-  printf("username: %s\n", ed->username);
-
-
   unsigned char pkey[PKEY_BYTES];
 
   size_t pkey_size;
@@ -50,35 +131,25 @@ static int auth_cb(int event, void *event_data, void *userdata)
     return MOSQ_ERR_AUTH;
   }
 
-  unsigned char sig[SIG_BASE64_BYTES];
-  size_t sig_size;
-  err = sodium_base642bin(
-      sig, SIG_BYTES,  // OUTPUT
-      ed->password, SIG_BASE64_BYTES, // INPUT
-      "", &sig_size, // SOMETHING
-      NULL, sodium_base64_VARIANT_ORIGINAL
-      );
-  if ( err != 0 )  {
-    printf("fail decoding signature, err: %d\n", err);
-    return MOSQ_ERR_AUTH;
-  }
-  if ( sig_size != SIG_BYTES ) {
-    printf("invalid decoded signature size: %zu\n", sig_size);
+  unsigned char sig[SIG_BYTES];
+  uint8_t ts[sizeof(uint32_t)];
+  err = decode_password(sig, ts, ed->password);
+  if ( err != 0 ) {
     return MOSQ_ERR_AUTH;
   }
 
-  err = crypto_sign_verify_detached(sig, pkey, PKEY_BYTES, pkey);
+  err = verify_password( sig, ts, pkey );
   if ( err != 0 ) {
-    printf("invalid signature\n");
     return MOSQ_ERR_AUTH;
   }
+
   printf("valid signature\n");
+
 	return MOSQ_ERR_SUCCESS;
 }
 
 int mosquitto_plugin_version(int supported_version_count, const int *supported_versions)
 {
-  printf("mosquitto_plugin_version()\n");
 	for(int i = 0; i < supported_version_count; i++){
 		if(supported_versions[i] == 5){
 			return 5;
@@ -142,7 +213,6 @@ int init_postgres() {
 
 int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, struct mosquitto_opt *opts, int opt_count)
 {
-  printf("mosquitto_plugin_init()\n");
 	mosq_pid = identifier;
 
   if(sodium_init() == -1) return 1;
@@ -158,7 +228,6 @@ int mosquitto_plugin_init(mosquitto_plugin_id_t *identifier, void **user_data, s
 
 int mosquitto_plugin_cleanup(void *user_data, struct mosquitto_opt *opts, int opt_count)
 {
-  printf("mosquitto_plugin_cleanup()\n");
   printf("Disconnecting from PostgreSQL\n");
   PQfinish(pgconn);
 	return mosquitto_callback_unregister(mosq_pid, MOSQ_EVT_BASIC_AUTH, auth_cb, NULL);
