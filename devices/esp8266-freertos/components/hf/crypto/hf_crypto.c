@@ -22,6 +22,9 @@ static unsigned char server_public_key[ED25519_PKEY_BYTES];
 static unsigned char public_key[ED25519_PKEY_BYTES];
 static unsigned char private_key[ED25519_SKEY_BYTES];
 
+// some year, used to check if retrieved date is real or not
+#define FIXED_YEAR 2021
+
 int crypto_init()
 {
   // Set public key here
@@ -65,36 +68,23 @@ int crypto_init()
 
   ESP_LOGI(CRYPTO_TAG, "Initializng SNTP");
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, "pool.ntp.org");
+  sntp_setservername(0, "0.europe.pool.ntp.org");
   sntp_init();
-  setenv("TZ", "UTC+1", 1);
+
+  setenv("TZ", "UTC", 1);
   tzset();
 
-  while(true) {
-    time_t now;
-    time_t nowUTC;
-    struct tm nowtm;
-    struct tm nowtmUTC;
-    time(&now);
-    localtime_r(&now, &nowtm);
-    gmtime_r(&nowUTC, &nowtmUTC);
-    ESP_LOGI(CRYPTO_TAG, "waiting for time");
-    ESP_LOGI(CRYPTO_TAG, "timestamp: %ld", now);
-    ESP_LOGI(CRYPTO_TAG, "UTC timestamp: %ld", nowUTC);
-    ESP_LOGI(CRYPTO_TAG, "time(): %ld", time(NULL));
+  time_t now = 0;
+  struct tm timeinfo;
 
-    ESP_LOGI(CRYPTO_TAG, "year: %d", nowtm.tm_year);
-    ESP_LOGI(CRYPTO_TAG, "month: %d", nowtm.tm_mon);
-    ESP_LOGI(CRYPTO_TAG, "day: %d", nowtm.tm_yday);
-    ESP_LOGI(CRYPTO_TAG, "hour: %d", nowtm.tm_hour);
-    ESP_LOGI(CRYPTO_TAG, "minute: %d", nowtm.tm_min);
+  while(timeinfo.tm_year < (FIXED_YEAR-1900)) {
+    ESP_LOGI(CRYPTO_TAG, "waiting for date to initialize");
+    time(&now);
+    localtime_r(&now, &timeinfo);
+
     vTaskDelay(1000 / portTICK_RATE_MS);
   }
-
-  time_t now;
-  struct tm time;
-  localtime_r(&now, &time);
-  ESP_LOGI(CRYPTO_TAG, "timestamp: %ld now: %ld", mktime(&time), now);
+  ESP_LOGI(CRYPTO_TAG, "date initialized, timestamp: %ld", now);
 
   return ESP_OK;
 }
@@ -118,7 +108,6 @@ int crypto_generate_password( unsigned char* dst )
 {
   time_t now = 0;
   time(&now);
-  ESP_LOGI(CRYPTO_TAG, "timestamp: %ld", now);
 
   uint8_t ts[4];
   ts[0] = (now >> 24) & 0xFF;

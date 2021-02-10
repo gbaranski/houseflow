@@ -20,15 +20,16 @@ void app_main()
   ESP_ERROR_CHECK(nvs_flash_init());
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+  io_init();
+
+  wifi_init_sta();
+
   int err = crypto_init();
   if (err != ESP_OK)
   {
     return;
   }
-
-  io_init();
-
-  wifi_init_sta();
 
   mqtt_init();
 }
