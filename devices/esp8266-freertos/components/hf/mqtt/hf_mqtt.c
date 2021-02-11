@@ -262,4 +262,6 @@ esp_err_t mqtt_init(void)
   ESP_ERROR_CHECK(esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler,
                                  client));
   ESP_ERROR_CHECK(esp_mqtt_client_start(client));
+
+  return ESP_OK;
 }

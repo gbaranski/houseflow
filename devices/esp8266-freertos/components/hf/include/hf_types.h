@@ -3,9 +3,15 @@
 #include <driver/gpio.h>
 #include <stdbool.h>
 
+#include "sdkconfig.h"
+
 typedef struct
 {
-  bool on;
+
+  #if CONFIG_DEVICE_TRAIT_ONOFF == 1 && CONFIG_DEVICE_TRAIT_ONOFF_QUERY == 1
+    bool on;
+  #endif
+
 } DeviceState;
 
 typedef struct

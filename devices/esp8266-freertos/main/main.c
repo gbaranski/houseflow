@@ -16,7 +16,8 @@ static const char *TAG = "app";
 #define FIXED_YEAR 2021
 #define SNTP_MAX_RETRY 10
 
-esp_err_t time_init() {
+esp_err_t time_init() 
+{
   ESP_LOGI(TAG, "Initializng SNTP");
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, "0.europe.pool.ntp.org");
@@ -42,6 +43,8 @@ esp_err_t time_init() {
     return ESP_ERR_TIMEOUT;
   }
   ESP_LOGI(TAG, "date initialized, timestamp: %ld", now);
+
+  return ESP_OK;
 }
 
 void app_main()
@@ -53,13 +56,10 @@ void app_main()
   ESP_ERROR_CHECK(nvs_flash_init());
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
-  ESP_ERROR_CHECK(io_init());
+  io_init();
   ESP_ERROR_CHECK(crypto_init());
-
   wifi_init_sta();
-
   ESP_ERROR_CHECK(time_init());
-
 
   ESP_ERROR_CHECK(mqtt_init());
 }

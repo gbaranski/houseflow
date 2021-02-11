@@ -8,6 +8,6 @@
 
 #define MQTT_TAG "MQTT"
 
-esp_err_t mqtt_init(void)
+esp_err_t mqtt_init(void);
 
 #endif // ESP8266_FREERTOS_HF_MQTT_H

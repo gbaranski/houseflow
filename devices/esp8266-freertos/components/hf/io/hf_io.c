@@ -3,15 +3,22 @@
 #include <esp_err.h>
 #include <string.h>
 #include <esp_log.h>
+#include "sdkconfig.h"
 
 #include "hf_types.h"
 
 static DeviceState g_state = {.on = 0};
-static IOConfig g_cfg = {.onoff_pin = 5};
 
-esp_err_t io_init()
+void io_init()
 {
-    return gpio_set_direction(g_cfg.onoff_pin, GPIO_MODE_OUTPUT);
+  #if CONFIG_DEVICE_TRAIT_ONOFF == 1
+    #if CONFIG_DEVICE_TRAIT_ONOFF_GPIO == 0
+      #error "OnOff GPIO is invalid or is not defined"
+    #endif
+    #if CONFIG_DEVICE_TRAIT_ONOFF_EXECUTE == 1
+      ESP_ERROR_CHECK(gpio_set_direction(CONFIG_DEVICE_TRAIT_ONOFF_GPIO, GPIO_MODE_OUTPUT));
+    #endif
+  #endif
 }
 
 // Handles command and writes to
@@ -25,11 +32,17 @@ DeviceResponseBody io_handle_command(const char *cmd, DeviceRequestBody *req)
         .status = "SUCCESS",
     };
 
+
+#if CONFIG_DEVICE_TRAIT_ONOFF == 1 && CONFIG_DEVICE_TRAIT_ONOFF_EXECUTE == 1
     if (strcmp(cmd, "action.devices.commands.OnOff") == 0)
     {
-        gpio_set_level(g_cfg.onoff_pin, req->state.on);
+        gpio_set_level(CONFIG_DEVICE_TRAIT_ONOFF_GPIO, req->state.on);
         g_state.on = req->state.on;
     }
+#else
+    // Something that will never exucute, just to satisfy the else below
+    if(false == true) {}
+#endif
     else
     {
         ESP_LOGE(IO_TAG, "invalid cmd %s", cmd);

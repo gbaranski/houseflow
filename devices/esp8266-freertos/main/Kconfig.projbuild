@@ -23,11 +23,13 @@ menu "Device configuration"
         default "mqtt://192.168.1.10:1883/mqtt"
         help
             URL of an mqtt broker which this example connects to.
+
     config DEVICE_ID
         string "Device ID"
         default ""
         help
-            Must match with ObjectID of device in DB
+            UUID of the device
+
 
     config DEVICE_PUBLIC_KEY
         string "Device public key"
@@ -46,4 +48,30 @@ menu "Device configuration"
         default ""
         help
             Ed25519 public key, must match with the servers public key set in .env
+
+    menu "Device traits"
+        config DEVICE_TRAIT_ONOFF
+          bool "action.devices.traits.OnOff"
+          default false
+        
+        if DEVICE_TRAIT_ONOFF
+          config DEVICE_TRAIT_ONOFF_GPIO
+              int "OnOff GPIO Pin"
+              help
+                GPIO Pin for OnOff
+
+          config DEVICE_TRAIT_ONOFF_EXECUTE
+              bool "Execute OnOff state"
+              default false
+              help
+                True if supports executing On/Off state
+
+          config DEVICE_TRAIT_ONOFF_QUERY
+              bool "Query OnOff state"
+              default false
+              help
+                True if supports reporting On/Off state
+        endif
+    endmenu
+
 endmenu
