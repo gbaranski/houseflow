@@ -9,9 +9,9 @@
 static DeviceState g_state = {.on = 0};
 static IOConfig g_cfg = {.onoff_pin = 5};
 
-void io_init()
+esp_err_t io_init()
 {
-    gpio_set_direction(g_cfg.onoff_pin, GPIO_MODE_OUTPUT);
+    return gpio_set_direction(g_cfg.onoff_pin, GPIO_MODE_OUTPUT);
 }
 
 // Handles command and writes to

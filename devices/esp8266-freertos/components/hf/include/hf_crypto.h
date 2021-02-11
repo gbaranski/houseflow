@@ -26,12 +26,12 @@
 
 #define REQUEST_ID_SIZE 16U
 
-int crypto_init();
+esp_err_t crypto_init();
 
-int crypto_encode_signature(unsigned char *dst, const unsigned char *sig);
-int crypto_generate_password( unsigned char* dst );
-int crypto_sign_payload(unsigned char *dst, const char *payload, const size_t payload_len);
-int crypto_encode_password( unsigned char* dst, const unsigned char* const src );
+esp_err_t crypto_encode_signature(unsigned char *dst, const unsigned char *sig);
+esp_err_t crypto_generate_password( unsigned char* dst );
+esp_err_t crypto_sign_payload(unsigned char *dst, const char *payload, const size_t payload_len);
+esp_err_t crypto_encode_password( unsigned char* dst, const unsigned char* const src );
 
 // verifies if requestID with Data is valid by checking with signature, data can be NULL
 bool crypto_verify_server_payload( const char* sig, const uint8_t* requestID, const char* body, const size_t body_len ); 

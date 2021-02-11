@@ -12,7 +12,7 @@ typedef struct
     gpio_num_t onoff_pin;
 } IOConfig;
 
-void io_init(void);
+esp_err_t io_init();
 
 DeviceResponseBody io_handle_command(const char *cmd, DeviceRequestBody *req);
 DeviceResponseBody io_handle_fetch_state();
