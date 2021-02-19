@@ -1,7 +1,3 @@
-//
-// Created by gbaranski on 20/12/2020.
-//
-
 #include "hf_mqtt.h"
 
 #include <stdint.h>
@@ -9,10 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "hf_crypto.h"
 #include "esp_err.h"
-#include "hf_utils.h"
-#include "hf_io.h"
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_tls.h>
@@ -23,6 +16,9 @@
 #include <sodium.h>
 #include <driver/gpio.h>
 #include <cJSON.h>
+
+#include "hf_crypto.h"
+#include "hf_device.h"
 
 #define COMMAND_TOPIC_REQUEST CONFIG_DEVICE_ID "/command/request"
 #define COMMAND_TOPIC_RESPONSE CONFIG_DEVICE_ID "/command/response"
@@ -35,11 +31,13 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
   uint16_t body_len = event->data_len - ED25519_SIGNATURE_BYTES - REQUEST_ID_SIZE;
   char sig[ED25519_SIGNATURE_BYTES];
   uint8_t requestID[REQUEST_ID_SIZE];
-  char body[body_len];
+  char body[body_len + 1];
 
   memcpy(sig, event->data, ED25519_SIGNATURE_BYTES);
   memcpy(requestID, &event->data[ED25519_SIGNATURE_BYTES], REQUEST_ID_SIZE);
   memcpy(body, &event->data[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE], body_len);
+  body[body_len] = '\0';
+
   ESP_LOGI(MQTT_TAG, "req_body: %.*s", body_len, body);
 
   bool valid = crypto_verify_server_payload(sig, requestID, body, body_len);
@@ -48,14 +46,8 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
     return ESP_ERR_INVALID_RESPONSE;
   }
   ESP_LOGI(MQTT_TAG, "signature verified");
-
-  DeviceRequestBody req_body;
-  esp_err_t err = parse_device_request_body(&req_body, body);
-  if (err != ESP_OK)
-  {
-    ESP_LOGE(MQTT_TAG, "fail parse device_request %d", err);
-    return err;
-  }
+  
+  cJSON* req_json = cJSON_Parse(body);
 
   DeviceResponseBody res_body = io_handle_command(req_body.command, &req_body);
 

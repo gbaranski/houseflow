@@ -5,6 +5,7 @@
 #include <nvs_flash.h>
 #include <esp_event.h>
 #include <lwip/apps/sntp.h>
+#include "hf_device.h"
 #include "hf_io.h"
 #include "hf_crypto.h"
 #include "hf_mqtt.h"
@@ -56,7 +57,7 @@ void app_main()
   ESP_ERROR_CHECK(nvs_flash_init());
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
-  io_init();
+  ESP_ERROR_CHECK(device_init());
   ESP_ERROR_CHECK(crypto_init());
   wifi_init_sta();
   ESP_ERROR_CHECK(time_init());

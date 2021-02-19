@@ -1,7 +1,6 @@
 idf_component_register(SRC_DIRS "wifi"
                                 "mqtt"
                                 "crypto"
-                                "utils"
-                                "io"
+                                "device"
                        INCLUDE_DIRS "include"
                        )

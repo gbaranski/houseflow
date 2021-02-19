@@ -49,29 +49,39 @@ menu "Device configuration"
         help
             Ed25519 public key, must match with the servers public key set in .env
 
-    menu "Device traits"
-        config DEVICE_TRAIT_ONOFF
-          bool "action.devices.traits.OnOff"
-          default false
-        
-        if DEVICE_TRAIT_ONOFF
-          config DEVICE_TRAIT_ONOFF_GPIO
-              int "OnOff GPIO Pin"
-              help
-                GPIO Pin for OnOff
+    config DEVICE_OUTPUT_GPIO
+        int "Output GPIO PIN"
+        range 0 34
+        default 0
+        help
+          GPIO Pin for OUTPUT, 0 for disabled
 
-          config DEVICE_TRAIT_ONOFF_EXECUTE
-              bool "Execute OnOff state"
-              default false
-              help
-                True if supports executing On/Off state
+    choice DEVICE_TYPE
+        prompt "Device type"
+        default DEVICE_TYPE_LIGHT
+        help
+          Type of the device
 
-          config DEVICE_TRAIT_ONOFF_QUERY
-              bool "Query OnOff state"
-              default false
-              help
-                True if supports reporting On/Off state
-        endif
-    endmenu
+        config DEVICE_TYPE_LIGHT
+          bool "Light"
+          help
+            Light device type
+
+        config DEVICE_TYPE_GARAGE
+          bool "Garage"
+          help
+            Garage device type
+
+        config DEVICE_TYPE_GATE
+          bool "Gate"
+          help
+            Gate device type
+
+        config DEVICE_TYPE_WATER_HEATER
+          bool "Water heater"
+          help
+            Water heater device type
+
+    endchoice
 
 endmenu
