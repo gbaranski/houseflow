@@ -19,7 +19,7 @@ type DeviceResponse struct {
 
 // DeviceRequest is type of request incoming to the device
 type DeviceRequest struct {
-	State   map[string]interface{} `json:"state,omitempty"`
+	Params  map[string]interface{} `json:"params,omitempty"`
 	Command string                 `json:"command"`
 }
 

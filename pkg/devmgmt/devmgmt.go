@@ -150,7 +150,7 @@ func (devmgmt Devmgmt) SendActionCommand(
 	params map[string]interface{},
 ) (types.DeviceResponse, error) {
 	deviceRequest := types.DeviceRequest{
-		State:   params,
+		Params:  params,
 		Command: command,
 	}
 	deviceRequestJSON, err := json.Marshal(deviceRequest)

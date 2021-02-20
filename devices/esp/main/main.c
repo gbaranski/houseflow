@@ -6,7 +6,6 @@
 #include <esp_event.h>
 #include <lwip/apps/sntp.h>
 #include "hf_device.h"
-#include "hf_io.h"
 #include "hf_crypto.h"
 #include "hf_mqtt.h"
 #include "hf_wifi.h"

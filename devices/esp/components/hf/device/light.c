@@ -54,11 +54,15 @@ cJSON* device_execute(const char* const cmd, const cJSON *paramsJSON)
 
   if (strcmp(cmd, "action.devices.commands.OnOff")) {
     gpio_set_level(CONFIG_DEVICE_OUTPUT_GPIO, params.on);
+    ESP_LOGI(
+        DEVICE_TAG, "Changing GPIO %d state to %s", 
+        CONFIG_DEVICE_OUTPUT_GPIO, params.on == false ? "false" : "true"
+        );
     
-    cJSON *state = cJSON_CreateObject();
     cJSON_AddBoolToObject(state, "on", params.on);
     cJSON_AddStringToObject(root, "status", "SUCCESS");
   } else {
+    ESP_LOGE(DEVICE_TAG, "unrecognized command: %s", cmd);
     cJSON_AddBoolToObject(state, "on", device_get_state().on);
     cJSON_AddStringToObject(root, "status", "ERROR");
     cJSON_AddStringToObject(root, "errorCode", "functionNotSupported");
@@ -70,9 +74,13 @@ cJSON* device_execute(const char* const cmd, const cJSON *paramsJSON)
 
 cJSON* device_query() {
   cJSON *root = cJSON_CreateObject();
+  cJSON *state = cJSON_CreateObject();
   cJSON_AddStringToObject(root, "status", "SUCCESS");
-  cJSON_AddBoolToObject(root, "online", true);
-  cJSON_AddBoolToObject(root, "on", device_get_state().on);
+
+  cJSON_AddBoolToObject(state, "online", true);
+  cJSON_AddBoolToObject(state, "on", device_get_state().on);
+
+  cJSON_AddItemToObject(root, "state", state);
 
   return root;
 }
