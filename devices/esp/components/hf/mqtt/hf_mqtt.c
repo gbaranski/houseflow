@@ -68,12 +68,25 @@ static esp_err_t on_command(esp_mqtt_event_handle_t event)
     return ESP_ERR_INVALID_RESPONSE;
   }
 
-
   cJSON* res_json = device_execute(command_item->string, params_item);
-  const char* res_body = cJSON_PrintUnformatted(res_json);
+  if (res_json == NULL) {
+    ESP_LOGE(MQTT_TAG, "failed responding to execute, device_execute() returned NULL");
+    return ESP_ERR_INVALID_RESPONSE;
+  }
+  const char* res_body = cJSON_PrintUnformatted( res_json );
+  if ( res_body == NULL ) {
+    ESP_LOGE( MQTT_TAG, "failed printing unformatted res_json" );
+    const char* cjson_err_ptr = cJSON_GetErrorPtr();
+    if ( cjson_err_ptr != NULL ) {
+      ESP_LOGI( MQTT_TAG, "cJSON Error: %s", cjson_err_ptr );
+    }
+    return ESP_ERR_INVALID_RESPONSE;
+  }
 
-  size_t res_body_len = strlen(res_body);
+  ESP_LOGI(MQTT_TAG, "about to print");
   ESP_LOGI(MQTT_TAG, "res_body: %s\n", res_body);
+  ESP_LOGI(MQTT_TAG, "about to measure len of res_body");
+  unsigned long res_body_len = strlen(res_body);
 
   char res_payload[ED25519_SIGNATURE_BYTES + REQUEST_ID_SIZE + res_body_len];
   // Add requestID to res payload
