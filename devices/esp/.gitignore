@@ -3,5 +3,5 @@ build/*
 build/**/*
 compile_commands.json
 sdkconfig
-sdkconfig.old
+sdkconfig.*
 .cache
