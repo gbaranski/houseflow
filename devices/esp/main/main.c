@@ -14,8 +14,6 @@ static const char *TAG = "app";
 
 // some year, used to check if retrieved date is real or not
 #define FIXED_YEAR 2021
-#define SNTP_MAX_RETRY 10
-
 esp_err_t time_init() 
 {
   ESP_LOGI(TAG, "Initializng SNTP");
@@ -29,15 +27,14 @@ esp_err_t time_init()
   time_t now = 0;
   struct tm timeinfo;
 
-  int retry = 0;
-
-  while(timeinfo.tm_year < (FIXED_YEAR-1900) && retry < SNTP_MAX_RETRY) {
-    ESP_LOGI(TAG, "waiting for time to initialize, retry %d/%d", retry, SNTP_MAX_RETRY);
+  for (int retry = 0; timeinfo.tm_year < (FIXED_YEAR-1900); retry++) {
+    ESP_LOGI(TAG, "waiting for time to initialize, retry %d", retry);
     time(&now);
     localtime_r(&now, &timeinfo);
 
     vTaskDelay(1000 / portTICK_RATE_MS);
   }
+
   if (timeinfo.tm_year < (FIXED_YEAR-1900)) {
     ESP_LOGE(TAG, "timeout waiting for SNTP time ts: %ld", time(&now));
     return ESP_ERR_TIMEOUT;
