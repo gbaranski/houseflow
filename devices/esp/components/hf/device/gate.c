@@ -71,14 +71,14 @@ cJSON* device_execute(const char* const cmd, const cJSON *paramsJSON)
   };
  
   if (strcmp(cmd, "action.devices.commands.OpenClose")) {
-    /* xTaskCreate( */
-    /*     device_open_close_task, */
-    /*     "open_close", */
-    /*     configMINIMAL_STACK_SIZE + sizeof(ExecuteParams*), */
-    /*     ( void* ) &params, */
-    /*     tskIDLE_PRIORITY+1, */
-    /*     NULL */
-    /*     ); */
+    xTaskCreate(
+        device_open_close_task,
+        "open_close",
+        configMINIMAL_STACK_SIZE + 577,
+        ( void* ) &params,
+        tskIDLE_PRIORITY+1,
+        NULL
+        );
     cJSON_AddStringToObjectSafe( root, "status", "SUCCESS" );
 
     
