@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 structopt = "0.3.21"
+base64 = "0.13.0"
+sodiumoxide = "0.2.6"
