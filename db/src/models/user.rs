@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-const USER_SCHEMA: &str = r#"
+pub const USER_SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL,
     first_name TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 "#;
 
 
-const USER_DEVICES_SCHEMA: &str = r#"
+pub const USER_DEVICES_SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS user_devicse (
     id UUID NOT NULL,
     user_id UUID REFERENCES users (id) ON DELETE CASCADE,
@@ -50,7 +50,8 @@ impl User {
         WHERE 
             id=$1"
         "#;
-        let row = db.client
+        let client = db.pool.get().await?;
+        let row = client
             .query_one(SQL_QUERY, &[&id])
             .await?;
 

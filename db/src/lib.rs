@@ -2,8 +2,12 @@ pub mod models {
     mod user;
     mod device;
 
-    pub use user::*;
-    pub use device::*;
+    pub use user::User;
+    pub use device::Device;
+
+    pub(crate) use user::USER_SCHEMA;
+    pub(crate) use user::USER_DEVICES_SCHEMA;
+    pub(crate) use device::DEVICE_SCHEMA;
 }
 
 #[derive(Debug)]
@@ -18,65 +22,64 @@ impl From<tokio_postgres::Error> for Error {
     }
 }
 
+impl From<deadpool_postgres::PoolError> for Error {
+    fn from(err: deadpool_postgres::PoolError) -> Error {
+        err.into()
+    }
+}
+
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self)
     }
 }
 
-// impl std::string::ToString for Error {
-//     fn to_string(&self) -> String {
-//         self
-//     }
-// }
-
-pub struct DatabaseOptions {
-    pub user: String,
-    pub password: String,
-    pub host: String,
-    pub db_name: String,
-}
-
-impl DatabaseOptions {
-    /// Retrieves DatabaseOptions from enviroment variables
-    pub fn from_env() -> Result<DatabaseOptions, String> {
-        use std::env::var;
-
-        Ok(DatabaseOptions {
-            user: var("POSTGRES_USER")
-                .map_err(|err| format!("fail loading `POSTGRES_USER`: `{}`", err))?,
-            password: var("POSTGRES_PASSWORD")
-                .map_err(|err| format!("fail loading `POSTGRES_PASSWORD`: `{}`", err))?,
-            host: var("POSTGRES_HOST")
-                .map_err(|err| format!("fail loading `POSTGRES_HOST`: `{}`", err))?,
-            db_name: var("POSTGRES_DB")
-                .map_err(|err| format!("fail loading `POSTGRES_DB`: `{}`", err))?,
-        })
-    }
-}
-
+#[derive(Clone)]
 pub struct Database {
-    client: tokio_postgres::Client,
-    options: DatabaseOptions
+    pool: deadpool_postgres::Pool,
+}
+
+fn read_env(key: &'static str) -> Result<String, Error> {
+    use std::env::var;
+    var(key)
+        .map_err(|err| Error::Error(format!("fail reading `{}`: `{}`", key, err)))
+    
 }
 
 impl Database {
-    pub async fn connect(options: DatabaseOptions) -> Result<Database, Error> {
-        let cstr = format!("user={} password={} host={} db={}", 
-                           options.user, 
-                           options.password, 
-                           options.host, 
-                           options.db_name
-                           );
+    pub async fn connect() -> Result<Database, Error> {
 
-        let (client, _connection) = 
-            tokio_postgres::connect(cstr.as_ref(), tokio_postgres::NoTls).await?;
+        let config = deadpool_postgres::Config {
+            user: Some(read_env("POSTGRES_USER")?),
+            password: Some(read_env("POSTGRES_PASSWORD")?),
+            dbname: Some(read_env("POSTGRES_DB")?),
+            options: None,
+            application_name: Some("houseflow".to_string()),
+            ssl_mode: None,
+            host: Some(read_env("POSTGRES_HOST")?),
+            hosts: None,
+            port: Some(5432),
+            ports: None,
+            connect_timeout: None,
+            keepalives: None,
+            keepalives_idle: None,
+            target_session_attrs: None,
+            channel_binding: None,
+            manager: Some(deadpool_postgres::ManagerConfig{
+                recycling_method: deadpool_postgres::RecyclingMethod::Fast,
+            }),
+            pool: None
+        };
 
-        client.batch_execute(device::DEVICE_SCHEMA).await?;
+        let pool = config.create_pool(tokio_postgres::NoTls).unwrap();
+        let client = pool.get().await?;
+
+        client.batch_execute(models::USER_SCHEMA).await?;
+        client.batch_execute(models::USER_DEVICES_SCHEMA).await?;
+        client.batch_execute(models::DEVICE_SCHEMA).await?;
 
         Ok(Database{
-            client,
-            options,
+            pool,
         })
     }
 }

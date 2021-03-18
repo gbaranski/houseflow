@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-const DEVICE_SCHEMA: &str = r#"
+pub const DEVICE_SCHEMA: &str = r#"
 CREATE EXTENSION IF NOT EXISTS hstore;
 CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL,
@@ -134,7 +134,8 @@ impl Device {
         WHERE 
             id=$1"
         "#;
-        let row = db.client
+        let client = db.pool.get().await?;
+        let row = client
             .query_one(SQL_QUERY, &[&id])
             .await?;
 
