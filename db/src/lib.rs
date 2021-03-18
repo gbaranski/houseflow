@@ -1,4 +1,5 @@
 pub mod device;
+pub mod user;
 
 pub enum Error {
     Error(String),
@@ -32,9 +33,11 @@ impl Database {
                            options.db_name
                            );
 
-        let (client, conn) = 
+        let (client, _connection) = 
             tokio_postgres::connect(cstr.as_ref(), tokio_postgres::NoTls).await?;
-            
+
+        client.batch_execute(device::DEVICE_SCHEMA).await?;
+
         Ok(Database{
             client,
             options,

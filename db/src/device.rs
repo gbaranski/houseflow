@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-const DEVICE_SCHEMA: &str = r#"
+pub const DEVICE_SCHEMA: &str = r#"
 CREATE EXTENSION IF NOT EXISTS hstore;
 CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL,
@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS users (
     attributes hstore NOT NULL,
 
     pkey_base64 CHAR(44) NOT NULL,
+
+    PRIMARY KEY (id)
 );
     
 "#;
@@ -110,27 +112,28 @@ pub struct Device {
 
 impl Device {
     pub async fn by_id(db: &crate::Database, id: String) -> Result<Option<Device>, crate::Error> {
-        const SQL_QUERY: &str = r#"
-"SELECT 
-    type, 
-    traits, 
-    default_names, 
-    name, 
-    nicknames, 
-    will_report_state, 
-    notification_support_by_agent, 
-    room_hint, 
-    manufacturer, 
-    model, 
-    hw_version, 
-    sw_version, 
-    attributes, 
-    pkey_base64 
-FROM 
-    devices 
-WHERE 
-    id=$1"
-"#;
+        const SQL_QUERY: &str = 
+        r#"
+        "SELECT 
+            type, 
+            traits, 
+            default_names, 
+            name, 
+            nicknames, 
+            will_report_state, 
+            notification_support_by_agent, 
+            room_hint, 
+            manufacturer, 
+            model, 
+            hw_version, 
+            sw_version, 
+            attributes, 
+            pkey_base64 
+        FROM 
+            devices 
+        WHERE 
+            id=$1"
+        "#;
         let row = db.client
             .query_one(SQL_QUERY, &[&id])
             .await?;
@@ -141,25 +144,24 @@ WHERE
 
         Ok(Some(Device{
             id,
-            device_type: row.try_get(1)?,
-            traits: row.try_get(2)?,
+            device_type: row.try_get(0)?,
+            traits: row.try_get(1)?,
             name: DeviceName{
-                default_names: row.try_get(3)?,
-                name: row.try_get(4)?,
-                nicknames: row.try_get(5)?,
+                default_names: row.try_get(2)?,
+                name: row.try_get(3)?,
+                nicknames: row.try_get(4)?,
             },
-            will_report_state: row.try_get(6)?,
-            notification_support_by_agent: row.try_get(7)?,
-            room_hint: row.try_get(8)?,
+            will_report_state: row.try_get(5)?,
+            notification_support_by_agent: row.try_get(6)?,
+            room_hint: row.try_get(7)?,
             device_info: DeviceInfo{
-                manufacturer: row.try_get(9)?,
-                model: row.try_get(10)?,
-                hw_version: row.try_get(11)?,
-                sw_version: row.try_get(12)?,
+                manufacturer: row.try_get(8)?,
+                model: row.try_get(9)?,
+                hw_version: row.try_get(10)?,
+                sw_version: row.try_get(11)?,
             },
-            attributes: row.try_get(13)?,
-            pkey_base64: row.try_get(14)?,
+            attributes: row.try_get(12)?,
+            pkey_base64: row.try_get(13)?,
         }))
-
     }
 }
