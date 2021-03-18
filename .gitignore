@@ -8,3 +8,6 @@ service-account.json
 
 # trash
 *.log
+
+# Rust files
+target
