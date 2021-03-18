@@ -2,6 +2,7 @@ use structopt::StructOpt;
 
 pub mod key;
 pub mod device;
+pub mod db;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "houseflow", about = "CLI Application for houseflow")]

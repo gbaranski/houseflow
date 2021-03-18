@@ -1,84 +1,69 @@
-use structopt::StructOpt;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use sqlx::FromRow;
+use serde::{Serialize, Deserialize};
 
-#[derive(StructOpt, Debug)]
-pub struct Add {
-    #[structopt(long)]
-    pub name: String,
+const DEVICE_SCHEMA: &str = r#"
+CREATE EXTENSION IF NOT EXISTS hstore;
+CREATE TABLE IF NOT EXISTS users (
+    id UUID NOT NULL,
+    type TEXT NOT NULL,
+    traits TEXT[] NOT NULL,
+    
+    default_names TEXT[] NOT NULL,
+    name TEXT NOT NULL,
+    nicknames TEXT[] NOT NULL,
 
-    #[structopt(flatten)]
-    pub db: crate::db::DatabaseOpts,
-}
+    will_report_state BOOL NOT NULL,
+    notification_support_by_agent BOOL NOT NULL,
 
-impl Add {
-    fn run(self) {
-        println!("adding device, name: {}", self.name);
-    }
-}
+    room_hint TEXT NOT NULL,
 
-#[derive(StructOpt, Debug)]
-pub enum Command {
-    Add(Add),
-}
+    manufacturer TEXT NOT NULL DEFAULT,
+    model TEXT NOT NULL,
+    hw_version TEXT NOT NULL,
+    sw_version TEXT NOT NULL,
 
-impl Command {
-    pub fn run(self) {
-        match self {
-            Command::Add(cmd) => cmd.run(),
-        }
+    attributes hstore NOT NULL,
 
-    }
-}
+    pkey_base64 CHAR(44) NOT NULL,
+);
+    
+"#;
 
 
 /// Contains fields describing the device for use in one-off logic if needed.
 /// e.g. 'broken firmware version X of light Y requires adjusting color', or 'security flaw requires notifying all users of firmware Z'.
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize)]
 pub struct DeviceInfo {
     /// Especially useful when the developer is a hub for other devices. 
     /// Google may provide a standard list of manufacturers here so that e.g. TP-Link and Smartthings both describe 'osram' the same way.
-    pub manufacturer: Option<String>,
+    pub manufacturer: String,
 
     /// The model or SKU identifier of the particular device.
-    pub model: Option<String>,
+    pub model: String,
 
     /// Specific version number attached to the hardware if available.
     #[serde(rename = "hwVersion")]
-    pub hw_version: Option<String>,
+    pub hw_version: String,
 
     /// Specific version number attached to the software/firmware, if available.
     #[serde(rename = "swVersion")]
-    pub sw_version: Option<String>,
+    pub sw_version: String,
 }
 
-#[derive(Serialize, Deserialize, FromRow)]
-pub struct OtherDeviceID {
-    /// The agent's ID. Generally, this is the project ID in the Actions console.
-    #[serde(rename = "agentId")]
-    pub agent_id: Option<String>,
-    
-    #[serde(rename = "deviceId")]
-    pub device_id: String
-}
-
-
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize)]
 pub struct DeviceName {
     /// List of names provided by the developer rather than the user, often manufacturer names, SKUs, etc.
-    pub default_names: Option<Vec<String>>,
+    pub default_names: Vec<String>,
 
     /// Primary name of the device, generally provided by the user. This is also the name the Assistant will prefer to describe the device in responses.
     pub name: String,
 
     /// Additional names provided by the user for the device.
-    pub nicknames: Option<Vec<String>>,
+    pub nicknames: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, FromRow)]
+#[derive(Serialize, Deserialize)]
 pub struct Device {
-
     /// The ID of the device in the developer's cloud. 
     /// This must be unique for the user and for the developer, 
     /// as in cases of sharing we may use this to dedupe multiple views of the same device. 
@@ -107,30 +92,74 @@ pub struct Device {
 
     /// Provides the current room of the device in the user's home to simplify setup.
     #[serde(rename = "roomHint")]
-    pub room_hint: Option<String>,
+    pub room_hint: String,
 
     /// Contains fields describing the device for use in one-off logic if needed 
     /// e.g. 'broken firmware version X of light Y requires adjusting color', or 'security flaw requires notifying all users of firmware Z'.
     #[serde(rename = "deviceInfo")]
-    pub device_info: Option<DeviceInfo>,
+    pub device_info: DeviceInfo,
 
     /// Aligned with per-trait attributes described in each trait schema reference.
-    pub attributes: Option<HashMap<String, String>>,
+    pub attributes: HashMap<String, Option<String>>,
 
-    /// Object defined by the developer which will be attached to future QUERY and EXECUTE requests
-    /// Maximum of 512 bytes per device. 
-    /// Use this object to store additional information about the device your cloud service may need, such as the global region of the device.
-    /// Data in this object has a few constraints: 
-    /// - No sensitive information, including but not limited to Personally Identifiable Information.
-    #[serde(rename = "customData")]
-    pub custom_data: Option<HashMap<String, String>>,
-
-    /// List of alternate IDs used to identify a cloud synced device for local execution.
-    #[serde(rename = "otherDeviceIds")]
-    pub other_device_ids: Option<Vec<OtherDeviceID>>,
-
-
+    /// ED25519 Public key, Base64 encoded, 44 in size
     #[serde(skip)]
     pub pkey_base64: String,
+}
 
+
+impl Device {
+    pub async fn by_id(db: &crate::Database, id: String) -> Result<Option<Device>, crate::Error> {
+        const SQL_QUERY: &str = r#"
+"SELECT 
+    type, 
+    traits, 
+    default_names, 
+    name, 
+    nicknames, 
+    will_report_state, 
+    notification_support_by_agent, 
+    room_hint, 
+    manufacturer, 
+    model, 
+    hw_version, 
+    sw_version, 
+    attributes, 
+    pkey_base64 
+FROM 
+    devices 
+WHERE 
+    id=$1"
+"#;
+        let row = db.client
+            .query_one(SQL_QUERY, &[&id])
+            .await?;
+
+        if row.is_empty() {
+            return Ok(None)
+        }
+
+        Ok(Some(Device{
+            id,
+            device_type: row.try_get(1)?,
+            traits: row.try_get(2)?,
+            name: DeviceName{
+                default_names: row.try_get(3)?,
+                name: row.try_get(4)?,
+                nicknames: row.try_get(5)?,
+            },
+            will_report_state: row.try_get(6)?,
+            notification_support_by_agent: row.try_get(7)?,
+            room_hint: row.try_get(8)?,
+            device_info: DeviceInfo{
+                manufacturer: row.try_get(9)?,
+                model: row.try_get(10)?,
+                hw_version: row.try_get(11)?,
+                sw_version: row.try_get(12)?,
+            },
+            attributes: row.try_get(13)?,
+            pkey_base64: row.try_get(14)?,
+        }))
+
+    }
 }
