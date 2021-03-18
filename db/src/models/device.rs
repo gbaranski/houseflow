@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-pub const DEVICE_SCHEMA: &str = r#"
+const DEVICE_SCHEMA: &str = r#"
 CREATE EXTENSION IF NOT EXISTS hstore;
 CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL,
