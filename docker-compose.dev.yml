@@ -51,10 +51,13 @@ services:
   fulfillment:
     tty: true
     restart: "unless-stopped"
-    depends_on:
-      - postgres
+    # depends_on:
+    #   - postgres
     build:
-      dockerfile: ./cmd/fulfillment/Dockerfile
+      dockerfile: ./fulfillment/Dockerfile
       context: .
+    volumes:
+      - ./fulfillment/src:/app/src
+      - ./db:/db
     env_file:
       - .env
