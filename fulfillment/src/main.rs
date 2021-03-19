@@ -33,6 +33,7 @@ async fn webhook(_req: HttpRequest, intent_request: web::Json<intent::Request>, 
 
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
+    log::info!("Starting houseflow-fulfillment");
     env_logger::init();
 
     let db = Database::connect()?;
@@ -42,13 +43,14 @@ async fn main() -> Result<(), Error> {
         db,
     };
 
+    log::info!("Starting HttpServer");
     HttpServer::new(move || {
         App::new()
             .data(app_state.to_owned())
             .wrap(actix_web::middleware::Logger::default())
             .service(webhook)
     })
-    .bind("127.0.0.1:8080")?
+    .bind("0.0.0.0:80")?
     .run()
     .await?;
 
