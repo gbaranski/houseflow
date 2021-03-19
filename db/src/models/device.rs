@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 
 pub const DEVICE_SCHEMA: &str = r#"
 CREATE EXTENSION IF NOT EXISTS hstore;
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS devices (
     id UUID NOT NULL,
     type TEXT NOT NULL,
     traits TEXT[] NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
 
     room_hint TEXT NOT NULL,
 
-    manufacturer TEXT NOT NULL DEFAULT,
+    manufacturer TEXT NOT NULL,
     model TEXT NOT NULL,
     hw_version TEXT NOT NULL,
     sw_version TEXT NOT NULL,
@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS users (
 
     PRIMARY KEY (id)
 );
-    
 "#;
 
 

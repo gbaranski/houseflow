@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     email TEXT NOT NULL,
-    password_hash NOT NULL,
+    password_hash TEXT NOT NULL,
 
     PRIMARY KEY(id)
 );
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 pub const USER_DEVICES_SCHEMA: &str = r#"
-CREATE TABLE IF NOT EXISTS user_devicse (
+CREATE TABLE IF NOT EXISTS user_devices (
     id UUID NOT NULL,
     user_id UUID REFERENCES users (id) ON DELETE CASCADE,
     device_id UUID REFERENCES devices (id) ON DELETE CASCADE,
