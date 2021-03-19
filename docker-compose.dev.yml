@@ -57,7 +57,9 @@ services:
       dockerfile: ./fulfillment/Dockerfile
       context: .
     volumes:
-      - ./fulfillment/src:/app/src
-      - ./db:/db
+      - ./fulfillment/src:/app/fulfillment/src
+      - ./db/src:/app/db/src
     env_file:
       - .env
+    environment:
+      - RUST_LOG=debug

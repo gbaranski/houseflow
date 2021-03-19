@@ -6,8 +6,7 @@ WORKDIR /app
 
 COPY db db
 COPY fulfillment fulfillment 
-RUN ls
 
 WORKDIR /app/fulfillment
 
-CMD ["cargo", "watch", "-x", "'run'"]
+CMD cargo watch -w /app/db/ -w /app/fulfillment -x run

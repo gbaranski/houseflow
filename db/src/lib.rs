@@ -59,13 +59,6 @@ pub struct Database {
 
 impl Database {
     pub fn connect() -> Result<Database, Error> {
-        use std::env;
-        env::set_var("POSTGRES_USER", "postgres");
-        env::set_var("POSTGRES_PASSWORD", "postgres");
-        env::set_var("POSTGRES_DB", "houseflow");
-        env::set_var("POSTGRES_HOST", "localhost");
-        env::set_var("POSTGRES_PORT", "5432");
-
         let cfg = deadpool_postgres::Config {
             user: Some(read_env("POSTGRES_USER")?),
             password: Some(read_env("POSTGRES_PASSWORD")?),
