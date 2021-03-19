@@ -1,5 +1,7 @@
 [workspace]
 members = [
     "db",
-    "fulfillment"
+    "fulfillment",
+    "auth",
+    "token"
 ]
