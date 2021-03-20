@@ -1,5 +1,8 @@
 use std::convert::TryInto;
-use crate::{Signature, Payload, SizedFrame};
+use std::time::SystemTime;
+use crate::{Signature, Payload, SizedFrame, Error, HmacSha256};
+use hmac::{Mac, NewMac};
+
 
 pub struct Token {
     pub payload: Payload,
@@ -20,9 +23,30 @@ impl Token {
 
         vector.try_into().unwrap()
     }
+
+    pub fn verify(&self, key: &[u8]) -> Result<(), Error> {
+        let ts = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        if self.payload.expires_at < ts {
+            return Err(Error::Expired{
+                expired_by: ts - self.payload.expires_at,
+            });
+        }
+
+        let mut mac = HmacSha256::new_varkey(key)
+            .expect(format!("Invalid HMAC Key size of {}", key.len()).as_str());
+
+        mac.update(&self.payload.to_bytes());
+        mac.verify(&self.signature)
+            .map_err(|_err| Error::InvalidSignature)?;
+
+        Ok(())
+    }
 }
 
 impl SizedFrame for Token {
-    // 4 first bytes are unsigned 32 bit integer
     const SIZE: usize = Signature::SIZE + Payload::SIZE;
 }
