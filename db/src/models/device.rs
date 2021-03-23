@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use uuid::Uuid;
 
 pub const DEVICE_SCHEMA: &str = r#"
 CREATE EXTENSION IF NOT EXISTS hstore;
@@ -69,7 +70,7 @@ pub struct Device {
     /// This must be unique for the user and for the developer, 
     /// as in cases of sharing we may use this to dedupe multiple views of the same device. 
     /// It should be immutable for the device; if it changes, the Assistant will treat it as a new device.
-    pub id: String,
+    pub id: Uuid,
 
     /// The hardware type of device.
     #[serde(rename = "type")]
@@ -109,8 +110,8 @@ pub struct Device {
 }
 
 
-impl Device {
-    pub async fn by_id(db: &crate::Database, id: String) -> Result<Option<Device>, crate::Error> {
+impl crate::Database {
+    pub async fn device_by_id(&self, id: Uuid) -> Result<Option<Device>, crate::Error> {
         const SQL_QUERY: &str = 
         r#"
         "SELECT 
@@ -133,7 +134,7 @@ impl Device {
         WHERE 
             id=$1"
         "#;
-        let client = db.pool.get().await?;
+        let client = self.pool.get().await?;
         let row = client
             .query_one(SQL_QUERY, &[&id])
             .await?;
@@ -163,5 +164,62 @@ impl Device {
             attributes: row.try_get(12)?,
             pkey_base64: row.try_get(13)?,
         }))
+    }
+
+
+    pub async fn get_user_devices(&self, user_id: Uuid) -> Result<Vec<Device>, crate::Error> {
+        const SQL_QUERY: &str = 
+        r#"
+        "SELECT 
+            id,
+            type, 
+            traits, 
+            default_names, 
+            name, 
+            nicknames, 
+            will_report_state, 
+            notification_support_by_agent, 
+            room_hint, 
+            manufacturer, 
+            model, 
+            hw_version, 
+            sw_version, 
+            attributes, 
+            pkey_base64 
+        FROM 
+            devices 
+        WHERE 
+            id=$1"
+        "#;
+        let client = self.pool.get().await?;
+        let rows = client
+            .query(SQL_QUERY, &[&user_id])
+            .await?;
+
+        rows
+            .iter()
+            .map(|row| Ok(Device{
+                id: row.try_get(0)?,
+                device_type: row.try_get(1)?,
+                traits: row.try_get(2)?,
+                name: DeviceName{
+                    default_names: row.try_get(3)?,
+                    name: row.try_get(4)?,
+                    nicknames: row.try_get(5)?,
+                },
+                will_report_state: row.try_get(6)?,
+                notification_support_by_agent: row.try_get(7)?,
+                room_hint: row.try_get(8)?,
+                device_info: DeviceInfo{
+                    manufacturer: row.try_get(9)?,
+                    model: row.try_get(10)?,
+                    hw_version: row.try_get(11)?,
+                    sw_version: row.try_get(12)?,
+                },
+                attributes: row.try_get(13)?,
+                pkey_base64: row.try_get(14)?,
+            }))
+            .filter(|device| device.is_ok())
+            .collect()
     }
 }
