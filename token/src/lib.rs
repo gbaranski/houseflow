@@ -1,6 +1,7 @@
 #[derive(Debug)]
 pub enum Error {
     InvalidSignature,
+    InvalidAudienceUUID,
     Expired{
         expired_by: u64,
     },
@@ -13,6 +14,7 @@ impl fmt::Display for Error {
         match *self {
             Error::Expired{expired_by} => write!(f, "token has expired by `{} seconds`", expired_by),
             Error::InvalidSignature => write!(f, "token has invalid signature"),
+            Error::InvalidAudienceUUID => write!(f, "token has UUID in audience field"),
         }
     }
 }

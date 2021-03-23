@@ -737,6 +737,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-postgres",
+ "uuid",
 ]
 
 [[package]]
@@ -744,11 +745,14 @@ name = "houseflow-fulfillment"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "base64",
  "env_logger",
  "houseflow-db",
+ "houseflow-token",
  "log",
  "serde",
  "serde_json",
+ "uuid",
 ]
 
 [[package]]
@@ -757,6 +761,7 @@ version = "0.1.0"
 dependencies = [
  "hmac",
  "sha2",
+ "uuid",
 ]
 
 [[package]]
@@ -1074,6 +1079,7 @@ dependencies = [
  "bytes",
  "fallible-iterator",
  "postgres-protocol",
+ "uuid",
 ]
 
 [[package]]
@@ -1595,6 +1601,16 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
+]
+
+[[package]]
+name = "uuid"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom",
+ "serde",
 ]
 
 [[package]]

@@ -12,10 +12,6 @@ pub mod models {
 
 #[derive(Debug)]
 pub enum Error {
-    Other(String),
-    MissingEnv{
-        key: &'static str,
-    },
     PoolError(deadpool_postgres::PoolError),
     PgError(tokio_postgres::Error)
 
@@ -35,20 +31,14 @@ impl From<tokio_postgres::Error> for Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Other(err) => write!(f, "Other: `{}`", err),
-            Error::MissingEnv{key} => write!(f, "Missing `{}` enviroment variable", key),
-            Error::PoolError(err) => write!(f, "Pool: `{}`", err),
-            Error::PgError(err) => write!(f, "PG: `{}`", err),
+            Error::PoolError(err) => write!(f, "pool: `{}`", err),
+            Error::PgError(err) => write!(f, "postgres: `{}`", err),
         }
     }
 }
 
-fn read_env(key: &'static str) -> Result<String, Error> {
-    std::env::var(key)
-        .map_err(|err| match err {
-            std::env::VarError::NotPresent => Error::MissingEnv{key},
-            std::env::VarError::NotUnicode(err) => Error::Other(format!("`{}` is not valid unicode `{:?}`", key, err)),
-        })
+fn read_env(key: &'static str) -> String {
+    std::env::var(key).unwrap()
 }
 
 #[derive(Clone)]
@@ -59,16 +49,16 @@ pub struct Database {
 
 impl Database {
     pub fn connect() -> Result<Database, Error> {
-        let cfg = deadpool_postgres::Config {
-            user: Some(read_env("POSTGRES_USER")?),
-            password: Some(read_env("POSTGRES_PASSWORD")?),
-            dbname: Some(read_env("POSTGRES_DB")?),
+        let cfg = deadpool_postgres::Config { 
+            user: Some(read_env("POSTGRES_USER")),
+            password: Some(read_env("POSTGRES_PASSWORD")),
+            dbname: Some(read_env("POSTGRES_DB")),
             options: None,
             application_name: None,
             ssl_mode: None,
-            host: Some(read_env("POSTGRES_HOST")?),
+            host: Some(read_env("POSTGRES_HOST")),
             hosts: None,
-            port: Some(read_env("POSTGRES_PORT")?)
+            port: Some(read_env("POSTGRES_PORT"))
                 .map(|p| u16::from_str_radix(&p, 10)
                 .expect("`POSTGRES_PORT` is invalid unsigned 16 bit integer")),
             ports: None,

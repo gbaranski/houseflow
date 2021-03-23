@@ -1,4 +1,5 @@
-use serde::{Serialize, Deserialize};
+use serde::{ser, Serialize, Deserialize};
+use uuid::Uuid;
 
 pub const USER_SCHEMA: &str = r#"
 CREATE TABLE IF NOT EXISTS users (
@@ -29,15 +30,16 @@ CREATE TABLE IF NOT EXISTS user_devices (
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
-    pub id: String,
+    pub id: Uuid,
     pub first_name: String,
     pub last_name: String,
     pub email: String,
     pub password_hash: String,
 }
 
-impl User {
-    pub async fn by_id(db: &crate::Database, id: String) -> Result<Option<User>, crate::Error> {
+
+impl crate::Database {
+    pub async fn user_by_id(&self, id: Uuid) -> Result<Option<User>, crate::Error> {
         const SQL_QUERY: &str = 
         r#"
         "SELECT 
@@ -50,7 +52,7 @@ impl User {
         WHERE 
             id=$1"
         "#;
-        let client = db.pool.get().await?;
+        let client = self.pool.get().await?;
         let row = client
             .query_one(SQL_QUERY, &[&id])
             .await?;
