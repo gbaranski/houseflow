@@ -10,3 +10,4 @@ edition = "2018"
 hmac = "0.10.1"
 sha2 = "0.9.3"
 uuid = { version = "0.8", features = ["v4"] }
+base64 = "0.13"

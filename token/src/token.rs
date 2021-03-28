@@ -10,6 +10,16 @@ pub struct Token {
 }
 
 impl Token {
+    pub fn from_base64(base64: &[u8]) -> Result<Self, Error> {
+        let bytes: &[u8] = &base64::decode(base64)?;
+
+        let bytes: [u8; Self::SIZE] = bytes
+            .try_into()
+            .map_err(|_| Error::InvalidSize(bytes.len()))?;
+
+        Ok(Self::from_bytes(bytes))
+
+    }
     pub fn from_bytes(b: [u8; Self::SIZE]) -> Self {
         Self {
             signature: b[0 .. Signature::SIZE].try_into().unwrap(),
