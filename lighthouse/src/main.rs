@@ -25,8 +25,8 @@ async fn query(
     log::info!("Querying device ID: {}", device_id);
 
     Ok(HttpResponse::Ok().json(Response {
-        status: PayloadCommandStatus::Success,
-        state: std::collections::HashMap::new(),
+        status: ResponseStatus::Success,
+        states: std::collections::HashMap::new(),
         error_code: None,
     }))
 }
@@ -39,8 +39,8 @@ async fn execute(
     log::info!("Execute for device ID: {}", request.device_id);
 
     Ok(HttpResponse::Ok().json(Response {
-        status: PayloadCommandStatus::Success,
-        state: std::collections::HashMap::new(),
+        status: ResponseStatus::Success,
+        states: std::collections::HashMap::new(),
         error_code: None,
     }))
 }
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Error> {
             .service(execute)
             .service(query)
     })
-    .bind("0.0.0.0:23123")?
+    .bind("0.0.0.0:80")?
     .run()
     .await
     .unwrap();

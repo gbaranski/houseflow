@@ -5,11 +5,23 @@ use serde::{Deserialize, Serialize};
 mod types;
 pub use types::*;
 
-#[derive(Serialize, Deserialize)]
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "error_code")]
 pub enum Error {
     MemcacheError(String),
     ReqwestError(String),
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            Error::MemcacheError(msg) => format!("Memcached error: `{}`", msg),
+            Error::ReqwestError(msg) => format!("Reqwest error: `{}`", msg)
+        };
+
+        write!(f, "{}", msg)
+    }
 }
 
 
