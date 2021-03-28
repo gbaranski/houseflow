@@ -259,6 +259,15 @@ dependencies = [
 [[package]]
 name = "auth"
 version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "env_logger",
+ "houseflow-db",
+ "houseflow-token",
+ "log",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "autocfg"
