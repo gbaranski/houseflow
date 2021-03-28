@@ -1,7 +1,8 @@
-use houseflow_db::{Database, models::{ User, Device }};
-use serde::{ Deserialize, Serialize };
+use houseflow_db::models::User;
+use futures::future::join_all;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::Error;
+use crate::intent::IntentError as Error;
 
 pub mod request {
     use super::*;
@@ -9,7 +10,7 @@ pub mod request {
     #[derive(Deserialize)]
     pub struct PayloadCommandDevice {
       /// Device ID, as per the ID provided in SYNC.
-      pub id: String,
+      pub id: Uuid,
     }
 
     #[derive(Deserialize)]
@@ -43,37 +44,12 @@ pub mod response {
     use super::*;
 
     #[derive(Serialize)]
-    pub enum PayloadCommandStatus {
-        /// Confirm that the command succeeded.
-        #[serde(rename = "SUCCESS")]
-        Success,
-
-        /// Command is enqueued but expected to succeed.
-        #[serde(rename = "PENDING")]
-        Pending,
-        
-        /// Target device is in offline state or unreachable.
-        #[serde(rename = "OFFLINE")]
-        Offline,
-        
-        /// There is an issue or alert associated with a command. 
-        /// The command could succeed or fail. 
-        /// This status type is typically set when you want to send additional information about another connected device.
-        #[serde(rename = "EXCEPTIONS")]
-        Exceptions,
-
-        /// Target device is unable to perform the command.
-        #[serde(rename = "ERROR")]
-        Error
-    }
-
-    #[derive(Serialize)]
     pub struct PayloadCommand {
         /// List of device IDs corresponding to this status.
         pub ids: Vec<Uuid>,
 
         /// Result of the execute operation.
-        pub status: PayloadCommandStatus,
+        pub status: houseflow_lighthouse::PayloadCommandStatus,
 
         /// Aligned with per-trait states described in each trait schema reference. 
         /// These are the states after execution, if available.
@@ -100,7 +76,7 @@ pub mod response {
         /// N.B. These may not be grouped the same way as in the request.
         /// For example, the request might turn 7 lights on, with 3 lights succeeding and 4 failing,
         /// thus with two groups in the response.
-        pub commands: Vec<Device>,
+        pub commands: Vec<PayloadCommand>,
     }
 
     #[derive(Serialize)]
@@ -116,17 +92,18 @@ pub mod response {
 }
 
 use response::Response;
+use houseflow_lighthouse::{
+    Response as LighthouseResponse,
+    Error as LighthouseError,
+};
 
-pub async fn handle(
-    db: &Database, 
+pub async fn handle<'a>(
+    app_state: &crate::AppState<'a>,
     user: &User, 
     request_payload: request::Payload, 
     request_id: String
 ) -> Result<Response, Error> {
     log::debug!("Received Execute intent from User ID: {}", user.id.to_string());
-
-    // combined version of all commands and devices as vector of tuple 
-    type CombinedDeviceExecution<'a> = Vec<(&'a request::PayloadCommandExecution, &'a request::PayloadCommandDevice)>;
 
     let requests = request_payload.commands
         .iter()
@@ -134,21 +111,51 @@ pub async fn handle(
             cmd.executions
                 .iter()
                 .zip(cmd.devices.iter())
-        )
-        .collect::<CombinedDeviceExecution>();
+        );
 
-    let devices = db.get_user_devices(user.id).await?;
+    type CombinedLighthouseResponse = (Uuid, Result<LighthouseResponse, Error>);
+    let responses: Vec<CombinedLighthouseResponse> = join_all(requests
+        .map(|(exec, device)| async move {
+            let get_resp_fn = || async move {
+                let is_allowed = app_state.db.get_device_permission(user.id, device.id)
+                    .await?
+                    .map_or(
+                        Err(Error::NoDevicePermission), 
+                        |v| if v.execute { Err(Error::NoDeviceExecutePermission) } else {Ok(())}
+                    )?;
+
+                let addr = app_state.lighthouse.get_wealthy_lighthouse_address(&device.id)?
+                    .ok_or(Error::NoWealthyLighthouse)?;
+                
+                let resp = app_state.lighthouse.send_execute(addr, houseflow_lighthouse::ExecuteRequest {
+                    params: exec.params.clone(),
+                    command: exec.command.clone(),
+                    device_id: device.id,
+                }).await?;
+
+                Ok::<LighthouseResponse, Error>(resp)
+            };
+
+            (device.id, get_resp_fn().await)
+        })).await;
 
 
-    Err(Error::UserNotFound) // to be changed
-    
-    // return Ok(Response {
-    //     request_id,
-    //     payload: response::Payload {
-    //         user_id: user.id,
-    //         error_code: None,
-    //         debug_string: None,
-    //         devices,
-    //     }
-    // })
+    Ok(
+        Response {
+            request_id,
+            payload: response::Payload {
+                error_code: None,
+                debug_string: None,
+                commands: responses
+                    .iter()
+                    .map(|(device_id, resp)| response::PayloadCommand {
+                        ids: vec![*device_id],
+                        states: resp.map_or_else(|_| std::collections::HashMap::new(), |v| v.states),
+                        error_code: resp.map_or_else(|e| Some(e.to_string()), |v| v.error_code),
+                        status: resp.map_or(houseflow_lighthouse::ResponseStatus::Error, |v| v.status),
+                    })
+                    .collect()
+            }
+        }
+    )
 }

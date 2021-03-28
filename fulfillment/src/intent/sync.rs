@@ -42,9 +42,13 @@ pub mod response {
 
 use response::Response;
 
-pub async fn handle(db: &Database, user: &User, request_id: String) -> Result<Response, Error> {
+pub async fn handle(
+    app_state: &crate::AppState,
+    user: &User, 
+    request_id: String
+) -> Result<Response, Error> {
     log::debug!("Received Sync intent from User ID: {}", user.id.to_string());
-    let devices = db.get_user_devices(user.id).await?;
+    let devices = app_state.db.get_user_devices(user.id).await?;
     
     Ok(Response {
         request_id,

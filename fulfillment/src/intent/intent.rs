@@ -1,13 +1,16 @@
 use serde::{ Serialize, Deserialize };
+use uuid::Uuid;
+use crate::intent;
+
 
 #[derive(Deserialize)]
 #[serde(tag = "intent", content = "payload")]
 pub enum RequestPayload {
     #[serde(rename = "action.devices.EXECUTE")]
-    Execute(crate::intent::ExecutePayload),
+    Execute(intent::execute::request::Payload),
 
-    #[serde(rename = "action.devices.QUERY")]
-    Query(crate::intent::QueryPayload),
+    // #[serde(rename = "action.devices.QUERY")]
+    // Query(inte),
 }
 
 
@@ -53,5 +56,5 @@ pub struct BaseResponse {
     pub request_id: String,
 
     /// Intent response payload.
-    pub payload: Payload,
+    pub payload: BaseResponsePayload,
 }
