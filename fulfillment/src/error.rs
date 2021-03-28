@@ -96,8 +96,11 @@ impl actix_web::error::ResponseError for Error {
         use Error::{DatabaseError, IOError, MemcacheError};
 
         match self {
-            AuthError => StatusCode::UNAUTHORIZED,
-
+            Error::AuthError(auth_err) => match auth_err {
+                AuthError::InvalidToken(_) => StatusCode::UNAUTHORIZED,
+                AuthError::MissingToken => StatusCode::BAD_REQUEST,
+                AuthError::UserNotFound => StatusCode::BAD_REQUEST,
+            },
             MemcacheError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
             DatabaseError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
             IOError(_err) => StatusCode::INTERNAL_SERVER_ERROR,
