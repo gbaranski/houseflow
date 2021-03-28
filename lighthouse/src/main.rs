@@ -2,6 +2,7 @@ use actix_web::{HttpServer, web, get, post, HttpResponse};
 use uuid::Uuid;
 use std::io;
 
+mod ws;
 mod types;
 use types::*;
 
@@ -46,7 +47,6 @@ async fn execute(
 }
 
 
-
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
     env_logger::init();
@@ -58,8 +58,9 @@ async fn main() -> Result<(), Error> {
             .wrap(actix_web::middleware::Logger::default())
             .service(execute)
             .service(query)
+            .service(ws::index)
     })
-    .bind("0.0.0.0:80")?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
     .unwrap();
