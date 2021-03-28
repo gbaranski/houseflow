@@ -3,5 +3,7 @@ members = [
     "db",
     "fulfillment",
     "auth",
-    "token"
+    "token",
+    "lighthouse",
+    "cli"
 ]
