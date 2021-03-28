@@ -1,5 +1,7 @@
 #[derive(Debug)]
 pub enum Error {
+    InvalidBase64Encoding(base64::DecodeError),
+    InvalidSize(usize),
     InvalidSignature,
     InvalidAudienceUUID,
     Expired{
@@ -7,15 +9,27 @@ pub enum Error {
     },
 }
 
+
+impl From<base64::DecodeError> for Error {
+    fn from(err: base64::DecodeError) -> Self {
+        Self::InvalidBase64Encoding(err)
+    }
+
+}
+
 use std::fmt;
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Error::Expired{expired_by} => write!(f, "token has expired by `{} seconds`", expired_by),
-            Error::InvalidSignature => write!(f, "token has invalid signature"),
-            Error::InvalidAudienceUUID => write!(f, "token has UUID in audience field"),
-        }
+        
+        let msg = match self {
+            Error::Expired{expired_by} => format!("token has expired by `{} seconds`", expired_by),
+            Error::InvalidSignature => format!("token has invalid signature"),
+            Error::InvalidAudienceUUID => format!("token has UUID in audience field"),
+            Error::InvalidBase64Encoding(err) => format!("token has invalid encoding: `{}`", err),
+            Error::InvalidSize(size) => format!("token has invalid size: `{}`", size),
+        };
+        write!(f, "{}", msg)
     }
 }
 
