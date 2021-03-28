@@ -5,7 +5,6 @@ use crate::intent::ResponsePayload;
 
 // Empty module, SYNC intent doesn't have any payload
 pub mod request {
-    pub struct Payload();
 }
 
 pub mod response {

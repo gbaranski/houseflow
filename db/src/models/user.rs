@@ -1,4 +1,4 @@
-use serde::{ser, Serialize, Deserialize};
+use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
 pub const USER_SCHEMA: &str = r#"

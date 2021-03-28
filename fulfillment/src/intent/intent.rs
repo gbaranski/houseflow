@@ -8,7 +8,7 @@ pub enum RequestPayload {
     #[serde(rename = "action.devices.EXECUTE")]
     Execute(intent::execute::request::Payload),
 
-    #[serde(rename = "action.devices.SYNC", skip)]
+    #[serde(rename = "action.devices.SYNC")]
     Sync(),
 
     // #[serde(rename = "action.devices.QUERY")]
@@ -37,7 +37,7 @@ pub struct Request {
 pub enum ResponsePayload {
     Execute(intent::execute::response::Payload),
     Sync(intent::sync::response::Payload),
-    Disconnect()
+    // Disconnect()
 }
 
 
