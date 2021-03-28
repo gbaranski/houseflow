@@ -1,0 +1,18 @@
+[package]
+name = "houseflow-lighthouse"
+version = "0.1.0"
+authors = ["gbaranski <root@gbaranski.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+houseflow-db = { path = "../db" }
+env_logger = "0.8"
+log = "0.4"
+actix-web = "4.0.0-beta.4"
+serde = "1.0"
+serde_json = "1.0"
+uuid = { version = "0.8", features = ["serde"] }
+memcache = "0.15"
+reqwest = { version = "0.11", features = ["json"] }
