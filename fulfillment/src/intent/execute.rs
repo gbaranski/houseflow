@@ -49,7 +49,7 @@ pub mod response {
         pub ids: Vec<Uuid>,
 
         /// Result of the execute operation.
-        pub status: houseflow_lighthouse::PayloadCommandStatus,
+        pub status: houseflow_lighthouse::ResponseStatus,
 
         /// Aligned with per-trait states described in each trait schema reference. 
         /// These are the states after execution, if available.
@@ -78,31 +78,16 @@ pub mod response {
         /// thus with two groups in the response.
         pub commands: Vec<PayloadCommand>,
     }
-
-    #[derive(Serialize)]
-    pub struct Response {
-        /// ID of the request.
-        #[serde(rename = "requestId")]
-        pub request_id: String,
-
-        /// Intent response payload.
-        pub payload: Payload,
-    }
-
 }
 
-use response::Response;
-use houseflow_lighthouse::{
-    Response as LighthouseResponse,
-    Error as LighthouseError,
-};
+use houseflow_lighthouse::Response as LighthouseResponse;
+use crate::intent::ResponsePayload;
 
-pub async fn handle<'a>(
-    app_state: &crate::AppState<'a>,
+pub async fn handle(
+    app_state: &crate::AppState,
     user: &User, 
-    request_payload: request::Payload, 
-    request_id: String
-) -> Result<Response, Error> {
+    request_payload: &request::Payload, 
+) -> ResponsePayload {
     log::debug!("Received Execute intent from User ID: {}", user.id.to_string());
 
     let requests = request_payload.commands
@@ -113,49 +98,55 @@ pub async fn handle<'a>(
                 .zip(cmd.devices.iter())
         );
 
-    type CombinedLighthouseResponse = (Uuid, Result<LighthouseResponse, Error>);
-    let responses: Vec<CombinedLighthouseResponse> = join_all(requests
-        .map(|(exec, device)| async move {
-            let get_resp_fn = || async move {
-                let is_allowed = app_state.db.get_device_permission(user.id, device.id)
+
+    let responses = requests.map(|(exec, device)| async move {
+            (device.id, async move {
+                app_state.db.get_device_permission(user.id, device.id)
                     .await?
                     .map_or(
                         Err(Error::NoDevicePermission), 
                         |v| if v.execute { Err(Error::NoDeviceExecutePermission) } else {Ok(())}
                     )?;
 
-                let addr = app_state.lighthouse.get_wealthy_lighthouse_address(&device.id)?
+                let lighthouse = app_state.lighthouse();
+
+                let addr = lighthouse.get_wealthy_lighthouse_address(&device.id)?
                     .ok_or(Error::NoWealthyLighthouse)?;
-                
-                let resp = app_state.lighthouse.send_execute(addr, houseflow_lighthouse::ExecuteRequest {
+
+                let resp = lighthouse.send_execute(addr, houseflow_lighthouse::ExecuteRequest {
                     params: exec.params.clone(),
                     command: exec.command.clone(),
                     device_id: device.id,
                 }).await?;
 
                 Ok::<LighthouseResponse, Error>(resp)
-            };
-
-            (device.id, get_resp_fn().await)
-        })).await;
+            }.await)
+        });
 
 
-    Ok(
-        Response {
-            request_id,
-            payload: response::Payload {
-                error_code: None,
-                debug_string: None,
-                commands: responses
-                    .iter()
-                    .map(|(device_id, resp)| response::PayloadCommand {
-                        ids: vec![*device_id],
-                        states: resp.map_or_else(|_| std::collections::HashMap::new(), |v| v.states),
-                        error_code: resp.map_or_else(|e| Some(e.to_string()), |v| v.error_code),
-                        status: resp.map_or(houseflow_lighthouse::ResponseStatus::Error, |v| v.status),
-                    })
-                    .collect()
-            }
-        }
+    ResponsePayload::Execute(response::Payload{
+        error_code: None,
+        debug_string: None,
+        commands: join_all(responses)
+            .await
+            .iter()
+            .map(|(device_id, resp)|
+                 response::PayloadCommand {
+                     ids: vec![*device_id],
+                     states: match resp {
+                         Ok(resp) => resp.states.clone(),
+                         Err(_) => std::collections::HashMap::new(),
+                     },
+                     error_code: match resp {
+                         Ok(resp) => resp.error_code.clone(),
+                         Err(e) => Some(e.to_string()),
+                     },
+                     status: match resp {
+                         Ok(resp) => resp.status,
+                         Err(_) => houseflow_lighthouse::ResponseStatus::Error,
+                     },
+                 }
+                ).collect()
+    }
     )
 }

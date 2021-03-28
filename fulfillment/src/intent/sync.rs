@@ -1,10 +1,11 @@
 use serde::Serialize;
 use uuid::Uuid;
-use houseflow_db::{Database, models::{User, Device}};
-use crate::Error;
+use houseflow_db::models::{User, Device};
+use crate::intent::ResponsePayload;
 
 // Empty module, SYNC intent doesn't have any payload
 pub mod request {
+    pub struct Payload();
 }
 
 pub mod response {
@@ -28,35 +29,28 @@ pub mod response {
         /// Zero or more devices are returned (zero devices meaning the user has no devices, or has disconnected them all).
         pub devices: Vec<Device>,
     }
-
-    #[derive(Serialize)]
-    pub struct Response {
-        /// ID of the request.
-        #[serde(rename = "requestId")]
-        pub request_id: String,
-
-        /// Intent response payload.
-        pub payload: Payload,
-    }
 }
-
-use response::Response;
 
 pub async fn handle(
     app_state: &crate::AppState,
-    user: &User, 
-    request_id: String
-) -> Result<Response, Error> {
+    user: &User,
+    _: (),
+) -> ResponsePayload {
     log::debug!("Received Sync intent from User ID: {}", user.id.to_string());
-    let devices = app_state.db.get_user_devices(user.id).await?;
-    
-    Ok(Response {
-        request_id,
-        payload: response::Payload {
+    let devices = app_state.db.get_user_devices(user.id).await;
+
+    ResponsePayload::Sync(match devices {
+        Ok(devices) => response::Payload {
             user_id: user.id,
             error_code: None,
             debug_string: None,
             devices,
+        },
+        Err(e) => response::Payload {
+            user_id: user.id,
+            error_code: Some(e.to_string()),
+            debug_string: None,
+            devices: vec![],
         }
     })
 }
