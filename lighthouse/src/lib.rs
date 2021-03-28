@@ -39,18 +39,25 @@ impl From<reqwest::Error> for Error {
 
 #[derive(Clone)]
 pub struct LighthouseAPI<'a> {
-    memcache: &'a memcache::Client,
+    mc: &'a memcache::Client,
     db: &'a houseflow_db::Database,
 }
 
 
 impl<'a> LighthouseAPI<'a> {
+    pub fn new(mc: &'a memcache::Client, db: &'a houseflow_db::Database) -> Self {
+        Self {
+            mc,
+            db
+        }
+    }
+
     pub fn get_wealthy_lighthouse_address(
         &self, 
         device_id: &Uuid
     ) -> Result<Option<String>, Error> {
         Ok(
-            self.memcache.get(&device_id.to_string())?
+            self.mc.get(&device_id.to_string())?
         )
     }
 

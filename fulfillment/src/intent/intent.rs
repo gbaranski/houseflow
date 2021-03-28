@@ -1,5 +1,4 @@
 use serde::{ Serialize, Deserialize };
-use uuid::Uuid;
 use crate::intent;
 
 
@@ -9,8 +8,11 @@ pub enum RequestPayload {
     #[serde(rename = "action.devices.EXECUTE")]
     Execute(intent::execute::request::Payload),
 
+    #[serde(rename = "action.devices.SYNC", skip)]
+    Sync(),
+
     // #[serde(rename = "action.devices.QUERY")]
-    // Query(inte),
+    // Query(intent::query::),
 }
 
 
@@ -19,7 +21,7 @@ pub struct RequestInput {
     /// Intent request type. Constant for each intent
     pub intent: String,
     /// Request payload
-    pub payload: Option<RequestPayload>
+    pub payload: RequestPayload
 }
 
 #[derive(Deserialize)]
@@ -31,30 +33,20 @@ pub struct Request {
     pub inputs: Vec<RequestInput>
 }
 
-
-/// Use it only for returning errors before redirecting intent request to specific handler
 #[derive(Serialize)]
-pub struct BaseResponsePayload {
-    /// Reflects the unique (and immutable) user ID on the agent's platform.
-    #[serde(rename = "agentUserId")]
-    pub user_id: Uuid,
-
-    /// For systematic errors on SYNC
-    #[serde(rename = "errorCode")]
-    pub error_code: String,
-
-    /// Detailed error which will never be presented to users but may be logged or used during development.
-    #[serde(rename = "debugString")]
-    pub debug_string: String,
+pub enum ResponsePayload {
+    Execute(intent::execute::response::Payload),
+    Sync(intent::sync::response::Payload),
+    Disconnect()
 }
 
-/// Use it only for returning errors before redirecting intent request to specific handler
+
 #[derive(Serialize)]
-pub struct BaseResponse {
-    /// ID of the request.
+pub struct Response {
+    /// ID of the response.
     #[serde(rename = "requestId")]
     pub request_id: String,
 
     /// Intent response payload.
-    pub payload: BaseResponsePayload,
+    pub payload: ResponsePayload,
 }

@@ -15,7 +15,7 @@ pub struct Response {
     pub error_code: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ResponseStatus {
     /// Confirm that the command succeeded.
