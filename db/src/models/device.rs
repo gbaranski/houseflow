@@ -111,7 +111,8 @@ pub struct Device {
 
 
 impl crate::Database {
-    pub async fn device_by_id(&self, id: Uuid) -> Result<Option<Device>, crate::Error> {
+
+    pub async fn get_device_by_id(&self, id: Uuid) -> Result<Option<Device>, crate::Error> {
         const SQL_QUERY: &str = 
         r#"
         "SELECT 
