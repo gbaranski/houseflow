@@ -1,6 +1,9 @@
 use actix_web::{HttpServer, web, get, post, HttpResponse};
 use uuid::Uuid;
+use std::sync::Mutex;
+use std::collections::HashMap;
 use std::io;
+use ws::WebsocketSession;
 
 mod ws;
 mod types;
@@ -46,18 +49,53 @@ async fn execute(
     }))
 }
 
+#[get("/testing/{id}")]
+async fn testing(
+    app_state: web::Data<AppState>,
+    path: web::Path<(String,)>
+) -> actix_web::Result<HttpResponse> {
+    log::info!("Received for testing");
+    let (id,) = path.into_inner();
+    let sessions = app_state.sessions.lock().unwrap();
+    let session = sessions.get(&id);
+    if session.is_none() {
+        return Ok(HttpResponse::BadRequest().body(format!("Session not found with id: {}", id)));
+    }
+
+
+    let execute_response = session.unwrap().send(ws::ExecuteRequest{
+        params: std::collections::HashMap::new(),
+        command: "hello world".to_string(),
+    })
+    .await
+    .unwrap();
+    println!("Execute response: {:?}", execute_response);
+
+    Ok(HttpResponse::Ok().body("Hello"))
+}
+
+
+pub struct AppState {
+    sessions: Mutex<HashMap<String, actix::Addr<WebsocketSession>>>,
+}
+
 
 #[actix_web::main]
 async fn main() -> Result<(), Error> {
     env_logger::init();
     log::info!("Starting houseflow-fulfillment");
 
+    let app_state = web::Data::new(AppState {
+        sessions: Mutex::new(HashMap::new())
+    });
 
     HttpServer::new(move || {
         actix_web::App::new()
             .wrap(actix_web::middleware::Logger::default())
+            .app_data(app_state.clone())
             .service(execute)
             .service(query)
+            .service(testing)
             .service(ws::index)
     })
     .bind("0.0.0.0:8080")?
