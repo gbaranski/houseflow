@@ -1,16 +1,39 @@
 use actix::prelude::*;
-use actix_web::{HttpRequest, HttpResponse, web, get};
+use actix::dev::*;
 use actix_web_actors::ws;
 use std::time::{Duration, Instant};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-struct Websockets {
+#[derive(Message)]
+#[rtype(result = "crate::Response")]
+pub struct ExecuteRequest {
+    pub params: std::collections::HashMap<String, String>,
+    pub command: String,
+}
+
+
+impl<A, M> MessageResponse<A, M> for crate::Response
+where
+    A: Actor,
+    M: Message<Result = crate::Response>,
+{
+    fn handle(self, _: &mut A::Context, tx: Option<OneshotSender<crate::Response>>) {
+        if let Some(tx) = tx {
+            if !tx.send(self).is_ok() {
+                log::error!("fail sending message response");
+            }
+        }
+    }
+}
+
+
+pub struct WebsocketSession {
     last_heartbeat: Instant,
 }
 
-impl Websockets {
+impl WebsocketSession {
     pub fn new() -> Self {
         Self{
             last_heartbeat: Instant::now(),
@@ -18,7 +41,7 @@ impl Websockets {
     }
 }
 
-impl Actor for Websockets {
+impl Actor for WebsocketSession {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
@@ -36,7 +59,7 @@ impl Actor for Websockets {
 }
 
 /// Handler for `ws::Message`
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Websockets {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketSession {
     fn handle(
         &mut self,
         msg: Result<ws::Message, ws::ProtocolError>,
@@ -51,7 +74,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Websockets {
             Ok(ws::Message::Pong(_)) => {
                 self.last_heartbeat = Instant::now();
             }
-            Ok(ws::Message::Text(text)) => ctx.text(text),
+            Ok(ws::Message::Text(text)) => ctx.text(format!("Response: {}", text)),
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
@@ -62,12 +85,21 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Websockets {
     }
 }
 
+impl Handler<ExecuteRequest> for WebsocketSession {
+    type Result = crate::Response;
 
-#[get("/ws")]
-pub async fn index(
-    request: HttpRequest,
-    stream: web::Payload,
-) -> actix_web::Result<HttpResponse> {
-    let res = ws::start(Websockets::new(), &request, stream);
-    res
+    fn handle(
+        &mut self, 
+        req: ExecuteRequest, 
+        ctx: &mut Self::Context
+    ) -> Self::Result {
+        ctx.text("Hello world");
+
+        Self::Result {
+            status: crate::ResponseStatus::Success,
+            states: std::collections::HashMap::new(),
+            error_code: None,
+        }
+
+    }
 }

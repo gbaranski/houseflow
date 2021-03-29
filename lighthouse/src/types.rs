@@ -8,14 +8,14 @@ pub struct ExecuteRequest {
     pub device_id: Uuid,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Response {
     pub status: ResponseStatus,
     pub states: std::collections::HashMap<String, String>,
     pub error_code: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ResponseStatus {
     /// Confirm that the command succeeded.
