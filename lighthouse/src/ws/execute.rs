@@ -15,6 +15,7 @@ pub enum ExecuteError {
 
 #[derive(Debug, Clone)]
 pub struct Response(pub String);
+
 use std::future::Future;
 use std::pin::Pin;
 use std::boxed::Box;
@@ -22,7 +23,7 @@ use std::task::Poll;
 
 
 #[derive(MessageResponse)]
-pub struct ResponseFuture(pub Pin<Box<dyn Future<Output = Response> + Send>>);
+pub struct ResponseFuture(pub Pin<Box<dyn Future<Output = Result<Response, ExecuteError>> + Send>>);
 
 // impl Future for ResponseFuture {
 //     type Output = Response;
@@ -53,9 +54,11 @@ impl Handler<Request> for WebsocketSession {
         self.response_channels.push((request_id, Some(tx)));
 
         let boxed = Box::pin(async move {
-            let resp = rx.await.unwrap();
-            println!("Received response: {:?}", resp);
-            resp
+
+            match tokio::time::timeout(EXECUTE_TIMEOUT, rx).await {
+                Ok(resp) => Ok(resp.unwrap()),
+                Err(_) => Err(ExecuteError::Timeout),
+            }
         });
 
         ResponseFuture(Box::pin(boxed))
