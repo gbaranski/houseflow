@@ -10,6 +10,7 @@ edition = "2018"
 houseflow-db = { path = "../db" }
 env_logger = "0.8"
 log = "0.4"
+tokio = { version = "1.4", features = ["full"] }
 actix = "0.11"
 actix-web = "4.0.0-beta.4"
 actix-web-actors = "4.0.0-beta.3"
@@ -18,4 +19,5 @@ serde_json = "1.0"
 uuid = { version = "0.8", features = ["serde"] }
 memcache = "0.15"
 reqwest = { version = "0.11", features = ["json"] }
+futures = "0.3"
 

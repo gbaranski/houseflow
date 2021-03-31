@@ -886,12 +886,14 @@ dependencies = [
  "actix-web",
  "actix-web-actors",
  "env_logger",
+ "futures",
  "houseflow-db",
  "log",
  "memcache",
  "reqwest",
  "serde",
  "serde_json",
+ "tokio",
  "uuid",
 ]
 
@@ -1939,11 +1941,24 @@ dependencies = [
  "libc",
  "memchr",
  "mio",
+ "num_cpus",
  "once_cell",
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
+ "tokio-macros",
  "winapi",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caf7b11a536f46a809a8a9f0bb4237020f70ecbf115b842360afb127ea2fda57"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

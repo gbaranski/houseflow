@@ -1,41 +1,23 @@
 use actix::prelude::*;
-use actix::dev::*;
 use actix_web_actors::ws;
 use std::time::{Duration, Instant};
+use tokio::sync::oneshot;
+use uuid::Uuid;
+use super::Response;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-#[derive(Message)]
-#[rtype(result = "crate::Response")]
-pub struct ExecuteRequest {
-    pub params: std::collections::HashMap<String, String>,
-    pub command: String,
-}
-
-
-impl<A, M> MessageResponse<A, M> for crate::Response
-where
-    A: Actor,
-    M: Message<Result = crate::Response>,
-{
-    fn handle(self, _: &mut A::Context, tx: Option<OneshotSender<crate::Response>>) {
-        if let Some(tx) = tx {
-            if !tx.send(self).is_ok() {
-                log::error!("fail sending message response");
-            }
-        }
-    }
-}
-
-
 pub struct WebsocketSession {
     last_heartbeat: Instant,
+
+    pub response_channels: Vec<(Uuid, Option<oneshot::Sender<Response>>)>,
 }
 
 impl WebsocketSession {
     pub fn new() -> Self {
         Self{
+            response_channels: vec![],
             last_heartbeat: Instant::now(),
         }
     }
@@ -58,7 +40,6 @@ impl Actor for WebsocketSession {
     }
 }
 
-/// Handler for `ws::Message`
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketSession {
     fn handle(
         &mut self,
@@ -74,7 +55,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketSession 
             Ok(ws::Message::Pong(_)) => {
                 self.last_heartbeat = Instant::now();
             }
-            Ok(ws::Message::Text(text)) => ctx.text(format!("Response: {}", text)),
+            Ok(ws::Message::Text(text)) => {
+                let ch = &mut self.response_channels[0]; // temporary constant
+                let tx = ch.1.take().unwrap();
+                let resp = Response(text.to_string());
+                if let Err(_) = tx.send(resp) {
+                    println!("the receiver has dropped");
+                }
+
+                ctx.text(format!("Response: {}", text));
+            },
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
@@ -82,24 +72,5 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketSession 
             }
             _ => ctx.stop(),
         }
-    }
-}
-
-impl Handler<ExecuteRequest> for WebsocketSession {
-    type Result = crate::Response;
-
-    fn handle(
-        &mut self, 
-        req: ExecuteRequest, 
-        ctx: &mut Self::Context
-    ) -> Self::Result {
-        ctx.text("Hello world");
-
-        Self::Result {
-            status: crate::ResponseStatus::Success,
-            states: std::collections::HashMap::new(),
-            error_code: None,
-        }
-
     }
 }

@@ -2,9 +2,11 @@ use actix_web::{get, HttpRequest, HttpResponse, web};
 use actix_web_actors::ws;
 
 mod session;
-mod server;
+pub mod execute;
 
-pub use session::{WebsocketSession, ExecuteRequest};
+pub use execute::Request as ExecuteRequest;
+pub use execute::Response;
+pub use session::WebsocketSession;
 
 #[get("/ws")]
 pub async fn index(

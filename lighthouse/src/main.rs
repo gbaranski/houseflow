@@ -62,16 +62,14 @@ async fn testing(
         return Ok(HttpResponse::BadRequest().body(format!("Session not found with id: {}", id)));
     }
 
+    let request = ws::ExecuteRequest("Request".to_string());
+    let response = session.unwrap().send(request)
+        .await
+        .unwrap().0.await;
 
-    let execute_response = session.unwrap().send(ws::ExecuteRequest{
-        params: std::collections::HashMap::new(),
-        command: "hello world".to_string(),
-    })
-    .await
-    .unwrap();
-    println!("Execute response: {:?}", execute_response);
+    println!("Execute response: {:?}", response);
 
-    Ok(HttpResponse::Ok().body("Hello"))
+    Ok(HttpResponse::Ok().body(format!("{:?}", response)))
 }
 
 
