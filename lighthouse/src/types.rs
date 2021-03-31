@@ -1,23 +1,37 @@
 use serde::{Serialize, Deserialize};
-use uuid::Uuid;
+use actix::prelude::*;
+use std::pin::Pin;
+use std::boxed::Box;
+use std::future::Future;
+use std::marker::Send;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug)]
+pub enum ExecuteError {
+    Timeout,
+}
+
+#[derive(MessageResponse)]
+pub struct ExecuteResponseFuture(pub Pin<Box<dyn Future<Output = Result<ExecuteResponse, ExecuteError>> + Send>>);
+
+#[derive(Serialize, Deserialize, Message, Debug)]
+#[rtype(result = "ExecuteResponseFuture")]
 pub struct ExecuteRequest {
     pub params: std::collections::HashMap<String, String>,
     pub command: String,
-    pub device_id: Uuid,
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Response {
-    pub status: ResponseStatus,
+pub struct ExecuteResponse {
+    pub status: ExecuteResponseStatus,
     pub states: std::collections::HashMap<String, String>,
     pub error_code: Option<String>,
 }
 
+
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum ResponseStatus {
+pub enum ExecuteResponseStatus {
     /// Confirm that the command succeeded.
     Success,
 
@@ -34,9 +48,4 @@ pub enum ResponseStatus {
 
     /// Target device is unable to perform the command.
     Error
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct QueryRequest {
-    pub device_id: Uuid,
 }

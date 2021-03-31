@@ -4,8 +4,6 @@ use actix_web_actors::ws;
 mod session;
 pub mod execute;
 
-pub use execute::Request as ExecuteRequest;
-pub use execute::Response;
 pub use session::WebsocketSession;
 
 #[get("/ws")]

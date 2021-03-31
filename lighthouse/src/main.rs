@@ -28,8 +28,8 @@ async fn query(
     let (device_id,) = path.into_inner();
     log::info!("Querying device ID: {}", device_id);
 
-    Ok(HttpResponse::Ok().json(Response {
-        status: ResponseStatus::Success,
+    Ok(HttpResponse::Ok().json(ExecuteResponse {
+        status: ExecuteResponseStatus::Success,
         states: std::collections::HashMap::new(),
         error_code: None,
     }))
@@ -38,12 +38,11 @@ async fn query(
 
 #[post("/execute")]
 async fn execute(
-    request: web::Json<ExecuteRequest>,
+    _request: web::Json<ExecuteRequest>,
 ) -> actix_web::Result<HttpResponse> {
-    log::info!("Execute for device ID: {}", request.device_id);
 
-    Ok(HttpResponse::Ok().json(Response {
-        status: ResponseStatus::Success,
+    Ok(HttpResponse::Ok().json(ExecuteResponse {
+        status: ExecuteResponseStatus::Success,
         states: std::collections::HashMap::new(),
         error_code: None,
     }))
@@ -62,7 +61,10 @@ async fn testing(
         return Ok(HttpResponse::BadRequest().body(format!("Session not found with id: {}", id)));
     }
 
-    let request = ws::ExecuteRequest("Request".to_string());
+    let request = ExecuteRequest{
+        params: HashMap::new(),
+        command: "commandhere".to_string(),
+    };
     let response = session.unwrap().send(request)
         .await
         .unwrap().0.await;
