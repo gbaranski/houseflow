@@ -3,7 +3,8 @@ use actix_web_actors::ws;
 use std::time::{Duration, Instant};
 use tokio::sync::oneshot;
 use uuid::Uuid;
-use super::Response;
+use std::collections::HashMap;
+use crate::{ExecuteResponse, ExecuteResponseStatus};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -11,7 +12,7 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 pub struct WebsocketSession {
     last_heartbeat: Instant,
 
-    pub response_channels: Vec<(Uuid, Option<oneshot::Sender<Response>>)>,
+    pub response_channels: Vec<(Uuid, Option<oneshot::Sender<ExecuteResponse>>)>,
 }
 
 impl WebsocketSession {
@@ -58,7 +59,11 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WebsocketSession 
             Ok(ws::Message::Text(text)) => {
                 let ch = &mut self.response_channels[0]; // temporary constant
                 let tx = ch.1.take().unwrap();
-                let resp = Response(text.to_string());
+                let resp = ExecuteResponse{
+                    status: ExecuteResponseStatus::Error,
+                    states: HashMap::new(),
+                    error_code: Some("dsad".to_string())
+                };
                 if let Err(_) = tx.send(resp) {
                     println!("the receiver has dropped");
                 }

@@ -65,7 +65,7 @@ impl<'a> LighthouseAPI<'a> {
         &self, 
         lighthouse_address: String,
         req: ExecuteRequest,
-    ) -> Result<Response, Error> {
+    ) -> Result<ExecuteResponse, Error> {
         let url = format!("http://{}/execute", lighthouse_address);
 
         reqwest::Client::new()
@@ -77,19 +77,19 @@ impl<'a> LighthouseAPI<'a> {
             .await?
     }
 
-    pub async fn send_query(
-        &self, 
-        lighthouse_address: String,
-        req: QueryRequest,
-    ) -> Result<Response, Error> {
-        let url = format!("http://{}/query/{}", lighthouse_address, req.device_id);
+    // pub async fn send_query(
+    //     &self, 
+    //     lighthouse_address: String,
+    //     req: QueryRequest,
+    // ) -> Result<Response, Error> {
+    //     let url = format!("http://{}/query/{}", lighthouse_address, req.device_id);
 
-        reqwest::Client::new()
-            .get(url)
-            .json(&req)
-            .send()
-            .await?
-            .json()
-            .await?
-    }
+    //     reqwest::Client::new()
+    //         .get(url)
+    //         .json(&req)
+    //         .send()
+    //         .await?
+    //         .json()
+    //         .await?
+    // }
 }
