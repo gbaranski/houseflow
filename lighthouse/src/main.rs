@@ -1,108 +1,77 @@
-use actix_web::{HttpServer, web, get, post, HttpResponse};
+use futures::TryStreamExt;
+use serde::{Serialize, Deserialize};
 use uuid::Uuid;
-use std::sync::Mutex;
-use std::collections::HashMap;
-use std::io;
-use ws::WebsocketSession;
+use hyper::service::{make_service_fn, service_fn};
+use hyper::{Body, Method, StatusCode, Server};
 
-mod ws;
 mod types;
-use types::*;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub enum Error {
-    IOError(io::Error),
+    MissingPathIntent,
+    MissingPathDeviceID,
 }
 
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::IOError(err)
-    }
+#[derive(Serialize, Deserialize)]
+pub struct Response {
+    pub error: Option<Error>,
 }
 
+async fn on_execute(device_id: Uuid) -> Result<hyper::Response<Body>, hyper::Error> {
+    let body = Body::from("Received execute");
+    let resp = hyper::Response::new(body);
 
-#[get("/query/{device_id}")]
-async fn query(
-    path: web::Path<(Uuid,)>
-) -> actix_web::Result<HttpResponse> {
-    let (device_id,) = path.into_inner();
-    log::info!("Querying device ID: {}", device_id);
-
-    Ok(HttpResponse::Ok().json(ExecuteResponse {
-        status: ExecuteResponseStatus::Success,
-        states: std::collections::HashMap::new(),
-        error_code: None,
-    }))
+    Ok(resp)
 }
 
+async fn handle(req: hyper::Request<Body>) -> Result<hyper::Response<Body>, Error> {
+    // this is path without leading /
+    let path: String = req
+        .uri()
+        .path()
+        .chars()
+        .skip(1)
+        .collect(); 
 
-#[post("/execute")]
-async fn execute(
-    _request: web::Json<ExecuteRequest>,
-) -> actix_web::Result<HttpResponse> {
+    let mut splitted_path = path.splitn(2, "/");
 
-    Ok(HttpResponse::Ok().json(ExecuteResponse {
-        status: ExecuteResponseStatus::Success,
-        states: std::collections::HashMap::new(),
-        error_code: None,
-    }))
+    let (intent, device_id) = (
+        splitted_path.next().ok_or(Error::MissingPathIntent)?,
+        splitted_path.next().ok_or(Error::MissingPathDeviceID)?
+    );
+    println!("Intent: {}, device id: {}", intent, device_id);
+
+    Ok(hyper::Response::new(Body::from("Hello world!!")))
 }
 
-#[get("/testing/{id}")]
-async fn testing(
-    app_state: web::Data<AppState>,
-    path: web::Path<(String,)>
-) -> actix_web::Result<HttpResponse> {
-    log::info!("Received for testing");
-    let (id,) = path.into_inner();
-    let sessions = app_state.sessions.lock().unwrap();
-    let session = sessions.get(&id);
-    if session.is_none() {
-        return Ok(HttpResponse::BadRequest().body(format!("Session not found with id: {}", id)));
-    }
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let addr = ([127, 0, 0, 1], 3000).into();
 
-    let request = ExecuteRequest{
-        params: HashMap::new(),
-        command: "commandhere".to_string(),
-    };
-    let response = session.unwrap().send(request)
-        .await
-        .unwrap().0.await;
+    let service = make_service_fn(|_| async {
+        let service = service_fn(|req| async {
+            Ok::<_, hyper::Error>(
+                match handle(req).await {
+                    Ok(resp) => resp,
+                    Err(error) => {
+                        let resp = Response {
+                            error: Some(error),
+                        };
+                        let json = serde_json::to_string(&resp).unwrap();
+                        let body = hyper::Body::from(json);
+                        hyper::Response::new(body)
+                    }
+                })
+        });
 
-    println!("Execute response: {:?}", response);
-
-    Ok(HttpResponse::Ok().body(format!("{:?}", response)))
-}
-
-
-pub struct AppState {
-    sessions: Mutex<HashMap<String, actix::Addr<WebsocketSession>>>,
-}
-
-
-#[actix_web::main]
-async fn main() -> Result<(), Error> {
-    env_logger::init();
-    log::info!("Starting houseflow-fulfillment");
-
-    let app_state = web::Data::new(AppState {
-        sessions: Mutex::new(HashMap::new())
+        Ok::<_, hyper::Error>(service)
     });
 
-    HttpServer::new(move || {
-        actix_web::App::new()
-            .wrap(actix_web::middleware::Logger::default())
-            .app_data(app_state.clone())
-            .service(execute)
-            .service(query)
-            .service(testing)
-            .service(ws::index)
-    })
-    .bind("0.0.0.0:8080")?
-    .run()
-    .await
-    .unwrap();
+    let server = hyper::Server::bind(&addr).serve(service);
+
+    println!("Listening on http://{}", addr);
+
+    server.await?;
 
     Ok(())
 }
-
