@@ -1,5 +1,5 @@
 [package]
-name = "houseflow-db"
+name = "houseflow_db"
 version = "0.1.0"
 authors = ["gbaranski <root@gbaranski.com>"]
 edition = "2018"
