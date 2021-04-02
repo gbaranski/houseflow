@@ -1,20 +1,11 @@
 use serde::{Serialize, Deserialize};
-use actix::prelude::*;
-use std::pin::Pin;
-use std::boxed::Box;
-use std::future::Future;
-use std::marker::Send;
 
 #[derive(Debug)]
 pub enum ExecuteError {
     Timeout,
 }
 
-#[derive(MessageResponse)]
-pub struct ExecuteResponseFuture(pub Pin<Box<dyn Future<Output = Result<ExecuteResponse, ExecuteError>> + Send>>);
-
-#[derive(Serialize, Deserialize, Message, Debug)]
-#[rtype(result = "ExecuteResponseFuture")]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ExecuteRequest {
     pub params: std::collections::HashMap<String, String>,
     pub command: String,
