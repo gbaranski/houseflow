@@ -34,14 +34,14 @@ pub async fn serve() {
 
     let execute_path = warp::post()
         .and(warp::path("execute"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
         .and(store_filter.clone())
         .and_then(on_execute);
 
     let query_path = warp::get()
         .and(warp::path("query"))
-        .and(warp::path::param::<String>())
+        .and(warp::path::param::<Uuid>())
         .and(warp::path::end())
         .and(store_filter.clone())
         .and_then(on_query);
@@ -53,7 +53,7 @@ pub async fn serve() {
         .await;
 }
 
-async fn on_execute(id: String, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
+async fn on_execute(id: Uuid, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
     *store.counter.write().unwrap() += 1;
 
     Ok(warp::reply::with_status(
@@ -63,7 +63,7 @@ async fn on_execute(id: String, store: Store) -> Result<impl warp::Reply, warp::
 
 }
 
-async fn on_query(id: String, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
+async fn on_query(id: Uuid, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
     *store.counter.write().unwrap() += 1;
 
     Ok(warp::reply::with_status(
