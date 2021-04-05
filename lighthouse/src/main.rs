@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
 pub use tcp_server::DeviceSessions;
+use tcp_server::TCPServer;
 
 mod types;
 mod http_server;
@@ -11,18 +12,15 @@ pub enum Error {
     InvalidDeviceID(String),
 }
 
-impl From<uuid::Error> for Error {
-    fn from(err: uuid::Error) -> Self {
-        Self::InvalidDeviceID(err.to_string())
-    }
-}
-
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    http_server::serve().await;
+    env_logger::init();
+    tokio::spawn(async {
+        http_server::serve().await;
+    });
 
+    TCPServer::new().serve().await?;
 
     Ok(())
 }
