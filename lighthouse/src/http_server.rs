@@ -39,7 +39,16 @@ pub async fn serve() {
         .and(store_filter.clone())
         .and_then(on_execute);
 
-    warp::serve(execute_path)
+    let query_path = warp::get()
+        .and(warp::path("query"))
+        .and(warp::path::param::<String>())
+        .and(warp::path::end())
+        .and(store_filter.clone())
+        .and_then(on_query);
+
+    let routes = execute_path.or(query_path);
+
+    warp::serve(routes)
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
@@ -49,6 +58,16 @@ async fn on_execute(id: String, store: Store) -> Result<impl warp::Reply, warp::
 
     Ok(warp::reply::with_status(
             format!("Received execute intent for deviceID: {}, counter: {}", id, store.counter.read().unwrap()),
+            http::StatusCode::OK
+            ))
+
+}
+
+async fn on_query(id: String, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
+    *store.counter.write().unwrap() += 1;
+
+    Ok(warp::reply::with_status(
+            format!("Received query intent for deviceID: {}, counter: {}", id, store.counter.read().unwrap()),
             http::StatusCode::OK
             ))
 
