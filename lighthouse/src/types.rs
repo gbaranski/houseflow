@@ -1,28 +1,115 @@
 use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
 
-#[derive(Debug)]
-pub enum ExecuteError {
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Error {
+    DeviceNotFound,
     Timeout,
+    IOError(String),
 }
+
+pub enum Request {
+    Execute(ExecuteRequest),
+    Query(QueryRequest),
+}
+
+impl Into<ExecuteRequest> for Request {
+    fn into(self) -> ExecuteRequest {
+        match self {
+            Self::Execute(item) => item,
+            _ => panic!("Request is not type of ExecuteRequest"),
+        }
+    }
+}
+
+impl Into<QueryRequest> for Request {
+    fn into(self) -> QueryRequest {
+        match self {
+            Self::Query(item) => item,
+            _ => panic!("Request is not type of QueryRequest"),
+        }
+    }
+}
+
+impl From<ExecuteRequest> for Request {
+    fn from(item: ExecuteRequest) -> Self {
+        Self::Execute(item)
+    }
+}
+
+impl From<QueryRequest> for Request {
+    fn from(item: QueryRequest) -> Self {
+        Self::Query(item)
+    }
+}
+
+
+
+pub enum Response {
+    Execute(ExecuteResponse),
+    Query(QueryResponse),
+}
+
+
+impl Into<ExecuteResponse> for Response {
+    fn into(self) -> ExecuteResponse {
+        match self {
+            Self::Execute(item) => item,
+            _ => panic!("Response is not type of ExecuteResponse"),
+        }
+    }
+}
+
+impl Into<QueryResponse> for Response {
+    fn into(self) -> QueryResponse {
+        match self {
+            Self::Query(item) => item,
+            _ => panic!("Response is not type of QueryResponse"),
+        }
+    }
+}
+
+impl From<ExecuteResponse> for Response {
+    fn from(item: ExecuteResponse) -> Self {
+        Self::Execute(item)
+    }
+}
+
+impl From<QueryResponse> for Response {
+    fn from(item: QueryResponse) -> Self {
+        Self::Query(item)
+    }
+}
+
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExecuteRequest {
-    pub params: std::collections::HashMap<String, String>,
+    pub params: HashMap<String, String>,
     pub command: String,
 }
 
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ExecuteResponse {
-    pub status: ExecuteResponseStatus,
-    pub states: std::collections::HashMap<String, String>,
-    pub error_code: Option<String>,
+    pub status: ResponseStatus,
+    pub states: HashMap<String, String>,
+    pub error: Option<Error>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct QueryRequest {}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct QueryResponse {
+    pub states: HashMap<String, String>,
 }
 
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum ExecuteResponseStatus {
+pub enum ResponseStatus {
     /// Confirm that the command succeeded.
     Success,
 
