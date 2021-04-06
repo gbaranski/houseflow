@@ -1,26 +1,31 @@
 use serde::{Serialize, Deserialize};
-pub use tcp_server::DeviceSessions;
 use tcp_server::TCPServer;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use std::collections::HashMap;
+
+pub use types::*;
+pub(crate) use session::{Session, SessionStore};
 
 mod types;
 mod http_server;
 mod tcp_server;
-
-#[derive(Serialize, Deserialize)]
-pub enum Error {
-    InvalidPath(String),
-    InvalidDeviceID(String),
-}
-
+mod session;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     env_logger::init();
-    tokio::spawn(async {
-        http_server::serve().await;
-    });
+    let session_store: SessionStore = Arc::new(Mutex::new(HashMap::new()));
 
-    TCPServer::new().serve().await?;
+    // Clone session_store into this scope
+    {
+        let session_store = session_store.clone();
+        tokio::spawn(async move {
+            http_server::serve(session_store).await;
+        });
+    }
+
+    TCPServer::new(session_store).serve().await?;
 
     Ok(())
 }
