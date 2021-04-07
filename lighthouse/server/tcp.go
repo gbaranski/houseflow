@@ -3,59 +3,94 @@ package server
 import (
 	"fmt"
 	"net"
+  "bytes"
 
+  "github.com/google/uuid"
 	"github.com/gbaranski/houseflow/lighthouse/packets"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // ListenTCP starts listening to incoming requests, this function is blocking
-func (b *Server) ListenTCP() error {
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", b.cfg.Hostname, b.cfg.Port))
+func (s *Server) ListenTCP() error {
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.cfg.Hostname, s.cfg.Port))
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{
-		"hostname": b.cfg.Hostname,
-		"port":     b.cfg.Port,
-	}).Info("Listening for incoming LightMQ connections")
 	defer l.Close()
+
+	logrus.WithFields(logrus.Fields{
+		"hostname": s.cfg.Hostname,
+		"port":     s.cfg.Port,
+	}).Info("Listening for incoming connections")
+
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			return fmt.Errorf("fail accepting connection %s", err.Error())
+      return fmt.Errorf("fail accepting connection: `%s`", err.Error())
 		}
-		go b.handleTCPConnection(conn)
+		go s.handleTCPConnection(conn)
 	}
 }
 
-func (b *Server) handleTCPConnection(conn net.Conn) {
-	defer conn.Close()
 
+func (s *Server) waitConnectPacket(conn net.Conn) (clientID uuid.UUID, code byte)  {
 	ptype, err := packets.ReadOpCode(conn)
 	if err != nil {
-		log.WithError(err).Error("fail read packet type")
-		return
+		logrus.WithError(err).Error("fail read packet type")
+		return uuid.Nil, packets.ConnACKMalformedPayload
 	}
 
 	if ptype != packets.OpCodeConnect {
-		log.WithField("type", ptype).Error("Connection must start with CONNECT packet")
-		return
+		logrus.WithField("type", ptype).Error("Connection must start with CONNECT packet")
+		return uuid.Nil, packets.ConnACKOperationUnavailable
 	}
-	client, err := b.onConnect(conn)
-	if err != nil {
-		log.WithError(err).Error("fail handle connection")
-		return
-	}
-	go b.ClientStore.Add(client)
-	loge := log.WithFields(log.Fields{
-		"clientID": client.ID,
-		"ip":       client.IPAddress.String(),
+
+  connectPayload, err := packets.ReadConnectPayload(conn)
+  if err != nil {
+    return uuid.Nil, packets.ConnACKMalformedPayload
+  }
+
+  return connectPayload.ClientID, packets.ConnACKConnectionAccepted
+}
+
+func (s *Server) handleTCPConnection(conn net.Conn) {
+	defer conn.Close()
+
+  clientID, code := s.waitConnectPacket(conn)
+
+  buf := bytes.NewBuffer([]byte{})
+  _, err := packets.Packet{
+    OpCode: packets.OpCodeConnACK,
+    Payload: packets.ConnACKPayload{
+    },
+  }.WriteTo(buf)
+  if err != nil {
+    logrus.WithError(err).Error("failed writing to buf")
+    return
+  }
+  _, err = buf.WriteTo(conn)
+  if err != nil {
+    logrus.WithError(err).Error("failed writing packet to connection")
+    return
+  }
+
+  if code != packets.ConnACKConnectionAccepted {
+    return
+  }
+
+  session := NewSession(conn, clientID)
+
+  if err := s.SessionStore.Add(&session); err != nil {
+    logrus.WithError(err).Error("failed adding session to store")
+  }
+	loge := logrus.WithFields(logrus.Fields{
+		"clientID": session.ClientID,
+		"ip":       session.conn.RemoteAddr().String(),
 	})
 
 	loge.Info("Started connection")
 
-	err = b.readLoop(conn, client)
-	if err != nil {
+  if err := session.readLoop(); err != nil {
 		loge.WithError(err).Error("fail readLoop()")
 	}
 }
