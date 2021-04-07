@@ -1,26 +1,28 @@
 package packets
 
 import (
-	"bytes"
-	"math"
-	"math/rand"
-	"testing"
+  "testing"
+  "bytes"
+  "math"
+  "math/rand"
 )
 
 func TestPingPayload(t *testing.T) {
-	payload := PingPayload{
-		ID: uint16(rand.Intn(math.MaxUint16)),
-	}
-	b := make([]byte, 0)
-	b = append(b, 0) // MSB
-	b = append(b, 2) // LSB
-	b = append(b, payload.Bytes()...)
+  payload := PingPayload{
+    ID: uint16(rand.Intn(math.MaxUint16)),
+  }
+  buf := bytes.NewBuffer([]byte{})
+  _, err := payload.WriteTo(buf)
+  if err != nil {
+    t.Fatalf(err.Error())
+  }
 
-	readenPayload, err := ReadPingPayload(bytes.NewReader(b))
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	if readenPayload.ID != payload.ID {
-		t.Fatalf("Unexpected ID: %d, expected: %d", readenPayload.ID, payload.ID)
-	}
+  newPayload, err := ReadPingPayload(buf)
+  if err != nil {
+    t.Fatalf("fail reading execute payload: %s", err.Error())
+  }
+
+  if payload.ID != newPayload.ID {
+    t.Fatalf("`payload.ID` does not match! Expected: `%d`, found: `%d`", payload.ID, newPayload.ID)
+  }
 }
