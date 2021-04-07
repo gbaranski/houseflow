@@ -1,40 +1,31 @@
 package packets
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/gbaranski/houseflow/lighthouse/utils"
 )
 
-// PongPayload is payload for PONG Control packet
+// PongPayload is payload for PONG packet
 type PongPayload struct {
 	ID uint16
 }
 
 // ReadPongPayload reads pong payload from io.Reader
-func ReadPongPayload(r io.Reader) (PongPayload, error) {
-	length, err := utils.Read16BitInteger(r)
-	if err != nil {
-		return PongPayload{}, fmt.Errorf("fail read payload len")
-	}
-	if length != 2 {
-		return PongPayload{}, fmt.Errorf("invlaid length: %d", length)
-	}
+func ReadPongPayload(r io.Reader) (p PongPayload, err error) {
 	id, err := utils.Read16BitInteger(r)
 	if err != nil {
-		return PongPayload{}, err
+    return p, err
 	}
+
 	return PongPayload{
 		ID: id,
 	}, nil
 }
 
-// Bytes convert PongPayload to bytes
-func (p PongPayload) Bytes() (b []byte) {
-	b = make([]byte, 2)
-	b[0] = byte(p.ID >> 8)
-	b[1] = byte(p.ID)
+// WriteTo writes PongPayload to io.Writer
+func (p PongPayload) WriteTo(w io.Writer) (n int64, err error) {
+  k, err := utils.Write16BitInteger(w, p.ID)
 
-	return b
+  return int64(k), err
 }
