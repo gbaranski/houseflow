@@ -3,43 +3,62 @@ package server
 import (
 	"errors"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
-// ClientStore ...
-type ClientStore struct {
-	c  map[string]Client
-	mu sync.RWMutex
+// ClientStore holds map with references to sessions
+type SessionStore struct {
+	*sync.RWMutex
+	m  map[uuid.UUID]*Session
 }
 
-// NewClientStore creates store of clients
-func NewClientStore() *ClientStore {
-	return &ClientStore{
-		c:  make(map[string]Client),
-		mu: sync.RWMutex{},
+// NewSessionStore creates store of sessions
+func NewSessionStore() SessionStore {
+	return SessionStore{
+		m:  make(map[uuid.UUID]*Session),
+    RWMutex: &sync.RWMutex{},
 	}
 }
 
 var (
 	// ErrAlreadyExists error which indicates that entry already exists in stroe
-	ErrAlreadyExists = errors.New("entry already exists in store")
+	ErrAlreadyExists = errors.New("session already exists in store")
 )
 
-// Add adds new client
-func (l *ClientStore) Add(c Client) error {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	_, ok := l.c[c.ID]
-	if ok {
-		return ErrAlreadyExists
-	}
-	l.c[c.ID] = c
+// Add adds new session
+func (store *SessionStore) Add(session *Session) error {
+	store.Lock()
+	defer store.Unlock()
+
+	store.m[session.ClientID] = session
 	return nil
 }
 
-// Get retreives client from store
-func (l *ClientStore) Get(clientID string) (Client, bool) {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-	c, ok := l.c[clientID]
-	return c, ok
+// Get retreives session from store
+func (store *SessionStore) Get(clientID uuid.UUID) *Session {
+  store.RLock()
+  defer store.RUnlock()
+
+  return store.m[clientID]
 }
+
+// Delete removes session from store
+func (store *SessionStore) Delete(clientID uuid.UUID) {
+  store.Lock()
+  defer store.Unlock()
+
+  delete(store.m, clientID)
+}
+
+
+// Exusts check if session exists in store
+func (store *SessionStore) Exists(clientID uuid.UUID) bool {
+  store.RLock()
+  defer store.RUnlock()
+
+  _, ok := store.m[clientID]
+
+  return ok
+}
+
