@@ -4,7 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 
-	"github.com/gbaranski/houseflow/lighthouse/server"
+	"github.com/gbaranski/houseflow/lighthouse/tcp_server"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	b, err := server.New(server.Config{
+	b, err := tcp_server.New(tcp_server.Config{
 		Hostname:   "0.0.0.0",
 		Port:       3030,
 		PrivateKey: skey,
