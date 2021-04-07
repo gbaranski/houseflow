@@ -5,39 +5,33 @@ import (
 	"io"
 
 	"github.com/gbaranski/houseflow/lighthouse/utils"
+	"github.com/google/uuid"
 )
+
+const ClientIDSize uint8 = 16
 
 // ConnectPayload ...
 type ConnectPayload struct {
-	ClientID string
+	ClientID uuid.UUID
 }
 
-// ReadConnectPayload ...
-func ReadConnectPayload(r io.Reader) (cp ConnectPayload, err error) {
-	clientIDSize, err := utils.ReadByte(r)
+// ReadConnectPayload reads ConnectPayload from io.Reader
+func ReadConnectPayload(r io.Reader) (p ConnectPayload, err error) {
+	p.ClientID, err = utils.ReadUUID(r)
 	if err != nil {
-		return cp, fmt.Errorf("fail read clientID len %s", err.Error())
+		return p, fmt.Errorf("fail read clientID %s", err.Error())
 	}
-	clientID := make([]byte, clientIDSize)
-	n, err := r.Read(clientID)
-	if err != nil {
-		return cp, fmt.Errorf("fail read clientID %s", err.Error())
-	}
-	if n != int(clientIDSize) {
-		return cp, fmt.Errorf("invalid clientID size n: %d, exp %d", n, clientIDSize)
-	}
-	cp.ClientID = string(clientID)
 
-	return cp, nil
+	return p, err
 }
 
-// Bytes converts ConnectPayload to payload bytes
-func (cp ConnectPayload) Bytes() []byte {
-	p := make([]byte, 1+len(cp.ClientID))
-	p[0] = byte(len(cp.ClientID))
-	for i, c := range cp.ClientID {
-		p[i+1] = byte(c)
-	}
-	return p
+// WriteTo writes ExecutePayload to io.Writer
+func (p ConnectPayload) WriteTo(w io.Writer) (n int64, err error) {
+  k, err := utils.WriteUUID(w, p.ClientID)
+  if err != nil {
+		return n, fmt.Errorf("fail writing `ClientID`: `%s`", err.Error())
+  }
+  n += int64(k)
 
+  return n, nil
 }
