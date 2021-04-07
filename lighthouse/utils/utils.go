@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"github.com/google/uuid"
+  "math"
+  "math/rand"
 )
 
 // Write16BitInteger writes 16 bit integer to bytes writer
@@ -118,4 +120,8 @@ func ReadByte(r io.Reader) (byte, error) {
 		return 0, fmt.Errorf("read invalid amount, exp: 1, n: %d", n)
 	}
 	return b[0], nil
+}
+
+func GenerateRandomUint16() uint16 {
+  return uint16(rand.Int31n(math.MaxUint16))
 }
