@@ -11,8 +11,8 @@ const (
 	// ConnACKConnectionAccepted Connection accepted
 	ConnACKConnectionAccepted byte = iota + 1
 
-	// ConnACKUnsupportedProtocol The Server does not support the level of the LightMQ protocol requested by the Client
-	ConnACKUnsupportedProtocol
+	// ConnACKOperationUnavailable The server cannot currently accept this operation
+	ConnACKOperationUnavailable
 
 	// ConnACKServerUnavailable The Network Connection has been made but the LightMQ service is unavailable
 	ConnACKServerUnavailable
@@ -30,27 +30,19 @@ type ConnACKPayload struct {
 	ReturnCode byte
 }
 
-// Bytes converts ConnACK to bytes
-func (c ConnACKPayload) Bytes() []byte {
-	b := make([]byte, 1)
-	b[0] = c.ReturnCode
-	return b
+
+// ReadExecutePayload reads ConnACKPayload from io.Reader
+func ReadConnACKPayload(r io.Reader) (p ConnACKPayload, err error) {
+  p.ReturnCode, err = utils.ReadByte(r)
+	if err != nil {
+		return p, fmt.Errorf("invalid returncode byte %s", err.Error())
+	}
+
+  return p, err
 }
 
-// ReadConnACKPayload reads ConnACK packet payload
-func ReadConnACKPayload(r io.Reader) (ConnACKPayload, error) {
-	length, err := utils.Read16BitInteger(r)
-	if err != nil {
-		return ConnACKPayload{}, fmt.Errorf("unable read length %s", err.Error())
-	}
-	if length != 1 {
-		return ConnACKPayload{}, fmt.Errorf("invalid length %d", length)
-	}
-	p, err := utils.ReadByte(r)
-	if err != nil {
-		return ConnACKPayload{}, fmt.Errorf("invalid returncode byte %s", err.Error())
-	}
-	return ConnACKPayload{
-		ReturnCode: p,
-	}, nil
+// WriteTo writes ConnACKPayload to io.Writer
+func (p ConnACKPayload) WriteTo(w io.Writer) (n int64, err error) {
+  k, err := utils.WriteByte(w, p.ReturnCode)
+	return int64(k), err
 }
