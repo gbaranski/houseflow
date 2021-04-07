@@ -3,5 +3,4 @@ members = [
     "db",
     "fulfillment",
     "token",
-    "lighthouse",
 ]
