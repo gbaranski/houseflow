@@ -1,10 +1,16 @@
 package packets
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/gbaranski/houseflow/lighthouse/utils"
 )
+
+type Payload interface {
+	io.WriterTo
+}
 
 const (
 	// OpCodeConnect - Client request to connect to Server operation code
@@ -17,15 +23,15 @@ const (
 	// Direction: Server to Client
 	OpCodeConnACK
 
-	// OpCodeSend - Send message operation code
+	// OpCodeExecute - Execute operation code
 	//
-	// Direction: Server to Client or Client to Server
-	OpCodeSend
+	// Direction: Server to Client
+	OpCodeExecute
 
-	// OpCodeSendResponse - Send Response operation code
+	// OpCodeExecute - Execute operation code
 	//
-	// Direction: Server to Client or Client to Server
-	OpCodeSendResponse
+	// Direction: Client to Server
+	OpCodeExecuteResponse
 
 	// OpCodePing - Ping request operation code
 	//
@@ -37,9 +43,6 @@ const (
 	// Direction: Server to Client or Client to Server
 	OpCodePong
 )
-
-// Payload is type for LightMQ Payload
-type Payload []byte
 
 // OpCode defnes opcode of packet
 type OpCode byte
@@ -61,18 +64,30 @@ type Packet struct {
 	Payload Payload
 }
 
-// Bytes converts packet to bytes which can be directly sent
-func (p Packet) Bytes() []byte {
-	length := 1 + // opcode
-		2 + // payload length in two bytes(uint16)
-		len(p.Payload) // length of the actual payload
+func (p Packet) WriteTo(w io.Writer) (n int64, err error) {
+	k, err := utils.WriteByte(w, byte(p.OpCode))
+  n+=int64(k)
+	if err != nil {
+		return n, fmt.Errorf("error when writing OpCode: `%s`", err.Error())
+	}
 
-	b := make([]byte, length)
-	b[0] = byte(p.OpCode)
-	b[1] = byte(len(p.Payload) >> 8)
-	b[2] = byte(len(p.Payload))
+	buf := bytes.NewBuffer([]byte{})
+	j, err := p.Payload.WriteTo(buf)
+	if err != nil {
+		return n, fmt.Errorf("error when writing Payload: `%s`", err.Error())
+	}
 
-	copy(b[3:], p.Payload)
+  k, err = utils.Write32BitInteger(w, uint32(j))
+  n += int64(k)
+	if err != nil {
+		return n, fmt.Errorf("error when writing payload length: `%s`", err.Error())
+	}
 
-	return b
+  j, err = buf.WriteTo(w)
+  n += j
+	if err != nil {
+		return n, fmt.Errorf("error when writing payload: `%s`", err.Error())
+	}
+
+  return 
 }
