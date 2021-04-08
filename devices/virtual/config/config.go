@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -20,9 +21,8 @@ type Config struct {
 	PrivateKey      ed25519.PrivateKey
 	ServerPublicKey ed25519.PublicKey
 	DeviceID        string
-	BrokerURL       string
-	CommandTopic    topic
-	StateTopic      topic
+	ServerHost      string
+	ServerPort      uint16
 }
 
 // Load loads config and returns it
@@ -66,18 +66,23 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("DEVICE_ID does not exist in .env")
 	}
 
-	brokerURL, exists := os.LookupEnv("BROKER_URL")
+	serverHost, exists := os.LookupEnv("SERVER_HOST")
 	if !exists {
-		return nil, fmt.Errorf("BROKER_URL does not exist in .env")
+		return nil, fmt.Errorf("SERVER_HOST does not exist in .env")
 	}
+
+	serverPortString, exists := os.LookupEnv("SERVER_PORT")
+	if !exists {
+		return nil, fmt.Errorf("SERVER_PORT does not exist in .env")
+	}
+	serverPort, err := strconv.ParseInt(serverPortString, 10, 32)
 
 	return &Config{
 		PublicKey:       pkey,
 		PrivateKey:      skey,
 		ServerPublicKey: serverPkey,
 		DeviceID:        deviceID,
-		BrokerURL:       brokerURL,
-		CommandTopic:    topic{Request: deviceID + "/command/request", Response: deviceID + "/command/response"},
-		StateTopic:      topic{Request: deviceID + "/state/request", Response: deviceID + "/state/response"},
+		ServerPort:      uint16(serverPort),
+		ServerHost:      serverHost,
 	}, nil
 }

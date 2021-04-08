@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gbaranski/houseflow/devices/lights_go/config"
-	"github.com/gbaranski/houseflow/devices/lights_go/device"
+	"github.com/gbaranski/houseflow/devices/virtual/config"
+	"github.com/gbaranski/houseflow/devices/virtual/device"
 )
 
 func main() {
@@ -10,8 +10,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	dev := device.CreateDevice(config)
-	err = dev.StartMQTT()
+	device := device.CreateDevice(config)
+	err = device.StartTCP()
 	if err != nil {
 		panic(err)
 	}
