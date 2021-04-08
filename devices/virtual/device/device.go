@@ -34,6 +34,7 @@ func (d *Device) StartTCP() (err error) {
   cfg := tcp_client.Config{
     Host: "localhost",
     Port: 3030,
+    ClientID: d.config.DeviceID,
     ExecuteHandler: d.onExecute,
   }
   d.client, err = tcp_client.Connect(cfg)

@@ -64,30 +64,23 @@ type Packet struct {
 	Payload Payload
 }
 
-func (p Packet) WriteTo(w io.Writer) (n int64, err error) {
-	k, err := utils.WriteByte(w, byte(p.OpCode))
-  n+=int64(k)
-	if err != nil {
-		return n, fmt.Errorf("error when writing OpCode: `%s`", err.Error())
-	}
-
+func (p Packet) WriteTo(w io.Writer) (int64, error) {
 	buf := bytes.NewBuffer([]byte{})
-	j, err := p.Payload.WriteTo(buf)
+
+	_, err := utils.WriteByte(buf, byte(p.OpCode))
 	if err != nil {
-		return n, fmt.Errorf("error when writing Payload: `%s`", err.Error())
+		return 0, fmt.Errorf("error when writing OpCode to buffer: `%s`", err.Error())
 	}
 
-  k, err = utils.Write32BitInteger(w, uint32(j))
-  n += int64(k)
+  _, err = p.Payload.WriteTo(buf)
 	if err != nil {
-		return n, fmt.Errorf("error when writing payload length: `%s`", err.Error())
+		return 0, fmt.Errorf("error when writing Payload to buffer: `%s`", err.Error())
 	}
 
-  j, err = buf.WriteTo(w)
-  n += j
+  n, err := buf.WriteTo(w)
 	if err != nil {
-		return n, fmt.Errorf("error when writing payload: `%s`", err.Error())
+		return 0, fmt.Errorf("error when writing Payload: `%s`", err.Error())
 	}
 
-  return 
+  return n, nil
 }
