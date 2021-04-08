@@ -1,8 +1,8 @@
 package device
 
 import (
-	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gbaranski/houseflow/devices/lights_go/config"
+	"github.com/gbaranski/houseflow/devices/virtual/config"
+	"github.com/gbaranski/houseflow/lighthouse/tcp_client"
 )
 
 // State is type of current state of device
@@ -14,6 +14,6 @@ type State struct {
 // Device ...
 type Device struct {
 	config *config.Config
-	client mqtt.Client
+	client tcp_client.Client
 	state  State
 }
