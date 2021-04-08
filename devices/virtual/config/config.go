@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -20,7 +21,7 @@ type Config struct {
 	PublicKey       ed25519.PublicKey
 	PrivateKey      ed25519.PrivateKey
 	ServerPublicKey ed25519.PublicKey
-	DeviceID        string
+	DeviceID        uuid.UUID
 	ServerHost      string
 	ServerPort      uint16
 }
@@ -81,7 +82,7 @@ func Load() (*Config, error) {
 		PublicKey:       pkey,
 		PrivateKey:      skey,
 		ServerPublicKey: serverPkey,
-		DeviceID:        deviceID,
+		DeviceID:        uuid.MustParse(deviceID),
 		ServerPort:      uint16(serverPort),
 		ServerHost:      serverHost,
 	}, nil
