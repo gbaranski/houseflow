@@ -10,8 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// ListenTCP starts listening to incoming requests, this function is blocking
-func (s *Server) ListenTCP() error {
+// Run starts listening to incoming requests, this function is blocking
+func (s *Server) Run() error {
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.cfg.Hostname, s.cfg.Port))
 	if err != nil {
 		return err
@@ -21,7 +21,7 @@ func (s *Server) ListenTCP() error {
 	logrus.WithFields(logrus.Fields{
 		"hostname": s.cfg.Hostname,
 		"port":     s.cfg.Port,
-	}).Info("Listening for incoming connections")
+	}).Info("Listening for incoming TCP connections")
 
 	for {
 		conn, err := l.Accept()
