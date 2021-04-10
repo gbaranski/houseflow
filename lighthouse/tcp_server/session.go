@@ -59,6 +59,25 @@ func (s *Session) readLoop() error {
 	}
 }
 
+func (s *Session) SendExecute(payload packets.ExecutePayload) error {
+  buf := bytes.NewBuffer([]byte{})
+  packet := packets.Packet {
+    OpCode: packets.OpCodeExecute,
+    Payload: payload,
+  }
+  _, err := packet.WriteTo(buf)
+  if err != nil {
+    return fmt.Errorf("fail writing to buffer: %s", err.Error())
+  }
+
+  _, err = buf.WriteTo(s.conn)
+  if err != nil {
+    return fmt.Errorf("fail writing to conn: %s", err.Error())
+  }
+
+  return nil
+}
+
 //
 // Execute response packet handler
 //
