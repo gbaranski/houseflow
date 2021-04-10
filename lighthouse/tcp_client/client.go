@@ -98,6 +98,7 @@ func (c *Client) read() error {
         return fmt.Errorf("unexpected return code: %x", p.ReturnCode)
       }
     case packets.OpCodeExecute:
+      fmt.Printf("Received execute packet")
       p, err := packets.ReadExecutePayload(c.conn)
       if err != nil {
         return err
