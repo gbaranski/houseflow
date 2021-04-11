@@ -1,12 +1,6 @@
-use super::{RequestChannel, SessionRequest, SessionStore};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::io::AsyncWriteExt;
+use super::{SessionRequest, SessionStore};
 use tokio::sync::oneshot;
-use tokio::sync::Mutex;
-use warp::{http, Filter};
-
-const MAX_CONTENT_LENGTH: u64 = 1024;
+use warp::Filter;
 
 pub async fn serve(session_store: SessionStore) {
     let store_filter = warp::any().map(move || session_store.clone());
