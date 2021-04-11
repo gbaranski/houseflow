@@ -2,7 +2,6 @@ pub(crate) use session::{
     Session,
     SessionStore,
     Request as SessionRequest,
-    RequestChannel,
     RequestReceiver,
     RequestSender,
 };

@@ -7,17 +7,19 @@ use tokio::{
         tcp::{OwnedReadHalf, OwnedWriteHalf},
         TcpStream,
     },
-    sync::{mpsc, oneshot, watch, RwLock},
+    sync::{mpsc, oneshot, RwLock},
 };
 
-pub type RequestChannel = (RequestSender, RequestReceiver);
 pub type RequestSender = mpsc::Sender<Request>;
 pub type RequestReceiver = mpsc::Receiver<Request>;
+
+pub type ResponseSender = oneshot::Sender<String>;
+
 pub type SessionStore = Arc<RwLock<HashMap<String, RequestSender>>>;
 
 pub struct Request {
     data: String,
-    response_to: oneshot::Sender<String>,
+    response_to: ResponseSender,
 }
 
 impl Request {
@@ -31,6 +33,8 @@ impl Request {
 }
 
 pub struct Session {
+    client_id: String,
+    socket_addr: SocketAddr,
     request_receiver: RequestReceiver,
     stream: TcpStream,
 }
@@ -38,10 +42,12 @@ pub struct Session {
 type RequestsStore = Arc<RwLock<HashMap<String, oneshot::Sender<String>>>>;
 
 impl Session {
-    pub fn new(request_receiver: RequestReceiver, stream: TcpStream) -> Self {
+    pub fn new(request_receiver: RequestReceiver, stream: TcpStream, socket_addr: SocketAddr, client_id: String) -> Self {
         Self {
             request_receiver,
             stream,
+            socket_addr,
+            client_id,
         }
     }
 
