@@ -10,7 +10,7 @@ pub struct Server {
 }
 
 impl Server {    
-    pub async fn new(sessions: SessionStore,) -> Self {
+    pub async fn new(sessions: SessionStore) -> Self {
         Self {
             listener: TcpListener::bind("127.0.0.1:8080").await.unwrap(),
             sessions, 
@@ -25,10 +25,10 @@ impl Server {
             tokio::spawn(async move {
                 let (request_sender, request_receiver) = mpsc::channel(10);
                 let session_id = addr.port().to_string();
-                let session = Session::new(request_receiver, stream, addr, session_id.clone());
+                let session = Session::new(addr, session_id.clone());
                 log::debug!("Connected with ID: {}", session_id);
                 sessions.write().await.insert(session_id, request_sender);
-                session.run().await;
+                session.run(stream.into_split(), request_receiver).await;
             });
         }
     }

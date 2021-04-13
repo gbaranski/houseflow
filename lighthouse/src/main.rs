@@ -1,9 +1,7 @@
 pub(crate) use session::{
     Session,
     SessionStore,
-    Request as SessionRequest,
-    RequestReceiver,
-    RequestSender,
+    Request as SessionRequest
 };
 
 use std::sync::Arc;

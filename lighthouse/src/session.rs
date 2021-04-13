@@ -2,11 +2,8 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::{
-        tcp::{OwnedReadHalf, OwnedWriteHalf},
-        TcpStream,
-    },
+    io::{AsyncReadExt, AsyncWriteExt, AsyncRead, AsyncWrite},
+    net::tcp::{OwnedReadHalf, OwnedWriteHalf},
     sync::{mpsc, oneshot, RwLock},
 };
 
@@ -35,17 +32,13 @@ impl Request {
 pub struct Session {
     client_id: String,
     socket_addr: SocketAddr,
-    request_receiver: RequestReceiver,
-    stream: TcpStream,
 }
 
 type RequestsStore = Arc<RwLock<HashMap<String, oneshot::Sender<String>>>>;
 
 impl Session {
-    pub fn new(request_receiver: RequestReceiver, stream: TcpStream, socket_addr: SocketAddr, client_id: String) -> Self {
+    pub fn new(socket_addr: SocketAddr, client_id: String) -> Self {
         Self {
-            request_receiver,
-            stream,
             socket_addr,
             client_id,
         }
@@ -53,7 +46,7 @@ impl Session {
 
     pub async fn read_requests(
         mut request_receiver: RequestReceiver,
-        mut tcp_sender: OwnedWriteHalf,
+        mut tcp_sender: impl AsyncWrite + Unpin,
         requests_store: RequestsStore,
     ) {
         loop {
@@ -67,7 +60,7 @@ impl Session {
         }
     }
 
-    pub async fn read_stream(mut tcp_receiver: OwnedReadHalf, requests_store: RequestsStore) {
+    pub async fn read_stream(mut tcp_receiver: impl AsyncRead + Unpin, requests_store: RequestsStore) {
         let mut buf = [0; 1024];
 
         loop {
@@ -92,14 +85,18 @@ impl Session {
         }
     }
 
-    pub async fn run(self) {
-        let (tcp_receiver, tcp_sender) = self.stream.into_split();
+    pub async fn run(
+        self, 
+        tcp: (impl AsyncRead + Unpin, impl AsyncWrite + Unpin),
+        request_receiver: RequestReceiver
+    ) {
+        let (tcp_receiver, tcp_sender) = tcp;
         let requests_store = Arc::new(RwLock::new(HashMap::new()));
 
         tokio::select! {
             _ = Self::read_stream(tcp_receiver, requests_store.clone()) => {
             },
-            _ = Self::read_requests(self.request_receiver, tcp_sender, requests_store.clone()) => {
+            _ = Self::read_requests(request_receiver, tcp_sender, requests_store.clone()) => {
             },
         };
     }
