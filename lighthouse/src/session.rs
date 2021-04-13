@@ -1,9 +1,9 @@
+use crate::Error;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt, AsyncRead, AsyncWrite},
-    net::tcp::{OwnedReadHalf, OwnedWriteHalf},
+    io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     sync::{mpsc, oneshot, RwLock},
 };
 
@@ -12,7 +12,29 @@ pub type RequestReceiver = mpsc::Receiver<Request>;
 
 pub type ResponseSender = oneshot::Sender<String>;
 
-pub type SessionStore = Arc<RwLock<HashMap<String, RequestSender>>>;
+// Not yet sure if RwLock is good for that
+#[derive(Clone)]
+pub struct Store(Arc<RwLock<HashMap<String, RequestSender>>>);
+
+impl Store {
+    pub fn new() -> Self {
+        Self(Arc::new(RwLock::new(HashMap::new())))
+    }
+    pub async fn add(&self, client_id: String, request_sender: RequestSender) {
+        self.0.write().await.insert(client_id, request_sender);
+    }
+
+    pub async fn send_to(&self, client_id: &String, request: Request) -> Result<(), Error> {
+        self.0
+            .read()
+            .await
+            .get(client_id)
+            .ok_or(Error::ClientNotConnected)?
+            .send(request)
+            .await
+            .map_err(|_| Error::Other)
+    }
+}
 
 pub struct Request {
     data: String,
@@ -21,12 +43,8 @@ pub struct Request {
 
 impl Request {
     pub fn new(data: String, response_to: oneshot::Sender<String>) -> Self {
-        Self {
-            data,
-            response_to,
-        }
+        Self { data, response_to }
     }
-
 }
 
 pub struct Session {
@@ -45,8 +63,8 @@ impl Session {
     }
 
     pub async fn read_requests(
-        mut request_receiver: RequestReceiver,
         mut tcp_sender: impl AsyncWrite + Unpin,
+        mut request_receiver: RequestReceiver,
         requests_store: RequestsStore,
     ) {
         loop {
@@ -55,16 +73,25 @@ impl Session {
                 .await
                 .expect("Received empty request");
             log::debug!("Received request, will send");
-            requests_store.write().await.insert(String::from("ABC"), request.response_to);
-            tcp_sender.write(request.data.as_bytes()).await.expect("fail sending request");
+            requests_store
+                .write()
+                .await
+                .insert(String::from("ABC"), request.response_to);
+            tcp_sender
+                .write(request.data.as_bytes())
+                .await
+                .expect("fail sending request");
         }
     }
 
-    pub async fn read_stream(mut tcp_receiver: impl AsyncRead + Unpin, requests_store: RequestsStore) {
+    pub async fn read_stream(
+        mut tcp_receiver: impl AsyncRead + Unpin,
+        requests_store: RequestsStore,
+    ) {
         let mut buf = [0; 1024];
 
         loop {
-            let n = match tcp_receiver.read(&mut buf).await {
+            let _n = match tcp_receiver.read(&mut buf).await {
                 // socket closed
                 Ok(n) if n == 0 => return,
                 Ok(n) => n,
@@ -81,23 +108,29 @@ impl Session {
                 .await
                 .remove("ABC")
                 .expect("No one was waiting for response");
-            response_to_channel.send(text).expect("fail sending into oneshot channel");
+            response_to_channel
+                .send(text)
+                .expect("fail sending into oneshot channel");
         }
     }
 
     pub async fn run(
-        self, 
-        tcp: (impl AsyncRead + Unpin, impl AsyncWrite + Unpin),
-        request_receiver: RequestReceiver
+        self,
+        stream: (impl AsyncRead + Unpin, impl AsyncWrite + Unpin),
+        request_rx: RequestReceiver,
     ) {
-        let (tcp_receiver, tcp_sender) = tcp;
+        log::info!(
+            "Started session with clientID: {}, address: {}",
+            self.client_id,
+            self.socket_addr
+        );
+
+        let (stream_rx, stream_tx) = stream;
         let requests_store = Arc::new(RwLock::new(HashMap::new()));
 
         tokio::select! {
-            _ = Self::read_stream(tcp_receiver, requests_store.clone()) => {
-            },
-            _ = Self::read_requests(request_receiver, tcp_sender, requests_store.clone()) => {
-            },
+            _ = Self::read_stream(stream_rx, requests_store.clone()) => {},
+            _ = Self::read_requests(stream_tx, request_rx, requests_store.clone()) => {},
         };
     }
 }
