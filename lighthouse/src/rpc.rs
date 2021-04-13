@@ -1,8 +1,8 @@
-use super::{SessionRequest, SessionStore};
+use crate::session;
 use tokio::sync::oneshot;
 use warp::Filter;
 
-pub async fn serve(session_store: SessionStore) {
+pub async fn serve(session_store: session::Store) {
     let store_filter = warp::any().map(move || session_store.clone());
 
     let execute_path = warp::post()
@@ -17,18 +17,14 @@ pub async fn serve(session_store: SessionStore) {
 
 async fn on_execute(
     id: String,
-    session_store: SessionStore,
+    session_store: session::Store,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let (tx, rx) = oneshot::channel();
-    let session_request = SessionRequest::new(String::from("Hello world\n"), tx);
+    let session_request = session::Request::new(String::from("Hello world\n"), tx);
     session_store
-        .read()
+        .send_to(&id, session_request)
         .await
-        .get(&id)
-        .expect("session found")
-        .send(session_request)
-        .await
-        .unwrap_or_else(|_| panic!(":wu"));
+        .unwrap_or_else(|_| panic!("Failed sending session_request"));
 
     let response = rx.await.expect("did not receive response");
     log::debug!("Received response: {}", response);
