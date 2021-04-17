@@ -1,9 +1,8 @@
-use crate::session;
-use tokio::sync::oneshot;
 use warp::Filter;
+use crate::server::connection;
 
-pub async fn serve(session_store: session::Store) {
-    let store_filter = warp::any().map(move || session_store.clone());
+pub async fn run(connection_store: connection::Store) {
+    let store_filter = warp::any().map(move || connection_store.clone());
 
     let execute_path = warp::post()
         .and(warp::path("execute"))
@@ -17,16 +16,14 @@ pub async fn serve(session_store: session::Store) {
 
 async fn on_execute(
     id: String,
-    session_store: session::Store,
+    connection_store: connection::Store
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let (tx, rx) = oneshot::channel();
-    let session_request = session::Request::new(String::from("Hello world\n"), tx);
-    session_store
-        .send_to(&id, session_request)
+    let conn_request = connection::Request::new(Vec::from("hello world"));
+    let conn_resp = connection_store
+        .send_request(&id, conn_request)
         .await
-        .unwrap_or_else(|_| panic!("Failed sending session_request"));
+        .expect("failed sending request");
 
-    let response = rx.await.expect("did not receive response");
-    log::debug!("Received response: {}", response);
-    Ok(warp::reply::json(&response))
+    log::debug!("Received response: {}", conn_resp);
+    Ok(warp::reply::json(&"dshsdahads".to_string()))
 }

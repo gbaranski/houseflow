@@ -1,0 +1,51 @@
+use tokio::{
+    io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
+    sync::mpsc,
+    net::{TcpListener, ToSocketAddrs},
+};
+
+pub enum Error {
+    IOError(std::io::Error),
+}
+
+impl From<std::io::Error> for Error {
+    fn from(item: std::io::Error) -> Self {
+        Self::IOError(item)
+    }
+}
+
+pub enum Event {
+    Message {
+        data: Vec<u8>,
+    }
+}
+
+type EventReceiver = mpsc::Receiver<Event>;
+type EventSender = mpsc::Sender<Event>;
+type EventChannel = (EventReceiver, EventSender);
+
+pub async fn run(addr: impl ToSocketAddrs, event_channel: EventChannel) -> Result<(), Error> {
+    let listener = TcpListener::bind(addr).await?;
+    accept_loop(listener, event_channel).await
+}
+
+async fn accept_loop(listener: TcpListener, event_channel: EventChannel) -> Result<(), Error> {
+    loop {
+        let (stream, address) = listener.accept().await?;
+        tokio::spawn(async {
+            connection_loop(stream.into_split());
+        });
+    }
+}
+
+async fn connection_loop(stream: (impl AsyncRead, impl AsyncWrite)) -> Result<(), Error> {
+    Ok(())
+}
+
+async fn connection_write_loop(stream: impl AsyncWrite) -> Result<(), Error> {
+    unimplemented!();
+}
+
+async fn connection_read_loop(stream: impl AsyncRead) -> Result<(), Error> {
+    unimplemented!();
+}
