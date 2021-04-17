@@ -113,6 +113,7 @@ impl Store {
     }
 }
 
+/// Starts connection on stream
 pub async fn run(
     stream: (impl AsyncRead + Unpin, impl AsyncWrite + Unpin),
     address: SocketAddr,
