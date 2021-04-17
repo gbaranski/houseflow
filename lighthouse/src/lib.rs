@@ -1,10 +1,4 @@
-#[forbid(unsafe_code)] 
-pub mod server;
+//! Library for interacting with lighthouse
+// #[warn(missing_docs)]
+// #[forbid(unsafe_code)] 
 
-pub enum Error {
-    /// Indicates that client was not connected at the time the request was sent.
-    ClientNotConnected,
-    
-    /// This error is ca
-    Other,
-}

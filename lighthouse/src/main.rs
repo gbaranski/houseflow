@@ -1,5 +1,5 @@
+#[forbid(missing_docs)]
 #[forbid(unsafe_code)] 
-pub use houseflow_lighthouse::Error;
 
 mod rpc;
 mod server;
