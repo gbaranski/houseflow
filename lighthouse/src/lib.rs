@@ -1,4 +1,4 @@
-pub mod session;
+#[forbid(unsafe_code)] 
 pub mod server;
 
 pub enum Error {
