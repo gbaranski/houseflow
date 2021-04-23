@@ -3,5 +3,6 @@ members = [
   # "db",
   # "fulfillment",
   #  "token",
-  "lighthouse"
+  "lighthouse/proto",
+  "lighthouse/server"
 ]

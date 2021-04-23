@@ -9,6 +9,22 @@ pub enum Error {
     IOError(std::io::Error),
 }
 
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        use Error::*;
+        let msg = match self {
+            InvalidOpcode(opcode) => format!("Invalid opcode: `{}`", opcode),
+            IOError(err) => format!( "IOError: {}", err),
+        };
+        write!(f, "{}", msg)
+    }
+}
+
+impl std::error::Error for Error {
+
+}
+
 impl From<std::io::Error> for Error {
     fn from(item: std::io::Error) -> Error {
         Error::IOError(item)
@@ -16,6 +32,12 @@ impl From<std::io::Error> for Error {
 }
 
 pub struct FrameCodec {}
+
+impl FrameCodec {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl Decoder for FrameCodec {
     type Item = Frame;
@@ -29,6 +51,7 @@ impl Decoder for FrameCodec {
         }
 
         let opcode = src.get_u8();
+
         let opcode = Opcode::iter()
             .find(|v| *v as u8 == opcode)
             .ok_or(Error::InvalidOpcode(opcode))?;
@@ -38,7 +61,9 @@ impl Decoder for FrameCodec {
                 let mut client_id = [0; 16];
                 src.copy_to_slice(&mut client_id[..]);
 
-                Frame::Connect { client_id }
+                Frame::Connect {
+                    client_id: client_id.into(),
+                }
             }
             Opcode::ConnACK => Frame::ConnACK {
                 response_code: src.get_u8(),
@@ -55,6 +80,7 @@ impl Encoder<Frame> for FrameCodec {
     fn encode(&mut self, item: Frame, dst: &mut BytesMut) -> Result<(), Self::Error> {
         match item {
             Frame::Connect { client_id } => {
+                let client_id: [u8; 16] = client_id.into();
                 dst.put_u8(Opcode::Connect as u8);
                 dst.put_slice(&client_id[..]);
             }
