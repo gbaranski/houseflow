@@ -1,9 +1,11 @@
 use bytes::BytesMut;
+use lighthouse_proto::{ClientID, Frame, FrameCodec, FrameCodecError, Opcode};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     sync::{mpsc, watch, RwLock},
 };
+use tokio_util::codec::{Decoder, Encoder};
 
 /// 5 seconds timeout for getting response for a request
 const REQUEST_TIMEOUT_MILLIS: u64 = 5000;
@@ -17,8 +19,21 @@ pub enum Error {
     RequestTimeout,
 }
 
-/// ClientID which will be used to identify connections
-pub type ClientID = String;
+/// Errors that occurs on the lowest level
+#[derive(Debug)]
+pub enum ServerError {
+    /// Server did not expect frame of this type
+    UnexpectedFrame(Opcode),
+
+    /// Error with decoding/encoding frames
+    FrameCodecError(FrameCodecError),
+}
+
+impl From<FrameCodecError> for ServerError {
+    fn from(v: FrameCodecError) -> Self {
+        Self::FrameCodecError(v)
+    }
+}
 
 /// Response sent from the Client to Server
 #[derive(Debug, Clone)]
@@ -118,24 +133,39 @@ pub async fn run(
     stream: (impl AsyncRead + Unpin, impl AsyncWrite + Unpin),
     address: SocketAddr,
     store: Store,
-) {
-    let client_id = address.port().to_string(); // TODO: replace it with real ClientID
+) -> Result<(), ServerError> {
+    let mut frame_codec = FrameCodec::new();
+    let mut buf = BytesMut::with_capacity(4096);
+    let (mut stream_receiver, stream_sender) = stream;
+    let n = stream_receiver.read_buf(&mut buf);
+    let client_id = match frame_codec.decode(&mut buf)? {
+        Some(Frame::Connect { client_id }) => client_id,
+
+        // First frame should be Connect
+        Some(v) => return Err(ServerError::UnexpectedFrame(v.opcode())),
+
+        // Connection closed by peer
+        None => return Ok(()),
+    };
+
     log::info!(
         "started with client ID: `{}` from `{}`",
         client_id,
         address.to_string()
     );
+
     let (request_sender, request_receiver) = mpsc::channel::<Request>(32);
     let (response_sender, response_receiver) = watch::channel::<Option<Response>>(None);
 
     store
         .add(client_id, (response_receiver.clone(), request_sender))
         .await;
-    let (stream_receiver, stream_sender) = stream;
     tokio::select! {
         _ = connection_read_loop(stream_receiver, response_sender) => {},
         _ = connection_write_loop(stream_sender, request_receiver) => {},
     };
+
+    Ok(())
 }
 
 async fn connection_read_loop(
@@ -165,5 +195,20 @@ async fn connection_write_loop(
             .write(&request.data)
             .await
             .expect("fail writing request data to stream");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+    use std::net::{Ipv4Addr, SocketAddrV4};
+
+    #[tokio::test]
+    async fn test_connect() {
+        let (rx, tx) = (Cursor::new(Vec::<u8>::new()), Cursor::new(Vec::<u8>::new()));
+        let addr = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0));
+        let store = Store::new();
+        tokio::spawn(async move { run((rx, tx), addr, store).await });
     }
 }
