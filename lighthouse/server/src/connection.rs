@@ -1,5 +1,5 @@
 use bytes::BytesMut;
-use lighthouse_proto::{ClientID, Frame, FrameCodec, FrameCodecError, Opcode};
+use lighthouse_proto::{ClientID, Frame, FrameCodec, FrameCodecError, Opcode, ResponseCode};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
@@ -27,11 +27,19 @@ pub enum ServerError {
 
     /// Error with decoding/encoding frames
     FrameCodecError(FrameCodecError),
+
+    IOError(std::io::Error),
 }
 
 impl From<FrameCodecError> for ServerError {
     fn from(v: FrameCodecError) -> Self {
         Self::FrameCodecError(v)
+    }
+}
+
+impl From<std::io::Error> for ServerError {
+    fn from(v: std::io::Error) -> Self {
+        Self::IOError(v)
     }
 }
 
@@ -136,8 +144,8 @@ pub async fn run(
 ) -> Result<(), ServerError> {
     let mut frame_codec = FrameCodec::new();
     let mut buf = BytesMut::with_capacity(4096);
-    let (mut stream_receiver, stream_sender) = stream;
-    let n = stream_receiver.read_buf(&mut buf);
+    let (mut stream_receiver, mut stream_sender) = stream;
+    let _ = stream_receiver.read_buf(&mut buf);
     let client_id = match frame_codec.decode(&mut buf)? {
         Some(Frame::Connect { client_id }) => client_id,
 
@@ -147,6 +155,16 @@ pub async fn run(
         // Connection closed by peer
         None => return Ok(()),
     };
+    let connack_frame = Frame::ConnACK {
+        response_code: ResponseCode::ConnectionAccepted,
+    };
+    frame_codec
+        .encode(connack_frame, &mut buf)
+        .expect("failed encoding ConnACK Frame");
+    stream_sender
+        .write_buf(&mut buf)
+        .await
+        .expect("failed writing connack frame to stream");
 
     log::info!(
         "started with client ID: `{}` from `{}`",
@@ -160,6 +178,7 @@ pub async fn run(
     store
         .add(client_id, (response_receiver.clone(), request_sender))
         .await;
+
     tokio::select! {
         _ = connection_read_loop(stream_receiver, response_sender) => {},
         _ = connection_write_loop(stream_sender, request_receiver) => {},
@@ -201,14 +220,53 @@ async fn connection_write_loop(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::{Buf, BufMut};
+    use rand::random;
     use std::io::Cursor;
     use std::net::{Ipv4Addr, SocketAddrV4};
 
+
     #[tokio::test]
     async fn test_connect() {
-        let (rx, tx) = (Cursor::new(Vec::<u8>::new()), Cursor::new(Vec::<u8>::new()));
+        let (mut rx, mut tx) = (Cursor::new(Vec::<u8>::new()), Cursor::new(Vec::<u8>::new()));
         let addr = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0));
         let store = Store::new();
-        tokio::spawn(async move { run((rx, tx), addr, store).await });
+
+        run((&mut rx, &mut tx), addr, store)
+            .await
+            .expect("failed running connection");
+
+        let mut buf = BytesMut::with_capacity(4096);
+
+        let mut codec = FrameCodec::new();
+        let connect_frame = Frame::Connect {
+            client_id: random(),
+        };
+
+        codec
+            .encode(connect_frame, &mut buf)
+            .expect("failed encoding frame");
+
+        tx.write_buf(&mut buf)
+            .await
+            .expect("failed writing connect packet to buf");
+
+        while !buf.has_remaining() {
+            println!("buf: {:?}", buf);
+            rx.read_buf(&mut buf)
+                .await
+                .expect("failed reading to buffer");
+        }
+
+        let response_code = match codec
+            .decode(&mut buf)
+            .expect("failed decoding using frame codec")
+        {
+            Some(Frame::ConnACK { response_code }) => response_code,
+            Some(frame) => panic!("unexpected packet, opcode: {}", frame.opcode() as u8),
+            None => panic!("received EOF"),
+        };
+
+        assert_eq!(response_code, ResponseCode::ConnectionAccepted);
     }
 }
