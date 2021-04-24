@@ -5,7 +5,7 @@ mod codec;
 mod frame;
 pub use codec::{Error as FrameCodecError, FrameCodec};
 
-pub use frame::Frame;
+pub use frame::{Frame, ResponseCode};
 
 pub const CLIENT_ID_SIZE: usize = 16;
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -75,7 +75,6 @@ impl std::fmt::Debug for ClientID {
     }
 }
 
-#[cfg(test)]
 impl rand::distributions::Distribution<ClientID> for rand::distributions::Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> ClientID {
         ClientID { inner: rng.gen() }

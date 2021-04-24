@@ -13,6 +13,4 @@ bytes = "1.0"
 strum = "0.20"
 strum_macros = "0.20"
 hex = "0.4"
-
-[dev-dependencies]
 rand = "0.8"

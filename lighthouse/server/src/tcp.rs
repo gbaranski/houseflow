@@ -2,6 +2,7 @@ use tokio::net::{TcpListener, ToSocketAddrs};
 
 use super::connection;
 
+#[derive(Debug)]
 pub enum Error {
     IOError(std::io::Error),
 }

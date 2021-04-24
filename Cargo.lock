@@ -288,6 +288,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
+name = "houseflow-device-virtual"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "env_logger",
+ "lighthouse-proto",
+ "log",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "http"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -429,6 +441,7 @@ dependencies = [
  "env_logger",
  "lighthouse-proto",
  "log",
+ "rand 0.8.3",
  "tokio",
  "tokio-util",
  "warp",

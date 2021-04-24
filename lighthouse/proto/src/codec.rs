@@ -1,29 +1,29 @@
 use crate::{frame::Frame, Opcode};
 use bytes::{Buf, BufMut, BytesMut};
+use std::convert::TryInto;
 use strum::IntoEnumIterator;
 use tokio_util::codec::{Decoder, Encoder};
 
 #[derive(Debug)]
 pub enum Error {
     InvalidOpcode(u8),
+    InvalidResponseCode(u8),
     IOError(std::io::Error),
 }
-
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         use Error::*;
         let msg = match self {
             InvalidOpcode(opcode) => format!("Invalid opcode: `{}`", opcode),
-            IOError(err) => format!( "IOError: {}", err),
+            InvalidResponseCode(response_code) => format!("Invalid response code: `{}`", response_code),
+            IOError(err) => format!("IOError: {}", err),
         };
         write!(f, "{}", msg)
     }
 }
 
-impl std::error::Error for Error {
-
-}
+impl std::error::Error for Error {}
 
 impl From<std::io::Error> for Error {
     fn from(item: std::io::Error) -> Error {
@@ -65,9 +65,13 @@ impl Decoder for FrameCodec {
                     client_id: client_id.into(),
                 }
             }
-            Opcode::ConnACK => Frame::ConnACK {
-                response_code: src.get_u8(),
-            },
+            Opcode::ConnACK => {
+                let response_code = src.get_u8();
+
+                Frame::ConnACK {
+                response_code: response_code.try_into().map_err(|_| Error::InvalidOpcode(response_code))?,
+                }
+            }
         };
 
         Ok(Some(frame))
@@ -86,7 +90,7 @@ impl Encoder<Frame> for FrameCodec {
             }
             Frame::ConnACK { response_code } => {
                 dst.put_u8(Opcode::ConnACK as u8);
-                dst.put_u8(response_code);
+                dst.put_u8(response_code as u8);
             }
         }
 
