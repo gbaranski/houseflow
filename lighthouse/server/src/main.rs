@@ -1,5 +1,5 @@
-mod tcp;
 mod rpc;
+pub mod tcp;
 mod connection;
 
 #[tokio::main]

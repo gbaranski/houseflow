@@ -24,6 +24,14 @@ impl TryFrom<u8> for ResponseCode {
     }
 }
 
+impl rand::distributions::Distribution<ResponseCode> for rand::distributions::Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> ResponseCode {
+        ResponseCode::iter()
+            .nth(rng.gen_range(0..ResponseCode::iter().len()))
+            .unwrap()
+    }
+}
+
 #[derive(Debug, EnumIter, PartialEq, Eq, Clone, Copy)]
 #[repr(u8)]
 pub enum Frame {

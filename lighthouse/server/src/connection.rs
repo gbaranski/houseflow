@@ -28,6 +28,8 @@ pub enum ServerError {
     /// Error with decoding/encoding frames
     FrameCodecError(FrameCodecError),
 
+    ConnectionResetByPeer,
+
     IOError(std::io::Error),
 }
 
@@ -109,6 +111,11 @@ impl Store {
         self.inner.write().await.insert(client_id, channel);
     }
 
+    /// Used to check if client with ID specified in argument exists
+    pub async fn exists(&self, client_id: &ClientID) -> bool {
+        self.inner.read().await.contains_key(client_id)
+    }
+
     /// Sends request over RequestSender channel to connection with specific ClientID
     pub async fn send_request(
         &self,
@@ -145,7 +152,10 @@ pub async fn run(
     let mut frame_codec = FrameCodec::new();
     let mut buf = BytesMut::with_capacity(4096);
     let (mut stream_receiver, mut stream_sender) = stream;
-    let _ = stream_receiver.read_buf(&mut buf);
+    let n = stream_receiver.read_buf(&mut buf).await?;
+    if n == 0 {
+        return Err(ServerError::ConnectionResetByPeer)
+    }
     let client_id = match frame_codec.decode(&mut buf)? {
         Some(Frame::Connect { client_id }) => client_id,
 
@@ -214,59 +224,5 @@ async fn connection_write_loop(
             .write(&request.data)
             .await
             .expect("fail writing request data to stream");
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use bytes::{Buf, BufMut};
-    use rand::random;
-    use std::io::Cursor;
-    use std::net::{Ipv4Addr, SocketAddrV4};
-
-
-    #[tokio::test]
-    async fn test_connect() {
-        let (mut rx, mut tx) = (Cursor::new(Vec::<u8>::new()), Cursor::new(Vec::<u8>::new()));
-        let addr = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0));
-        let store = Store::new();
-
-        run((&mut rx, &mut tx), addr, store)
-            .await
-            .expect("failed running connection");
-
-        let mut buf = BytesMut::with_capacity(4096);
-
-        let mut codec = FrameCodec::new();
-        let connect_frame = Frame::Connect {
-            client_id: random(),
-        };
-
-        codec
-            .encode(connect_frame, &mut buf)
-            .expect("failed encoding frame");
-
-        tx.write_buf(&mut buf)
-            .await
-            .expect("failed writing connect packet to buf");
-
-        while !buf.has_remaining() {
-            println!("buf: {:?}", buf);
-            rx.read_buf(&mut buf)
-                .await
-                .expect("failed reading to buffer");
-        }
-
-        let response_code = match codec
-            .decode(&mut buf)
-            .expect("failed decoding using frame codec")
-        {
-            Some(Frame::ConnACK { response_code }) => response_code,
-            Some(frame) => panic!("unexpected packet, opcode: {}", frame.opcode() as u8),
-            None => panic!("received EOF"),
-        };
-
-        assert_eq!(response_code, ResponseCode::ConnectionAccepted);
     }
 }
