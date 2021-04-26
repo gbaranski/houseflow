@@ -1,21 +1,28 @@
 use bytes::BytesMut;
-use lighthouse_proto::{ClientID, Frame, FrameCodec, ResponseCode};
+use lazy_static::lazy_static;
+use lighthouse_proto::{ClientID, Frame, FrameCodec, ConnectionResponseCode};
 use lighthouse_server::{connection, tcp};
+use std::sync::Once;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_util::codec::{Decoder, Encoder};
 
-const SERVER_ADDR: &'static str = "127.0.0.1:23233";
+const SERVER_ADDR: &'static str = "127.0.0.1:9997";
 
-async fn start_server() -> connection::Store {
-    let store = connection::Store::new();
-    let cloned_store = store.clone();
-    tokio::spawn(async move {
-        tcp::run(SERVER_ADDR, cloned_store)
-            .await
-            .expect("failed running server");
-    });
-    store
+lazy_static! {
+    static ref STORE: connection::Store = connection::Store::new();
+}
+
+static INIT: Once = Once::new();
+
+fn setup() {
+    INIT.call_once(|| {
+        tokio::spawn(async move {
+            tcp::run(SERVER_ADDR, STORE.clone())
+                .await
+                .expect("failed running server");
+        });
+    })
 }
 
 async fn new_tcpstream() -> TcpStream {
@@ -54,7 +61,7 @@ async fn send_connect_frame(stream: &mut TcpStream, client_id: ClientID) -> Fram
 
 #[tokio::test]
 async fn test_connect() {
-    let store = start_server().await;
+    setup();
     let mut stream = new_tcpstream().await;
     let client_id = rand::random();
     let response_frame = send_connect_frame(&mut stream, client_id).await;
@@ -67,6 +74,25 @@ async fn test_connect() {
         ),
     };
 
-    assert_eq!(response_code, ResponseCode::ConnectionAccepted);
-    assert_eq!(store.exists(&client_id).await, true);
+    assert_eq!(response_code, ConnectionResponseCode::ConnectionAccepted);
+    assert_eq!(STORE.exists(&client_id).await, true);
+}
+
+#[tokio::test]
+async fn test_publish() {
+    setup();
+    let mut stream = new_tcpstream().await;
+    let client_id = rand::random();
+    let response_frame = send_connect_frame(&mut stream, client_id).await;
+
+    let response_code = match response_frame {
+        Frame::ConnACK { response_code } => response_code,
+        _ => panic!(
+            "unexpected frame opcode response: {:?}",
+            response_frame.opcode()
+        ),
+    };
+
+    assert_eq!(response_code, ConnectionResponseCode::ConnectionAccepted);
+    assert_eq!(STORE.exists(&client_id).await, true);
 }
