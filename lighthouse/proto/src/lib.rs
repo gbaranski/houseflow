@@ -1,11 +1,12 @@
 use std::convert::{TryFrom, TryInto};
+use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 mod codec;
 mod frame;
 pub use codec::{Error as FrameCodecError, FrameCodec};
 
-pub use frame::{Frame, ResponseCode};
+pub use frame::{ConnectionResponseCode, Frame, ExecuteCommand, ExecuteResponseCode, ExecuteResponseError};
 
 pub const CLIENT_ID_SIZE: usize = 16;
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -22,9 +23,21 @@ pub enum Error {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
 #[repr(u8)]
 pub enum Opcode {
+    NoOperation = 0x00,
     Connect = 0x01,
     ConnACK = 0x02,
+    Execute = 0x03,
+    ExecuteResponse = 0x04,
 }
+
+impl TryFrom<u8> for Opcode {
+    type Error = ();
+
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
+        Self::iter().find(|e| *e as u8 == v).ok_or(())
+    }
+}
+
 
 impl From<[u8; 16]> for ClientID {
     fn from(item: [u8; 16]) -> Self {
