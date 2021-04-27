@@ -1,6 +1,6 @@
 use bytes::BytesMut;
 use lazy_static::lazy_static;
-use lighthouse_proto::{ClientID, Frame, FrameCodec, ConnectionResponseCode};
+use lighthouse_proto::{ClientID, Frame, FrameCodec, ConnectResponseCode};
 use lighthouse_server::{connection, tcp};
 use std::sync::Once;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -74,7 +74,7 @@ async fn test_connect() {
         ),
     };
 
-    assert_eq!(response_code, ConnectionResponseCode::ConnectionAccepted);
+    assert_eq!(response_code, ConnectResponseCode::ConnectionAccepted);
     assert_eq!(STORE.exists(&client_id).await, true);
 }
 
@@ -93,6 +93,6 @@ async fn test_publish() {
         ),
     };
 
-    assert_eq!(response_code, ConnectionResponseCode::ConnectionAccepted);
+    assert_eq!(response_code, ConnectResponseCode::ConnectionAccepted);
     assert_eq!(STORE.exists(&client_id).await, true);
 }
