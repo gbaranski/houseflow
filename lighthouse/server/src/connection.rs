@@ -1,5 +1,5 @@
 use bytes::BytesMut;
-use lighthouse_proto::{ClientID, Frame, FrameCodec, FrameCodecError, Opcode, ResponseCode};
+use lighthouse_proto::{ClientID, Frame, FrameCodec, FrameCodecError, Opcode, ConnectResponseCode};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
@@ -166,7 +166,7 @@ pub async fn run(
         None => return Ok(()),
     };
     let connack_frame = Frame::ConnACK {
-        response_code: ResponseCode::ConnectionAccepted,
+        response_code: ConnectResponseCode::ConnectionAccepted,
     };
     frame_codec
         .encode(connack_frame, &mut buf)

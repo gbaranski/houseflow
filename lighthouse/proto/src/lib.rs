@@ -6,7 +6,7 @@ mod codec;
 mod frame;
 pub use codec::{Error as FrameCodecError, FrameCodec};
 
-pub use frame::{ConnectionResponseCode, Frame, ExecuteCommand, ExecuteResponseCode, ExecuteResponseError};
+pub use frame::{ConnectResponseCode, Frame, ExecuteCommand, ExecuteResponseCode, ExecuteResponseError};
 
 pub const CLIENT_ID_SIZE: usize = 16;
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

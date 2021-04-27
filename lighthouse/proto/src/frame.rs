@@ -5,18 +5,18 @@ use strum_macros::EnumIter;
 
 #[derive(Debug, EnumIter, PartialEq, Eq, Clone, Copy)]
 #[repr(u8)]
-pub enum ConnectionResponseCode {
+pub enum ConnectResponseCode {
     ConnectionAccepted = 0x00,
     Unauthorized = 0x01,
 }
 
-impl Default for ConnectionResponseCode {
+impl Default for ConnectResponseCode {
     fn default() -> Self {
         Self::ConnectionAccepted
     }
 }
 
-impl TryFrom<u8> for ConnectionResponseCode {
+impl TryFrom<u8> for ConnectResponseCode {
     type Error = ();
 
     fn try_from(item: u8) -> Result<Self, Self::Error> {
@@ -24,10 +24,10 @@ impl TryFrom<u8> for ConnectionResponseCode {
     }
 }
 
-impl rand::distributions::Distribution<ConnectionResponseCode> for rand::distributions::Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> ConnectionResponseCode {
-        ConnectionResponseCode::iter()
-            .nth(rng.gen_range(0..ConnectionResponseCode::iter().len()))
+impl rand::distributions::Distribution<ConnectResponseCode> for rand::distributions::Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> ConnectResponseCode {
+        ConnectResponseCode::iter()
+            .nth(rng.gen_range(0..ConnectResponseCode::iter().len()))
             .unwrap()
     }
 }
@@ -155,7 +155,7 @@ pub enum Frame {
     ///
     /// Opcode: 0x02
     ConnACK {
-        response_code: ConnectionResponseCode,
+        response_code: ConnectResponseCode,
     },
 
     /// Packet which will be send to execute some action on client side

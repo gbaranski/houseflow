@@ -24,6 +24,10 @@ async fn accept_loop(listener: TcpListener, peers: connection::Store) -> Result<
         let peers = peers.clone();
         log::debug!("Accepted");
         log::info!("Accepted");
-        tokio::spawn(async move { connection::run(stream.into_split(), address, peers).await });
+        tokio::spawn(async move {
+            connection::run(stream.into_split(), address, peers)
+                .await
+                .expect("Connection failed"); // TODO: Change that
+        });
     }
 }
