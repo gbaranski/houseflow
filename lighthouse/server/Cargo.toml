@@ -15,6 +15,7 @@ log = "0.4"
 warp = "0.3"
 bytes = "1.0"
 serde = "1.0"
+serde_json = "1.0"
 
 
 [dev-dependencies]

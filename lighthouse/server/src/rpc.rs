@@ -1,7 +1,6 @@
-use warp::Filter;
-use std::convert::TryInto;
-use lighthouse_proto::ClientID;
 use crate::connection;
+use std::convert::TryInto;
+use warp::Filter;
 
 pub async fn run(connection_store: connection::Store) {
     let store_filter = warp::any().map(move || connection_store.clone());
@@ -18,7 +17,7 @@ pub async fn run(connection_store: connection::Store) {
 
 async fn on_execute(
     client_id: String,
-    connection_store: connection::Store
+    connection_store: connection::Store,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     let client_id = client_id.try_into().expect("invalid  id");
     let conn_request = connection::Request::new(Vec::from("hello world"));

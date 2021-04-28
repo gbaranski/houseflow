@@ -1,12 +1,6 @@
-use crate::{frame::Frame, Opcode};
-use crate::{ExecuteCommand, ExecuteResponseCode, ExecuteResponseError};
+use crate::frame::{self, Frame, Opcode};
 use bytes::{Buf, BufMut, BytesMut};
-use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    convert::{TryFrom, TryInto},
-};
-use strum::IntoEnumIterator;
+use std::convert::{TryFrom, TryInto};
 use tokio_util::codec::{Decoder, Encoder};
 
 /// Max size of JSON-encoded field in frame
@@ -82,23 +76,27 @@ impl Decoder for FrameCodec {
                 let mut client_id = [0; 16];
                 src.copy_to_slice(&mut client_id[..]);
 
-                Frame::Connect {
+                let frame = frame::connect::Frame {
                     client_id: client_id.into(),
-                }
+                };
+
+                Frame::Connect(frame)
             }
             Opcode::ConnACK => {
                 let response_code = src.get_u8();
 
-                Frame::ConnACK {
+                let frame = frame::connack::Frame {
                     response_code: response_code.try_into().map_err(|_| {
-                        Error::InvalidField("ConnACK.ResponseCode", Box::new(response_code))
+                        Error::InvalidField("ConnACK.Response", Box::new(response_code))
                     })?,
-                }
+                };
+
+                Frame::ConnACK(frame)
             }
             Opcode::Execute => {
                 let id = src.get_u32();
                 let command = src.get_u16();
-                let command = ExecuteCommand::try_from(command)
+                let command = frame::execute::Command::try_from(command)
                     .map_err(|_| Error::InvalidField("Execute.Command", Box::new(command)))?;
                 let params_len = src
                     .iter()
@@ -111,21 +109,24 @@ impl Decoder for FrameCodec {
                 let params = serde_json::from_slice(&params_bytes)
                     .map_err(|err| Error::InvalidField("Execute.Params", Box::new(err)))?;
 
-                Frame::Execute {
+                let frame = frame::execute::Frame {
                     id,
                     command,
                     params,
-                }
+                };
+
+                Frame::Execute(frame)
             }
             Opcode::ExecuteResponse => {
                 let id = src.get_u32();
                 let response_code = src.get_u8();
-                let response_code = ExecuteResponseCode::try_from(response_code).map_err(|_| {
-                    Error::InvalidField("ExecuteResponse.ResponseCode", Box::new(response_code))
-                })?;
+                let response_code = frame::execute_response::ResponseCode::try_from(response_code)
+                    .map_err(|_| {
+                        Error::InvalidField("ExecuteResponse.ResponseCode", Box::new(response_code))
+                    })?;
 
                 let error = src.get_u16();
-                let error = ExecuteResponseError::try_from(error)
+                let error = frame::execute_response::Error::try_from(error)
                     .map_err(|_| Error::InvalidField("ExecuteResponse.Error", Box::new(error)))?;
                 let state_len = src
                     .iter()
@@ -137,12 +138,14 @@ impl Decoder for FrameCodec {
                 let state_bytes = src.copy_to_bytes(state_len);
                 let state = serde_json::from_slice(&state_bytes).unwrap();
 
-                Frame::ExecuteResponse {
+                let frame = frame::execute_response::Frame {
                     id,
                     response_code,
                     state,
                     error,
-                }
+                };
+
+                Frame::ExecuteResponse(frame)
             }
         };
 
@@ -154,43 +157,34 @@ impl Encoder<Frame> for FrameCodec {
     type Error = Error;
 
     fn encode(&mut self, item: Frame, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let opcode = item.opcode();
+        dst.put_u8(opcode as u8);
+
         match item {
             Frame::NoOperation => {
                 let opcode = Frame::NoOperation.opcode();
                 return Err(Error::InvalidField("opcode", Box::new(opcode)));
             }
-            Frame::Connect { client_id } => {
-                let client_id: [u8; 16] = client_id.into();
-                dst.put_u8(Opcode::Connect as u8);
+            Frame::Connect(frame) => {
+                let client_id: [u8; 16] = frame.client_id.into();
                 dst.put_slice(&client_id[..]);
             }
-            Frame::ConnACK { response_code } => {
-                dst.put_u8(Opcode::ConnACK as u8);
-                dst.put_u8(response_code as u8);
+            Frame::ConnACK(frame) => {
+                dst.put_u8(frame.response_code as u8);
             }
-            Frame::Execute {
-                id,
-                command,
-                params,
-            } => {
-                dst.put_u8(Opcode::Execute as u8);
-                dst.put_u32(id);
-                dst.put_u16(command as u16);
-                let params = serde_json::to_vec(&params).unwrap();
+            Frame::Execute(frame) => {
+                dst.put_u32(frame.id);
+                dst.put_u16(frame.command as u16);
+                let params = serde_json::to_vec(&frame.params).unwrap();
                 dst.put_slice(&params);
                 dst.put_u8(b'\0');
             }
-            Frame::ExecuteResponse {
-                id,
-                response_code,
-                error,
-                state,
-            } => {
+            Frame::ExecuteResponse(frame) => {
                 dst.put_u8(Opcode::ExecuteResponse as u8);
-                dst.put_u32(id);
-                dst.put_u8(response_code as u8);
-                dst.put_u16(error as u16);
-                let state = serde_json::to_vec(&state).unwrap();
+                dst.put_u32(frame.id);
+                dst.put_u8(frame.response_code as u8);
+                dst.put_u16(frame.error as u16);
+                let state = serde_json::to_vec(&frame.state).unwrap();
                 dst.put_slice(&state);
                 dst.put_u8(b'\0');
             }
@@ -217,18 +211,18 @@ mod tests {
 
     #[test]
     fn test_connect_codec() {
-        let frame = Frame::Connect {
+        let frame = frame::connect::Frame {
             client_id: random(),
         };
-        test_frame_codec(frame)
+        test_frame_codec(Frame::Connect(frame))
     }
 
     #[test]
     fn test_connack_codec() {
-        let frame = Frame::ConnACK {
+        let frame = frame::connack::Frame {
             response_code: random(),
         };
-        test_frame_codec(frame)
+        test_frame_codec(Frame::ConnACK(frame))
     }
 
     #[test]
@@ -240,12 +234,12 @@ mod tests {
                 "openPercent": 20
             }
             "#;
-        let frame = Frame::Execute {
+        let frame = frame::execute::Frame {
             id: random(),
             command: random(),
             params: serde_json::from_str(params).unwrap(),
         };
-        test_frame_codec(frame)
+        test_frame_codec(Frame::Execute(frame))
     }
 
     #[test]
@@ -257,12 +251,12 @@ mod tests {
                 "openPercent": 20
             }
             "#;
-        let frame = Frame::ExecuteResponse {
+        let frame = frame::execute_response::Frame {
             id: random(),
             response_code: random(),
             error: random(),
             state: serde_json::from_str(state).unwrap(),
         };
-        test_frame_codec(frame)
+        test_frame_codec(Frame::ExecuteResponse(frame))
     }
 }

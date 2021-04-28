@@ -1,5 +1,8 @@
 use bytes::BytesMut;
-use lighthouse_proto::{ClientID, Frame, FrameCodec, FrameCodecError, Opcode, ConnectResponseCode};
+use lighthouse_proto::{
+    frame::{self, ClientID, Frame, Opcode},
+    FrameCodec, FrameCodecError,
+};
 use std::{collections::HashMap, net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
@@ -48,7 +51,7 @@ impl From<std::io::Error> for ServerError {
 /// Response sent from the Client to Server
 #[derive(Debug, Clone)]
 pub struct Response {
-    data: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 impl std::fmt::Display for Response {
@@ -154,10 +157,10 @@ pub async fn run(
     let (mut stream_receiver, mut stream_sender) = stream;
     let n = stream_receiver.read_buf(&mut buf).await?;
     if n == 0 {
-        return Err(ServerError::ConnectionResetByPeer)
-    }
+        return Err(ServerError::ConnectionResetByPeer); }
+
     let client_id = match frame_codec.decode(&mut buf)? {
-        Some(Frame::Connect { client_id }) => client_id,
+        Some(Frame::Connect(frame)) => frame.client_id,
 
         // First frame should be Connect
         Some(v) => return Err(ServerError::UnexpectedFrame(v.opcode())),
@@ -165,11 +168,11 @@ pub async fn run(
         // Connection closed by peer
         None => return Ok(()),
     };
-    let connack_frame = Frame::ConnACK {
-        response_code: ConnectResponseCode::ConnectionAccepted,
+    let connack_frame = frame::connack::Frame {
+        response_code: frame::connack::ResponseCode::Accepted,
     };
     frame_codec
-        .encode(connack_frame, &mut buf)
+        .encode(Frame::ConnACK(connack_frame), &mut buf)
         .expect("failed encoding ConnACK Frame");
     stream_sender
         .write_buf(&mut buf)
