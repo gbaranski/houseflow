@@ -1,7 +1,11 @@
 use bytes::BytesMut;
 use lazy_static::lazy_static;
-use lighthouse_proto::{ClientID, Frame, FrameCodec, ConnectResponseCode};
+use lighthouse_proto::{
+    frame::{self, ClientID, Frame},
+    FrameCodec,
+};
 use lighthouse_server::{connection, tcp};
+use rand::random;
 use std::sync::Once;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -37,9 +41,9 @@ async fn new_tcpstream() -> TcpStream {
 async fn send_connect_frame(stream: &mut TcpStream, client_id: ClientID) -> Frame {
     let mut buf = BytesMut::with_capacity(4096);
     let mut codec = FrameCodec::new();
-    let frame = Frame::Connect { client_id };
+    let frame = frame::connect::Frame { client_id };
     codec
-        .encode(frame, &mut buf)
+        .encode(Frame::Connect(frame), &mut buf)
         .expect("failed encoding frame");
     stream
         .write_buf(&mut buf)
@@ -63,36 +67,71 @@ async fn send_connect_frame(stream: &mut TcpStream, client_id: ClientID) -> Fram
 async fn test_connect() {
     setup();
     let mut stream = new_tcpstream().await;
-    let client_id = rand::random();
+    let client_id = random();
     let response_frame = send_connect_frame(&mut stream, client_id).await;
 
     let response_code = match response_frame {
-        Frame::ConnACK { response_code } => response_code,
+        Frame::ConnACK(frame) => frame.response_code,
         _ => panic!(
             "unexpected frame opcode response: {:?}",
             response_frame.opcode()
         ),
     };
 
-    assert_eq!(response_code, ConnectResponseCode::ConnectionAccepted);
+    assert_eq!(response_code, frame::connack::ResponseCode::Accepted);
     assert_eq!(STORE.exists(&client_id).await, true);
 }
 
 #[tokio::test]
 async fn test_publish() {
     setup();
+    let mut codec = FrameCodec::new();
     let mut stream = new_tcpstream().await;
-    let client_id = rand::random();
+    let client_id = random();
     let response_frame = send_connect_frame(&mut stream, client_id).await;
 
     let response_code = match response_frame {
-        Frame::ConnACK { response_code } => response_code,
+        Frame::ConnACK(frame) => frame.response_code,
         _ => panic!(
             "unexpected frame opcode response: {:?}",
             response_frame.opcode()
         ),
     };
 
-    assert_eq!(response_code, ConnectResponseCode::ConnectionAccepted);
+    assert_eq!(response_code, frame::connack::ResponseCode::Accepted);
     assert_eq!(STORE.exists(&client_id).await, true);
+
+    let mut buf = BytesMut::with_capacity(4096);
+    let params = r#"
+    {
+        "on": true,
+        "online": true,
+        "openPercent": 20
+    }
+    "#;
+    let execute_frame = frame::execute::Frame {
+        id: random(),
+        command: random(),
+        params: serde_json::from_str(&params).unwrap(),
+    };
+    FrameCodec::new()
+        .encode(Frame::Execute(execute_frame), &mut buf)
+        .expect("Fail encoding execute_frame");
+
+    // TODO: Test sending execute frame
+    
+    // let resp = STORE
+    //     .send_request(&client_id, connection::Request::new(buf.to_vec()))
+    //     .await
+    //     .expect("failed sending request");
+    // let mut buf = BytesMut::from(resp.data.as_slice());
+
+    // let execute_response_frame = match codec
+    //     .decode(&mut buf)
+    //     .expect("Failed decoding execute response")
+    //     .expect("Received None")
+    // {
+    //     Frame::ExecuteResponse { dsad } => v,
+    //     _ => panic!("Unexpected frame received"),
+    // };
 }
