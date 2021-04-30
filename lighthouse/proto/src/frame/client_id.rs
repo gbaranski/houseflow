@@ -6,6 +6,8 @@ pub struct ClientID {
     inner: [u8; CLIENT_ID_SIZE],
 }
 
+
+
 impl From<[u8; 16]> for ClientID {
     fn from(item: [u8; 16]) -> Self {
         Self { inner: item }
@@ -35,6 +37,20 @@ impl TryFrom<String> for ClientID {
 
     fn try_from(v: String) -> Result<Self, Self::Error> {
         let bytes = hex::decode(v)?;
+        Ok(Self {
+            inner: bytes.try_into().map_err(|_| {
+                std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid size")
+            })?,
+        })
+    }
+}
+
+impl<'a> TryFrom<&'a str> for ClientID {
+    type Error = Box<dyn std::error::Error>;
+
+    fn try_from(v: &'a str) -> Result<Self, Self::Error> {
+        let bytes = hex::decode(v)?;
+
         Ok(Self {
             inner: bytes.try_into().map_err(|_| {
                 std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid size")
