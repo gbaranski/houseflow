@@ -180,7 +180,6 @@ impl Encoder<Frame> for FrameCodec {
                 dst.put_u8(b'\0');
             }
             Frame::ExecuteResponse(frame) => {
-                dst.put_u8(Opcode::ExecuteResponse as u8);
                 dst.put_u32(frame.id);
                 dst.put_u8(frame.response_code as u8);
                 dst.put_u16(frame.error as u16);
