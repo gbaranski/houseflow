@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 houseflow_db = { path = "../db" }
 houseflow_token = { path = "../token" }
-houseflow_lighthouse = { path = "../lighthouse" }
+# houseflow_lighthouse = { path = "../lighthouse" }
 memcache = "0.15.0"
 serde = "1"
 serde_json = "1"

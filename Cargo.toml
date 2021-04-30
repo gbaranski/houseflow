@@ -1,8 +1,8 @@
 [workspace]
 members = [
   # "db",
-  # "fulfillment",
   #  "token",
+  "fulfillment",
   "devices/virtual",
   "lighthouse/proto",
   "lighthouse/server"
