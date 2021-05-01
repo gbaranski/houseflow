@@ -44,6 +44,7 @@ impl From<std::io::Error> for Error {
     }
 }
 
+#[derive(Clone)]
 pub struct FrameCodec {}
 
 impl FrameCodec {
