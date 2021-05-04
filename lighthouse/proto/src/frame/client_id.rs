@@ -1,12 +1,15 @@
-use std::convert::{TryFrom, TryInto};
+use serde::{Deserialize, Serialize};
+use std::{
+    convert::{TryFrom, TryInto},
+    str::FromStr,
+};
 
 pub const CLIENT_ID_SIZE: usize = 16;
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ClientID {
     inner: [u8; CLIENT_ID_SIZE],
 }
-
-
 
 impl From<[u8; 16]> for ClientID {
     fn from(item: [u8; 16]) -> Self {
@@ -59,15 +62,29 @@ impl<'a> TryFrom<&'a str> for ClientID {
     }
 }
 
+impl FromStr for ClientID {
+    type Err = Box<dyn std::error::Error>;
+
+    fn from_str(v: &str) -> Result<Self, Self::Err> {
+        let bytes = hex::decode(v)?;
+
+        Ok(Self {
+            inner: bytes.try_into().map_err(|_| {
+                std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid size")
+            })?,
+        })
+    }
+}
+
 impl std::fmt::Display for ClientID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", hex::encode(self.inner))
     }
 }
 
 impl std::fmt::Debug for ClientID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "ClientID: `{}`", self.to_string())
+        write!(f, "ClientID: `{}`", hex::encode(self.inner))
     }
 }
 

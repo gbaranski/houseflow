@@ -1,15 +1,26 @@
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Default)]
 pub struct Frame {
     pub id: u32,
     pub command: Command,
     pub params: serde_json::Value,
 }
 
-#[derive(Debug, EnumIter, PartialEq, Eq, Clone, Copy)]
+impl Frame {
+    pub fn new(command: Command, params: serde_json::Value) -> Self {
+        Self {
+            id: rand::random(),
+            command,
+            params,
+        }
+    }
+}
+
+#[derive(Debug, EnumIter, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 #[repr(u16)]
 pub enum Command {
     NoOperation = 0x0000,

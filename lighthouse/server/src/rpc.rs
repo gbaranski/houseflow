@@ -1,16 +1,25 @@
 use crate::connection;
-use std::convert::TryInto;
-use std::net::SocketAddr;
+use lighthouse_proto::frame::{self, ClientID};
+use std::net::ToSocketAddrs;
 use warp::Filter;
 
-pub async fn run(addr: SocketAddr, connection_store: connection::Store) {
-    log::info!("Starting RPC server at address: {}", addr);
+const CONTENT_LENGTH_MAX: usize = 4096;
+
+pub async fn run(addr: impl ToSocketAddrs, connection_store: connection::Store) {
+    let addr = addr
+        .to_socket_addrs()
+        .expect("RPC has invalid address")
+        .nth(0)
+        .unwrap();
+
+    log::info!("Starting RPC server at address: {:?}", addr);
     let store_filter = warp::any().map(move || connection_store.clone());
 
     let execute_path = warp::post()
         .and(warp::path("execute"))
-        .and(warp::path::param::<String>())
-        .and(warp::path::end())
+        .and(warp::path::param::<ClientID>())
+        .and(warp::body::content_length_limit(CONTENT_LENGTH_MAX as u64))
+        .and(warp::body::json())
         .and(store_filter.clone())
         .and_then(on_execute);
 
@@ -18,16 +27,16 @@ pub async fn run(addr: SocketAddr, connection_store: connection::Store) {
 }
 
 async fn on_execute(
-    client_id: String,
-    connection_store: connection::Store,
+    _client_id: ClientID,
+    _frame: frame::execute::Frame,
+    _connection_store: connection::Store,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let client_id = client_id.try_into().expect("invalid  id");
-    let conn_request = connection::Request::Execute(Vec::from("hello world"));
-    let conn_resp = connection_store
-        .send_request(&client_id, conn_request)
-        .await
-        .expect("failed sending request");
-
-    log::debug!("Received response: {}", conn_resp);
+    // TODO :impl that
+//     let conn_resp = connection_store
+//         .send_request(&client_id, Frame::Execute(frame))
+//         .await
+//         .expect("failed sending request");
+// 
+//     log::debug!("Received response: {:?}", conn_resp);
     Ok(warp::reply::json(&"dshsdahads".to_string()))
 }

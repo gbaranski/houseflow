@@ -1,4 +1,5 @@
-use tokio::net::{TcpListener, ToSocketAddrs};
+use std::net::ToSocketAddrs;
+use tokio::net::TcpListener;
 
 use super::connection;
 
@@ -14,6 +15,12 @@ impl From<std::io::Error> for Error {
 }
 
 pub async fn run(addr: impl ToSocketAddrs, store: connection::Store) -> Result<(), Error> {
+    let addr = addr
+        .to_socket_addrs()
+        .expect("Invalid TCP address")
+        .nth(0)
+        .unwrap();
+    log::info!("Starting TCP server at address: {}", addr);
     let listener = TcpListener::bind(addr).await?;
     accept_loop(listener, store).await
 }
@@ -22,8 +29,6 @@ async fn accept_loop(listener: TcpListener, peers: connection::Store) -> Result<
     loop {
         let (stream, address) = listener.accept().await?;
         let peers = peers.clone();
-        log::debug!("Accepted");
-        log::info!("Accepted");
         tokio::spawn(async move {
             connection::run(stream.into_split(), address, peers)
                 .await
