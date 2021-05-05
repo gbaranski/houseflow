@@ -3,8 +3,10 @@
 #include <ESP8266WiFiMulti.h>
 #include <WebSocketsClient.h>
 #include <Hash.h>
-#include "lighthouse.h"
-#include "config.h"
+#include "lighthouse.hpp"
+#include "config.hpp"
+
+static Lighthouse lighthouse;
 
 void setupWifi() 
 {
@@ -20,7 +22,7 @@ void setupWifi()
 
 void setupSerial()
 {
-  Serial.begin(115200);
+  Serial.begin(SERIAL_BAUD);
   Serial.println("Starting serial");
 }
 
@@ -28,10 +30,10 @@ void setup()
 {
   setupSerial();
   setupWifi();
+  lighthouse.setup_websocket_client();
 }
 
 void loop() 
 {
-  static Lighthouse lighthouse;
   lighthouse.loop();
 }

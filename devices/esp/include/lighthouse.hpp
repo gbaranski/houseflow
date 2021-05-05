@@ -6,13 +6,13 @@
 
 class Lighthouse {
   public:
-    void loop();
     Lighthouse();
+    void loop();
     void setup_websocket_client();
 
   private:
     void onEvent(WStype_t type, uint8_t *payload, size_t length);
-    WebSocketsClient ws_client;
+    WebSocketsClient websocketClient;
 };
 
 #endif

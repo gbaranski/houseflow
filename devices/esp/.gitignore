@@ -2,4 +2,4 @@
 .ccls-cache
 .cache
 .pio
-include/config.h
+include/config.hpp
