@@ -10,7 +10,7 @@ void setupWifi()
 {
   ESP8266WiFiMulti WiFiMulti;
 
-  WiFiMulti.addAP(WIFI_SSID, WIFI_PASS);
+  WiFiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
   Serial.printf("Starting WiFi with SSID: %s\n", WIFI_SSID);
   while (WiFiMulti.run() != WL_CONNECTED) {
     Serial.println("Waiting for WiFi to connect");
