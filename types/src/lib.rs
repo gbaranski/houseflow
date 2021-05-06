@@ -145,3 +145,30 @@ impl<const N: usize> rand::distributions::Distribution<Credential<N>>
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bytes::BytesMut;
+    const SIZE: usize = 32;
+
+    #[test]
+    fn test_buffer_parse() {
+        let mut buf = BytesMut::with_capacity(SIZE);
+        let credential: Credential<SIZE> = rand::random();
+        credential.to_buf(&mut buf);
+        let parsed_credential = Credential::<SIZE>::from_buf(&mut buf)
+            .expect("reading Credential from buffer returned Error");
+        assert_eq!(credential, parsed_credential);
+    }
+
+    #[test]
+    fn test_buffer_parse_underflow() {
+        let mut buf = BytesMut::with_capacity(SIZE);
+        let credential: Credential<SIZE> = rand::random();
+        credential.to_buf(&mut buf);
+        buf = buf[0..SIZE - 1].into(); // Malform some last bytes of Buf
+        Credential::<SIZE>::from_buf(&mut buf)
+            .expect_err("reading malformed Credential from buffer did not return Error");
+    }
+}
