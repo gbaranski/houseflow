@@ -11,10 +11,6 @@ mod session;
 mod store;
 
 fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePassword), String> {
-    const VALUE_OFFSET: usize = "Basic ".len();
-    const VALUE_SIZE: usize =
-        VALUE_OFFSET + format!("{}:{}", DeviceID::default(), DevicePassword::default()).len();
-
     let header = req
         .headers()
         .get(http::header::AUTHORIZATION)
@@ -22,16 +18,27 @@ fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePass
         .to_str()
         .map_err(|err| format!("Invalid string `Authorization` header, error: `{}`", err))?;
 
-    if header.len() != VALUE_SIZE {
-        Err(String::from("`Authorization` header invalid size"))
-    } else {
-        let id: String = header.chars().take(DeviceID::SIZE).collect();
-        let password: String = header.chars().take(DevicePassword::SIZE).collect();
-        Ok((
-            DeviceID::try_from(id).map_err(|err| err.to_string())?,
-            DevicePassword::try_from(password).map_err(|err| err.to_string())?,
-        ))
+    let mut iter = header.split_whitespace();
+    let auth_type = iter
+        .next()
+        .ok_or("Missing auth type in `Authorization` header")?;
+    if auth_type != "Basic" {
+        return Err(format!("Invalid auth type: {}", auth_type));
     }
+    let credentials = iter
+        .next()
+        .ok_or("Missing credentials in `Authorization` header")?;
+
+    let (device_id, device_password) = credentials
+        .split_terminator(":")
+        .take(2)
+        .next_tuple()
+        .ok_or("Missing ID/Password in `Authorization` header")?;
+
+    Ok((
+        DeviceID::from_str(device_id).map_err(|err| err.to_string())?,
+        DevicePassword::from_str(device_password).map_err(|err| err.to_string())?,
+    ))
 }
 
 #[get("/")]
