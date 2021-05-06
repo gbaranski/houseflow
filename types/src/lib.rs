@@ -1,8 +1,8 @@
+use bytes::{Buf, BufMut};
 use std::{
     convert::{TryFrom, TryInto},
     str::FromStr,
 };
-use bytes::Buf;
 use thiserror::Error;
 
 pub type UserID = Credential<32>;
@@ -25,12 +25,21 @@ impl<const N: usize> Credential<N> {
         Self::from(bytes)
     }
 
-    pub fn from_buf(buf: &mut impl Buf) -> Self {
+    pub fn to_buf(&self, buf: &mut impl BufMut) {
+        buf.put_slice(&self.inner);
+    }
+
+    pub fn from_buf(buf: &mut impl Buf) -> Result<Self, CredentialError> {
+        if buf.remaining() < N {
+            return Err(CredentialError::InvalidSize {
+                expected: N,
+                received: buf.remaining(),
+            });
+        }
+
         let mut inner = [0; N];
         buf.copy_to_slice(&mut inner);
-        Self {
-            inner,
-        }
+        Ok(Self { inner })
     }
 }
 
