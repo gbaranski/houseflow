@@ -1,45 +1,30 @@
-#[derive(Debug)]
+use thiserror::Error;
+
+#[derive(Debug, Error)]
 pub enum Error {
-    InvalidBase64Encoding(base64::DecodeError),
+    #[error("Invalid Base64 encoding: {0} ")]
+    InvalidBase64Encoding(#[from] base64::DecodeError),
+
+    #[error("Invalid token size: {0}")]
     InvalidSize(usize),
+
+    #[error("Invalid token signature")]
     InvalidSignature,
-    InvalidAudienceUUID,
-    Expired{
-        expired_by: u64,
-    },
-}
 
+    #[error("Malformed payload {0:?}")]
+    MalformedPayload(Option<Box<dyn std::error::Error>>),
 
-impl From<base64::DecodeError> for Error {
-    fn from(err: base64::DecodeError) -> Self {
-        Self::InvalidBase64Encoding(err)
-    }
-
-}
-
-use std::fmt;
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        
-        let msg = match self {
-            Error::Expired{expired_by} => format!("token has expired by `{} seconds`", expired_by),
-            Error::InvalidSignature => format!("token has invalid signature"),
-            Error::InvalidAudienceUUID => format!("token has UUID in audience field"),
-            Error::InvalidBase64Encoding(err) => format!("token has invalid encoding: `{}`", err),
-            Error::InvalidSize(size) => format!("token has invalid size: `{}`", size),
-        };
-        write!(f, "{}", msg)
-    }
+    #[error("Token is expired by {expired_by}s")]
+    Expired { expired_by: u64 },
 }
 
 use hmac::Hmac;
 use sha2::Sha256;
 pub(crate) type HmacSha256 = Hmac<Sha256>;
 
-mod token;
 mod payload;
 mod signature;
+mod token;
 
 pub use payload::Payload;
 pub use signature::Signature;
@@ -49,75 +34,72 @@ pub trait SizedFrame {
     const SIZE: usize;
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::time::SystemTime;
     use super::*;
+    use bytes::{Buf, BufMut, BytesMut};
+    use rand::random;
+    use std::time::{Duration, SystemTime};
 
     const KEY: &[u8] = b"some hmac key";
-    const AUDIENCE: [u8; 36] = *b"00000000-0000-0000-0000-000000000000";
-
-    fn get_ts() -> u64 {
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-    }
 
     #[test]
     fn sign_verify() {
         let payload = Payload {
-            audience: AUDIENCE,
-            expires_at: get_ts() + 1000,
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_add(Duration::from_secs(5))
+                .unwrap(),
         };
-        let signed_token = payload.sign(KEY);
-
-        let token = Token {
-            payload,
-            signature: signed_token.signature,
-        };
-        let verify = token.verify(KEY);
-
-        assert!(verify.is_ok(), "fail verifying token: {}", verify.unwrap_err());
+        let token = payload.sign(KEY);
+        token.verify(KEY).expect("failed token verification");
     }
 
     #[test]
     fn sign_verify_expired() {
         let payload = Payload {
-            audience: AUDIENCE,
-            expires_at: get_ts() - 1000,
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_sub(Duration::from_secs(5))
+                .unwrap(),
         };
-        let signed_token = payload.sign(KEY);
-        let token = Token {
-            payload,
-            signature: signed_token.signature,
-        };
-
-        let verify = token.verify(KEY);
-
-        assert!(verify.is_err(), "fail verifying token, expected to fail because expired");
+        let token = payload.sign(KEY);
+        token.verify(KEY).expect_err("failed token verification");
     }
 
+    #[test]
+    fn convert_invalid() {
+        let mut buf = BytesMut::with_capacity(Token::SIZE);
+        let payload = Payload {
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_add(Duration::from_secs(5))
+                .unwrap(),
+        };
+        let token = payload.sign(KEY);
+        token.to_buf(&mut buf);
+        buf = buf[0..Token::SIZE - 5].into(); // Malform the data on intention
+
+        Token::from_buf(&mut buf)
+            .expect_err("reading token from buffer succeded even if it should not succeed");
+    }
 
     #[test]
     fn to_from_bytes_conversion() {
+        let mut buf = BytesMut::with_capacity(Token::SIZE);
         let payload = Payload {
-            audience: AUDIENCE,
-            expires_at: get_ts(),
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_add(Duration::from_secs(5))
+                .unwrap(),
         };
-        let signed_token = payload.sign(KEY);
-        let token = Token {
-            payload,
-            signature: signed_token.signature,
-        };
+        let token = payload.clone().sign(KEY);
+        token.to_buf(&mut buf);
 
-        let token = Token::from_bytes(token.to_bytes());
-        let verify = token.verify(KEY);
-
-        assert!(verify.is_ok(), "fail verifying token after bytes conversions: {}", verify.unwrap_err());
+        let parsed_token = Token::from_buf(&mut buf).expect("failed reading token from buffer");
+        assert_eq!(parsed_token, token);
+        parsed_token
+            .verify(KEY)
+            .expect("Failed veryfing token after bytes conversion");
     }
-
-
 }
-
