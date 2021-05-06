@@ -1,10 +1,10 @@
-use actix::prelude::*;
-use actix_web::{get, http, web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web_actors::ws;
 
 use houseflow_types::{DeviceID, DevicePassword};
+use itertools::Itertools;
 use session::Session;
-use std::convert::TryFrom;
+use std::str::FromStr;
 
 mod channels;
 mod session;
@@ -41,62 +41,30 @@ fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePass
     ))
 }
 
-#[get("/")]
+#[get("/ws")]
 async fn on_websocket(req: HttpRequest, stream: web::Payload) -> impl Responder {
-    // let (type, credentials) = (.
     let address = req.peer_addr().unwrap();
     let (device_id, device_password) = match parse_authorization_header(&req) {
         Ok(v) => v,
         Err(err) => return Ok(HttpResponse::BadRequest().body(err)), // TODO: Consider changing Ok to Err
     };
+    log::debug!(
+        "DeviceID: {}, DevicePassword: {}",
+        device_id,
+        device_password
+    );
     let session = Session::new(device_id, address);
-    ws::start(session, &req, stream)
+    let response = ws::start(session, &req, stream);
+    log::debug!("Response: {:?}", response);
+    response
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
-    let connection_store = store::Store::new();
-    let server = HttpServer::new(move || App::new().service(on_websocket));
-    //     let store_filter = warp::any().map(move || connection_store.clone());
-    //
-    //     let address: SocketAddr = "127.0.0.1:8080".parse().unwrap();
-    //     let websocket_path = warp::ws()
-    //         .and(warp::path("websocket"))
-    //         .and(warp::addr::remote())
-    //         .and(store_filter)
-    //         .and(warp::header::<ClientID>("client_id"))
-    //         .map(
-    //             |ws: warp::ws::Ws,
-    //              address: Option<SocketAddr>,
-    //              store: store::Store,
-    //              client_id: ClientID| {
-    //                 ws.on_upgrade(move |ws: warp::ws::WebSocket| async move {
-    //                     let (request_receiver, request_sender) = channels::new_request_channel();
-    //                     let (response_receiver, response_sender) = channels::new_response_channel();
-    //                     store
-    //                         .add(client_id, (response_receiver, request_sender.clone()))
-    //                         .await;
-    //                     let session = Session::new(client_id);
-    //                     log::info!(
-    //                         "New client connected from {} as {}",
-    //                         address.unwrap(),
-    //                         client_id
-    //                     );
-    //                     match session
-    //                         .run(ws, request_receiver, request_sender, response_sender)
-    //                         .await
-    //                     {
-    //                         Ok(()) => log::info!("Client {} disconnected.", client_id),
-    //                         Err(err) => {
-    //                             log::error!("Client {} disconnected, error: {}", client_id, err)
-    //                         }
-    //                     }
-    //                     store.remove(&client_id).await;
-    //                 })
-    //             },
-    //         );
-    //
-    //     warp::serve(websocket_path).run(address).await;
-    Ok(())
+    // let connection_store = store::Store::new();
+    let addr = "127.0.0.1:8080";
+    let server = HttpServer::new(move || App::new().service(on_websocket)).bind(&addr)?;
+
+    server.run().await
 }

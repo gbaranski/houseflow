@@ -45,6 +45,7 @@ impl Handler<Request> for Session {
 
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+        log::debug!("Handling msg");
         let msg = match msg {
             Ok(msg) => msg,
             Err(err) => {
