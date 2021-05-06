@@ -10,8 +10,8 @@ pub enum Request {
 
 #[derive(Debug, Error)]
 pub enum RequestError {
-    #[error("Client is not connected")]
-    ClientNotConnected,
+    #[error("Device is not connected")]
+    DeviceNotConnected,
 
     #[error("Timeout when sending request")]
     Timeout,
