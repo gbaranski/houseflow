@@ -11,11 +11,16 @@ houseflow-types = { path = "../../types" }
 lighthouse-proto = { path = "../proto" }
 lighthouse-api = { path = "../api", default-features = false }
 
+# Update versions when this resolves https://github.com/actix/actix-web/issues/2195
 actix = "0.11.1"
-actix-web = "4.0.0-beta.6"
-actix-web-actors = { git = "https://github.com/actix/actix-web" }
+actix-web = "=4.0.0-beta.5" 
+actix-web-actors = "=4.0.0-beta.4"
+actix-service = "=2.0.0-beta.5"
 tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync" ] }
 
 thiserror = "1.0"
 env_logger = "0.8"
 log = "0.4"
+
+itertools = "0.10"
+
