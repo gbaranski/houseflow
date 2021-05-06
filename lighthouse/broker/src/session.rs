@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use actix::{Actor, Handler, StreamHandler};
 use actix_web_actors::ws;
-use houseflow_types::ClientID;
+use houseflow_types::DeviceID;
 use lighthouse_api::Request;
 use std::net::SocketAddr;
 use thiserror::Error;
@@ -13,33 +13,33 @@ pub enum SessionError {
 }
 
 pub struct Session {
-    client_id: ClientID,
+    device_id: DeviceID,
     address: SocketAddr,
 }
 
 impl Session {
-    pub fn new(client_id: ClientID, address: SocketAddr) -> Self {
-        Self { client_id, address }
+    pub fn new(device_id: DeviceID, address: SocketAddr) -> Self {
+        Self { device_id, address }
     }
 }
 
 impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
 
-    fn started(&mut self, ctx: &mut Self::Context) {
-        log::info!("New client connected from {} as {}.", self.address, self.client_id);
+    fn started(&mut self, _ctx: &mut Self::Context) {
+        log::info!("New device connected from {} as {}.", self.address, self.device_id);
     }
 
-    fn stopped(&mut self, ctx: &mut Self::Context) {
-        log::info!("Client {} disconnected.", self.client_id);
+    fn stopped(&mut self, _ctx: &mut Self::Context) {
+        log::info!("Device {} disconnected.", self.device_id);
     }
 }
 
 impl Handler<Request> for Session {
     type Result = ();
 
-    fn handle(&mut self, request: Request, ctx: &mut Self::Context) {
-        log::info!("Received request for {}", self.client_id);
+    fn handle(&mut self, _request: Request, _ctx: &mut Self::Context) {
+        log::info!("Received request for {}", self.device_id);
     }
 }
 

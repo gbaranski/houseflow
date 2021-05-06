@@ -1,5 +1,5 @@
 use super::channels::RequestResponseChannel;
-use houseflow_types::ClientID;
+use houseflow_types::DeviceID;
 use lighthouse_api::{Request, RequestError, Response};
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio::sync::RwLock;
@@ -7,10 +7,10 @@ use tokio::sync::RwLock;
 /// 5 seconds timeout for getting response for a request
 const REQUEST_TIMEOUT_MILLIS: u64 = 5000;
 
-/// Store holds thread safe RequestResponseChannels with corresponding ClientIDs
+/// Store holds thread safe RequestResponseChannels with corresponding DeviceIDs
 #[derive(Clone)]
 pub struct Store {
-    inner: Arc<RwLock<HashMap<ClientID, RequestResponseChannel>>>,
+    inner: Arc<RwLock<HashMap<DeviceID, RequestResponseChannel>>>,
 }
 
 impl Store {
@@ -22,30 +22,30 @@ impl Store {
     }
 
     /// Used to add new Connection to store
-    pub async fn add(&self, client_id: ClientID, channel: RequestResponseChannel) {
-        self.inner.write().await.insert(client_id, channel);
+    pub async fn add(&self, device_id: DeviceID, channel: RequestResponseChannel) {
+        self.inner.write().await.insert(device_id, channel);
     }
 
-    /// Used to remove ClientID from store
-    pub async fn remove(&self, client_id: &ClientID) {
-        self.inner.write().await.remove(client_id);
+    /// Used to remove DeviceID from store
+    pub async fn remove(&self, device_id: &DeviceID) {
+        self.inner.write().await.remove(device_id);
     }
 
-    /// Used to check if client with ID specified in argument exists
-    pub async fn exists(&self, client_id: &ClientID) -> bool {
-        self.inner.read().await.contains_key(client_id)
+    /// Used to check if device with ID specified in argument exists
+    pub async fn exists(&self, device_id: &DeviceID) -> bool {
+        self.inner.read().await.contains_key(device_id)
     }
 
-    /// Sends request over RequestSender channel to connection with specific ClientID
+    /// Sends request over RequestSender channel to connection with specific DeviceID
     pub async fn send_request(
         &self,
-        client_id: &ClientID,
+        device_id: &DeviceID,
         request: Request,
     ) -> Result<Response, RequestError> {
         let mut inner = self.inner.write().await;
         let (rx, tx) = inner
-            .get_mut(client_id)
-            .ok_or(RequestError::ClientNotConnected)?;
+            .get_mut(device_id)
+            .ok_or(RequestError::DeviceNotConnected)?;
 
         let timeout = Duration::from_millis(REQUEST_TIMEOUT_MILLIS);
 
