@@ -39,13 +39,14 @@ impl SizedFrame for Payload {
 impl Payload {
     pub fn from_buf(buf: &mut impl Buf) -> Result<Self, Error> {
         if buf.remaining() < Self::SIZE {
-            return Err(Error::InvalidSize(buf.remaining()))
+            return Err(Error::InvalidSize(buf.remaining()));
         }
 
         let expires_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(buf.get_u64()))
             .unwrap();
-        let user_id = UserID::from_buf(buf);
+        let user_id =
+            UserID::from_buf(buf).map_err(|err| Error::MalformedPayload(Some(err.into())))?;
         Ok(Self {
             expires_at,
             user_id,
