@@ -1,6 +1,6 @@
 use crate::frame::{self, Frame, Opcode};
 use bytes::{Buf, BufMut, BytesMut};
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use tokio_util::codec::{Decoder, Encoder};
 
 /// Max size of JSON-encoded field in frame
@@ -72,27 +72,6 @@ impl Decoder for FrameCodec {
         let frame = match opcode {
             Opcode::NoOperation => {
                 return Err(Error::InvalidField("opcode", Box::new(opcode)));
-            }
-            Opcode::Connect => {
-                let mut client_id = [0; 16];
-                src.copy_to_slice(&mut client_id[..]);
-
-                let frame = frame::connect::Frame {
-                    client_id: client_id.into(),
-                };
-
-                Frame::Connect(frame)
-            }
-            Opcode::ConnACK => {
-                let response_code = src.get_u8();
-
-                let frame = frame::connack::Frame {
-                    response_code: response_code.try_into().map_err(|_| {
-                        Error::InvalidField("ConnACK.Response", Box::new(response_code))
-                    })?,
-                };
-
-                Frame::ConnACK(frame)
             }
             Opcode::Execute => {
                 let id = src.get_u32();
@@ -166,13 +145,6 @@ impl Encoder<Frame> for FrameCodec {
                 let opcode = Frame::NoOperation.opcode();
                 return Err(Error::InvalidField("opcode", Box::new(opcode)));
             }
-            Frame::Connect(frame) => {
-                let client_id: [u8; 16] = frame.client_id.into();
-                dst.put_slice(&client_id[..]);
-            }
-            Frame::ConnACK(frame) => {
-                dst.put_u8(frame.response_code as u8);
-            }
             Frame::Execute(frame) => {
                 dst.put_u32(frame.id);
                 dst.put_u16(frame.command as u16);
@@ -207,22 +179,6 @@ mod tests {
         let decoded_frame = codec.decode(&mut bytes).unwrap().unwrap();
 
         assert_eq!(frame, decoded_frame);
-    }
-
-    #[test]
-    fn test_connect_codec() {
-        let frame = frame::connect::Frame {
-            client_id: random(),
-        };
-        test_frame_codec(Frame::Connect(frame))
-    }
-
-    #[test]
-    fn test_connack_codec() {
-        let frame = frame::connack::Frame {
-            response_code: random(),
-        };
-        test_frame_codec(Frame::ConnACK(frame))
     }
 
     #[test]

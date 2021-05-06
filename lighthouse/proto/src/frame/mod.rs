@@ -1,10 +1,5 @@
-pub mod connack;
-pub mod connect;
 pub mod execute;
 pub mod execute_response;
-
-mod client_id;
-pub use client_id::ClientID;
 
 use std::convert::TryFrom;
 use strum::IntoEnumIterator;
@@ -17,16 +12,6 @@ pub enum Frame {
     ///
     /// Opcode: 0x00
     NoOperation,
-
-    /// First frame that should be sent from Client to Server
-    ///
-    /// Opcode: 0x01
-    Connect(connect::Frame),
-
-    /// First frame that should be sent from Server to Client as a response for Connect
-    ///
-    /// Opcode: 0x02
-    ConnACK(connack::Frame),
 
     /// Packet which will be send to execute some action on client side
     ///
@@ -53,24 +38,14 @@ pub enum Opcode {
     /// Opcode: 0x00
     NoOperation,
 
-    /// First frame that should be sent from Client to Server
-    ///
-    /// Opcode: 0x01
-    Connect,
-
-    /// First frame that should be sent from Server to Client as a response for Connect
-    ///
-    /// Opcode: 0x02
-    ConnACK,
-
     /// Packet which will be send to execute some action on client side
     ///
-    /// Opcode: 0x03
+    /// Opcode: 0x01
     Execute,
 
     /// Packet which will be send as a response to Execute request from server
     ///
-    /// Opcode: 0x04
+    /// Opcode: 0x02
     ExecuteResponse,
 }
 
@@ -93,8 +68,6 @@ impl Frame {
         // sorry for that, but discriminants on non-unit variants are experimental
         match self {
             Frame::NoOperation => Opcode::NoOperation,
-            Frame::Connect(_) => Opcode::Connect,
-            Frame::ConnACK(_) => Opcode::ConnACK,
             Frame::Execute(_) => Opcode::Execute,
             Frame::ExecuteResponse(_) => Opcode::ExecuteResponse,
         }
