@@ -7,6 +7,7 @@ use thiserror::Error;
 pub type DeviceID = DeviceCredential<16>;
 pub type DevicePassword = DeviceCredential<32>;
 
+#[derive(Hash, Eq, PartialEq)]
 pub struct DeviceCredential<const N: usize> {
     inner: [u8; N],
 }
