@@ -37,7 +37,7 @@ pub trait SizedFrame {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bytes::{Buf, BufMut, BytesMut};
+    use bytes::BytesMut;
     use rand::random;
     use std::time::{Duration, SystemTime};
 
@@ -53,6 +53,18 @@ mod tests {
         };
         let token = payload.sign(KEY);
         token.verify(KEY).expect("failed token verification");
+    }
+
+    #[test]
+    fn sign_verify_invalid_signature() {
+        let payload = Payload {
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_sub(Duration::from_secs(5))
+                .unwrap(),
+        };
+        let token = payload.sign(KEY);
+        token.verify(b"some other key").expect_err("failed token verification");
     }
 
     #[test]
