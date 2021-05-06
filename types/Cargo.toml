@@ -11,3 +11,4 @@ serde = { version = "1.0", features = ["derive"] }
 hex = "0.4"
 rand = "0.8"
 thiserror = "1.0"
+bytes = "1"
