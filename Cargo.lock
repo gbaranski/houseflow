@@ -760,6 +760,7 @@ name = "houseflow-device"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "futures-util",
  "houseflow-types",
  "http",
@@ -969,7 +970,6 @@ dependencies = [
  "strum_macros",
  "thiserror",
  "tokio",
- "tokio-util",
 ]
 
 [[package]]

@@ -1,21 +1,25 @@
-use futures_util::{Sink, SinkExt, Stream, StreamExt};
+use bytes::BytesMut;
+use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_types::{DeviceID, DevicePassword};
-use lighthouse_proto::frame;
+use lighthouse_proto::{Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum Event {
     Ping,
     Pong,
+    LighthouseFrame(Frame),
     // Execute(frame::execute::Frame),
     // ExecuteResponse(frame::execute_response::Frame),
 }
 
+const BUFFER_CAPACITY: usize = 1024;
+
 pub type EventSender = mpsc::Sender<Event>;
 pub type EventReceiver = mpsc::Receiver<Event>;
-pub type EventChannel = (EventSender, EventReceiver);
 
 pub struct Options {
     pub url: Url,
@@ -63,7 +67,9 @@ impl Session {
                     log::info!("Received text data: {:?}", text);
                 }
                 WebsocketMessage::Binary(bytes) => {
-                    log::info!("Received binary data: {:?}", bytes);
+                    let mut bytes = BytesMut::from(bytes.as_slice());
+                    let frame = Frame::decode(&mut bytes)?;
+                    log::info!("Received frame: {:?}", frame);
                 }
                 WebsocketMessage::Ping(payload) => {
                     events
@@ -92,6 +98,7 @@ impl Session {
     where
         S: Sink<WebsocketMessage, Error = tungstenite::Error> + Unpin,
     {
+        let mut buf = BytesMut::with_capacity(BUFFER_CAPACITY);
         while let Some(event) = events.recv().await {
             match event {
                 Event::Ping => {
@@ -101,6 +108,10 @@ impl Session {
                 Event::Pong => {
                     log::info!("Sending Pong");
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
+                }
+                Event::LighthouseFrame(frame) => {
+                    frame.encode(&mut buf);
+                    stream.send(WebsocketMessage::Binary(buf.to_vec())).await?; // Think about optimizing this .to_vec()
                 }
             }
         }

@@ -11,6 +11,8 @@ houseflow-types = { path = "../../types" }
 lighthouse-proto = { path = "../../lighthouse/proto" }
 
 tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "fs" ] }
+bytes = "1.0"
+futures-util = "0.3"
 tokio-tungstenite = "0.14"
 tungstenite = "0.13"
 hyper = { version = "0.14", features = [ "client", "http1" ] }
@@ -23,5 +25,4 @@ log = "0.4"
 structopt = "0.3"
 anyhow = "1.0"
 url = "2.2"
-futures-util = "0.3.14"
 
