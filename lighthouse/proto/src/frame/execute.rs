@@ -1,5 +1,8 @@
+use crate::{DecodeError, Decoder, Encoder};
+use bytes::{Buf, BufMut};
 use serde::{Deserialize, Serialize};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
+use std::mem::size_of;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -17,6 +20,41 @@ impl Frame {
             command,
             params,
         }
+    }
+}
+
+impl Decoder for Frame {
+    const MIN_SIZE: usize = size_of::<u32>() + size_of::<Command>();
+
+    fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
+        if buf.remaining() < Self::MIN_SIZE {
+            return Err(DecodeError::InvalidSize {
+                expected: Self::MIN_SIZE,
+                received: buf.remaining(),
+            });
+        }
+
+        let id = buf.get_u32();
+        let command = buf
+            .get_u16()
+            .try_into()
+            .map_err(|_| DecodeError::InvalidField { field: "command" })?;
+        let params: serde_json::Value = serde_json::from_reader(buf.reader())?;
+
+        Ok(Self {
+            id,
+            command,
+            params,
+        })
+    }
+}
+
+impl Encoder for Frame {
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_u32(self.id);
+        buf.put_u16(self.command as u16);
+        let params_bytes = serde_json::to_vec(&self.params).expect("invalid params");
+        buf.put_slice(&params_bytes);
     }
 }
 

@@ -32,20 +32,9 @@ impl Default for Frame {
 
 #[derive(Debug, Clone, Copy, EnumIter)]
 #[repr(u8)]
-pub enum Opcode {
-    /// Placeholder, MUST NOT be used
-    ///
-    /// Opcode: 0x00
+pub(crate) enum Opcode {
     NoOperation,
-
-    /// Packet which will be send to execute some action on client side
-    ///
-    /// Opcode: 0x01
     Execute,
-
-    /// Packet which will be send as a response to Execute request from server
-    ///
-    /// Opcode: 0x02
     ExecuteResponse,
 }
 
@@ -64,7 +53,7 @@ impl TryFrom<u8> for Opcode {
 }
 
 impl Frame {
-    pub fn opcode(&self) -> Opcode {
+    pub(crate) fn opcode(&self) -> Opcode {
         // sorry for that, but discriminants on non-unit variants are experimental
         match self {
             Frame::NoOperation => Opcode::NoOperation,

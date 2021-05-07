@@ -1,184 +1,78 @@
 use crate::frame::{self, Frame, Opcode};
-use bytes::{Buf, BufMut, BytesMut};
-use std::convert::TryFrom;
-use tokio_util::codec::{Decoder, Encoder};
+use bytes::{Buf, BufMut};
+use std::mem::size_of;
+use std::convert::TryInto;
+use thiserror::Error;
 
-/// Max size of JSON-encoded field in frame
-const MAX_JSON_LEN: usize = 1024;
+#[derive(Debug, Error)]
+pub enum DecodeError {
+    #[error("Invalid JSON: `{0}`")]
+    InvalidJSON(#[from] serde_json::Error),
 
-#[derive(Debug)]
-pub enum Error {
-    InvalidField(&'static str, Box<dyn std::fmt::Debug>),
-    FieldTooBig(usize),
-    FieldNotNullTerminated,
-    IOError(std::io::Error),
+    #[error("Frame has invalid field `{field}`")]
+    InvalidField { field: &'static str },
+
+    #[error("Invalid size, expected: `{received}`, received: `{received}`")]
+    InvalidSize { expected: usize, received: usize },
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        use Error::*;
-        let msg = match self {
-            InvalidField(field, received) => {
-                format!("Invalid `{}`: `{:?}`", field, received)
-            }
-            FieldTooBig(size) => {
-                format!(
-                    "Received too big field, aborting decoding it, size: `{}`",
-                    size
-                )
-            }
-            FieldNotNullTerminated => {
-                format!("Field was not NULL terminated")
-            }
-            IOError(err) => format!("IOError: {}", err),
-        };
-        write!(f, "{}", msg)
-    }
+pub trait Decoder {
+    const MIN_SIZE: usize;
+    fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError>
+    where
+        Self: Sized;
 }
 
-impl std::error::Error for Error {}
-
-impl From<std::io::Error> for Error {
-    fn from(item: std::io::Error) -> Error {
-        Error::IOError(item)
-    }
+pub trait Encoder {
+    fn encode(&self, buf: &mut impl BufMut);
 }
 
-#[derive(Clone)]
-pub struct FrameCodec {}
+impl Decoder for Frame {
+    const MIN_SIZE: usize = size_of::<Opcode>();
 
-impl FrameCodec {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Decoder for FrameCodec {
-    type Item = Frame;
-    type Error = Error;
-
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        const MIN_SIZE: usize = std::mem::size_of::<u8>();
-
-        if src.len() < MIN_SIZE {
-            return Ok(None);
-        }
-
-        let opcode = src.get_u8();
-
-        let opcode =
-            Opcode::try_from(opcode).or(Err(Error::InvalidField("opcode", Box::new(opcode))))?;
-
+    fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
+        let opcode: Opcode = buf
+            .get_u8()
+            .try_into()
+            .map_err(|_| DecodeError::InvalidField { field: "opcode" })?;
         let frame = match opcode {
-            Opcode::NoOperation => {
-                return Err(Error::InvalidField("opcode", Box::new(opcode)));
-            }
-            Opcode::Execute => {
-                let id = src.get_u32();
-                let command = src.get_u16();
-                let command = frame::execute::Command::try_from(command)
-                    .map_err(|_| Error::InvalidField("Execute.Command", Box::new(command)))?;
-                let params_len = src
-                    .iter()
-                    .position(|v| *v == b'\0')
-                    .ok_or(Error::FieldNotNullTerminated)?;
-                if params_len > MAX_JSON_LEN {
-                    return Err(Error::FieldTooBig(params_len));
-                }
-                let params_bytes = src.copy_to_bytes(params_len);
-                let params = serde_json::from_slice(&params_bytes)
-                    .map_err(|err| Error::InvalidField("Execute.Params", Box::new(err)))?;
-
-                let frame = frame::execute::Frame {
-                    id,
-                    command,
-                    params,
-                };
-
-                Frame::Execute(frame)
-            }
+            Opcode::NoOperation => Frame::NoOperation,
+            Opcode::Execute => Frame::Execute(frame::execute::Frame::decode(buf)?),
             Opcode::ExecuteResponse => {
-                let id = src.get_u32();
-                let response_code = src.get_u8();
-                let response_code = frame::execute_response::ResponseCode::try_from(response_code)
-                    .map_err(|_| {
-                        Error::InvalidField("ExecuteResponse.ResponseCode", Box::new(response_code))
-                    })?;
-
-                let error = src.get_u16();
-                let error = frame::execute_response::Error::try_from(error)
-                    .map_err(|_| Error::InvalidField("ExecuteResponse.Error", Box::new(error)))?;
-                let state_len = src
-                    .iter()
-                    .position(|v| *v == b'\0')
-                    .ok_or(Error::FieldNotNullTerminated)?;
-                if state_len > MAX_JSON_LEN {
-                    return Err(Error::FieldTooBig(state_len));
-                }
-                let state_bytes = src.copy_to_bytes(state_len);
-                let state = serde_json::from_slice(&state_bytes).unwrap();
-
-                let frame = frame::execute_response::Frame {
-                    id,
-                    response_code,
-                    state,
-                    error,
-                };
-
-                Frame::ExecuteResponse(frame)
+                Frame::ExecuteResponse(frame::execute_response::Frame::decode(buf)?)
             }
         };
 
-        Ok(Some(frame))
+        Ok(frame)
     }
 }
 
-impl Encoder<Frame> for FrameCodec {
-    type Error = Error;
-
-    fn encode(&mut self, item: Frame, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        let opcode = item.opcode();
-        dst.put_u8(opcode as u8);
-
-        match item {
-            Frame::NoOperation => {
-                let opcode = Frame::NoOperation.opcode();
-                return Err(Error::InvalidField("opcode", Box::new(opcode)));
-            }
+impl Encoder for Frame {
+    fn encode(&self, buf: &mut impl BufMut) {
+        buf.put_u8(self.opcode() as u8);
+        match self {
+            Frame::NoOperation => {}
             Frame::Execute(frame) => {
-                dst.put_u32(frame.id);
-                dst.put_u16(frame.command as u16);
-                let params = serde_json::to_vec(&frame.params).unwrap();
-                dst.put_slice(&params);
-                dst.put_u8(b'\0');
+                frame.encode(buf);
             }
             Frame::ExecuteResponse(frame) => {
-                dst.put_u32(frame.id);
-                dst.put_u8(frame.response_code as u8);
-                dst.put_u16(frame.error as u16);
-                let state = serde_json::to_vec(&frame.state).unwrap();
-                dst.put_slice(&state);
-                dst.put_u8(b'\0');
+                frame.encode(buf);
             }
         }
-
-        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::BytesMut;
     use rand::random;
 
     fn test_frame_codec(frame: Frame) {
-        let mut codec = FrameCodec {};
-        let mut bytes = BytesMut::new();
-        codec.encode(frame.clone(), &mut bytes).unwrap();
-
-        let decoded_frame = codec.decode(&mut bytes).unwrap().unwrap();
-
-        assert_eq!(frame, decoded_frame);
+        let mut buf = BytesMut::new();
+        frame.encode(&mut buf);
+        let frame_decoded = Frame::decode(&mut buf).expect("failed decoding");
+        assert_eq!(frame, frame_decoded);
     }
 
     #[test]
