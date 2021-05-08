@@ -1,4 +1,5 @@
 use crate::{DecodeError, Decoder, Encoder};
+use super::FrameID;
 use bytes::{Buf, BufMut};
 use serde::{Deserialize, Serialize};
 use std::convert::{TryFrom, TryInto};
@@ -8,7 +9,7 @@ use strum_macros::EnumIter;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Default)]
 pub struct Frame {
-    pub id: u32,
+    pub id: FrameID,
     pub command: Command,
     pub params: serde_json::Value,
 }
@@ -24,7 +25,7 @@ impl Frame {
 }
 
 impl Decoder for Frame {
-    const MIN_SIZE: usize = size_of::<u32>() + size_of::<Command>();
+    const MIN_SIZE: usize = size_of::<FrameID>() + size_of::<Command>();
 
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
         if buf.remaining() < Self::MIN_SIZE {
@@ -34,7 +35,7 @@ impl Decoder for Frame {
             });
         }
 
-        let id = buf.get_u32();
+        let id = buf.get_u16();
         let command = buf
             .get_u16()
             .try_into()
@@ -51,7 +52,7 @@ impl Decoder for Frame {
 
 impl Encoder for Frame {
     fn encode(&self, buf: &mut impl BufMut) {
-        buf.put_u32(self.id);
+        buf.put_u16(self.id);
         buf.put_u16(self.command as u16);
         let params_bytes = serde_json::to_vec(&self.params).expect("invalid params");
         buf.put_slice(&params_bytes);

@@ -1,4 +1,5 @@
 use crate::{DecodeError, Decoder, Encoder};
+use super::FrameID;
 use bytes::{Buf, BufMut};
 use std::convert::{TryFrom, TryInto};
 use std::mem::size_of;
@@ -7,14 +8,14 @@ use strum_macros::EnumIter;
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub struct Frame {
-    pub id: u32,
+    pub id: FrameID,
     pub response_code: ResponseCode,
     pub error: Error,
     pub state: serde_json::Value,
 }
 
 impl Decoder for Frame {
-    const MIN_SIZE: usize = size_of::<u32>() + size_of::<ResponseCode>() + size_of::<Error>();
+    const MIN_SIZE: usize = size_of::<FrameID>() + size_of::<ResponseCode>() + size_of::<Error>();
 
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
         if buf.remaining() < Self::MIN_SIZE {
@@ -24,7 +25,7 @@ impl Decoder for Frame {
             });
         }
 
-        let id = buf.get_u32();
+        let id = buf.get_u16();
         let response_code = buf
             .get_u8()
             .try_into()
@@ -48,7 +49,7 @@ impl Decoder for Frame {
 
 impl Encoder for Frame {
     fn encode(&self, buf: &mut impl BufMut) {
-        buf.put_u32(self.id);
+        buf.put_u16(self.id);
         buf.put_u8(self.response_code as u8);
         buf.put_u16(self.error as u16);
         let state_bytes = serde_json::to_vec(&self.state).expect("invalid state");

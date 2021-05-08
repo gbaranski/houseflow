@@ -5,6 +5,8 @@ use std::convert::TryFrom;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
+pub type FrameID = u16; 
+
 #[derive(Debug, EnumIter, PartialEq, Eq, Clone)]
 #[repr(u8)]
 pub enum Frame {
