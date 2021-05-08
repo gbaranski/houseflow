@@ -74,6 +74,12 @@ mod tests {
         let frame_decoded = Frame::decode(&mut buf).expect("failed decoding");
         assert_eq!(frame, frame_decoded);
         assert_eq!(buf.remaining(), 0);
+
+        // Test with random sizes of random data
+        for i in 1..1024 { 
+            let buf: Vec<u8> = (0..i).map(|_| random()).collect();
+            let _ = Frame::decode(&mut buf.as_ref());
+        }
     }
 
     #[test]
