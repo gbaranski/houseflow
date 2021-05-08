@@ -2,6 +2,7 @@
 members = [
   # "db",
   # "fulfillment",
+  "cli",
   "devices/virtual",
   "token",
   "types",
