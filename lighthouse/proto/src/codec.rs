@@ -1,7 +1,7 @@
 use crate::frame::{self, Frame, Opcode};
 use bytes::{Buf, BufMut};
-use std::mem::size_of;
 use std::convert::TryInto;
+use std::mem::size_of;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -73,6 +73,7 @@ mod tests {
         frame.encode(&mut buf);
         let frame_decoded = Frame::decode(&mut buf).expect("failed decoding");
         assert_eq!(frame, frame_decoded);
+        assert_eq!(buf.remaining(), 0);
     }
 
     #[test]
