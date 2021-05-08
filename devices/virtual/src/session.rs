@@ -1,7 +1,7 @@
 use bytes::BytesMut;
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_types::{DeviceID, DevicePassword};
-use lighthouse_proto::{Decoder, Encoder, Frame};
+use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
@@ -70,6 +70,25 @@ impl Session {
                     let mut bytes = BytesMut::from(bytes.as_slice());
                     let frame = Frame::decode(&mut bytes)?;
                     log::info!("Received frame: {:?}", frame);
+                    match frame {
+                        Frame::Execute(frame) => {
+                            let response_frame = execute_response::Frame {
+                                id: frame.id,
+                                response_code: execute_response::ResponseCode::Success,
+                                error: execute_response::Error::None,
+                                state: frame.params,
+                            };
+                            let response_frame = Frame::ExecuteResponse(response_frame);
+                            let response_event = Event::LighthouseFrame(response_frame);
+                            events
+                                .send(response_event)
+                                .await
+                                .expect("failed sending event");
+                        }
+                        _ => {
+                            panic!("Unexpected frame received")
+                        }
+                    }
                 }
                 WebsocketMessage::Ping(payload) => {
                     events
