@@ -1,4 +1,4 @@
-use bytes::BytesMut;
+use bytes::{BytesMut, Buf};
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_types::{DeviceID, DevicePassword};
 use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
@@ -129,8 +129,12 @@ impl Session {
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
                 }
                 Event::LighthouseFrame(frame) => {
+                    assert_eq!(buf.remaining(), 0); 
+
                     frame.encode(&mut buf);
-                    stream.send(WebsocketMessage::Binary(buf.to_vec())).await?; // Think about optimizing this .to_vec()
+                    let vec = buf.to_vec();
+                    buf.advance(vec.len());
+                    stream.send(WebsocketMessage::Binary(vec)).await?; 
                 }
             }
         }
