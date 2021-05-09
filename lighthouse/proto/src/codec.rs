@@ -105,7 +105,7 @@ mod tests {
                     "online": true,
                     "openPercent": 20
                 }
-                "#;
+               "#;
         let frame = frame::state::Frame {
             state: serde_json::from_str(state).unwrap(),
         };
@@ -129,7 +129,7 @@ mod tests {
                 "#;
         let frame = frame::command::Frame {
             id: random(),
-            command: random(),
+            code: random(),
             params: serde_json::from_str(params).unwrap(),
         };
         test_frame_codec(frame)
@@ -146,7 +146,7 @@ mod tests {
             "#;
         let frame = frame::command_response::Frame {
             id: random(),
-            response_code: random(),
+            code: random(),
             error: random(),
             state: serde_json::from_str(state).unwrap(),
         };
