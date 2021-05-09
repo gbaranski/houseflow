@@ -17,7 +17,7 @@ pub struct CommandFrame {
 impl<'de> Framed<'de> for CommandFrame {}
 
 impl Decoder for CommandFrame {
-    const MIN_SIZE: usize = size_of::<FrameID>() + size_of::<CommandFrame>();
+    const MIN_SIZE: usize = size_of::<FrameID>() + size_of::<Code>();
 
     #[decoder]
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
