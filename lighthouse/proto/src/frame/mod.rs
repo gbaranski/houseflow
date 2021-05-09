@@ -1,11 +1,16 @@
-pub mod execute;
-pub mod execute_response;
+pub mod command;
+pub mod command_response;
+
+pub mod state;
+pub mod state_check;
+
+pub mod no_operation;
 
 use std::convert::TryFrom;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-pub type FrameID = u16; 
+pub type FrameID = u16;
 
 #[derive(Debug, EnumIter, PartialEq, Eq, Clone)]
 #[repr(u8)]
