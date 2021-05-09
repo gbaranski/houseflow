@@ -50,7 +50,7 @@ pub trait Framed<'de>:
 }
 
 impl Frame {
-    pub(crate) fn opcode(&self) -> Opcode {
+    pub(crate) const fn opcode(&self) -> Opcode {
         // sorry for that, but discriminants on non-unit variants are experimental
         match self {
             Frame::NoOperation(_) => Opcode::NoOperation,

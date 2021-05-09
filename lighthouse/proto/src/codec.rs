@@ -38,7 +38,7 @@ impl Decoder for Frame {
             .get_u8()
             .try_into()
             .map_err(|_| DecodeError::InvalidField { field: "opcode" })?;
-        let frame: Frame = match opcode {
+        let frame: Self = match opcode {
             NoOperation => no_operation::Frame::decode(buf)?.into(),
             State => state::Frame::decode(buf)?.into(),
             StateCheck => state_check::Frame::decode(buf)?.into(),

@@ -22,6 +22,6 @@ impl TryFrom<u8> for Opcode {
     type Error = ();
 
     fn try_from(v: u8) -> Result<Self, Self::Error> {
-        Opcode::iter().find(|e| *e as u8 == v).ok_or(())
+        Self::iter().find(|e| *e as u8 == v).ok_or(())
     }
 }
