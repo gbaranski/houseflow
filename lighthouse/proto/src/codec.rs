@@ -31,33 +31,35 @@ impl Decoder for Frame {
     const MIN_SIZE: usize = size_of::<Opcode>();
 
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
+        use frame::*;
+        use Opcode::*;
+
         let opcode: Opcode = buf
             .get_u8()
             .try_into()
             .map_err(|_| DecodeError::InvalidField { field: "opcode" })?;
-        let frame = match opcode {
-            Opcode::NoOperation => Frame::NoOperation,
-            Opcode::Execute => Frame::Execute(frame::execute::Frame::decode(buf)?),
-            Opcode::ExecuteResponse => {
-                Frame::ExecuteResponse(frame::execute_response::Frame::decode(buf)?)
-            }
+        let frame: Frame = match opcode {
+            NoOperation => no_operation::Frame::decode(buf)?.into(),
+            State => state::Frame::decode(buf)?.into(),
+            StateCheck => state_check::Frame::decode(buf)?.into(),
+            Command => command::Frame::decode(buf)?.into(),
+            CommandResponse => command_response::Frame::decode(buf)?.into(),
         };
-
         Ok(frame)
     }
 }
 
 impl Encoder for Frame {
     fn encode(&self, buf: &mut impl BufMut) {
+        use Frame::*;
+
         buf.put_u8(self.opcode() as u8);
         match self {
-            Frame::NoOperation => {}
-            Frame::Execute(frame) => {
-                frame.encode(buf);
-            }
-            Frame::ExecuteResponse(frame) => {
-                frame.encode(buf);
-            }
+            NoOperation(frame) => frame.encode(buf),
+            State(frame) => frame.encode(buf),
+            StateCheck(frame) => frame.encode(buf),
+            Command(frame) => frame.encode(buf),
+            CommandResponse(frame) => frame.encode(buf),
         }
     }
 }
