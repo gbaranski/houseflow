@@ -13,22 +13,33 @@ pub enum Frame {
     /// Placeholder, MUST NOT be used
     ///
     /// Opcode: 0x00
-    NoOperation,
+    NoOperation(no_operation::Frame),
+
+    /// Packet which will be send to get current state from device
+    ///
+    /// Opcode: 0x03
+    State(state::Frame),
+
+    /// Packet which will be send to get current state from device
+    ///
+    /// Opcode: 0x03
+    StateCheck(state_check::Frame),
 
     /// Packet which will be send to execute some action on client side
     ///
-    /// Opcode: 0x03
-    Execute(execute::Frame),
+    /// Opcode: 0x01
+    Command(command::Frame),
 
     /// Packet which will be send as a response to Execute request from server
     ///
-    /// Opcode: 0x04
-    ExecuteResponse(execute_response::Frame),
+    /// Opcode: 0x02
+    CommandResponse(command_response::Frame),
 }
+
 
 impl Default for Frame {
     fn default() -> Self {
-        Self::NoOperation
+        Self::NoOperation(no_operation::Frame::new())
     }
 }
 
@@ -36,8 +47,10 @@ impl Default for Frame {
 #[repr(u8)]
 pub(crate) enum Opcode {
     NoOperation,
-    Execute,
-    ExecuteResponse,
+    State,
+    StateCheck,
+    Command,
+    CommandResponse,
 }
 
 impl Into<u8> for Opcode {
@@ -58,9 +71,12 @@ impl Frame {
     pub(crate) fn opcode(&self) -> Opcode {
         // sorry for that, but discriminants on non-unit variants are experimental
         match self {
-            Frame::NoOperation => Opcode::NoOperation,
-            Frame::Execute(_) => Opcode::Execute,
-            Frame::ExecuteResponse(_) => Opcode::ExecuteResponse,
+            Frame::NoOperation(_) => Opcode::NoOperation,
+            Frame::State(_) => Opcode::State,
+            Frame::StateCheck(_) => Opcode::StateCheck,
+            Frame::Command(_) => Opcode::Command,
+            Frame::CommandResponse(_) => Opcode::CommandResponse,
         }
     }
 }
+
