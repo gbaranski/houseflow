@@ -6,13 +6,16 @@ pub mod state_check;
 
 pub mod no_operation;
 
-use std::convert::TryFrom;
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+mod common;
+mod opcode;
 
-pub type FrameID = u16;
+pub use common::FrameID;
+pub(crate) use opcode::Opcode;
 
-#[derive(Debug, EnumIter, PartialEq, Eq, Clone)]
+use crate::{Decoder, Encoder};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum Frame {
     /// Placeholder, MUST NOT be used
@@ -41,35 +44,9 @@ pub enum Frame {
     CommandResponse(command_response::Frame),
 }
 
-
-impl Default for Frame {
-    fn default() -> Self {
-        Self::NoOperation(no_operation::Frame::new())
-    }
-}
-
-#[derive(Debug, Clone, Copy, EnumIter)]
-#[repr(u8)]
-pub(crate) enum Opcode {
-    NoOperation,
-    State,
-    StateCheck,
-    Command,
-    CommandResponse,
-}
-
-impl Into<u8> for Opcode {
-    fn into(self) -> u8 {
-        self as u8
-    }
-}
-
-impl TryFrom<u8> for Opcode {
-    type Error = ();
-
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        Opcode::iter().find(|e| *e as u8 == v).ok_or(())
-    }
+pub trait Framed<'de>:
+    std::fmt::Debug + Clone + Eq + PartialEq + Serialize + Deserialize<'de> + Encoder + Decoder
+{
 }
 
 impl Frame {
@@ -84,4 +61,3 @@ impl Frame {
         }
     }
 }
-
