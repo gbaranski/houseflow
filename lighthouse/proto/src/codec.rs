@@ -70,39 +70,73 @@ mod tests {
     use bytes::BytesMut;
     use rand::random;
 
-    fn test_frame_codec(frame: Frame) {
+    fn test_frame_codec<F>(frame: F)
+    where
+        F: Decoder + Encoder + std::fmt::Debug + PartialEq + Eq + Into<Frame> + Clone,
+    {
         let mut buf = BytesMut::new();
-        frame.encode(&mut buf);
+        let full_frame: Frame = frame.clone().into();
+        full_frame.encode(&mut buf);
         let frame_decoded = Frame::decode(&mut buf).expect("failed decoding");
-        assert_eq!(frame, frame_decoded);
+        assert_eq!(frame.into(), frame_decoded);
         assert_eq!(buf.remaining(), 0);
 
         // Test with random sizes of random data
-        for i in 1..1024 { 
+        for i in 1..512 {
             let buf: Vec<u8> = (0..i).map(|_| random()).collect();
-            let _ = Frame::decode(&mut buf.as_ref());
+            let buf: &[u8] = buf.as_ref();
+            let buf = BytesMut::from(buf);
+            let _ = F::decode(&mut buf.clone());
+            let _ = Frame::decode(&mut buf.clone());
         }
     }
 
     #[test]
-    fn test_execute_codec() {
+    fn no_operation() {
+        let frame = frame::no_operation::Frame {};
+        test_frame_codec(frame)
+    }
+
+    #[test]
+    fn state() {
+        let state = r#"
+                {
+                    "on": true,
+                    "online": true,
+                    "openPercent": 20
+                }
+                "#;
+        let frame = frame::state::Frame {
+            state: serde_json::from_str(state).unwrap(),
+        };
+        test_frame_codec(frame)
+    }
+
+    #[test]
+    fn state_check() {
+        let frame = frame::state_check::Frame {};
+        test_frame_codec(frame)
+    }
+
+    #[test]
+    fn command() {
         let params = r#"
-            {
-                "on": true,
-                "online": true,
-                "openPercent": 20
-            }
-            "#;
-        let frame = frame::execute::Frame {
+                {
+                    "on": true,
+                    "online": true,
+                    "openPercent": 20
+                }
+                "#;
+        let frame = frame::command::Frame {
             id: random(),
             command: random(),
             params: serde_json::from_str(params).unwrap(),
         };
-        test_frame_codec(Frame::Execute(frame))
+        test_frame_codec(frame)
     }
 
     #[test]
-    fn test_execute_response_codec() {
+    fn command_response() {
         let state = r#"
             {
                 "on": true,
@@ -110,12 +144,12 @@ mod tests {
                 "openPercent": 20
             }
             "#;
-        let frame = frame::execute_response::Frame {
+        let frame = frame::command_response::Frame {
             id: random(),
             response_code: random(),
             error: random(),
             state: serde_json::from_str(state).unwrap(),
         };
-        test_frame_codec(Frame::ExecuteResponse(frame))
+        test_frame_codec(frame)
     }
 }
