@@ -1,14 +1,14 @@
-use actix_web::{get, http, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web_actors::ws;
 use houseflow_types::{DeviceID, DevicePassword};
 use itertools::Itertools;
-use lighthouse_api::Request;
-use lighthouse_proto::execute;
+use lighthouse_proto::{command, command_response};
 use session::Session;
 use std::collections::HashMap;
 use std::str::FromStr;
 use tokio::sync::Mutex;
 
+mod aliases;
 mod session;
 
 fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePassword), String> {
@@ -67,30 +67,30 @@ async fn on_websocket(
     Ok(response)
 }
 
-#[get("/test")]
-async fn on_test(_req: HttpRequest, app_state: web::Data<AppState>) -> impl Responder {
-    let params = r#"
-    {
-        "on": true,
-        "openPercent": 80
-    }
-        "#;
-    let params = serde_json::from_str(params).expect("invalid params");
-    let frame = execute::Frame::new(execute::Command::OnOff, params);
-    let request = Request::Execute(frame);
-    let response = app_state
+#[post("/command/{device_id}")]
+async fn on_command(
+    path: web::Path<String>,
+    frame: web::Json<command::Frame>,
+    app_state: web::Data<AppState>,
+) -> Result<HttpResponse, actix_web::Error> {
+    let device_id = path.into_inner();
+    let device_id = DeviceID::from_str(&device_id)
+        .map_err(|err| HttpResponse::BadRequest().body(format!("Invalid DeviceID: {}", err)))?;
+
+    let response: command_response::Frame = app_state
         .sessions
         .lock()
         .await
-        .values()
-        .nth(0)
-        .unwrap()
-        .send(request)
+        .get(&device_id)
+        .ok_or(HttpResponse::NotFound().body("Device not found"))?
+        .send(aliases::ActorCommandFrame::from(frame.into_inner()))
         .await
         .unwrap()
-        .unwrap();
+        .unwrap()
+        .into();
+
     log::debug!("Response: {:?}", response);
-    HttpResponse::Ok().body("received")
+    Ok(HttpResponse::Ok().json(response))
 }
 
 struct AppState {
@@ -108,7 +108,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(app_state.clone())
             .service(on_websocket)
-            .service(on_test)
+            .service(on_command)
     })
     .bind(&addr)?;
 

@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 houseflow-types = { path = "../../types" }
 lighthouse-proto = { path = "../proto" }
-lighthouse-api = { path = "../api", default-features = false }
+lighthouse-types = { path = "../types" }
 
 # Update versions when this resolves https://github.com/actix/actix-web/issues/2195
 actix = "0.11.1"
