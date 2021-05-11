@@ -1,71 +1,44 @@
-use actix::prelude::{Message, MessageResponse};
-use lighthouse_proto::{execute, execute_response, Frame, FrameID};
-use std::convert::TryFrom;
+use houseflow_types::DeviceID;
+use lighthouse_proto::{command, command_response};
+use lighthouse_types::DeviceError;
 use thiserror::Error;
+use url::Url;
 
 #[derive(Debug, Error)]
-pub enum RequestError {
-    #[error("Device is not connected")]
-    DeviceNotConnected,
+pub enum SendError {
+    #[error("Error with device: {0}")]
+    DeviceError(#[from] DeviceError),
 
-    #[error("Timeout when sending request")]
-    Timeout,
+    #[error("Error when sending request: {0}")]
+    ReqwestError(#[from] reqwest::Error),
 }
 
-#[derive(Debug, Clone)]
-pub enum Request {
-    Execute(execute::Frame),
+pub struct Lighthouse {
+    pub url: Url,
 }
 
+impl Lighthouse {
+    pub async fn send_command(
+        &self,
+        frame: command::Frame,
+        device_id: DeviceID,
+    ) -> Result<command_response::Frame, SendError> {
+        let device_id_string = device_id.to_string();
+        let url = self
+            .url
+            .join("command/")
+            .unwrap()
+            .join(&device_id_string)
+            .unwrap();
 
-#[derive(Debug, Clone, MessageResponse)]
-pub enum Response {
-    Execute(execute_response::Frame),
-}
-
-impl Message for Request {
-    type Result = std::result::Result<Response, RequestError>;
-}
-
-impl TryFrom<Frame> for Response {
-    type Error = ();
-
-    fn try_from(frame: Frame) -> Result<Self, Self::Error> {
-        match frame {
-            Frame::ExecuteResponse(frame) => Ok(Response::Execute(frame)),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Into<Frame> for Request {
-    fn into(self) -> Frame {
-        match self {
-            Self::Execute(frame) => Frame::Execute(frame),
-        }
-    }
-}
-
-impl Into<Frame> for Response {
-    fn into(self) -> Frame {
-        match self {
-            Self::Execute(frame) => Frame::ExecuteResponse(frame),
-        }
-    }
-}
-
-impl Request {
-    pub fn id(&self) -> FrameID {
-        match self {
-            Self::Execute(frame) => frame.id,
-        }
-    }
-}
-
-impl Response {
-    pub fn id(&self) -> FrameID {
-        match self {
-            Self::Execute(frame) => frame.id,
-        }
+        let client = reqwest::Client::new();
+        let response = client
+            .post(url)
+            .json(&frame)
+            .send()
+            .await?
+            .json::<command_response::Frame>()
+            .await?;
+        Ok(response)
     }
 }
