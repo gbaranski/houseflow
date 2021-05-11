@@ -4,7 +4,7 @@ use lighthouse_macros::decoder;
 use serde::{Deserialize, Serialize};
 use std::mem::size_of;
 
-#[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize, Hash)]
 pub struct FrameID {
     inner: u16,
 }
