@@ -13,3 +13,23 @@ fn get_devices() -> impl Iterator<Item = Device> {
         id: generate_random_device_id(),
     })
 }
+use cursive::Cursive;
+use cursive::{view::View, views::SelectView};
+/// Returns SelectView whichs shows all available devices to user
+fn get_devices_select_view(
+    devices: Vec<Device>,
+    submit_callback: impl 'static + Fn(&mut Cursive, &Device),
+) -> impl View {
+    let devices_cursive_iter = devices
+        .iter()
+        .enumerate()
+        .map(|(index, device)| (&device.id, index));
+
+    let mut view = SelectView::new();
+    view.add_all(devices_cursive_iter);
+    view.set_on_submit(move |siv, index| {
+        let device = devices.get(*index).unwrap();
+        submit_callback(siv, device)
+    });
+    view
+}
