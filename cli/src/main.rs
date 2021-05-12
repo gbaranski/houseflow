@@ -43,3 +43,14 @@ fn device_select_callback(siv: &mut Cursive, device: &Device) {
 
     siv.add_layer(dialog);
 }
+
+#[tokio::main]
+async fn main() -> Result<(), anyhow::Error> {
+    let mut siv = cursive::default();
+    let devices = get_devices().take(3).collect();
+    let devices_selectview = get_devices_select_view(devices, device_select_callback);
+    siv.add_layer(devices_selectview);
+    siv.run();
+
+    Ok(())
+}
