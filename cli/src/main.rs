@@ -3,18 +3,22 @@ type DeviceID = String;
 pub struct Device {
     pub id: DeviceID,
 }
+
 fn generate_random_device_id() -> DeviceID {
     let bytes: [u8; 16] = rand::random();
     hex::encode(bytes)
 }
+
 /// Creates a infinite Iterator of fake devices
 fn get_devices() -> impl Iterator<Item = Device> {
     std::iter::repeat_with(|| Device {
         id: generate_random_device_id(),
     })
 }
+
 use cursive::Cursive;
 use cursive::{view::View, views::SelectView};
+
 /// Returns SelectView whichs shows all available devices to user
 fn get_devices_select_view(
     devices: Vec<Device>,
@@ -33,6 +37,7 @@ fn get_devices_select_view(
     });
     view
 }
+
 use cursive::views::{Dialog, TextView};
 fn device_select_callback(siv: &mut Cursive, device: &Device) {
     let text_view = TextView::new("Select action");
