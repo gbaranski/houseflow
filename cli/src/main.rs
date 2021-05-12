@@ -33,3 +33,13 @@ fn get_devices_select_view(
     });
     view
 }
+use cursive::views::{Dialog, TextView};
+fn device_select_callback(siv: &mut Cursive, device: &Device) {
+    let text_view = TextView::new("Select action");
+    let dialog_title = format!("Selected: {}", device.id);
+    let dialog = Dialog::around(text_view)
+        .title(dialog_title)
+        .button("Cancel", |s| s.quit());
+
+    siv.add_layer(dialog);
+}
