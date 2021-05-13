@@ -50,9 +50,9 @@ fn get_devices_select_view(
     view
 }
 
-async fn send_command(_device: Device) -> Result<reqwest::StatusCode, anyhow::Error> {
-    let client = reqwest::Client::new();
-    let response = client.post("http://httpbin.org/delay/2").send().await?;
+fn send_command(_device: Device) -> Result<reqwest::StatusCode, anyhow::Error> {
+    let client = reqwest::blocking::Client::new();
+    let response = client.post("http://httpbin.org/delay/2").send()?;
     let response_status = response.status();
 
     Ok(response_status)
@@ -68,12 +68,10 @@ fn device_select_callback(siv: &mut Cursive, device: Device) {
         .title(dialog_title)
         .button("Send command", move |siv| {
             let device = device.clone();
-            let fut = send_command(device);
-            let rt = tokio::runtime::Runtime::new().unwrap();
             let async_view = AsyncView::new_with_bg_creator(
                 siv,
                 move || {
-                    let result = rt.block_on(fut);
+                    let result = send_command(device);
                     match result {
                         Ok(status_code) => {
                             Ok(format!("Suceeded with status code: {}", status_code))
@@ -97,8 +95,7 @@ fn device_select_callback(siv: &mut Cursive, device: Device) {
     siv.add_layer(dialog);
 }
 
-#[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+fn main() -> Result<(), anyhow::Error> {
     let mut siv = cursive::default();
     let devices = get_devices().take(3).collect();
     let devices_select_view = get_devices_select_view(devices, device_select_callback);
