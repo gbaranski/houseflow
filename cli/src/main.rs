@@ -11,9 +11,7 @@ fn generate_random_device_id() -> DeviceID {
 
 /// Creates a infinite Iterator of fake devices
 fn get_devices() -> impl Iterator<Item = Device> {
-    std::iter::repeat_with(|| Device {
-        id: generate_random_device_id(),
-    })
+    std::iter::repeat_with(|| Device { id: rand::random() })
 }
 
 use cursive::Cursive;
