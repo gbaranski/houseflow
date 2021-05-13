@@ -7,6 +7,14 @@ pub struct Device {
 fn generate_random_device_id() -> DeviceID {
     let bytes: [u8; 16] = rand::random();
     hex::encode(bytes)
+use rand::distributions;
+
+impl distributions::Distribution<DeviceID> for distributions::Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> DeviceID {
+        DeviceID {
+            inner: rng.gen(),
+        }
+    }
 }
 
 /// Creates a infinite Iterator of fake devices
