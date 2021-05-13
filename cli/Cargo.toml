@@ -4,6 +4,21 @@ version = "0.1.0"
 authors = ["gbaranski <root@gbaranski.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+cursive = "0.16"
+tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync" ] }
+rand = "0.8"
+hex = "0.4.3"
+
+houseflow-types = { path = "../types" }
+lighthouse-proto = { path = "../lighthouse/proto" }
+lighthouse-api = { path = "../lighthouse/api" }
+
+bytes = "1.0"
+
+loggerv = "0.7"
+log = "0.4"
+
+structopt = "0.3"
+anyhow = "1.0"
+
