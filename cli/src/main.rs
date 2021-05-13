@@ -1,8 +1,10 @@
 /// Used to identify the device
+#[derive(Debug, Clone)]
 struct DeviceID {
     inner: [u8; 16],
 }
 
+#[derive(Debug, Clone)]
 struct Device {
     pub id: DeviceID,
 }
@@ -17,9 +19,7 @@ use rand::distributions;
 
 impl distributions::Distribution<DeviceID> for distributions::Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> DeviceID {
-        DeviceID {
-            inner: rng.gen(),
-        }
+        DeviceID { inner: rng.gen() }
     }
 }
 
@@ -34,7 +34,7 @@ use cursive::{view::View, views::SelectView};
 /// Returns SelectView whichs shows all available devices to user
 fn get_devices_select_view(
     devices: Vec<Device>,
-    submit_callback: impl 'static + Fn(&mut Cursive, &Device),
+    submit_callback: impl 'static + Fn(&mut Cursive, Device),
 ) -> impl View {
     let devices_cursive_iter = devices
         .iter()
@@ -45,23 +45,53 @@ fn get_devices_select_view(
     view.add_all(devices_cursive_iter);
     view.set_on_submit(move |siv, index| {
         let device = devices.get(*index).unwrap();
-        submit_callback(siv, device)
+        submit_callback(siv, device.clone())
     });
     view
 }
 
-use cursive::views::{Dialog, TextView};
+async fn send_command(_device: Device) -> Result<reqwest::StatusCode, anyhow::Error> {
+    let client = reqwest::Client::new();
+    let response = client.post("http://httpbin.org/delay/2").send().await?;
+    let response_status = response.status();
 
-fn device_select_callback(siv: &mut Cursive, device: &Device) {
+    Ok(response_status)
+}
+
+use cursive::views::{Dialog, TextView};
+use cursive_async_view::AsyncView;
+
+fn device_select_callback(siv: &mut Cursive, device: Device) {
     let text_view = TextView::new("Select what to do with the device");
     let dialog_title = format!("Selected device: {}", device.id);
     let dialog = Dialog::around(text_view)
         .title(dialog_title)
-        .button("Send command", |s| {
-            s.pop_layer().unwrap();
+        .button("Send command", move |siv| {
+            let device = device.clone();
+            let fut = send_command(device);
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            let async_view = AsyncView::new_with_bg_creator(
+                siv,
+                move || {
+                    let result = rt.block_on(fut);
+                    match result {
+                        Ok(status_code) => {
+                            Ok(format!("Suceeded with status code: {}", status_code))
+                        }
+                        Err(err) => Err(err.to_string()),
+                    }
+                },
+                TextView::new,
+            );
+            let async_view_width = siv.screen_size().x / 3;
+            let async_view =
+                Dialog::around(async_view.with_width(async_view_width)).button("Ok", |siv| {
+                    siv.pop_layer().unwrap();
+                });
+            siv.add_layer(async_view);
         })
-        .button("Cancel", |s| {
-            s.pop_layer().unwrap();
+        .button("Cancel", |siv| {
+            siv.pop_layer().unwrap();
         });
 
     siv.add_layer(dialog);
