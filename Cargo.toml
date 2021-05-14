@@ -2,10 +2,13 @@
 members = [
   # "db",
   # "fulfillment",
-  "cli",
+  "tui",
   "devices/virtual",
   "token",
   "types",
   "lighthouse/proto",
-  "lighthouse/broker"
+  "lighthouse/broker",
+  "lighthouse/api",
+  "lighthouse/types",
+  "lighthouse/macros"
 ]
