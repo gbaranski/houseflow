@@ -1,7 +1,7 @@
-use bytes::{BytesMut, Buf};
+use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_types::{DeviceID, DevicePassword};
-use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
+use lighthouse_proto::{command_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
@@ -71,14 +71,14 @@ impl Session {
                     let frame = Frame::decode(&mut bytes)?;
                     log::info!("Received frame: {:?}", frame);
                     match frame {
-                        Frame::Execute(frame) => {
-                            let response_frame = execute_response::Frame {
+                        Frame::Command(frame) => {
+                            let response_frame = command_response::Frame {
                                 id: frame.id,
-                                response_code: execute_response::ResponseCode::Success,
-                                error: execute_response::Error::None,
+                                code: command_response::Code::Success,
+                                error: command_response::Error::None,
                                 state: frame.params,
                             };
-                            let response_frame = Frame::ExecuteResponse(response_frame);
+                            let response_frame = Frame::CommandResponse(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);
                             events
                                 .send(response_event)
@@ -129,12 +129,12 @@ impl Session {
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
                 }
                 Event::LighthouseFrame(frame) => {
-                    assert_eq!(buf.remaining(), 0); 
+                    assert_eq!(buf.remaining(), 0);
 
                     frame.encode(&mut buf);
                     let vec = buf.to_vec();
                     buf.advance(vec.len());
-                    stream.send(WebsocketMessage::Binary(vec)).await?; 
+                    stream.send(WebsocketMessage::Binary(vec)).await?;
                 }
             }
         }
