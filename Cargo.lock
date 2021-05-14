@@ -967,18 +967,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "houseflow-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cursive",
- "cursive-async-view",
- "hex",
- "rand",
- "reqwest",
-]
-
-[[package]]
 name = "houseflow-device"
 version = "0.1.0"
 dependencies = [

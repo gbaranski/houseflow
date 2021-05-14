@@ -1,3 +1,4 @@
+
 /// Used to identify the device
 #[derive(Debug, Clone)]
 pub struct DeviceID {
@@ -8,6 +9,7 @@ pub struct DeviceID {
 pub struct Device {
     pub id: DeviceID,
 }
+
 
 
 use std::fmt;

@@ -2,7 +2,13 @@ mod device;
 
 use device::{get_devices, Device};
 
-use cursive::views::{Dialog, TextView};
+use cursive_async_view::AsyncView;
+use cursive::{
+    views::{Dialog, TextView, OnEventView, SelectView},
+    direction::{Absolute, Direction},
+    event::{Event, EventTrigger, EventResult},
+    Cursive, View,
+};
 
 fn main() -> anyhow::Result<()> {
     // Creates the cursive root - required for every application.
@@ -20,7 +26,6 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-use cursive_async_view::AsyncView;
 
 fn send_command(siv: &mut Cursive, _device: &Device) {
     let client = reqwest::blocking::Client::new();
@@ -39,11 +44,6 @@ fn send_command(siv: &mut Cursive, _device: &Device) {
     });
     siv.add_layer(async_view);
 }
-
-use cursive::{
-    direction::{Absolute, Direction},
-    event::{Event, EventTrigger},
-};
 
 fn submit_callback(siv: &mut Cursive, device: Device) {
     let text_view = TextView::new("Select what to do with the device");
@@ -76,12 +76,6 @@ fn submit_callback(siv: &mut Cursive, device: Device) {
 
     siv.add_layer(dialog);
 }
-
-use cursive::{
-    event::EventResult,
-    views::{OnEventView, SelectView},
-    Cursive, View,
-};
 
 /// Returns SelectView whichs shows all available devices to user
 fn get_devices_select_view(
