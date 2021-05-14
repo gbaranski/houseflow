@@ -10,8 +10,6 @@ pub struct Device {
     pub id: DeviceID,
 }
 
-
-
 use std::fmt;
 
 impl fmt::Display for DeviceID {
