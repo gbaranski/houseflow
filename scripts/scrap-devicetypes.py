@@ -1,4 +1,4 @@
-# pip install pyquery requests
+# pip install pyquery
 from pyquery import PyQuery as pq
 
 URL = "https://developers.google.com/assistant/smarthome/guides"
