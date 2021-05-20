@@ -10,11 +10,14 @@ def to_camel_case(snake_str):
     components = snake_str.split('_')
     return components[0] + ''.join(x.title() for x in components[1:])
 
+def capitalize_first(str):
+    return str[0].capitalize() + str[1:]
+
 for type in d('td > a > code'):
     original_name = type.text
     elem_id = type.text.lower()
     description = d("#{} > td:nth-child(2)".format(elem_id)).text()
-    new_name = to_camel_case(elem_id).capitalize()
+    new_name = capitalize_first(to_camel_case(elem_id))
     out = """
 /// Google Assistant name: {}
 /// 
