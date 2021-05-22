@@ -1,6 +1,4 @@
-mod device;
-
-use device::{get_devices, Device};
+use houseflow_types::Device;
 
 use cursive_async_view::AsyncView;
 use cursive::{
