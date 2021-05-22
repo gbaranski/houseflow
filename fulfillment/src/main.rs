@@ -1,21 +1,3 @@
-use houseflow_db::Database;
-use houseflow_lighthouse::LighthouseAPI;
-use houseflow_token::Token;
-use actix_web::{web, post, App, HttpResponse, HttpRequest, HttpServer};
-use error::{Error, AuthError};
-
-mod error;
-mod intent {
-    mod intent;
-    mod error;
-    pub mod sync;
-    pub mod execute;
-    pub mod query;
-
-    pub use intent::{Request, RequestPayload, Response, ResponsePayload};
-    pub use error::IntentError;
-}
-
 
 /// This struct represents shared state across routes
 #[derive(Clone)]
