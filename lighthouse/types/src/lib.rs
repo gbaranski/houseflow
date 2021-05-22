@@ -1,2 +1,2 @@
 mod device;
-pub use device::{DeviceError, DeviceRequest, DeviceResponse, BrokerResponse};
+pub use device::DeviceError;

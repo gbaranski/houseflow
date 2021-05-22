@@ -7,9 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix = { version = "0.11", features = [ "macros" ], default-features = false }
-actix-web = { version = "=4.0.0-beta.5", default-features = false } 
-
 lighthouse-proto = { path = "../proto" }
 serde = "1.0"
 serde_json = "1.0"
