@@ -1,96 +1,63 @@
-pub mod models {
-    mod user;
-    mod device;
+use houseflow_types::{Device, DeviceID, User, UserID};
+use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
+use thiserror::Error;
 
-    pub use user::User;
-    pub use device::Device;
-
-    pub(crate) use user::USER_SCHEMA;
-    pub(crate) use user::USER_DEVICES_SCHEMA;
-    pub(crate) use device::DEVICE_SCHEMA;
-}
-
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
-    PoolError(deadpool_postgres::PoolError),
-    PgError(tokio_postgres::Error)
+    #[error("Error when running migrations: {0}")]
+    MigrateError(#[from] sqlx::migrate::MigrateError),
 
+    #[error("Error when sending query: {0}")]
+    QueryError(#[from] sqlx::Error),
 }
 
-impl From<deadpool_postgres::PoolError> for Error {
-    fn from(err: deadpool_postgres::PoolError) -> Error {
-        Error::PoolError(err)
-    }
-}
-
-impl From<tokio_postgres::Error> for Error {
-    fn from(err: tokio_postgres::Error) -> Error {
-        Error::PgError(err)
-    }
-}
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::PoolError(err) => write!(f, "pool: `{}`", err),
-            Error::PgError(err) => write!(f, "postgres: `{}`", err),
-        }
-    }
-}
-
-fn read_env(key: &'static str) -> String {
-    std::env::var(key).unwrap()
+pub struct Options {
+    pub host: String,
+    pub port: u16,
+    pub password: String,
 }
 
 #[derive(Clone)]
 pub struct Database {
-    pool: deadpool_postgres::Pool,
+    pool: PgPool,
 }
 
-
 impl Database {
-    pub fn connect() -> Result<Database, Error> {
-        let cfg = deadpool_postgres::Config { 
-            user: Some(read_env("POSTGRES_USER")),
-            password: Some(read_env("POSTGRES_PASSWORD")),
-            dbname: Some(read_env("POSTGRES_DB")),
-            options: None,
-            application_name: None,
-            ssl_mode: None,
-            host: Some(read_env("POSTGRES_HOST")),
-            hosts: None,
-            port: Some(read_env("POSTGRES_PORT"))
-                .map(|p| u16::from_str_radix(&p, 10)
-                .expect("`POSTGRES_PORT` is invalid unsigned 16 bit integer")),
-            ports: None,
-            connect_timeout: None,
-            keepalives: None,
-            keepalives_idle: None,
-            target_session_attrs: None,
-            channel_binding: None,
-            manager: None,
-            pool: None,
-        };
-
-        let pool = cfg.create_pool(tokio_postgres::NoTls).unwrap();
-
-        Ok(Database{
-            pool,
-        })
-
+    pub fn new(opts: Options) -> Self {
+        let connect_options = PgConnectOptions::new()
+            .host(&opts.host)
+            .password(&opts.password)
+            .port(opts.port);
+        let pool_options = PgPoolOptions::new().max_connections(5);
+        let pool = pool_options.connect_lazy_with(connect_options);
+        Self { pool }
     }
 
+    #[must_use = "you must initialise the database"]
     pub async fn init(&self) -> Result<(), Error> {
-        let client = self.pool.get().await?;
-
-        log::debug!("Creating `users` table");
-        client.batch_execute(models::USER_SCHEMA).await?;
-        log::debug!("Creating `devices` table");
-        client.batch_execute(models::DEVICE_SCHEMA).await?;
-        log::debug!("Creating `user_devices` table");
-        client.batch_execute(models::USER_DEVICES_SCHEMA).await?;
-
+        sqlx::migrate!("./migrations").run(&self.pool).await?;
         Ok(())
     }
 
+    pub async fn get_user_by_id(&self, user_id: UserID) -> Result<Option<User>, Error> {
+        const QUERY: &str = "SELECT * FROM users WHERE id = $1";
 
+        let user_id: &str = &user_id.to_string();
+        let user = sqlx::query_as::<_, User>(QUERY)
+            .bind(user_id)
+            .fetch_optional(&self.pool)
+            .await?;
+        Ok(user)
+    }
+
+    pub async fn get_device_by_id(&self, device_id: DeviceID) -> Result<Option<Device>, Error> {
+        const QUERY: &str = "SELECT * FROM devices WHERE id = $1";
+
+        let device_id: &str = &device_id.to_string();
+        let device = sqlx::query_as::<sqlx::Postgres, Device>(QUERY)
+            .bind(device_id)
+            .fetch_optional(&self.pool)
+            .await?;
+        Ok(device)
+    }
 }
