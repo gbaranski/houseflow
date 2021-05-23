@@ -5,8 +5,7 @@ use serde::{Serialize, Deserialize};
 
 pub type UserID = Credential<16>;
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct User {
     /// Unique ID of the user
