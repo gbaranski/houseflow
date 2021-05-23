@@ -1,5 +1,5 @@
 CREATE TABLE users (
-    id            VARCHAR(32) NOT NULL,
+    id            CHAR(32)    NOT NULL,
     first_name    TEXT        NOT NULL,
     last_name     TEXT        NOT NULL,
     email         TEXT        NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE users (
 CREATE EXTENSION hstore;
 
 CREATE TABLE devices (
-    id              VARCHAR(32) NOT NULL,
+    id              CHAR(32)    NOT NULL,
     password_hash   TEXT        NOT NULL,
     type            TEXT        NOT NULL,
     traits          TEXT[]      NOT NULL,
@@ -32,8 +32,8 @@ CREATE TABLE devices (
 
 
 CREATE TABLE user_devices (
-    user_id   VARCHAR(32)   REFERENCES users (id) ON DELETE CASCADE,
-    device_id VARCHAR(32)   REFERENCES devices (id) ON DELETE CASCADE,
+    user_id   CHAR(32)   REFERENCES users (id) ON DELETE CASCADE,
+    device_id CHAR(32)   REFERENCES devices (id) ON DELETE CASCADE,
     read      BOOL          NOT NULL,
     write     BOOL          NOT NULL,
     execute   BOOL          NOT NULL,
