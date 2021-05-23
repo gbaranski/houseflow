@@ -20,29 +20,29 @@ pub struct Device {
     /// Type of the device
     pub device_type: DeviceType,
 
-    // Functionatily that the device has
+    /// Functionatily that the device has
     pub traits: Vec<DeviceTrait>,
 
-    // Name of the device
-    // pub name: String,
+    /// Name of the device
+    pub name: String,
 
-    // True if device will push state by itself, otherwise will use polling
-    // pub will_push_state: bool,
+    /// True if device will push state by itself, otherwise will use polling
+    pub will_push_state: bool,
 
-    // Name of room(if available)
-    // pub room_hint: Option<String>,
+    /// Name of room(if available)
+    pub room: Option<String>,
 
-    // The model or SKU identifier of the device
-    // pub model: String,
+    /// The model or SKU identifier of the device
+    pub model: String,
 
-    // Specific version number of hardware of the device
-    // pub hw_version: Version,
+    /// Specific version number of hardware of the device
+    pub hw_version: Version,
 
-    // Specific version number of software of the device
-    // pub sw_version: Version,
+    /// Specific version number of software of the device
+    pub sw_version: Version,
 
-    // Aligned with per-trait attributes described in each trait schema reference.
-    // pub attributes: HashMap<String, String>,
+    /// Aligned with per-trait attributes described in each trait schema reference.
+    pub attributes: HashMap<String, Option<String>>,
 }
 
 use std::str::FromStr;
