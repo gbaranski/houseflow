@@ -4,5 +4,5 @@ mod user;
 
 
 pub use device::{Device, DeviceTrait, DeviceType, DeviceID, DevicePassword};
-pub use user::{User, UserID};
+pub use user::{User, UserID, UserAgent};
 
