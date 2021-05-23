@@ -162,17 +162,48 @@ impl<const N: usize> rand::distributions::Distribution<Credential<N>>
 }
 
 #[cfg(feature = "postgres-types")]
+impl<const N: usize> postgres_types::ToSql for Credential<N> {
+    fn accepts(ty: &postgres_types::Type) -> bool {
+        *ty == postgres_types::Type::BPCHAR
+    }
+
+    fn to_sql(
+        &self,
+        _ty: &postgres_types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres_types::IsNull, Box<dyn std::error::Error + Sync + Send>>
+    where
+        Self: Sized,
+    {
+        let string = self.to_string();
+        out.put_slice(string.as_bytes());
+        Ok(postgres_types::IsNull::No)
+    }
+
+    fn to_sql_checked(
+        &self,
+        _ty: &postgres_types::Type,
+        out: &mut bytes::BytesMut,
+    ) -> Result<postgres_types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
+        let string = self.to_string();
+        out.put_slice(string.as_bytes());
+        Ok(postgres_types::IsNull::No)
+    }
+}
+
+#[cfg(feature = "postgres-types")]
 impl<'a, const N: usize> postgres_types::FromSql<'a> for Credential<N> {
     fn from_sql(
-        ty: &postgres_types::Type,
+        _ty: &postgres_types::Type,
         raw: &'a [u8],
     ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        println!("Raw: {:?}", raw);
-        todo!()
+        let str = std::str::from_utf8(raw)?;
+        let credential = Self::from_str(str)?;
+        Ok(credential)
     }
 
     fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::TEXT 
+        *ty == postgres_types::Type::BPCHAR
     }
 }
 
