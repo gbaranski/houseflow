@@ -11,7 +11,7 @@ pub type DevicePassword = Credential<32>;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Device {
-    // Identifier of the device
+    /// Identifier of the device
     pub id: DeviceID,
 
     /// Hashed password for device
