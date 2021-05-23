@@ -30,12 +30,12 @@ pub enum Error {
     NotModified,
 }
 
-pub struct Options {
-    pub user: String,
-    pub password: String,
-    pub host: String,
+pub struct Options<'a> {
+    pub user: &'a str,
+    pub password: &'a str,
+    pub host: &'a str,
     pub port: u16,
-    pub database_name: String,
+    pub database_name: &'a str,
 }
 
 #[derive(Clone)]
@@ -46,17 +46,17 @@ pub struct Database {
 impl Database {
     fn get_pool_config(opts: &Options) -> deadpool_postgres::Config {
         let mut cfg = deadpool_postgres::Config::new();
-        cfg.user = Some(opts.user.clone());
-        cfg.password = Some(opts.password.clone());
-        cfg.host = Some(opts.host.clone());
+        cfg.user = Some(opts.user.to_string());
+        cfg.password = Some(opts.password.to_string());
+        cfg.host = Some(opts.host.to_string());
         cfg.port = Some(opts.port);
-        cfg.dbname = Some(opts.database_name.clone());
+        cfg.dbname = Some(opts.database_name.to_string());
         cfg
     }
 
     /// This function connect with database and runs migrations on it, after doing so it's fully
     /// ready for operations
-    pub async fn new(opts: Options) -> Result<Self, Error> {
+    pub async fn new<'a>(opts: &Options<'a>) -> Result<Self, Error> {
         let pool_config = Self::get_pool_config(&opts);
         let pool = pool_config
             .create_pool(NoTls)
