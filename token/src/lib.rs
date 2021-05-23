@@ -1,3 +1,4 @@
+use houseflow_types::UserAgent;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -10,6 +11,15 @@ pub enum Error {
 
     #[error("Invalid token signature")]
     InvalidSignature,
+
+    #[error("Agent could not be recognized: `{0}`")]
+    UnknownAgent(u8),
+
+    #[error("Invalid UserAgent, expected: `{expected}`, received: `{received}`")]
+    InvalidAgent{
+        expected: UserAgent,
+        received: UserAgent,
+    },
 
     #[error("Malformed payload {0:?}")]
     MalformedPayload(Option<Box<dyn std::error::Error>>),
@@ -45,44 +55,51 @@ mod tests {
 
     #[test]
     fn sign_verify() {
+        let user_agent: UserAgent = random();
         let payload = Payload {
+            user_agent: user_agent.clone(),
             user_id: random(),
             expires_at: SystemTime::now()
                 .checked_add(Duration::from_secs(5))
                 .unwrap(),
         };
         let token = payload.sign(KEY);
-        token.verify(KEY).expect("failed token verification");
+        token.verify(KEY, &user_agent).expect("failed token verification");
     }
 
     #[test]
     fn sign_verify_invalid_signature() {
+        let user_agent: UserAgent = random();
         let payload = Payload {
+            user_agent: user_agent.clone(),
             user_id: random(),
             expires_at: SystemTime::now()
                 .checked_sub(Duration::from_secs(5))
                 .unwrap(),
         };
         let token = payload.sign(KEY);
-        token.verify(b"some other key").expect_err("failed token verification");
+        token.verify(b"some other key", &user_agent).expect_err("failed token verification");
     }
 
     #[test]
     fn sign_verify_expired() {
+        let user_agent: UserAgent = random();
         let payload = Payload {
+            user_agent: user_agent.clone(),
             user_id: random(),
             expires_at: SystemTime::now()
                 .checked_sub(Duration::from_secs(5))
                 .unwrap(),
         };
         let token = payload.sign(KEY);
-        token.verify(KEY).expect_err("failed token verification");
+        token.verify(KEY, &user_agent).expect_err("failed token verification");
     }
 
     #[test]
     fn convert_invalid() {
         let mut buf = BytesMut::with_capacity(Token::SIZE);
         let payload = Payload {
+            user_agent: random(),
             user_id: random(),
             expires_at: SystemTime::now()
                 .checked_add(Duration::from_secs(5))
@@ -100,6 +117,7 @@ mod tests {
     fn to_from_bytes_conversion() {
         let mut buf = BytesMut::with_capacity(Token::SIZE);
         let payload = Payload {
+            user_agent: random(),
             user_id: random(),
             expires_at: SystemTime::now()
                 .checked_add(Duration::from_secs(5))
@@ -111,7 +129,7 @@ mod tests {
         let parsed_token = Token::from_buf(&mut buf).expect("failed reading token from buffer");
         assert_eq!(parsed_token, token);
         parsed_token
-            .verify(KEY)
+            .verify(KEY, &payload.user_agent)
             .expect("Failed veryfing token after bytes conversion");
     }
 }

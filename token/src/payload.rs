@@ -1,14 +1,15 @@
 use crate::{Error, HmacSha256, SizedFrame, Token};
 use bytes::{Buf, BufMut, BytesMut};
 use hmac::{Mac, NewMac};
-use houseflow_types::UserID;
+use houseflow_types::{UserAgent, UserID};
 use std::{
-    convert::TryInto,
+    convert::{TryFrom, TryInto},
     time::{Duration, SystemTime},
 };
 
 #[derive(Debug, Clone, Eq)]
 pub struct Payload {
+    pub user_agent: UserAgent,
     pub user_id: UserID,
     pub expires_at: SystemTime,
 }
@@ -42,18 +43,24 @@ impl Payload {
             return Err(Error::InvalidSize(buf.remaining()));
         }
 
+        let user_agent = buf.get_u8();
+        let user_agent =
+            UserAgent::try_from(user_agent).map_err(|_| Error::UnknownAgent(user_agent))?;
+
         let expires_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(buf.get_u64()))
             .unwrap();
         let user_id =
             UserID::from_buf(buf).map_err(|err| Error::MalformedPayload(Some(err.into())))?;
         Ok(Self {
+            user_agent,
             expires_at,
             user_id,
         })
     }
 
     pub fn to_buf(&self, buf: &mut impl BufMut) {
+        buf.put_u8(self.user_agent.clone() as u8);
         buf.put_u64(
             self.expires_at
                 .duration_since(SystemTime::UNIX_EPOCH)

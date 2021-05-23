@@ -1,6 +1,7 @@
 use crate::{Error, HmacSha256, Payload, Signature, SizedFrame};
 use bytes::{Buf, BufMut, BytesMut};
 use hmac::{Mac, NewMac};
+use houseflow_types::UserAgent;
 use std::time::SystemTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,7 +15,7 @@ impl SizedFrame for Token {
 }
 
 impl Token {
-    pub fn from_base64(base64: &[u8]) -> Result<Self, Error> {
+    pub fn from_base64(base64: impl AsRef<[u8]>) -> Result<Self, Error> {
         let mut bytes: &[u8] = &base64::decode(base64)?;
         Self::from_buf(&mut bytes)
     }
@@ -29,7 +30,13 @@ impl Token {
         self.payload.to_buf(buf);
     }
 
-    pub fn verify(&self, key: &[u8]) -> Result<(), Error> {
+    pub fn verify(&self, key: &[u8], user_agent: &UserAgent) -> Result<(), Error> {
+        if self.payload.user_agent != *user_agent {
+            return Err(Error::InvalidAgent {
+                expected: *user_agent,
+                received: self.payload.user_agent,
+            });
+        }
         if self.payload.expires_at.elapsed().is_ok() {
             return Err(Error::Expired {
                 expired_by: self
