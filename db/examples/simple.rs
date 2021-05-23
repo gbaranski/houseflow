@@ -1,4 +1,5 @@
 use houseflow_db::Database;
+use std::time::Instant;
 use std::convert::TryFrom;
 
 const DATABASE_USER: &str = "postgres";
@@ -11,8 +12,8 @@ const SALT: &[u8] = b"SomeSalt";
 const USER_ID: &str = "19632fc07d08424ab80adfd907c3932c";
 const USER_FIRST_NAME: &str = "John";
 const USER_LAST_NAME: &str = "Smith";
-const USER_EMAIL: &str = "root@gbaranski.com";
-const USER_PASSWORD: &str = "haslo123";
+const USER_EMAIL: &str = "username@example.com";
+const USER_PASSWORD: &str = "somepassword";
 
 #[tokio::main]
 async fn main() {
@@ -35,16 +36,21 @@ async fn main() {
     let database = Database::new(database_options)
         .await
         .expect("failed creating database");
+    let start = Instant::now();
     database.add_user(&user).await.expect("add user failed");
+    println!("Added user");
     let db_user = database
         .get_user(&user.id)
         .await
         .expect("get user failed")
         .expect("user not found");
+    println!("Retreived user");
     assert_eq!(user, db_user);
     database
         .delete_user(&user.id)
         .await
         .expect("delete user failed");
+    println!("Deleted user");
+    println!("All actions took: {:#?}", start.elapsed())
 }
 
