@@ -64,7 +64,7 @@ impl actix_web::FromRequest for ActixUser {
 
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
 
-    fn from_request(req: &HttpRequest, payload: &mut actix_web::dev::Payload) -> Self::Future {
+    fn from_request(req: &HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
         let headers = req.headers();
         let agent_state = req.app_data::<AgentState>().unwrap();
         let token_key = agent_state.token_key.clone();
@@ -142,7 +142,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..common_agent_state.clone()
     };
 
-    let google_actions_agent_state = AgentState {
+    let _google_actions_agent_state = AgentState {
         users_agent: UserAgent::GoogleSmartHome,
         ..internal_agent_state.clone()
     };
