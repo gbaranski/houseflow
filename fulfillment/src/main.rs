@@ -1,4 +1,11 @@
+use actix_web::{http, web, App, HttpRequest, HttpServer};
+use houseflow_db::{Database, Error as DatabaseError, Options as DatabaseOptions};
+use houseflow_token::Token;
+use houseflow_types::{User, UserAgent};
 use thiserror::Error;
+
+mod gactions;
+mod internal;
 
 #[derive(Debug, Error)]
 pub enum AuthorizationError {
@@ -20,6 +27,7 @@ pub enum AuthorizationError {
     #[error("user has not been found in database")]
     UserNotFound,
 }
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("authorization error: `{0}`")]
@@ -107,29 +115,51 @@ pub struct AgentState {
     users_agent: UserAgent,
     token_key: Vec<u8>,
 }
+
 #[actix_web::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
-    log::info!("Starting houseflow-fulfillment");
+    log::info!("Starting fulfillment service");
 
-    let db = Database::connect()?;
-    db.init().await?;
+    // TODO: Replace those fixed values
+    let database_options = DatabaseOptions {
+        user: "postgres",
+        password: "haslo123",
+        host: "localhost",
+        port: 5432,
+        database_name: "houseflow",
+    };
+    let token_key = b"4a92c480aa4147ed-a3c36e5e667d8fbd";
+    let database = Database::new(&database_options).await?;
+    log::info!("Database initialized");
 
-    let mc = memcache::connect("memcache://memcache:11211?timeout=10&tcp_nodelay=true")?;
-    
-    let app_state = AppState {
-        db,
-        mc,
+    let common_agent_state = AgentState {
+        database,
+        token_key: token_key.to_vec(),
+        users_agent: UserAgent::default(),
     };
 
-    log::info!("Starting HttpServer");
+    let internal_agent_state = AgentState {
+        users_agent: UserAgent::Internal,
+        ..common_agent_state
+    };
+
+    let google_actions_agent_state = AgentState {
+        users_agent: UserAgent::GoogleSmartHome,
+        ..internal_agent_state
+    };
+
     HttpServer::new(move || {
         App::new()
-            .data(app_state.to_owned())
             .wrap(actix_web::middleware::Logger::default())
-            .service(webhook)
+            // .wrap(auth)
+            .service(
+                web::scope("/internal")
+                    .app_data(internal_agent_state.clone())
+                    .service(internal::on_sync),
+            )
     })
-    .bind("0.0.0.0:80")?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
     .unwrap();
