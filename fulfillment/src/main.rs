@@ -69,7 +69,7 @@ impl actix_web::FromRequest for ActixUser {
         let agent_state = req.app_data::<AgentState>().unwrap();
         let token_key = agent_state.token_key.clone();
         let expected_user_agent = agent_state.users_agent.clone();
-        let database = agent_state.database;
+        let database = agent_state.database.clone();
         let authorization_header = match headers
             .get(http::header::AUTHORIZATION)
             .ok_or(AuthorizationError::MissingHeader)
@@ -90,15 +90,13 @@ impl actix_web::FromRequest for ActixUser {
             if schema != "Bearer" {
                 return Err(AuthorizationError::InvalidHeaderSchema.into());
             }
-            let user_id = Token::from_base64(token)
-                .map_err(AuthorizationError::InvalidToken)?
+            let token = Token::from_base64(token).map_err(AuthorizationError::InvalidToken)?;
+            token
                 .verify(&token_key, &expected_user_agent)
-                .map_err(AuthorizationError::InvalidToken)?
-                .payload
-                .user_id;
+                .map_err(AuthorizationError::InvalidToken)?;
 
             let user = database
-                .get_user(&user_id)
+                .get_user(&token.payload.user_id)
                 .await?
                 .ok_or(AuthorizationError::UserNotFound)?;
 
@@ -141,12 +139,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let internal_agent_state = AgentState {
         users_agent: UserAgent::Internal,
-        ..common_agent_state
+        ..common_agent_state.clone()
     };
 
     let google_actions_agent_state = AgentState {
         users_agent: UserAgent::GoogleSmartHome,
-        ..internal_agent_state
+        ..internal_agent_state.clone()
     };
 
     HttpServer::new(move || {
