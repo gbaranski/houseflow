@@ -10,8 +10,15 @@ pub type UserID = Credential<16>;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, EnumIter, strum_macros::Display)]
 pub enum UserAgent {
+    None,
     Internal,
     GoogleSmartHome,
+}
+
+impl Default for UserAgent {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 impl TryFrom<u8> for UserAgent {
