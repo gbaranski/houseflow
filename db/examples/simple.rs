@@ -33,7 +33,7 @@ async fn main() {
         port: DATABASE_PORT,
         database_name: DATABASE_NAME.into(),
     };
-    let database = Database::new(database_options)
+    let database = Database::new(&database_options)
         .await
         .expect("failed creating database");
     let start = Instant::now();
