@@ -6,7 +6,6 @@ use std::{
 use thiserror::Error;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-#[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
 pub struct Credential<const N: usize> {
     inner: [u8; N],
 }
@@ -51,7 +50,6 @@ pub enum CredentialError {
     #[error("Invalid size, expected: {expected}, received: {received}")]
     InvalidSize { expected: usize, received: usize },
 
-
     #[error("Invalid encoding: {0}")]
     InvalidEncoding(#[from] hex::FromHexError),
 }
@@ -77,6 +75,25 @@ impl<const N: usize> Default for Credential<N> {
 impl<const N: usize> Into<String> for Credential<N> {
     fn into(self) -> String {
         hex::encode(self.inner)
+    }
+}
+
+impl<const N: usize> TryFrom<&str> for Credential<N> {
+    type Error = CredentialError;
+
+    fn try_from(v: &str) -> Result<Self, Self::Error> {
+        // N * 2 because encoding with hex doubles the size
+
+        if v.len() != N * 2 {
+            Err(CredentialError::InvalidSize {
+                expected: N * 2,
+                received: v.len(),
+            })
+        } else {
+            Ok(Self {
+                inner: hex::decode(v)?.try_into().unwrap(),
+            })
+        }
     }
 }
 
@@ -144,32 +161,18 @@ impl<const N: usize> rand::distributions::Distribution<Credential<N>>
     }
 }
 
-#[cfg(feature = "sqlx")]
-impl<'r, const N: usize> sqlx::Decode<'r, sqlx::Postgres> for Credential<N> {
-    fn decode(
-        value: sqlx::postgres::PgValueRef<'r>,
-    ) -> Result<Self, Box<dyn std::error::Error + 'static + Send + Sync>> {
-        let hex = <&str as sqlx::Decode<sqlx::Postgres>>::decode(value)?;
-        let credential = Self::from_str(hex)?;
-
-        Ok(credential)
+#[cfg(feature = "postgres-types")]
+impl<'a, const N: usize> postgres_types::FromSql<'a> for Credential<N> {
+    fn from_sql(
+        ty: &postgres_types::Type,
+        raw: &'a [u8],
+    ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        println!("Raw: {:?}", raw);
+        todo!()
     }
-}
 
-#[cfg(feature = "sqlx")]
-impl<'q, const N: usize> sqlx::Encode<'q, sqlx::Postgres> for Credential<N> {
-    fn encode_by_ref(&self, buf: &mut sqlx::postgres::PgArgumentBuffer) -> sqlx::encode::IsNull {
-        match hex::encode_to_slice(self.inner, buf) {
-            Ok(()) => sqlx::encode::IsNull::No,
-            Err(err) => unreachable!(err),
-        }
-    }
-}
-
-#[cfg(feature = "sqlx")]
-impl<const N: usize> sqlx::Type<sqlx::Postgres> for Credential<N> {
-    fn type_info() -> sqlx::postgres::PgTypeInfo {
-        sqlx::postgres::PgTypeInfo::with_name("TEXT")
+    fn accepts(ty: &postgres_types::Type) -> bool {
+        *ty == postgres_types::Type::TEXT 
     }
 }
 
