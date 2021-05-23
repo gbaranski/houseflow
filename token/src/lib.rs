@@ -16,7 +16,7 @@ pub enum Error {
     UnknownAgent(u8),
 
     #[error("Invalid UserAgent, expected: `{expected}`, received: `{received}`")]
-    InvalidAgent{
+    InvalidUserAgent {
         expected: UserAgent,
         received: UserAgent,
     },
@@ -64,7 +64,9 @@ mod tests {
                 .unwrap(),
         };
         let token = payload.sign(KEY);
-        token.verify(KEY, &user_agent).expect("failed token verification");
+        token
+            .verify(KEY, &user_agent)
+            .expect("failed token verification");
     }
 
     #[test]
@@ -74,11 +76,16 @@ mod tests {
             user_agent: user_agent.clone(),
             user_id: random(),
             expires_at: SystemTime::now()
-                .checked_sub(Duration::from_secs(5))
+                .checked_add(Duration::from_secs(5))
                 .unwrap(),
         };
         let token = payload.sign(KEY);
-        token.verify(b"some other key", &user_agent).expect_err("failed token verification");
+        let result = token.verify(b"some other key", &user_agent).unwrap_err();
+
+        match result {
+            Error::InvalidSignature => (),
+            _ => panic!("received unexpected error: {}", result),
+        }
     }
 
     #[test]
@@ -92,7 +99,34 @@ mod tests {
                 .unwrap(),
         };
         let token = payload.sign(KEY);
-        token.verify(KEY, &user_agent).expect_err("failed token verification");
+        let result = token.verify(KEY, &user_agent).unwrap_err();
+        match result {
+            Error::Expired { .. } => (),
+            _ => panic!("received unexpected error: {}", result),
+        };
+    }
+
+    #[test]
+    fn sign_verify_invalid_user_agent() {
+        let user_agent = UserAgent::GoogleSmartHome;
+        let other_user_agent = UserAgent::Internal;
+        let payload = Payload {
+            user_agent,
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_sub(Duration::from_secs(5))
+                .unwrap(),
+        };
+        let token = payload.sign(KEY);
+
+        let result = token.verify(KEY, &other_user_agent).unwrap_err();
+        match result {
+            Error::InvalidUserAgent { received, expected } => {
+                assert_eq!(expected, user_agent);
+                assert_eq!(received, other_user_agent);
+            }
+            _ => panic!("received unexpected error: {}", result),
+        };
     }
 
     #[test]
@@ -105,12 +139,16 @@ mod tests {
                 .checked_add(Duration::from_secs(5))
                 .unwrap(),
         };
+
         let token = payload.sign(KEY);
         token.to_buf(&mut buf);
         buf = buf[0..Token::SIZE - 5].into(); // Malform the data on intention
 
-        Token::from_buf(&mut buf)
-            .expect_err("reading token from buffer succeded even if it should not succeed");
+        let result = Token::from_buf(&mut buf).unwrap_err();
+        match result {
+            Error::MalformedPayload(_) | Error::InvalidSize(_) => (),
+            _ => panic!("received unexpected error: {}", result),
+        }
     }
 
     #[test]
