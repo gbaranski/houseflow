@@ -58,3 +58,32 @@ pub enum DeviceTrait {}
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DeviceType {}
 
+#[cfg(feature = "postgres-types")]
+impl<'a> postgres_types::FromSql<'a> for DeviceType {
+    fn from_sql(
+        _ty: &postgres_types::Type,
+        raw: &'a [u8],
+    ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        let str = std::str::from_utf8(raw)?;
+        Ok(Self::from_str(str)?)
+    }
+
+    fn accepts(ty: &postgres_types::Type) -> bool {
+        *ty == postgres_types::Type::TEXT_ARRAY
+    }
+}
+
+#[cfg(feature = "postgres-types")]
+impl<'a> postgres_types::FromSql<'a> for DeviceTrait {
+    fn from_sql(
+        _ty: &postgres_types::Type,
+        raw: &'a [u8],
+    ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        let str = std::str::from_utf8(raw)?;
+        Ok(Self::from_str(str)?)
+    }
+
+    fn accepts(ty: &postgres_types::Type) -> bool {
+        *ty == postgres_types::Type::TEXT_ARRAY
+    }
+}
