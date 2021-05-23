@@ -30,7 +30,7 @@ impl Token {
         self.payload.to_buf(buf);
     }
 
-    pub fn verify(&self, key: &[u8], user_agent: &UserAgent) -> Result<&Self, Error> {
+    pub fn verify(&self, key: &[u8], user_agent: &UserAgent) -> Result<(), Error> {
         if self.payload.user_agent != *user_agent {
             return Err(Error::InvalidUserAgent {
                 expected: self.payload.user_agent,
@@ -56,6 +56,6 @@ impl Token {
         mac.verify(self.signature.as_ref())
             .map_err(|_err| Error::InvalidSignature)?;
 
-        Ok(self)
+        Ok(())
     }
 }
