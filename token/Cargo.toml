@@ -10,11 +10,12 @@ edition = "2018"
 houseflow-types = { path = "../types" }
 serde = { version = "1.0", features = [ "derive" ], optional = true }
 
-hmac = "0.10"
+hmac = "0.11"
 sha2 = "0.9"
 base64 = "0.13"
 bytes = "1"
 thiserror = "1.0"
+hex = "0.4.3"
 
 
 [dev-dependencies]
