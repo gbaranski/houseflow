@@ -41,6 +41,15 @@ pub enum VerifyError {
     InvalidSignature,
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("token failed to verify: `{0}`")]
+    VerifyError(VerifyError),
+    
+    #[error("token failed to decode: `{0}`")]
+    DecodeError(VerifyError),
+}
+
 use bytes::{Buf, BufMut};
 
 pub trait Decoder {
