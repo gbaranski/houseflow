@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub type UserID = Credential<16>;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, EnumIter, strum_macros::Display)]
+#[repr(u8)]
 pub enum UserAgent {
     None,
     Internal,
