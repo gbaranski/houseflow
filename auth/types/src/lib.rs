@@ -58,7 +58,7 @@ pub struct AccessTokenRequestError {
 
 #[derive(Debug, Clone, thiserror::Error)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(rename = "snake_case"))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum AccessTokenRequestErrorKind {
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
