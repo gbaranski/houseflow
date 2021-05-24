@@ -1,5 +1,6 @@
 use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError};
 use houseflow_types::UserAgent;
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -16,6 +17,17 @@ impl Token {
         self.payload.verify(user_agent)?;
         self.signature.verify(&self.payload, key)?;
         Ok(())
+    }
+}
+
+impl TryFrom<&str> for Token {
+    type Error = DecodeError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        use bytes::BytesMut;
+
+        let mut buf = BytesMut::from(value);
+        Token::decode(&mut buf)
     }
 }
 

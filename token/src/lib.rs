@@ -44,10 +44,10 @@ pub enum VerifyError {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("token failed to verify: `{0}`")]
-    VerifyError(VerifyError),
+    VerifyError(#[from] VerifyError),
     
     #[error("token failed to decode: `{0}`")]
-    DecodeError(VerifyError),
+    DecodeError(#[from] DecodeError),
 }
 
 use bytes::{Buf, BufMut};
