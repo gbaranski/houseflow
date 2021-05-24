@@ -20,14 +20,26 @@ impl Token {
         Self::from_buf(&mut bytes)
     }
 
+    pub fn to_base64(&self) -> String {
+        let mut bytes = BytesMut::with_capacity(Self::SIZE);
+        self.signature.to_buf(&mut bytes);
+        self.payload.to_buf(&mut bytes);
+        base64::encode(bytes)
+    }
+
     pub fn from_buf(buf: &mut impl Buf) -> Result<Self, Error> {
         let signature = Signature::from_buf(buf)?;
         let payload = Payload::from_buf(buf)?;
         Ok(Self { payload, signature })
     }
+
     pub fn to_buf(&self, buf: &mut impl BufMut) {
         self.signature.to_buf(buf);
         self.payload.to_buf(buf);
+    }
+
+    pub fn has_expired(&self) -> bool {
+        self.payload.expires_at.elapsed().is_ok()
     }
 
     pub fn verify(&self, key: &[u8], user_agent: &UserAgent) -> Result<(), Error> {
@@ -37,7 +49,7 @@ impl Token {
                 received: *user_agent,
             });
         }
-        if self.payload.expires_at.elapsed().is_ok() {
+        if self.has_expired() {
             return Err(Error::Expired {
                 expired_by: self
                     .payload
