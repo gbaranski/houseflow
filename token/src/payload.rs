@@ -3,6 +3,7 @@ use bytes::{Buf, BufMut, BytesMut};
 use hmac::{Mac, NewMac};
 use houseflow_types::{UserAgent, UserID};
 use std::{
+    mem::size_of,
     convert::{TryFrom, TryInto},
     time::{Duration, SystemTime},
 };
@@ -34,7 +35,7 @@ const UNIX_TIMESTAMP_SECONDS_SIZE: usize = 8;
 
 impl SizedFrame for Payload {
     // 8 first bytes are unsigned 64 bit integer
-    const SIZE: usize = UNIX_TIMESTAMP_SECONDS_SIZE + UserID::SIZE;
+    const SIZE: usize = size_of::<UserAgent>() + UNIX_TIMESTAMP_SECONDS_SIZE + UserID::SIZE;
 }
 
 impl Payload {
