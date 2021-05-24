@@ -27,13 +27,7 @@ pub enum TokenType {
     Bearer,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(untagged))]
-pub enum AccessTokenResponse {
-    Ok(AccessTokenRequestBody),
-    Err(AccessTokenRequestError),
-}
+pub type AccessTokenResponse = Result<AccessTokenRequestBody, AccessTokenRequestError>;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
@@ -52,8 +46,8 @@ pub struct AccessTokenResponseBody {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[error("kind: `{error}`, description: `{}`")]
 pub struct AccessTokenRequestError {
-    error: AccessTokenRequestErrorKind,
-    error_description: String,
+    pub error: AccessTokenRequestErrorKind,
+    pub error_description: Option<String>,
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
