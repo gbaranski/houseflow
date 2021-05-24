@@ -18,8 +18,13 @@ thiserror = "1.0.25"
 tokio = { version = "1.6.0", features = [ "macros", "rt-multi-thread" ] }
 
 # Web
-warp = "0.3.1"
+actix-web = "=4.0.0-beta.5" 
+
+# Databases
+redis = { version = "0.20.1", features = [ "tokio-comp" ] }
+houseflow-db = { path = "../../db" }
 
 # Internal
-houseflow-auth-types = { path = "../types", features = [ "serde" ] }
+houseflow-auth-types = { path = "../types", features = [ "serde", "actix" ] }
+houseflow-types = { path = "../../types", features = [ "serde" ] }
 houseflow-token = { path = "../../token" }
