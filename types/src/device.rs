@@ -45,7 +45,6 @@ pub struct Device {
     pub attributes: HashMap<String, Option<String>>,
 }
 
-use std::str::FromStr;
 use strum_macros::EnumString;
 
 /// Traits defines what functionality device supports
