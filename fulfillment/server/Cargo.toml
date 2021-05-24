@@ -7,10 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-db = { path = "../db" }
-houseflow-token = { path = "../token" }
-houseflow-types = { path = "../types" }
-lighthouse-api = { path = "../lighthouse/api" }
+houseflow-db = { path = "../../db" }
+houseflow-token = { path = "../../token" }
+houseflow-types = { path = "../../types" }
+lighthouse-api = { path = "../../lighthouse/api" }
 
 actix-web = "=4.0.0-beta.5" 
 
