@@ -3,6 +3,7 @@ members = [
   "fulfillment/api",
   "fulfillment/server",
   "auth/types",
+  "auth/server",
   "db",
   "tui",
   "devices/virtual",

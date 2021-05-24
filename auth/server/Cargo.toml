@@ -1,0 +1,25 @@
+[package]
+name = "houseflow-auth-server"
+version = "0.1.0"
+authors = ["gbaranski <root@gbaranski.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Logging
+env_logger = "0.8.3"
+log = "0.4.14"
+
+# Errors
+thiserror = "1.0.25"
+
+# Async
+tokio = { version = "1.6.0", features = [ "macros", "rt-multi-thread" ] }
+
+# Web
+warp = "0.3.1"
+
+# Internal
+houseflow-auth-types = { path = "../types", features = [ "serde" ] }
+houseflow-token = { path = "../../token" }
