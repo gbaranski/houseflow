@@ -15,6 +15,9 @@ impl SizedFrame for Token {
 }
 
 impl Token {
+    #[cfg(feature = "serde")]
+    const BASE64_SIZE: usize = (Self::SIZE / 3) * 4;
+
     pub fn from_base64(base64: impl AsRef<[u8]>) -> Result<Self, Error> {
         let mut bytes: &[u8] = &base64::decode(base64)?;
         Self::from_buf(&mut bytes)
@@ -69,5 +72,58 @@ impl Token {
             .map_err(|_err| Error::InvalidSignature)?;
 
         Ok(())
+    }
+}
+
+#[cfg(feature = "serde")]
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Token {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[cfg(feature = "serde")]
+        struct TokenVisitor;
+
+        #[cfg(feature = "serde")]
+        impl<'de> Visitor<'de> for TokenVisitor {
+            type Value = String;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str(&format!("string of length `{}`", Token::BASE64_SIZE))
+            }
+        }
+
+        let base64 = deserializer.deserialize_string(TokenVisitor)?;
+        if base64.len() != Self::BASE64_SIZE {
+            let msg = format!("expected base64 string of length: {}", Self::BASE64_SIZE);
+            return Err(de::Error::invalid_length(base64.len(), &msg.as_str()));
+        }
+        let token = match Token::from_base64(base64) {
+            Ok(token) => token,
+            Err(err) => {
+                return Err(de::Error::invalid_value(
+                    de::Unexpected::Other(&err.to_string()),
+                    &"valid token",
+                ))
+            }
+        };
+        Ok(token)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for Token {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let base64 = self.to_base64();
+        serializer.serialize_str(&base64)
     }
 }
