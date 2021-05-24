@@ -109,6 +109,6 @@ impl actix_web::ResponseError for AccessTokenRequestError {
     fn error_response(&self) -> actix_web::HttpResponse {
         let json = actix_web::web::Json(self);
 
-        actix_web::dev::HttpResponseBuilder::new(self.status_code()).json(json)
+        actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }
