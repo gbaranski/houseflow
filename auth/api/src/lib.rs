@@ -17,6 +17,9 @@ pub struct Auth {
 pub enum Error {
     #[error("error occured with sending request: `{0}`")]
     ReqwestError(#[from] reqwest::Error),
+
+    #[error("refreshing access token failed with: `{0}`")]
+    RefreshAccessTokenError(#[from] houseflow_auth_types::AccessTokenRequestError),
 }
 
 impl Auth {
