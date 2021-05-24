@@ -2,10 +2,12 @@
 members = [
   "fulfillment/api",
   "fulfillment/server",
+  "fulfillment/types",
   "auth/types",
   "auth/server",
+  "auth/api",
   "db",
-  "tui",
+  # "tui",
   "devices/virtual",
   "token",
   "types",
