@@ -89,3 +89,26 @@ pub enum AccessTokenRequestErrorKind {
     #[error("Grant type is unsupported")]
     UnsupportedGrantType,
 }
+
+#[cfg(feature = "actix-web")]
+impl actix_web::ResponseError for AccessTokenRequestError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        use actix_web::http::StatusCode;
+        use AccessTokenRequestErrorKind::*;
+
+        match self.error {
+            InvalidRequest => StatusCode::BAD_REQUEST,
+            InvalidClient => StatusCode::UNAUTHORIZED,
+            InvalidGrant => StatusCode::BAD_REQUEST,
+            InvalidScope => StatusCode::BAD_REQUEST,
+            UnauthorizedClient => StatusCode::BAD_REQUEST,
+            UnsupportedGrantType => StatusCode::BAD_REQUEST,
+        }
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse {
+        let json = actix_web::web::Json(self);
+
+        actix_web::dev::HttpResponseBuilder::new(self.status_code()).json(json)
+    }
+}
