@@ -63,6 +63,8 @@ impl<'a> postgres_types::FromSql<'a> for DeviceType {
         _ty: &postgres_types::Type,
         raw: &'a [u8],
     ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        use std::str::FromStr;
+
         let str = std::str::from_utf8(raw)?;
         Ok(Self::from_str(str)?)
     }
@@ -78,6 +80,8 @@ impl<'a> postgres_types::FromSql<'a> for DeviceTrait {
         _ty: &postgres_types::Type,
         raw: &'a [u8],
     ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
+        use std::str::FromStr;
+
         let str = std::str::from_utf8(raw)?;
         Ok(Self::from_str(str)?)
     }
