@@ -21,11 +21,11 @@ impl<const N: usize> Credential<N> {
         Self::from(bytes)
     }
 
-    pub fn to_buf(&self, buf: &mut impl BufMut) {
+    pub fn encode(&self, buf: &mut impl BufMut) {
         buf.put_slice(&self.inner);
     }
 
-    pub fn from_buf(buf: &mut impl Buf) -> Result<Self, CredentialError> {
+    pub fn decode(buf: &mut impl Buf) -> Result<Self, CredentialError> {
         if buf.remaining() < N {
             return Err(CredentialError::InvalidSize {
                 expected: N,
@@ -254,8 +254,8 @@ mod tests {
     fn test_buffer_parse() {
         let mut buf = BytesMut::with_capacity(SIZE);
         let credential: Credential<SIZE> = rand::random();
-        credential.to_buf(&mut buf);
-        let parsed_credential = Credential::<SIZE>::from_buf(&mut buf)
+        credential.encode(&mut buf);
+        let parsed_credential = Credential::<SIZE>::decode(&mut buf)
             .expect("reading Credential from buffer returned Error");
         assert_eq!(credential, parsed_credential);
     }
@@ -264,9 +264,9 @@ mod tests {
     fn test_buffer_parse_underflow() {
         let mut buf = BytesMut::with_capacity(SIZE);
         let credential: Credential<SIZE> = rand::random();
-        credential.to_buf(&mut buf);
+        credential.encode(&mut buf);
         buf = buf[0..SIZE - 1].into(); // Malform some last bytes of Buf
-        Credential::<SIZE>::from_buf(&mut buf)
+        Credential::<SIZE>::decode(&mut buf)
             .expect_err("reading malformed Credential from buffer did not return Error");
     }
 }
