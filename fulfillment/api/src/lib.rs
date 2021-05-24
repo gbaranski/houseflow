@@ -1,36 +1,41 @@
-use url::Url;
+use houseflow_auth_api::Auth;
+use houseflow_fulfillment_types::{SyncRequest, SyncResponse};
+use houseflow_types::Device;
 use reqwest::Client;
-use houseflow_types::{Device, UserAgent};
-use houseflow_token::Token;
+use url::Url;
 
 pub struct Fulfillment {
     url: Url,
-    refresh_token: Token,
-    access_token: Token,
+    auth: Auth,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Auth API Error: `{0}`")]
+    AuthError(#[from] houseflow_auth_api::Error),
+
+    #[error("Sending request failed: `{0}`")]
+    ReqwestError(#[from] reqwest::Error),
 }
 
 impl Fulfillment {
-    pub fn new(url: Url, refresh_token: Token) -> Self {
-        Self { url, refresh_token }
+    pub fn new(url: Url, auth: Auth) -> Self {
+        Self { url, auth }
     }
 
-    async fn refresh_token(&mut self) -> bool {
-        if !self.access_token.has_expired() {
-            return false
-        }
+    pub async fn sync(&self) -> Result<Vec<Device>, Error> {
+        let access_token = self.auth.access_token().await?;
         let client = Client::new();
-        let query = format!("grant_type=refresh_token&refresh_token={}", self.refresh_token.to_base64());
-        let url = self.url
-            .join("token")
-            .unwrap()
-            .set_query(Some(&query));
-        let response =  client.post(self.url.join("token").unwrap());
+        let url = self.url.join("sync").unwrap();
+        let response = client
+            .post(url)
+            .json(&SyncRequest::default())
+            .bearer_auth(access_token.to_base64())
+            .send()
+            .await?
+            .json::<SyncResponse>()
+            .await?;
 
-
-        true
-    }
-
-    pub async fn sync(&mut self) -> Vec<Device> {
-
+        Ok(response)
     }
 }
