@@ -15,10 +15,10 @@ pub enum GrantType {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AccessTokenRequest {
     /// The grant_type parameter must be set to `GrantType::RefreshToken`.
-    grant_type: GrantType,
+    pub grant_type: GrantType,
 
     /// The refresh token previously issued to the client.
-    refresh_token: Token,
+    pub refresh_token: Token,
 }
 
 
@@ -32,11 +32,11 @@ pub enum TokenType {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AccessTokenResponse {
     /// The access token string as issued by the authorization server.
-    access_token: Token,
+    pub access_token: Token,
 
     /// The type of token this is, typically just the string “Bearer”.
-    token_type: TokenType,
+    pub token_type: TokenType,
     
     /// If the access token expires, the server should reply with the duration of time the access token is granted for.
-    expires_in: Duration,
+    pub expires_in: Option<Duration>,
 }
