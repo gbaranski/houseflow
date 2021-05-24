@@ -90,10 +90,12 @@ impl actix_web::FromRequest for ActixUser {
             if schema != "Bearer" {
                 return Err(AuthorizationError::InvalidHeaderSchema.into());
             }
-            let token = Token::from_base64(token).map_err(AuthorizationError::InvalidToken)?;
+            let token = Token::from_base64(token)
+                .map_err(|err| AuthorizationError::InvalidToken(err.into()))?;
+
             token
                 .verify(&token_key, &expected_user_agent)
-                .map_err(AuthorizationError::InvalidToken)?;
+                .map_err(|err| AuthorizationError::InvalidToken(err.into()))?;
 
             let user = database
                 .get_user(&token.payload.user_id)

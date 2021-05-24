@@ -22,6 +22,9 @@ pub enum DecodeError {
 
     #[error("unknown user agent: `{0}`")]
     UnknownUserAgent(u8),
+
+    #[error("encoding base64 failed: `{0}`")]
+    InvalidBase64Encoding(#[from] base64::DecodeError)
 }
 
 pub use houseflow_types::UserAgent;

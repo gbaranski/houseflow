@@ -10,6 +10,7 @@ edition = "2018"
 houseflow-db = { path = "../../db" }
 houseflow-token = { path = "../../token" }
 houseflow-types = { path = "../../types" }
+houseflow-fulfillment-types = { path = "../types" }
 lighthouse-api = { path = "../../lighthouse/api" }
 
 actix-web = "=4.0.0-beta.5" 

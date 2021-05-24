@@ -1,6 +1,5 @@
 use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError};
 use houseflow_types::UserAgent;
-use std::convert::TryFrom;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -9,8 +8,26 @@ pub struct Token {
 }
 
 impl Token {
+    #[cfg(feature = "serde")]
+    pub const BASE64_SIZE: usize = ((4 * Self::SIZE / 3) + 3) & !3;
+
     pub fn new(payload: Payload, signature: Signature) -> Self {
         Self { payload, signature }
+    }
+
+    pub fn from_base64(value: impl AsRef<str>) -> Result<Self, DecodeError> {
+        use bytes::BytesMut;
+
+        let value = base64::decode(value.as_ref())?;
+        let mut buf = BytesMut::from(value.as_slice());
+        Self::decode(&mut buf)
+    }
+
+    pub fn into_base64(self) -> String {
+        use bytes::BytesMut;
+        let mut buf = BytesMut::with_capacity(Self::SIZE);
+        self.encode(&mut buf);
+        base64::encode(buf)
     }
 
     pub fn verify(&self, key: impl AsRef<[u8]>, user_agent: &UserAgent) -> Result<(), VerifyError> {
@@ -18,16 +35,10 @@ impl Token {
         self.signature.verify(&self.payload, key)?;
         Ok(())
     }
-}
 
-impl TryFrom<&str> for Token {
-    type Error = DecodeError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        use bytes::BytesMut;
-
-        let mut buf = BytesMut::from(value);
-        Token::decode(&mut buf)
+    #[inline]
+    pub fn has_expired(&self) -> bool {
+        self.payload.expires_at.has_expired()
     }
 }
 
@@ -54,6 +65,58 @@ impl Encoder for Token {
     fn encode(&self, buf: &mut impl bytes::BufMut) {
         self.payload.encode(buf);
         self.signature.encode(buf);
+    }
+}
+
+#[cfg(feature = "serde")]
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Token {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[cfg(feature = "serde")]
+        struct TokenVisitor;
+        #[cfg(feature = "serde")]
+        impl<'de> Visitor<'de> for TokenVisitor {
+            type Value = String;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str(&format!("string of length `{}`", Token::BASE64_SIZE))
+            }
+        }
+
+        let base64 = deserializer.deserialize_string(TokenVisitor)?;
+        if base64.len() != Self::SIZE {
+            let msg = format!("expected base64 string of length: {}", Self::BASE64_SIZE);
+            return Err(de::Error::invalid_length(base64.len(), &msg.as_str()));
+        }
+        let token = match Token::from_base64(base64) {
+            Ok(token) => token,
+            Err(err) => {
+                return Err(de::Error::invalid_value(
+                    de::Unexpected::Other(&err.to_string()),
+                    &"valid token",
+                ))
+            }
+        };
+        Ok(token)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for Token {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let base64 = self.clone().into_base64();
+        serializer.serialize_str(&base64)
     }
 }
 
@@ -134,55 +197,3 @@ impl Encoder for Token {
 //     }
 // }
 //
-// #[cfg(feature = "serde")]
-// use serde::{
-//     de::{self, Visitor},
-//     Deserialize, Deserializer, Serialize, Serializer,
-// };
-//
-// #[cfg(feature = "serde")]
-// impl<'de> Deserialize<'de> for Token {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: Deserializer<'de>,
-//     {
-//         #[cfg(feature = "serde")]
-//         struct TokenVisitor;
-//
-//         #[cfg(feature = "serde")]
-//         impl<'de> Visitor<'de> for TokenVisitor {
-//             type Value = String;
-//
-//             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-//                 formatter.write_str(&format!("string of length `{}`", Token::BASE64_SIZE))
-//             }
-//         }
-//
-//         let base64 = deserializer.deserialize_string(TokenVisitor)?;
-//         if base64.len() != Self::BASE64_SIZE {
-//             let msg = format!("expected base64 string of length: {}", Self::BASE64_SIZE);
-//             return Err(de::Error::invalid_length(base64.len(), &msg.as_str()));
-//         }
-//         let token = match Token::from_base64(base64) {
-//             Ok(token) => token,
-//             Err(err) => {
-//                 return Err(de::Error::invalid_value(
-//                     de::Unexpected::Other(&err.to_string()),
-//                     &"valid token",
-//                 ))
-//             }
-//         };
-//         Ok(token)
-//     }
-// }
-//
-// #[cfg(feature = "serde")]
-// impl Serialize for Token {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: Serializer,
-//     {
-//         let base64 = self.to_base64();
-//         serializer.serialize_str(&base64)
-//     }
-// }
