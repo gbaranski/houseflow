@@ -2,6 +2,7 @@
 members = [
   "fulfillment/api",
   "fulfillment/server",
+  "auth/types",
   "db",
   "tui",
   "devices/virtual",
