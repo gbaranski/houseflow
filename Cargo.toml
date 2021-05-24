@@ -1,8 +1,9 @@
 [workspace]
 members = [
-  "fulfillment",
+  "fulfillment/api",
+  "fulfillment/server",
   "db",
-# "tui",
+  "tui",
   "devices/virtual",
   "token",
   "types",
