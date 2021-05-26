@@ -25,6 +25,6 @@ redis = { version = "0.20.1", features = [ "tokio-comp" ] }
 houseflow-db = { path = "../../db" }
 
 # Internal
-houseflow-auth-types = { path = "../types", features = [ "serde", "actix" ] }
+houseflow-auth-types = { path = "../types", features = [ "actix-web" ] }
 houseflow-types = { path = "../../types", features = [ "serde" ] }
 houseflow-token = { path = "../../token" }

@@ -1,12 +1,11 @@
 use houseflow_token::Token;
 use std::time::Duration;
 
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(rename = "snake_case"))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+// #[cfg_attr(feature = "serde", derive(serdeDeserialize, Serialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum GrantType {
     RefreshToken,
 }
@@ -84,7 +83,7 @@ pub enum AccessTokenRequestErrorKind {
     UnsupportedGrantType,
 }
 
-#[cfg(feature = "actix-web")]
+#[cfg(feature = "actix")]
 impl actix_web::ResponseError for AccessTokenRequestError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
@@ -106,3 +105,4 @@ impl actix_web::ResponseError for AccessTokenRequestError {
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }
+
