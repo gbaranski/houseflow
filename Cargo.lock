@@ -964,6 +964,7 @@ dependencies = [
  "houseflow-token",
  "houseflow-types",
  "log",
+ "rand",
  "redis",
  "serde_json",
  "thiserror",

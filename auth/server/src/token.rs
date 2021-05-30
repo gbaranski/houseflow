@@ -1,7 +1,8 @@
+
 use crate::TokenStore;
 use actix_web::{
     post,
-    web::{self, QueryConfig},
+    web::{self, Form, FormConfig},
     App, HttpServer,
 };
 use houseflow_auth_types::{
@@ -13,8 +14,8 @@ use houseflow_token::{
 };
 use houseflow_types::{UserAgent, UserID};
 
-pub fn exchange_refresh_token_query_config() -> QueryConfig {
-    QueryConfig::default().error_handler(|err, req| {
+pub fn exchange_refresh_token_form_config() -> FormConfig {
+    FormConfig::default().error_handler(|err, _| {
         actix_web::Error::from(AccessTokenRequestError {
             error: AccessTokenRequestErrorKind::InvalidRequest,
             error_description: Some(err.to_string()),
@@ -24,9 +25,10 @@ pub fn exchange_refresh_token_query_config() -> QueryConfig {
 
 #[post("/token")]
 pub async fn exchange_refresh_token(
-    request: web::Query<AccessTokenRequestBody>,
+    request: Form<AccessTokenRequestBody>,
     token_store: web::Data<Box<dyn TokenStore>>,
 ) -> Result<web::Json<AccessTokenResponseBody>, AccessTokenRequestError> {
+    println!("request: {:?}", request);
     use std::convert::TryFrom;
     use std::time::{Duration, SystemTime};
     let expires_in = Duration::from_secs(3600);
@@ -54,21 +56,56 @@ pub async fn exchange_refresh_token(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MemoryTokenStore;
     use actix_web::test;
+    use rand::random;
+    use std::time::{Duration, SystemTime};
+
+    const KEY: &[u8] = b"some key";
 
     #[actix_rt::test]
-    async fn test_exchange_refresh_token_empty_body() {
+    async fn test_exchange_refresh_token() {
+        let token_store = MemoryTokenStore::new();
+        let refresh_token_payload = TokenPayload {
+            id: random(),
+            user_agent: UserAgent::Internal,
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_add(Duration::from_secs(10))
+                .unwrap()
+                .into(),
+        };
+        let refresh_token_signature = refresh_token_payload.sign(KEY);
+        let refresh_token = Token {
+            payload: refresh_token_payload,
+            signature: refresh_token_signature,
+        };
+        token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(
             App::new().service(
                 web::scope("/")
-                    .app_data(exchange_refresh_token_query_config())
+                    .app_data(exchange_refresh_token_form_config())
+                    .app_data(token_store)
                     .service(exchange_refresh_token),
             ),
         )
         .await;
-        let request = test::TestRequest::post().uri("/token").to_request();
+        let request_body = AccessTokenRequestBody {
+            grant_type: GrantType::RefreshToken,
+            refresh_token,
+        };
+        // FIXME: resolve this issue with setting form data
+        let request = test::TestRequest::post()
+            .uri("/token")
+            .set_form(&request_body)
+            .to_request();
         let response = test::call_service(&mut app, request).await;
-        assert_eq!(response.status(), 400);
+        assert_eq!(
+            response.status(),
+            200,
+            "status is not succesfull, body: {:?}",
+            test::read_body(response).await
+        );
         let response_body: AccessTokenRequestError = test::read_body_json(response).await;
         assert_eq!(
             response_body.error,
@@ -76,4 +113,27 @@ mod tests {
         );
         assert!(response_body.error_description.is_some());
     }
+
+    // #[actix_rt::test]
+    // async fn test_exchange_refresh_token_empty_body() {
+    //     let token_store = MemoryTokenStore::new();
+    //     let mut app = test::init_service(
+    //         App::new().service(
+    //             web::scope("/")
+    //                 .app_data(exchange_refresh_token_query_config())
+    //                 .app_data(token_store)
+    //                 .service(exchange_refresh_token),
+    //         ),
+    //     )
+    //     .await;
+    //     let request = test::TestRequest::post().uri("/token").to_request();
+    //     let response = test::call_service(&mut app, request).await;
+    //     assert_eq!(response.status(), 400);
+    //     let response_body: AccessTokenRequestError = test::read_body_json(response).await;
+    //     assert_eq!(
+    //         response_body.error,
+    //         AccessTokenRequestErrorKind::InvalidRequest
+    //     );
+    //     assert!(response_body.error_description.is_some());
+    // }
 }
