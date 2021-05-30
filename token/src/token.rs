@@ -30,6 +30,13 @@ impl Token {
         base64::encode(buf)
     }
 
+    pub fn base64(&self) -> String {
+        use bytes::BytesMut;
+        let mut buf = BytesMut::with_capacity(Self::SIZE);
+        self.encode(&mut buf);
+        base64::encode(buf)
+    }
+
     pub fn verify(&self, key: impl AsRef<[u8]>, user_agent: &UserAgent) -> Result<(), VerifyError> {
         self.payload.verify(user_agent)?;
         self.signature.verify(&self.payload, key)?;
