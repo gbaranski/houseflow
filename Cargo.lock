@@ -955,7 +955,9 @@ dependencies = [
 name = "houseflow-auth-server"
 version = "0.1.0"
 dependencies = [
+ "actix-rt",
  "actix-web",
+ "async-trait",
  "env_logger",
  "houseflow-auth-types",
  "houseflow-db",
@@ -963,6 +965,7 @@ dependencies = [
  "houseflow-types",
  "log",
  "redis",
+ "serde_json",
  "thiserror",
  "tokio",
 ]

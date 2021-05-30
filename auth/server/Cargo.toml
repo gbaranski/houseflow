@@ -21,10 +21,15 @@ tokio = { version = "1.6.0", features = [ "macros", "rt-multi-thread" ] }
 actix-web = "=4.0.0-beta.5" 
 
 # Databases
-redis = { version = "0.20.1", features = [ "tokio-comp" ] }
+redis_client = { version = "0.20.1", package = "redis", features = [ "tokio-comp" ] }
 houseflow-db = { path = "../../db" }
 
 # Internal
 houseflow-auth-types = { path = "../types", features = [ "actix" ] }
 houseflow-types = { path = "../../types", features = [ "serde" ] }
 houseflow-token = { path = "../../token" }
+async-trait = "0.1.50"
+actix-rt = "2.2.0"
+
+[dev-dependencies]
+serde_json = "1.0.64"
