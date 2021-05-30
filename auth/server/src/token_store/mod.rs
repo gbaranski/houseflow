@@ -24,12 +24,8 @@ impl<T: TokenStoreInternalError + 'static> From<T> for Error {
 
 #[async_trait]
 pub trait TokenStore {
-    async fn exists(self: &Self, id: &TokenID) -> Result<bool, Error>
-    where
-        Self: Sized;
+    async fn exists(self: &Self, id: &TokenID) -> Result<bool, Error>;
 
-    async fn set(self: &Self, token: &Token) -> Result<(), Error>
-    where
-        Self: Sized;
+    async fn add(self: &Self, token: &Token) -> Result<(), Error>;
 }
 

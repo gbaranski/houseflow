@@ -9,7 +9,6 @@ pub use redis_client::RedisError as Error;
 
 impl TokenStoreInternalError for Error {}
 
-
 #[derive(Clone)]
 pub struct RedisTokenStore {
     connection: Arc<Mutex<Connection>>,
@@ -36,7 +35,7 @@ impl TokenStore for RedisTokenStore {
             .await?)
     }
 
-    async fn set(&self, token: &Token) -> Result<(), super::Error> {
+    async fn add(&self, token: &Token) -> Result<(), super::Error> {
         self.connection
             .lock()
             .await
