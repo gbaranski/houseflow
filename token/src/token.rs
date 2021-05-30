@@ -122,7 +122,7 @@ impl Serialize for Token {
     where
         S: Serializer,
     {
-        let base64 = self.clone().into_base64();
+        let base64 = self.base64();
         serializer.serialize_str(&base64)
     }
 }
