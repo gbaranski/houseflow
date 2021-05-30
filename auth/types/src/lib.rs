@@ -45,7 +45,7 @@ pub struct AccessTokenRequestError {
     pub error_description: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, thiserror::Error)]
 #[serde(rename_all = "snake_case")]
 pub enum AccessTokenRequestErrorKind {
     /// The request is missing a parameter so the server can’t proceed with the request.
