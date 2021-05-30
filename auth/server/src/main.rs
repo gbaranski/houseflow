@@ -31,7 +31,6 @@ async fn token(// req: web::Query<AccessTokenRequestBody>,
     Ok(web::Json(AccessTokenResponseBody {
         access_token: token,
         token_type: TokenType::Bearer,
-        // TODO: Fix serializing ExpiresIn
         expires_in: Some(expires_in),
     }))
     // Err(AccessTokenRequestError {

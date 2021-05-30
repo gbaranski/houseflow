@@ -4,14 +4,12 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-// #[cfg_attr(feature = "serde", derive(serdeDeserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[serde(rename_all = "snake_case")]
 pub enum GrantType {
     RefreshToken,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AccessTokenRequestBody {
     /// The grant_type parameter must be set to `GrantType::RefreshToken`.
     pub grant_type: GrantType,
@@ -20,16 +18,14 @@ pub struct AccessTokenRequestBody {
     pub refresh_token: Token,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum TokenType {
     Bearer,
 }
 
 pub type AccessTokenResponse = Result<AccessTokenRequestBody, AccessTokenRequestError>;
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AccessTokenResponseBody {
     /// The access token string as issued by the authorization server.
     pub access_token: Token,
@@ -38,20 +34,19 @@ pub struct AccessTokenResponseBody {
     pub token_type: TokenType,
 
     /// If the access token expires, the server should reply with the duration of time the access token is granted for.
+    #[serde(with = "token_expiration")]
     pub expires_in: Option<Duration>,
 }
 
-#[derive(Debug, Clone, thiserror::Error)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[error("kind: `{error}`, description: `{}`")]
 pub struct AccessTokenRequestError {
     pub error: AccessTokenRequestErrorKind,
     pub error_description: Option<String>,
 }
 
-#[derive(Debug, Clone, thiserror::Error)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
+#[serde(rename_all = "snake_case")]
 pub enum AccessTokenRequestErrorKind {
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
@@ -106,3 +101,63 @@ impl actix_web::ResponseError for AccessTokenRequestError {
     }
 }
 
+mod token_expiration {
+    use super::*;
+    use serde::{
+        de::{self, Visitor},
+        ser,
+    };
+    pub struct TokenExpirationVisitor;
+
+    impl<'de> Visitor<'de> for TokenExpirationVisitor {
+        type Value = Option<Duration>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("duration in seconds")
+        }
+
+        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(Some(Duration::from_secs(value)))
+        }
+
+        fn visit_some<D>(self, d: D) -> Result<Option<Duration>, D::Error>
+        where
+            D: de::Deserializer<'de>,
+        {
+            d.deserialize_i64(Self)
+        }
+
+        fn visit_none<E>(self) -> Result<Option<Duration>, E>
+        where
+            E: de::Error,
+        {
+            Ok(None)
+        }
+        fn visit_unit<E>(self) -> Result<Option<Duration>, E>
+        where
+            E: de::Error,
+        {
+            Ok(None)
+        }
+    }
+
+    pub fn serialize<S>(duration: &Option<Duration>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        match *duration {
+            Some(duration) => serializer.serialize_some(&duration.as_secs()),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D>(d: D) -> Result<Option<Duration>, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        Ok(d.deserialize_option(TokenExpirationVisitor)?)
+    }
+}
