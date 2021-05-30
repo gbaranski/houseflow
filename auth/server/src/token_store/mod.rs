@@ -23,9 +23,8 @@ impl<T: TokenStoreInternalError + 'static> From<T> for Error {
 }
 
 #[async_trait]
-pub trait TokenStore {
+pub trait TokenStore: Send + Sync {
     async fn exists(self: &Self, id: &TokenID) -> Result<bool, Error>;
 
     async fn add(self: &Self, token: &Token) -> Result<(), Error>;
 }
-
