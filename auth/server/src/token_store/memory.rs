@@ -1,4 +1,4 @@
-use super::TokenStore;
+use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
 use houseflow_token::{Token, TokenID};
 use std::{
@@ -8,6 +8,8 @@ use std::{
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}
+
+impl TokenStoreInternalError for Error {}
 
 #[derive(Clone)]
 pub struct MemoryTokenStore {
@@ -23,12 +25,12 @@ impl MemoryTokenStore {
 }
 
 #[async_trait]
-impl TokenStore<Error> for MemoryTokenStore {
-    async fn exists(&self, id: &TokenID) -> Result<bool, super::Error<Error>> {
+impl TokenStore for MemoryTokenStore {
+    async fn exists(&self, id: &TokenID) -> Result<bool, super::Error> {
         Ok(self.store.lock().unwrap().contains_key(id))
     }
 
-    async fn set(&self, token: &Token) -> Result<(), super::Error<Error>> {
+    async fn set(&self, token: &Token) -> Result<(), super::Error> {
         self.store
             .lock()
             .unwrap()

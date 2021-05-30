@@ -1,12 +1,12 @@
-use crate::token_store::RedisTokenStore;
+use crate::TokenStore;
 use actix_web::{
     post,
     web::{self, QueryConfig},
     App, HttpServer,
 };
 use houseflow_auth_types::{
-    AccessTokenRequestBody, AccessTokenRequestError,
-    AccessTokenRequestErrorKind, AccessTokenResponseBody, GrantType, TokenType,
+    AccessTokenRequestBody, AccessTokenRequestError, AccessTokenRequestErrorKind,
+    AccessTokenResponseBody, GrantType, TokenType,
 };
 use houseflow_token::{
     ExpirationDate, Payload as TokenPayload, Signature as TokenSignature, Token, TokenID,
@@ -25,6 +25,7 @@ pub fn exchange_refresh_token_query_config() -> QueryConfig {
 #[post("/token")]
 pub async fn exchange_refresh_token(
     request: web::Query<AccessTokenRequestBody>,
+    token_store: web::Data<Box<dyn TokenStore>>,
 ) -> Result<web::Json<AccessTokenResponseBody>, AccessTokenRequestError> {
     use std::convert::TryFrom;
     use std::time::{Duration, SystemTime};
@@ -58,16 +59,21 @@ mod tests {
     #[actix_rt::test]
     async fn test_exchange_refresh_token_empty_body() {
         let mut app = test::init_service(
-            App::new()
-                .app_data(exchange_refresh_token_query_config())
-                .service(exchange_refresh_token),
+            App::new().service(
+                web::scope("/")
+                    .app_data(exchange_refresh_token_query_config())
+                    .service(exchange_refresh_token),
+            ),
         )
         .await;
         let request = test::TestRequest::post().uri("/token").to_request();
         let response = test::call_service(&mut app, request).await;
         assert_eq!(response.status(), 400);
         let response_body: AccessTokenRequestError = test::read_body_json(response).await;
-        assert_eq!(response_body.error, AccessTokenRequestErrorKind::InvalidRequest);
+        assert_eq!(
+            response_body.error,
+            AccessTokenRequestErrorKind::InvalidRequest
+        );
         assert!(response_body.error_description.is_some());
     }
 }

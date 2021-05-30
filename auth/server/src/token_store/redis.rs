@@ -1,11 +1,14 @@
-use super::TokenStore;
+use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
 use houseflow_token::{Token, TokenID};
-use redis_client::{aio::Connection, Client, AsyncCommands};
+use redis_client::{aio::Connection, AsyncCommands, Client};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub use redis_client::RedisError as Error;
+
+impl TokenStoreInternalError for Error {}
+
 
 #[derive(Clone)]
 pub struct RedisTokenStore {
@@ -23,8 +26,8 @@ impl RedisTokenStore {
 }
 
 #[async_trait]
-impl TokenStore<Error> for RedisTokenStore {
-    async fn exists(&self, id: &TokenID) -> Result<bool, super::Error<Error>> {
+impl TokenStore for RedisTokenStore {
+    async fn exists(&self, id: &TokenID) -> Result<bool, super::Error> {
         Ok(self
             .connection
             .lock()
@@ -33,7 +36,7 @@ impl TokenStore<Error> for RedisTokenStore {
             .await?)
     }
 
-    async fn set(&self, token: &Token) -> Result<(), super::Error<Error>> {
+    async fn set(&self, token: &Token) -> Result<(), super::Error> {
         self.connection
             .lock()
             .await

@@ -7,18 +7,29 @@ pub use memory::{Error as MemoryTokenStoreError, MemoryTokenStore};
 pub use redis::{Error as RedisTokenStoreError, RedisTokenStore};
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error<IE>
-where
-    IE: std::error::Error + 'static,
-{
+pub enum Error {
     #[error("internal error: `{0}`")]
-    InternalError(#[from] IE),
+    InternalError(Box<dyn TokenStoreInternalError>),
     //     #[error("decoding token failed: `{0}`")]
     //     DecodeError(#[from] DecodeError),
 }
 
-#[async_trait]
-pub trait TokenStore<IE: std::fmt::Debug + std::error::Error>: Clone {
-    async fn exists(&self, id: &TokenID) -> Result<bool, Error<IE>>;
-    async fn set(&self, token: &Token) -> Result<(), Error<IE>>;
+pub trait TokenStoreInternalError: std::fmt::Debug + std::error::Error {}
+
+impl<T: TokenStoreInternalError + 'static> From<T> for Error {
+    fn from(v: T) -> Self {
+        Self::InternalError(Box::new(v))
+    }
 }
+
+#[async_trait]
+pub trait TokenStore {
+    async fn exists(self: &Self, id: &TokenID) -> Result<bool, Error>
+    where
+        Self: Sized;
+
+    async fn set(self: &Self, token: &Token) -> Result<(), Error>
+    where
+        Self: Sized;
+}
+
