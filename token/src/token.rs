@@ -8,7 +8,6 @@ pub struct Token {
 }
 
 impl Token {
-    #[cfg(feature = "serde")]
     pub const BASE64_SIZE: usize = ((4 * Self::SIZE / 3) + 3) & !3;
 
     pub fn new(payload: Payload, signature: Signature) -> Self {
@@ -17,8 +16,16 @@ impl Token {
 
     pub fn from_base64(value: impl AsRef<str>) -> Result<Self, DecodeError> {
         use bytes::BytesMut;
+        let value = value.as_ref();
 
-        let value = base64::decode(value.as_ref())?;
+        if value.len() != Self::BASE64_SIZE {
+            return Err(DecodeError::InvalidLength {
+                expected: Self::BASE64_SIZE,
+                received: value.len(),
+            });
+        }
+
+        let value = base64::decode(value)?;
         let mut buf = BytesMut::from(value.as_slice());
         Self::decode(&mut buf)
     }
@@ -87,32 +94,39 @@ impl<'de> Deserialize<'de> for Token {
     where
         D: Deserializer<'de>,
     {
-        #[cfg(feature = "serde")]
         struct TokenVisitor;
-        #[cfg(feature = "serde")]
         impl<'de> Visitor<'de> for TokenVisitor {
-            type Value = String;
+            type Value = Token;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str(&format!("string of length `{}`", Token::BASE64_SIZE))
             }
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                let result = Token::from_base64(value).map_err(|err| match err {
+                    DecodeError::InvalidBase64Encoding(_) => {
+                        de::Error::invalid_value(de::Unexpected::Str(value), &"valid base64 str")
+                    }
+                    DecodeError::InvalidLength { expected, received } => {
+                        de::Error::invalid_length(received, &format!("size: {}", expected).as_str())
+                    }
+                    DecodeError::InvalidTimestamp(ts) => {
+                        de::Error::invalid_value(de::Unexpected::Unsigned(ts), &"valid base64 str")
+                    }
+                    DecodeError::InvalidTokenID(err) => de::Error::custom(err),
+                    DecodeError::InvalidUserID(err) => de::Error::custom(err),
+                    DecodeError::UnknownUserAgent(value) => de::Error::invalid_value(
+                        de::Unexpected::Unsigned(value as u64),
+                        &"valid UserAgent",
+                    ),
+                });
+                Ok(result?)
+            }
         }
 
-        let base64 = deserializer.deserialize_string(TokenVisitor)?;
-        if base64.len() != Self::SIZE {
-            let msg = format!("expected base64 string of length: {}", Self::BASE64_SIZE);
-            return Err(de::Error::invalid_length(base64.len(), &msg.as_str()));
-        }
-        let token = match Token::from_base64(base64) {
-            Ok(token) => token,
-            Err(err) => {
-                return Err(de::Error::invalid_value(
-                    de::Unexpected::Other(&err.to_string()),
-                    &"valid token",
-                ))
-            }
-        };
-        Ok(token)
+        deserializer.deserialize_str(TokenVisitor)
     }
 }
 

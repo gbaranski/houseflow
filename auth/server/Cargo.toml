@@ -27,7 +27,7 @@ houseflow-db = { path = "../../db" }
 # Internal
 houseflow-auth-types = { path = "../types", features = [ "actix" ] }
 houseflow-types = { path = "../../types", features = [ "serde" ] }
-houseflow-token = { path = "../../token" }
+houseflow-token = { path = "../../token", features = [ "serde" ] }
 async-trait = "0.1.50"
 actix-rt = "2.2.0"
 
