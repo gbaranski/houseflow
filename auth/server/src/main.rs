@@ -18,8 +18,18 @@ pub struct AppState {
     token_store: RedisTokenStore,
 }
 
-pub fn config(cfg: &mut web::ServiceConfig, token_store: web::Data<Box<dyn TokenStore>>) {
-    cfg.app_data(token_store).service(
+#[derive(Clone)]
+pub struct AppData {
+    refresh_key: Vec<u8>,
+    access_key: Vec<u8>,
+}
+
+pub fn config(
+    cfg: &mut web::ServiceConfig,
+    token_store: web::Data<Box<dyn TokenStore>>,
+    app_data: AppData,
+) {
+    cfg.data(app_data).app_data(token_store).service(
         web::scope("/")
             .app_data(exchange_refresh_token_form_config)
             .service(exchange_refresh_token),
@@ -34,9 +44,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token_store: web::Data<Box<dyn TokenStore>> =
         web::Data::new(Box::new(MemoryTokenStore::new()));
 
+    let app_data = AppData {
+        refresh_key: Vec::from("refresh-key"),
+        access_key: Vec::from("access-key"),
+    };
+
     let server = HttpServer::new(move || {
         App::new()
-            .configure(|cfg| config(cfg, token_store.clone()))
+            .configure(|cfg| config(cfg, token_store.clone(), app_data.clone()))
             .wrap(actix_web::middleware::Logger::default())
     })
     .bind(IP_ADDR)?;

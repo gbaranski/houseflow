@@ -23,7 +23,7 @@ pub enum TokenType {
     Bearer,
 }
 
-pub type AccessTokenResponse = Result<AccessTokenRequestBody, AccessTokenRequestError>;
+pub type AccessTokenResponse = Result<AccessTokenResponseBody, AccessTokenRequestError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AccessTokenResponseBody {
