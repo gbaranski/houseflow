@@ -19,7 +19,11 @@ pub struct AppState {
 }
 
 pub fn config(cfg: &mut web::ServiceConfig, token_store: web::Data<Box<dyn TokenStore>>) {
-    cfg.app_data(token_store).service(exchange_refresh_token);
+    cfg.app_data(token_store).service(
+        web::scope("/")
+            .app_data(exchange_refresh_token_form_config)
+            .service(exchange_refresh_token),
+    );
 }
 
 #[actix_web::main]

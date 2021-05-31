@@ -1,4 +1,3 @@
-
 use crate::TokenStore;
 use actix_web::{
     post,
@@ -65,7 +64,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_exchange_refresh_token() {
-        let token_store = MemoryTokenStore::new();
+        let token_store: web::Data<Box<dyn TokenStore>> =
+            web::Data::new(Box::new(MemoryTokenStore::new()));
         let refresh_token_payload = TokenPayload {
             id: random(),
             user_agent: UserAgent::Internal,
@@ -81,20 +81,13 @@ mod tests {
             signature: refresh_token_signature,
         };
         token_store.add(&refresh_token).await.unwrap();
-        let mut app = test::init_service(
-            App::new().service(
-                web::scope("/")
-                    .app_data(exchange_refresh_token_form_config())
-                    .app_data(token_store)
-                    .service(exchange_refresh_token),
-            ),
-        )
-        .await;
+        let mut app =
+            test::init_service(App::new().configure(|cfg| crate::config(cfg, token_store.clone())))
+                .await;
         let request_body = AccessTokenRequestBody {
             grant_type: GrantType::RefreshToken,
             refresh_token,
         };
-        // FIXME: resolve this issue with setting form data
         let request = test::TestRequest::post()
             .uri("/token")
             .set_form(&request_body)
