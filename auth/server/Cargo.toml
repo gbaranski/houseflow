@@ -20,13 +20,14 @@ tokio = { version = "1.6.0", features = [ "macros", "rt-multi-thread" ] }
 # Web
 actix-web = "=4.0.0-beta.5" 
 actix-rt = "2.2.0"
+actix-files = "0.6.0-beta.4"
 
 # Databases
 redis_client = { version = "0.20.1", package = "redis", features = [ "tokio-comp" ] }
 houseflow-db = { path = "../../db" }
 
 # Internal
-houseflow-auth-types = { path = "../types", features = [ "actix" ] }
+houseflow-auth-types = { path = "../types", features = [ "actix", "houseflow-db" ] }
 houseflow-types = { path = "../../types", features = [ "serde" ] }
 houseflow-token = { path = "../../token", features = [ "serde" ] }
 
