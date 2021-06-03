@@ -83,7 +83,7 @@ impl Payload {
     pub fn verify_expires_at(&self) -> Result<(), VerifyError> {
         if self.expires_at.has_expired() {
             Err(VerifyError::Expired {
-                by: self.expires_at.unix_timestamp(),
+                date: self.expires_at.clone(),
             })
         } else {
             Ok(())

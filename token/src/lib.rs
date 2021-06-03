@@ -24,15 +24,15 @@ pub enum DecodeError {
     UnknownUserAgent(u8),
 
     #[error("encoding base64 failed: `{0}`")]
-    InvalidBase64Encoding(#[from] base64::DecodeError)
+    InvalidBase64Encoding(#[from] base64::DecodeError),
 }
 
 pub use houseflow_types::UserAgent;
 
 #[derive(Debug, thiserror::Error)]
 pub enum VerifyError {
-    #[error("token has expired by `{by:?}`")]
-    Expired { by: std::time::Duration },
+    #[error("token is expired since:  `{date}`")]
+    Expired { date: ExpirationDate },
 
     #[error("invalid user agent, expected: `{expected}`, received: `{received}`")]
     InvalidUserAgent {
