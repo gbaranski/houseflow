@@ -22,30 +22,86 @@ pub fn exchange_refresh_token_form_config() -> FormConfig {
     })
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum RefreshTokenExchangeError {
+    #[error("invalid request: `{0}`")]
+    InvalidRequest(#[from] AccessTokenRequestError),
+
+    #[error("error with token_store: `{0}`")]
+    TokenStoreError(#[from] crate::token_store::Error),
+}
+
+impl actix_web::ResponseError for RefreshTokenExchangeError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        use actix_web::http::StatusCode;
+        match self {
+            Self::InvalidRequest(err) => err.status_code(),
+            Self::TokenStoreError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse {
+        match self {
+            Self::InvalidRequest(err) => err.error_response(),
+            Self::TokenStoreError(err) => {
+                actix_web::HttpResponse::build(self.status_code()).body(err.to_string())
+            }
+        }
+    }
+}
+
 #[post("/token")]
 pub async fn exchange_refresh_token(
     request: Form<AccessTokenRequestBody>,
     token_store: web::Data<Box<dyn TokenStore>>,
     app_data: web::Data<AppData>,
-) -> Result<web::Json<AccessTokenResponseBody>, AccessTokenRequestError> {
+) -> Result<web::Json<AccessTokenResponseBody>, RefreshTokenExchangeError> {
     use std::convert::TryFrom;
     use std::time::{Duration, SystemTime};
 
-    let expires_in = Duration::from_secs(3600);
-    let payload = TokenPayload {
-        id: rand::random(),
-        user_agent: request.refresh_token.payload.user_agent,
-        user_id: request.refresh_token.payload.user_id.clone(),
-        expires_at: ExpirationDate::from(
-            SystemTime::now().checked_add(expires_in.clone()).unwrap(),
-        ),
+    let refresh_token = &request.refresh_token;
+    refresh_token
+        .verify(&app_data.refresh_key, None)
+        .map_err(|err| AccessTokenRequestError {
+            error: AccessTokenRequestErrorKind::InvalidGrant,
+            error_description: Some(err.to_string()),
+        })?;
+
+    let stored_refresh_token = token_store
+        .get(&refresh_token.payload.id)
+        .await?
+        .ok_or_else(|| AccessTokenRequestError {
+            error: AccessTokenRequestErrorKind::InvalidGrant,
+            error_description: Some("token does not exists in store".into()),
+        })?;
+
+    if *refresh_token != stored_refresh_token {
+        return Err(AccessTokenRequestError {
+            error: AccessTokenRequestErrorKind::InvalidGrant,
+            error_description: Some("token does not match with this one in store".into()),
+        }
+        .into());
+    }
+
+    let expires_in = match refresh_token.payload.user_agent {
+        UserAgent::Internal => Some(Duration::from_secs(3600)),
+        UserAgent::GoogleSmartHome => None,
+        UserAgent::None => todo!(),
     };
-    let signature = payload.sign(&app_data.access_key);
-    let token = Token::new(payload, signature);
+
+    let expires_at = ExpirationDate::from_duration(expires_in);
+    let access_token_payload = TokenPayload {
+        id: refresh_token.payload.user_id.clone(),
+        user_agent: refresh_token.payload.user_agent,
+        user_id: refresh_token.payload.user_id.clone(),
+        expires_at,
+    };
+    let access_token_signature = access_token_payload.sign(&app_data.access_key);
+    let access_token = Token::new(access_token_payload, access_token_signature);
     Ok(web::Json(AccessTokenResponseBody {
-        access_token: token,
+        access_token,
         token_type: TokenType::Bearer,
-        expires_in: Some(expires_in),
+        expires_in,
     }))
 }
 
@@ -69,14 +125,13 @@ mod tests {
         rand::thread_rng().fill_bytes(&mut app_data.access_key);
 
         let refresh_token_payload = TokenPayload {
-            id: random(),
+            id: TokenID::from_bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
             user_agent: UserAgent::Internal,
-            user_id: random(),
-            expires_at: SystemTime::now()
-                .checked_add(Duration::from_secs(10))
-                .unwrap()
-                .into(),
+            user_id: UserID::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 16]),
+            expires_at: ExpirationDate::from_duration(Some(Duration::from_secs(10))),
         };
+        println!("rtoken id: {:?}", refresh_token_payload.id);
+        println!("ruser id: {:?}", refresh_token_payload.user_id);
         let refresh_token_signature = refresh_token_payload.sign(&app_data.refresh_key);
         let refresh_token = Token {
             payload: refresh_token_payload,
@@ -105,7 +160,7 @@ mod tests {
         let response_body: AccessTokenResponseBody = test::read_body_json(response).await;
         let verify_result = response_body.access_token.verify(
             &app_data.access_key,
-            &request_body.refresh_token.payload.user_agent,
+            Some(&request_body.refresh_token.payload.user_agent),
         );
         assert!(
             verify_result.is_ok(),
