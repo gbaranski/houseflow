@@ -1,69 +1,35 @@
-use deadpool_postgres::Pool;
-use std::ops::DerefMut;
-use thiserror::Error;
-use tokio_postgres::NoTls;
+use async_trait::async_trait;
 
-use refinery::embed_migrations;
-embed_migrations!("migrations");
+mod postgres;
+mod memory;
+pub use postgres::{PostgresConfig, PostgresDatabase, PostgresError};
+pub use memory::{MemoryDatabase, MemoryDatabaseError};
 
-mod device;
-mod user;
+pub trait DatabaseInternalError: std::fmt::Debug + std::error::Error {}
 
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Error when sending query: `{0}`")]
-    QueryError(#[from] tokio_postgres::Error),
-
-    #[error("Error occured with Postgres Pool: `{0}`")]
-    PoolError(#[from] deadpool_postgres::PoolError),
-
-    #[error("Error when running migrations: `{0}`")]
-    MigrationError(#[from] refinery::Error),
-
-    #[error("Column `{column}` is invalid: `{error}`")]
-    InvalidColumn {
-        column: &'static str,
-        error: Box<dyn std::error::Error>,
-    },
+    #[error("internal error: `{0}`")]
+    InternalError(Box<dyn DatabaseInternalError>),
 
     #[error("Query did not modify anything")]
     NotModified,
 }
 
-pub struct Options<'a> {
-    pub user: &'a str,
-    pub password: &'a str,
-    pub host: &'a str,
-    pub port: u16,
-    pub database_name: &'a str,
+impl<T: DatabaseInternalError + 'static> From<T> for Error {
+    fn from(v: T) -> Self {
+        Self::InternalError(Box::new(v))
+    }
 }
 
-#[derive(Clone)]
-pub struct Database {
-    pool: Pool<NoTls>,
-}
+use houseflow_types::{Device, DeviceID, User, UserID};
 
-impl Database {
-    fn get_pool_config(opts: &Options) -> deadpool_postgres::Config {
-        let mut cfg = deadpool_postgres::Config::new();
-        cfg.user = Some(opts.user.to_string());
-        cfg.password = Some(opts.password.to_string());
-        cfg.host = Some(opts.host.to_string());
-        cfg.port = Some(opts.port);
-        cfg.dbname = Some(opts.database_name.to_string());
-        cfg
-    }
+#[async_trait]
+pub trait Database: Send + Sync {
+    async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
 
-    /// This function connect with database and runs migrations on it, after doing so it's fully
-    /// ready for operations
-    pub async fn new<'a>(opts: &Options<'a>) -> Result<Self, Error> {
-        let pool_config = Self::get_pool_config(&opts);
-        let pool = pool_config
-            .create_pool(NoTls)
-            .expect("invalid pool configuration");
-        let mut obj = pool.get().await?;
-        let client = obj.deref_mut().deref_mut();
-        migrations::runner().run_async(client).await?;
-        Ok(Self { pool })
-    }
+    async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
+    async fn get_user_by_email(&self, email: &String) -> Result<Option<User>, Error>;
+    async fn add_user(&self, user: &User) -> Result<(), Error>;
+    async fn delete_user(&self, user_id: &UserID) -> Result<(), Error>;
 }
