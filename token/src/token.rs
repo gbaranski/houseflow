@@ -1,6 +1,5 @@
 use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError};
 use houseflow_types::UserAgent;
-use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -25,6 +24,10 @@ impl Token {
         Ok(())
     }
 
+    pub fn from_str(s: &str) -> Result<Self, DecodeError> {
+        std::str::FromStr::from_str(s)
+    }
+
     #[inline]
     pub fn has_expired(&self) -> bool {
         self.payload.expires_at.has_expired()
@@ -41,7 +44,7 @@ impl std::string::ToString for Token {
     }
 }
 
-impl FromStr for Token {
+impl std::str::FromStr for Token {
     type Err = DecodeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -52,7 +55,8 @@ impl FromStr for Token {
                 received: s.len(),
             });
         }
-        let mut s = BytesMut::from(s);
+        let s = base64::decode(s)?;
+        let mut s = BytesMut::from(s.as_slice());
         Self::decode(&mut s)
     }
 }
@@ -137,6 +141,7 @@ impl Serialize for Token {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        let string = self.to_string();
+        serializer.serialize_str(&string)
     }
 }
