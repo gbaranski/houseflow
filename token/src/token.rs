@@ -1,5 +1,5 @@
-use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError};
-use houseflow_types::UserAgent;
+use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError, TokenID, ExpirationDate};
+use houseflow_types::{UserAgent, UserID};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -28,11 +28,31 @@ impl Token {
         std::str::FromStr::from_str(s)
     }
 
-    #[inline]
     pub fn has_expired(&self) -> bool {
         self.payload.expires_at.has_expired()
     }
+
+    #[inline]
+    pub fn id(&self) -> &TokenID {
+        &self.payload.id
+    }
+
+    #[inline]
+    pub fn user_agent(&self) -> &UserAgent {
+        &self.payload.user_agent
+    }
+
+    #[inline]
+    pub fn user_id(&self) -> &UserID {
+        &self.payload.user_id
+    }
+
+    #[inline]
+    pub fn expires_at(&self) -> &ExpirationDate {
+        &self.payload.expires_at
+    }
 }
+
 
 impl std::string::ToString for Token {
     fn to_string(&self) -> String {
