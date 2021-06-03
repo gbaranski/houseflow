@@ -1071,6 +1071,7 @@ dependencies = [
  "houseflow-types",
  "rand",
  "serde",
+ "serde_json",
  "sha2",
  "thiserror",
 ]
