@@ -32,7 +32,7 @@ impl TryFrom<u8> for UserAgent {
 
 impl rand::distributions::Distribution<UserAgent> for rand::distributions::Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> UserAgent {
-        UserAgent::try_from(rng.gen_range(0..1)).unwrap()
+        UserAgent::try_from(rng.gen_range(0..UserAgent::iter().len() as u8)).unwrap()
     }
 }
 
