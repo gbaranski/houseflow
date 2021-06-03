@@ -89,7 +89,7 @@ mod tests {
         let signature = payload.sign(KEY);
         let token = Token::new(payload, signature);
         token
-            .verify(KEY, &user_agent)
+            .verify(KEY, Some(&user_agent))
             .expect("failed token verification");
     }
 
@@ -107,7 +107,7 @@ mod tests {
         };
         let signature = payload.sign(KEY);
         let token = Token::new(payload, signature);
-        let result = token.verify(b"some other key", &user_agent).unwrap_err();
+        let result = token.verify(b"some other key", Some(&user_agent)).unwrap_err();
         match result {
             VerifyError::InvalidSignature => (),
             _ => panic!("received unexpected error: {}", result),
@@ -128,7 +128,7 @@ mod tests {
         };
         let signature = payload.sign(KEY);
         let token = Token::new(payload, signature);
-        let result = token.verify(KEY, &user_agent).unwrap_err();
+        let result = token.verify(KEY, Some(&user_agent)).unwrap_err();
         match result {
             VerifyError::Expired { .. } => (),
             _ => panic!("received unexpected error: {}", result),
@@ -150,7 +150,7 @@ mod tests {
         };
         let signature = payload.sign(KEY);
         let token = Token::new(payload, signature);
-        let result = token.verify(KEY, &expected_user_agent).unwrap_err();
+        let result = token.verify(KEY, Some(&expected_user_agent)).unwrap_err();
         match result {
             VerifyError::InvalidUserAgent { received, expected } => {
                 assert_eq!(expected, expected_user_agent);
@@ -195,7 +195,7 @@ mod tests {
             let parsed_token = Token::decode(&mut buf).expect("fail decoding token from buf");
             assert_eq!(parsed_token, token);
             parsed_token
-                .verify(KEY, &payload.user_agent)
+                .verify(KEY, Some(&payload.user_agent))
                 .expect("Failed veryfing token after bytes conversion");
         }
 }

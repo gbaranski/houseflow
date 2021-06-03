@@ -65,18 +65,34 @@ impl Payload {
         Signature::new(result)
     }
 
-    pub fn verify(&self, user_agent: &UserAgent) -> Result<(), VerifyError> {
-        if self.user_agent != *user_agent {
-            Err(VerifyError::InvalidUserAgent {
-                expected: user_agent.clone(),
-                received: self.user_agent,
-            })
-        } else if self.expires_at.has_expired() {
+    #[inline]
+    pub fn verify_user_agent(&self, user_agent: Option<&UserAgent>) -> Result<(), VerifyError> {
+        match user_agent {
+            Some(user_agent) if self.user_agent != *user_agent => {
+                Err(VerifyError::InvalidUserAgent {
+                    expected: user_agent.clone(),
+                    received: self.user_agent,
+                })
+            }
+            Some(_) => Ok(()),
+            None => Ok(()),
+        }
+    }
+
+    #[inline]
+    pub fn verify_expires_at(&self) -> Result<(), VerifyError> {
+        if self.expires_at.has_expired() {
             Err(VerifyError::Expired {
                 by: self.expires_at.unix_timestamp(),
             })
         } else {
             Ok(())
         }
+    }
+
+    pub fn verify(&self, user_agent: Option<&UserAgent>) -> Result<(), VerifyError> {
+        self.verify_user_agent(user_agent)?;
+        self.verify_expires_at()?;
+        Ok(())
     }
 }

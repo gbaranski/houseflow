@@ -30,7 +30,7 @@ impl Token {
         Self::decode(&mut buf)
     }
 
-    pub fn verify(&self, key: impl AsRef<[u8]>, user_agent: &UserAgent) -> Result<(), VerifyError> {
+    pub fn verify(&self, key: impl AsRef<[u8]>, user_agent: Option<&UserAgent>) -> Result<(), VerifyError> {
         self.payload.verify(user_agent)?;
         self.signature.verify(&self.payload, key)?;
         Ok(())
