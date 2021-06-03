@@ -83,12 +83,7 @@ pub async fn exchange_refresh_token(
         .into());
     }
 
-    let expires_in = match refresh_token.payload.user_agent {
-        UserAgent::Internal => Some(Duration::from_secs(3600)),
-        UserAgent::GoogleSmartHome => None,
-        UserAgent::None => todo!(),
-    };
-
+    let expires_in = refresh_token.user_agent().refresh_token_duration();
     let expires_at = ExpirationDate::from_duration(expires_in);
     let access_token_payload = TokenPayload {
         id: refresh_token.payload.user_id.clone(),
@@ -113,25 +108,111 @@ mod tests {
     use rand::{random, Rng, RngCore};
     use std::time::{Duration, SystemTime};
 
-    #[actix_rt::test]
-    async fn test_exchange_refresh_token() {
-        let token_store: web::Data<Box<dyn TokenStore>> =
-            web::Data::new(Box::new(MemoryTokenStore::new()));
+    fn get_token_store() -> web::Data<Box<dyn TokenStore>> {
+        web::Data::new(Box::new(MemoryTokenStore::new()))
+    }
+    fn get_app_data() -> crate::AppData {
         let mut app_data = crate::AppData {
             refresh_key: vec![0; 32],
             access_key: vec![0; 32],
         };
         rand::thread_rng().fill_bytes(&mut app_data.refresh_key);
         rand::thread_rng().fill_bytes(&mut app_data.access_key);
+        app_data
+    }
 
+    fn random_refresh_token(key: &[u8]) -> Token {
         let refresh_token_payload = TokenPayload {
-            id: TokenID::from_bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-            user_agent: UserAgent::Internal,
-            user_id: UserID::from_bytes([0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 14, 15, 16]),
+            id: random(),
+            user_agent: random(),
+            user_id: random(),
             expires_at: ExpirationDate::from_duration(Some(Duration::from_secs(10))),
         };
-        println!("rtoken id: {:?}", refresh_token_payload.id);
-        println!("ruser id: {:?}", refresh_token_payload.user_id);
+        let refresh_token_signature = refresh_token_payload.sign(key);
+        Token {
+            payload: refresh_token_payload,
+            signature: refresh_token_signature,
+        }
+    }
+
+    #[actix_rt::test]
+    async fn test_exchange_refresh_token() {
+        let token_store = get_token_store();
+        let app_data = get_app_data();
+        let refresh_token = random_refresh_token(&app_data.refresh_key);
+        token_store.add(&refresh_token).await.unwrap();
+        let mut app = test::init_service(
+            App::new().configure(|cfg| crate::config(cfg, token_store.clone(), app_data.clone())),
+        )
+        .await;
+        let request_body = AccessTokenRequestBody {
+            grant_type: GrantType::RefreshToken,
+            refresh_token: refresh_token.clone(),
+        };
+        let request = test::TestRequest::post()
+            .uri("/token")
+            .set_form(&request_body)
+            .to_request();
+        let response = test::call_service(&mut app, request).await;
+        assert_eq!(
+            response.status(),
+            200,
+            "status is not succesfull, body: {:?}",
+            test::read_body(response).await
+        );
+        let response_body: AccessTokenResponseBody = test::read_body_json(response).await;
+        let access_token = &response_body.access_token;
+        let verify_result = response_body.access_token.verify(
+            &app_data.access_key,
+            Some(&request_body.refresh_token.payload.user_agent),
+        );
+        assert!(
+            verify_result.is_ok(),
+            "failed access token verification: `{}`",
+            verify_result.err().unwrap()
+        );
+        assert_eq!(access_token.user_agent(), refresh_token.user_agent());
+        assert_eq!(access_token.user_id(), refresh_token.user_id());
+    }
+
+    #[actix_rt::test]
+    async fn test_exchange_refresh_token_not_existing_token() {
+        let token_store = get_token_store();
+        let app_data = get_app_data();
+        let refresh_token = random_refresh_token(&app_data.refresh_key);
+        let mut app = test::init_service(
+            App::new().configure(|cfg| crate::config(cfg, token_store.clone(), app_data.clone())),
+        )
+        .await;
+        let request_body = AccessTokenRequestBody {
+            grant_type: GrantType::RefreshToken,
+            refresh_token,
+        };
+        let request = test::TestRequest::post()
+            .uri("/token")
+            .set_form(&request_body)
+            .to_request();
+        let response = test::call_service(&mut app, request).await;
+        assert_eq!(response.status(), 400);
+        let response_body: AccessTokenRequestError = test::read_body_json(response).await;
+        assert_eq!(
+            response_body.error,
+            AccessTokenRequestErrorKind::InvalidGrant,
+        );
+    }
+
+    #[actix_rt::test]
+    async fn test_exchange_refresh_token_expired_token() {
+        let token_store = get_token_store();
+        let app_data = get_app_data();
+        let refresh_token_payload = TokenPayload {
+            id: random(),
+            user_agent: random(),
+            user_id: random(),
+            expires_at: ExpirationDate::from_system_time(
+                SystemTime::now().checked_sub(Duration::from_secs(5)),
+            ),
+        };
         let refresh_token_signature = refresh_token_payload.sign(&app_data.refresh_key);
         let refresh_token = Token {
             payload: refresh_token_payload,
@@ -151,31 +232,13 @@ mod tests {
             .set_form(&request_body)
             .to_request();
         let response = test::call_service(&mut app, request).await;
+        assert_eq!(response.status(), 400);
+        let response_body: AccessTokenRequestError = test::read_body_json(response).await;
         assert_eq!(
-            response.status(),
-            200,
-            "status is not succesfull, body: {:?}",
-            test::read_body(response).await
-        );
-        let response_body: AccessTokenResponseBody = test::read_body_json(response).await;
-        let verify_result = response_body.access_token.verify(
-            &app_data.access_key,
-            Some(&request_body.refresh_token.payload.user_agent),
-        );
-        assert!(
-            verify_result.is_ok(),
-            "failed access token verification: `{}`",
-            verify_result.err().unwrap()
-        );
-        assert!(response_body.expires_in.is_some());
-        assert!(response_body.expires_in.is_some());
-        assert_eq!(
-            response_body.access_token.payload.user_agent,
-            request_body.refresh_token.payload.user_agent
-        );
-        assert_eq!(
-            response_body.access_token.payload.user_id,
-            request_body.refresh_token.payload.user_id
+            response_body.error,
+            AccessTokenRequestErrorKind::InvalidGrant,
+            "error_description: {:?}",
+            response_body.error_description
         );
     }
 }
