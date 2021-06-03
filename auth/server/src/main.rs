@@ -1,7 +1,12 @@
 // TODO: remove that
 #![allow(unused_imports)]
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{
+    web::{self, Data},
+    App, HttpServer,
+};
+use houseflow_db::{Database, MemoryDatabase, PostgresDatabase};
+use std::sync::Arc;
 
 pub use token_store::{
     MemoryTokenStore, MemoryTokenStoreError, RedisTokenStore, RedisTokenStoreError,
@@ -10,12 +15,14 @@ pub use token_store::{
 use token::{exchange_refresh_token, exchange_refresh_token_form_config};
 pub use token_store::TokenStore;
 
+mod auth;
 mod token;
 mod token_store;
 
 #[derive(Clone)]
-pub struct AppState {
-    token_store: RedisTokenStore,
+pub struct AppState<TS: TokenStore, DB: Database> {
+    token_store: TS,
+    database: DB,
 }
 
 #[derive(Clone)]
@@ -26,14 +33,18 @@ pub struct AppData {
 
 pub fn config(
     cfg: &mut web::ServiceConfig,
-    token_store: web::Data<Box<dyn TokenStore>>,
+    token_store: Data<dyn TokenStore>,
+    database: Data<dyn Database>,
     app_data: AppData,
 ) {
-    cfg.data(app_data).app_data(token_store).service(
-        web::scope("/")
-            .app_data(exchange_refresh_token_form_config)
-            .service(exchange_refresh_token),
-    );
+    cfg.data(app_data)
+        .app_data(token_store)
+        .app_data(database)
+        .service(
+            web::scope("/")
+                .app_data(exchange_refresh_token_form_config)
+                .service(exchange_refresh_token),
+        );
 }
 
 #[actix_web::main]
@@ -41,8 +52,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     const IP_ADDR: &str = "127.0.0.1:8080";
     env_logger::init();
     log::info!("Starting `Auth` service");
-    let token_store: web::Data<Box<dyn TokenStore>> =
-        web::Data::new(Box::new(MemoryTokenStore::new()));
+
+    let token_store = Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>);
+    let database = Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>);
 
     let app_data = AppData {
         refresh_key: Vec::from("refresh-key"),
@@ -51,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let server = HttpServer::new(move || {
         App::new()
-            .configure(|cfg| config(cfg, token_store.clone(), app_data.clone()))
+            .configure(|cfg| config(cfg, token_store.clone(), database.clone(), app_data.clone()))
             .wrap(actix_web::middleware::Logger::default())
     })
     .bind(IP_ADDR)?;

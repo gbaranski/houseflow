@@ -1,13 +1,14 @@
 use crate::{AppData, TokenStore};
 use actix_web::{
-    post,
-    web::{self, Form, FormConfig},
+    get, post,
+    web::{self, Data, Form, FormConfig, Json},
     App, HttpServer,
 };
 use houseflow_auth_types::{
     AccessTokenRequestBody, AccessTokenRequestError, AccessTokenRequestErrorKind,
     AccessTokenResponse, AccessTokenResponseBody, GrantType, TokenType,
 };
+use houseflow_db::Database;
 use houseflow_token::{
     ExpirationDate, Payload as TokenPayload, Signature as TokenSignature, Token, TokenID,
 };
@@ -53,9 +54,9 @@ impl actix_web::ResponseError for RefreshTokenExchangeError {
 #[post("/token")]
 pub async fn exchange_refresh_token(
     request: Form<AccessTokenRequestBody>,
-    token_store: web::Data<Box<dyn TokenStore>>,
-    app_data: web::Data<AppData>,
-) -> Result<web::Json<AccessTokenResponseBody>, RefreshTokenExchangeError> {
+    token_store: Data<dyn TokenStore>,
+    app_data: Data<AppData>,
+) -> Result<Json<AccessTokenResponseBody>, RefreshTokenExchangeError> {
     use std::convert::TryFrom;
     use std::time::{Duration, SystemTime};
 
@@ -105,12 +106,20 @@ mod tests {
     use super::*;
     use crate::MemoryTokenStore;
     use actix_web::test;
+    use houseflow_db::MemoryDatabase;
     use rand::{random, Rng, RngCore};
     use std::time::{Duration, SystemTime};
 
-    fn get_token_store() -> web::Data<Box<dyn TokenStore>> {
-        web::Data::new(Box::new(MemoryTokenStore::new()))
+    fn get_token_store() -> web::Data<dyn TokenStore> {
+        use std::sync::Arc;
+        Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)
     }
+
+    fn get_database() -> web::Data<dyn Database> {
+        use std::sync::Arc;
+        Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
+    }
+
     fn get_app_data() -> crate::AppData {
         let mut app_data = crate::AppData {
             refresh_key: vec![0; 32],
@@ -138,11 +147,12 @@ mod tests {
     #[actix_rt::test]
     async fn test_exchange_refresh_token() {
         let token_store = get_token_store();
+        let database = get_database();
         let app_data = get_app_data();
         let refresh_token = random_refresh_token(&app_data.refresh_key);
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, token_store.clone(), app_data.clone())),
+            App::new().configure(|cfg| crate::config(cfg, token_store, database, app_data.clone())),
         )
         .await;
         let request_body = AccessTokenRequestBody {
@@ -178,11 +188,12 @@ mod tests {
     #[actix_rt::test]
     async fn test_exchange_refresh_token_not_existing_token() {
         let token_store = get_token_store();
+        let database = get_database();
         let app_data = get_app_data();
         let refresh_token = random_refresh_token(&app_data.refresh_key);
-        let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, token_store.clone(), app_data.clone())),
-        )
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
+        }))
         .await;
         let request_body = AccessTokenRequestBody {
             grant_type: GrantType::RefreshToken,
@@ -204,6 +215,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_exchange_refresh_token_expired_token() {
         let token_store = get_token_store();
+        let database = get_database();
         let app_data = get_app_data();
         let refresh_token_payload = TokenPayload {
             id: random(),
@@ -219,9 +231,9 @@ mod tests {
             signature: refresh_token_signature,
         };
         token_store.add(&refresh_token).await.unwrap();
-        let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, token_store.clone(), app_data.clone())),
-        )
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
+        }))
         .await;
         let request_body = AccessTokenRequestBody {
             grant_type: GrantType::RefreshToken,
