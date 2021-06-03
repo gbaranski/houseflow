@@ -48,7 +48,7 @@ pub enum VerifyError {
 pub enum Error {
     #[error("token failed to verify: `{0}`")]
     VerifyError(#[from] VerifyError),
-    
+
     #[error("token failed to decode: `{0}`")]
     DecodeError(#[from] DecodeError),
 }
@@ -70,12 +70,13 @@ pub trait Encoder {
 mod tests {
     use super::*;
     use bytes::BytesMut;
+    use houseflow_types::UserID;
     use rand::random;
     use std::time::{Duration, SystemTime};
     const KEY: &[u8] = b"some hmac key";
 
     #[test]
-    fn sign_verify() {
+    fn test_sign_verify() {
         let user_agent: UserAgent = random();
         let payload = Payload {
             id: random(),
@@ -94,7 +95,7 @@ mod tests {
     }
 
     #[test]
-    fn sign_verify_invalid_signature() {
+    fn test_sign_verify_invalid_signature() {
         let user_agent: UserAgent = random();
         let payload = Payload {
             id: random(),
@@ -107,7 +108,9 @@ mod tests {
         };
         let signature = payload.sign(KEY);
         let token = Token::new(payload, signature);
-        let result = token.verify(b"some other key", Some(&user_agent)).unwrap_err();
+        let result = token
+            .verify(b"some other key", Some(&user_agent))
+            .unwrap_err();
         match result {
             VerifyError::InvalidSignature => (),
             _ => panic!("received unexpected error: {}", result),
@@ -115,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn sign_verify_expired() {
+    fn test_sign_verify_expired() {
         let user_agent: UserAgent = random();
         let payload = Payload {
             id: random(),
@@ -136,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn sign_verify_invalid_user_agent() {
+    fn test_sign_verify_invalid_user_agent() {
         let expected_user_agent = UserAgent::Internal;
         let received_user_agent = UserAgent::GoogleSmartHome;
         let payload = Payload {
@@ -160,42 +163,86 @@ mod tests {
         };
     }
 
-        #[test]
-        fn convert_invalid() {
-            let mut buf = BytesMut::with_capacity(Token::SIZE);
-            let payload = Payload {
-                id: random(),
-                user_agent: random(),
-                user_id: random(),
-                expires_at: SystemTime::now()
-                    .checked_add(Duration::from_secs(5))
-                    .unwrap().into(),
-            };
-            let signature = payload.sign(KEY);
-            let token = Token::new(payload, signature);
-            token.encode(&mut buf);
-            buf = buf[0..Token::SIZE - 5].into(); // Malform the data on intention
-            Token::decode(&mut buf).unwrap_err();
-        }
+    #[test]
+    fn test_convert_invalid() {
+        let mut buf = BytesMut::with_capacity(Token::SIZE);
+        let payload = Payload {
+            id: random(),
+            user_agent: random(),
+            user_id: random(),
+            expires_at: SystemTime::now()
+                .checked_add(Duration::from_secs(5))
+                .unwrap()
+                .into(),
+        };
+        let signature = payload.sign(KEY);
+        let token = Token::new(payload, signature);
+        token.encode(&mut buf);
+        buf = buf[0..Token::SIZE - 5].into(); // Malform the data on intention
+        Token::decode(&mut buf).unwrap_err();
+    }
 
-        #[test]
-        fn to_from_bytes_conversion() {
-            let mut buf = BytesMut::with_capacity(Token::SIZE);
-            let payload = Payload {
-                id: random(),
-                user_agent: random(),
-                user_id: random(),
-                expires_at: SystemTime::now()
-                    .checked_add(Duration::from_secs(5))
-                    .unwrap().into(),
-            };
-            let signature = payload.clone().sign(KEY);
-            let token = Token::new(payload.clone(), signature);
-            token.encode(&mut buf);
-            let parsed_token = Token::decode(&mut buf).expect("fail decoding token from buf");
-            assert_eq!(parsed_token, token);
-            parsed_token
-                .verify(KEY, Some(&payload.user_agent))
-                .expect("Failed veryfing token after bytes conversion");
-        }
+    #[test]
+    fn test_formats_integrity() {
+        let mut buf = BytesMut::new();
+        let payload = Payload {
+            id: random(),
+            user_agent: random(),
+            user_id: random(),
+            expires_at: ExpirationDate::from_duration(Some(Duration::from_secs(5))),
+        };
+        let signature = payload.clone().sign(KEY);
+        let token = Token::new(payload.clone(), signature);
+        token.encode(&mut buf);
+        let stringified = base64::decode(token.to_string()).unwrap();
+        assert_eq!(buf, stringified);
+    }
+
+
+    #[test]
+    fn test_bytes_conversions() {
+        let mut buf = BytesMut::new();
+        let payload = Payload {
+            id: random(),
+            user_agent: random(),
+            user_id: random(),
+            expires_at: ExpirationDate::from_duration(Some(Duration::from_secs(5))),
+        };
+        let signature = payload.clone().sign(KEY);
+        let token = Token::new(payload.clone(), signature);
+        token.encode(&mut buf);
+        let token_parsed = Token::decode(&mut buf).unwrap();
+        assert_eq!(token, token_parsed);
+    }
+
+    #[test]
+    fn test_string_conversions() {
+        let payload = Payload {
+            id: TokenID::from_bytes(*b"abcdefghijklemno"),
+            user_agent: UserAgent::GoogleSmartHome,
+            user_id: UserID::from_bytes(*b"abcdefghijklemno"),
+            expires_at: ExpirationDate::from_duration(None),
+        };
+        let signature = payload.clone().sign(KEY);
+        let token = Token::new(payload.clone(), signature);
+        let token_string = token.to_string();
+        let token_string_parsed = Token::from_str(&token_string).unwrap();
+        assert_eq!(token, token_string_parsed);
+    }
+
+    #[test]
+    fn test_serde() {
+        let user_agent: UserAgent = random();
+        let payload = Payload {
+            id: random(),
+            user_agent: user_agent.clone(),
+            user_id: random(),
+            expires_at: ExpirationDate::from_duration(Some(Duration::from_secs(5))),
+        };
+        let signature = payload.sign(KEY);
+        let token = Token::new(payload, signature);
+        let token_json = serde_json::to_string(&token).unwrap();
+        let token_json_parsed: Token = serde_json::from_str(&token_json).unwrap();
+        assert_eq!(token, token_json_parsed)
+    }
 }
