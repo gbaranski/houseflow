@@ -1,5 +1,6 @@
 use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError};
 use houseflow_types::UserAgent;
+use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -14,23 +15,11 @@ impl Token {
         Self { payload, signature }
     }
 
-    pub fn from_base64(value: impl AsRef<str>) -> Result<Self, DecodeError> {
-        use bytes::BytesMut;
-        let value = value.as_ref();
-
-        if value.len() != Self::BASE64_SIZE {
-            return Err(DecodeError::InvalidLength {
-                expected: Self::BASE64_SIZE,
-                received: value.len(),
-            });
-        }
-
-        let value = base64::decode(value)?;
-        let mut buf = BytesMut::from(value.as_slice());
-        Self::decode(&mut buf)
-    }
-
-    pub fn verify(&self, key: impl AsRef<[u8]>, user_agent: Option<&UserAgent>) -> Result<(), VerifyError> {
+    pub fn verify(
+        &self,
+        key: impl AsRef<[u8]>,
+        user_agent: Option<&UserAgent>,
+    ) -> Result<(), VerifyError> {
         self.payload.verify(user_agent)?;
         self.signature.verify(&self.payload, key)?;
         Ok(())
@@ -52,11 +41,17 @@ impl std::string::ToString for Token {
     }
 }
 
-impl std::str::FromStr for Token {
+impl FromStr for Token {
     type Err = DecodeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         use bytes::BytesMut;
+        if s.len() != Self::BASE64_SIZE {
+            return Err(DecodeError::InvalidLength {
+                expected: Self::BASE64_SIZE,
+                received: s.len(),
+            });
+        }
         let mut s = BytesMut::from(s);
         Self::decode(&mut s)
     }
@@ -111,7 +106,7 @@ impl<'de> Deserialize<'de> for Token {
             where
                 E: de::Error,
             {
-                let result = Token::from_base64(value).map_err(|err| match err {
+                let result = Token::from_str(value).map_err(|err| match err {
                     DecodeError::InvalidBase64Encoding(_) => {
                         de::Error::invalid_value(de::Unexpected::Str(value), &"valid base64 str")
                     }
