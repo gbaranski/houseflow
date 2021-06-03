@@ -2,6 +2,7 @@ use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
 use houseflow_token::{Token, TokenID};
 use redis_client::{aio::Connection, AsyncCommands, Client};
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -39,9 +40,18 @@ impl TokenStore for RedisTokenStore {
         self.connection
             .lock()
             .await
-            .set(token.payload.id.to_string(), token.base64())
+            .set(token.payload.id.to_string(), token.to_string())
             .await?;
 
         Ok(())
+    }
+
+    async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
+        let token: Option<String> = self.connection.lock().await.get(id.to_string()).await?;
+        let token: Option<Token> = match token.map(|token| Token::from_str(token.as_str())) {
+            Some(token) => Some(token?),
+            None => None,
+        };
+        Ok(token)
     }
 }

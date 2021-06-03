@@ -30,6 +30,10 @@ impl TokenStore for MemoryTokenStore {
         Ok(self.store.lock().unwrap().contains_key(id))
     }
 
+    async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
+        Ok(self.store.lock().unwrap().get(id).map(|v| v.clone()))
+    }
+
     async fn add(&self, token: &Token) -> Result<(), super::Error> {
         self.store
             .lock()
