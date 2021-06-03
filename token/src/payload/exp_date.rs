@@ -103,4 +103,8 @@ impl ExpirationDate {
             None => Self { system_time: None },
         }
     }
+
+    pub fn from_system_time(system_time: Option<SystemTime>) -> Self {
+        Self { system_time }
+    }
 }
