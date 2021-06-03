@@ -87,13 +87,13 @@ impl Encoder for Token {
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(any(test, feature = "serde"))]
 use serde::{
     de::{self, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
 };
 
-#[cfg(feature = "serde")]
+#[cfg(any(test, feature = "serde"))]
 impl<'de> Deserialize<'de> for Token {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -135,7 +135,7 @@ impl<'de> Deserialize<'de> for Token {
     }
 }
 
-#[cfg(feature = "serde")]
+#[cfg(any(test, feature = "serde"))]
 impl Serialize for Token {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
