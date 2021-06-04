@@ -79,7 +79,6 @@ impl From<houseflow_db::Error> for RegisterError {
     }
 }
 
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterResponseBody {}
 
