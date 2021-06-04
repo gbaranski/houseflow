@@ -38,7 +38,7 @@ impl TokenStore for MemoryTokenStore {
         self.store
             .lock()
             .unwrap()
-            .insert(token.payload.id.clone(), token.clone());
+            .insert(token.id().clone(), token.clone());
         Ok(())
     }
 }

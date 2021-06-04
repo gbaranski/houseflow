@@ -40,7 +40,7 @@ impl TokenStore for RedisTokenStore {
         self.connection
             .lock()
             .await
-            .set(token.payload.id.to_string(), token.to_string())
+            .set(token.id().to_string(), token.to_string())
             .await?;
 
         Ok(())
