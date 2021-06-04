@@ -5,7 +5,7 @@ use actix_web::{
     App, HttpServer,
 };
 use houseflow_auth_types::{
-    AccessTokenRequestBody, AccessTokenRequestError, AccessTokenRequestErrorKind,
+    AccessTokenRequest, AccessTokenError, AccessTokenErrorKind,
     AccessTokenResponse, AccessTokenResponseBody, GrantType, TokenType,
 };
 use houseflow_db::Database;
@@ -16,8 +16,8 @@ use houseflow_types::{UserAgent, UserID};
 
 pub fn exchange_refresh_token_form_config() -> FormConfig {
     FormConfig::default().error_handler(|err, _| {
-        actix_web::Error::from(AccessTokenRequestError {
-            error: AccessTokenRequestErrorKind::InvalidRequest,
+        actix_web::Error::from(AccessTokenError {
+            error: AccessTokenErrorKind::InvalidRequest,
             error_description: Some(err.to_string()),
         })
     })
@@ -26,7 +26,7 @@ pub fn exchange_refresh_token_form_config() -> FormConfig {
 #[derive(Debug, thiserror::Error)]
 pub enum RefreshTokenExchangeError {
     #[error("invalid request: `{0}`")]
-    InvalidRequest(#[from] AccessTokenRequestError),
+    InvalidRequest(#[from] AccessTokenError),
 
     #[error("error with token_store: `{0}`")]
     TokenStoreError(#[from] crate::token_store::Error),
@@ -53,7 +53,7 @@ impl actix_web::ResponseError for RefreshTokenExchangeError {
 
 #[post("/token")]
 pub async fn exchange_refresh_token(
-    request: Form<AccessTokenRequestBody>,
+    request: Form<AccessTokenRequest>,
     token_store: Data<dyn TokenStore>,
     app_data: Data<AppData>,
 ) -> Result<Json<AccessTokenResponseBody>, RefreshTokenExchangeError> {
@@ -63,8 +63,8 @@ pub async fn exchange_refresh_token(
     let refresh_token = &request.refresh_token;
     refresh_token
         .verify(&app_data.refresh_key, None)
-        .map_err(|err| AccessTokenRequestError {
-            error: AccessTokenRequestErrorKind::InvalidGrant,
+        .map_err(|err| AccessTokenError {
+            error: AccessTokenErrorKind::InvalidGrant,
             error_description: Some(err.to_string()),
         })?;
 
@@ -72,14 +72,14 @@ pub async fn exchange_refresh_token(
         token_store
             .get(&refresh_token.id())
             .await?
-            .ok_or_else(|| AccessTokenRequestError {
-                error: AccessTokenRequestErrorKind::InvalidGrant,
+            .ok_or_else(|| AccessTokenError {
+                error: AccessTokenErrorKind::InvalidGrant,
                 error_description: Some("token does not exists in store".into()),
             })?;
 
     if *refresh_token != stored_refresh_token {
-        return Err(AccessTokenRequestError {
-            error: AccessTokenRequestErrorKind::InvalidGrant,
+        return Err(AccessTokenError {
+            error: AccessTokenErrorKind::InvalidGrant,
             error_description: Some("token does not match with this one in store".into()),
         }
         .into());
@@ -123,7 +123,7 @@ mod tests {
             App::new().configure(|cfg| crate::config(cfg, token_store, database, app_data.clone())),
         )
         .await;
-        let request_body = AccessTokenRequestBody {
+        let request_body = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
             refresh_token: refresh_token.clone(),
         };
@@ -163,7 +163,7 @@ mod tests {
             crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
         }))
         .await;
-        let request_body = AccessTokenRequestBody {
+        let request_body = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
             refresh_token,
         };
@@ -173,10 +173,10 @@ mod tests {
             .to_request();
         let response = test::call_service(&mut app, request).await;
         assert_eq!(response.status(), 400);
-        let response_body: AccessTokenRequestError = test::read_body_json(response).await;
+        let response_body: AccessTokenError = test::read_body_json(response).await;
         assert_eq!(
             response_body.error,
-            AccessTokenRequestErrorKind::InvalidGrant,
+            AccessTokenErrorKind::InvalidGrant,
         );
     }
 
@@ -197,7 +197,7 @@ mod tests {
             crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
         }))
         .await;
-        let request_body = AccessTokenRequestBody {
+        let request_body = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
             refresh_token,
         };
@@ -207,10 +207,10 @@ mod tests {
             .to_request();
         let response = test::call_service(&mut app, request).await;
         assert_eq!(response.status(), 400);
-        let response_body: AccessTokenRequestError = test::read_body_json(response).await;
+        let response_body: AccessTokenError = test::read_body_json(response).await;
         assert_eq!(
             response_body.error,
-            AccessTokenRequestErrorKind::InvalidGrant,
+            AccessTokenErrorKind::InvalidGrant,
             "error_description: {:?}",
             response_body.error_description
         );

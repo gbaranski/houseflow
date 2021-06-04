@@ -10,7 +10,7 @@ pub enum GrantType {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AccessTokenRequestBody {
+pub struct AccessTokenRequest {
     /// The grant_type parameter must be set to `GrantType::RefreshToken`.
     pub grant_type: GrantType,
 
@@ -23,7 +23,7 @@ pub enum TokenType {
     Bearer,
 }
 
-pub type AccessTokenResponse = Result<AccessTokenResponseBody, AccessTokenRequestError>;
+pub type AccessTokenResponse = Result<AccessTokenResponseBody, AccessTokenError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AccessTokenResponseBody {
@@ -40,14 +40,14 @@ pub struct AccessTokenResponseBody {
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[error("kind: `{error}`, description: `{}`")]
-pub struct AccessTokenRequestError {
-    pub error: AccessTokenRequestErrorKind,
+pub struct AccessTokenError {
+    pub error: AccessTokenErrorKind,
     pub error_description: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, thiserror::Error)]
 #[serde(rename_all = "snake_case")]
-pub enum AccessTokenRequestErrorKind {
+pub enum AccessTokenErrorKind {
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
     #[error("Request is missing a parameter")]
@@ -79,10 +79,10 @@ pub enum AccessTokenRequestErrorKind {
 }
 
 #[cfg(feature = "actix")]
-impl actix_web::ResponseError for AccessTokenRequestError {
+impl actix_web::ResponseError for AccessTokenError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
-        use AccessTokenRequestErrorKind::*;
+        use AccessTokenErrorKind::*;
 
         match self.error {
             InvalidRequest => StatusCode::BAD_REQUEST,
