@@ -33,7 +33,7 @@ fn verify_password(hash: &str, password: &str) -> Result<(), LoginError> {
 #[post("/login")]
 pub async fn login(
     request: Json<LoginRequest>,
-    // _token_store: Data<dyn TokenStore>,
+    token_store: Data<dyn TokenStore>,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
 ) -> Result<Json<LoginResponseBody>, LoginError> {
@@ -45,6 +45,11 @@ pub async fn login(
     let refresh_token =
         Token::new_refresh_token(&app_data.refresh_key, &user.id, &request.user_agent);
     let access_token = Token::new_access_token(&app_data.access_key, &user.id, &request.user_agent);
+    token_store
+        .add(&refresh_token)
+        .await
+        .map_err(|err| LoginError::InternalError(err.to_string()))?;
+
     let response = LoginResponseBody {
         refresh_token,
         access_token,
@@ -92,10 +97,11 @@ mod tests {
             password_hash,
         };
         database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, token_store, database, app_data.clone())),
-        )
-        .await;
+        let mut app =
+            test::init_service(App::new().configure(|cfg| {
+                crate::config(cfg, token_store.clone(), database, app_data.clone())
+            }))
+            .await;
 
         let request_body = LoginRequest {
             email: user.email,
@@ -123,5 +129,13 @@ mod tests {
         );
         assert_eq!(at.user_agent(), rt.user_agent());
         assert_eq!(at.user_id(), rt.user_id());
+        assert!(
+            !token_store.exists(at.id()).await.unwrap(),
+            "access token found in token store"
+        );
+        assert!(
+            token_store.exists(rt.id()).await.unwrap(),
+            "refresh token not found in token store"
+        );
     }
 }
