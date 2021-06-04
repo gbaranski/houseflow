@@ -152,4 +152,51 @@ mod tests {
             "refresh token not found in token store"
         );
     }
+
+    #[actix_rt::test]
+    async fn test_register() {
+        let token_store = get_token_store();
+        let database = get_database();
+        let app_data = get_app_data();
+        let password = String::from("SomePassword");
+        let password_hash = argon2::hash_encoded(
+            password.as_bytes(),
+            &app_data.password_salt,
+            &argon2::Config::default(),
+        )
+        .unwrap();
+        let mut app =
+            test::init_service(App::new().configure(|cfg| {
+                crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
+            }))
+            .await;
+
+        let request_body = RegisterRequest {
+            password,
+            first_name: String::from("John"),
+            last_name: String::from("Smith"),
+            email: String::from("john_smith@example.com"),
+        };
+        let request = test::TestRequest::post()
+            .uri("/register")
+            .set_json(&request_body)
+            .to_request();
+        let response = test::call_service(&mut app, request).await;
+        assert_eq!(
+            response.status(),
+            200,
+            "status is not succesfull, body: {:?}",
+            test::read_body(response).await
+        );
+        let _: RegisterResponseBody = test::read_body_json(response).await;
+        let db_user = database
+            .get_user_by_email(&request_body.email)
+            .await
+            .unwrap()
+            .expect("user not found in database");
+        assert_eq!(db_user.first_name, request_body.first_name);
+        assert_eq!(db_user.last_name, request_body.last_name);
+        assert_eq!(db_user.email, request_body.email);
+        assert_eq!(db_user.password_hash, password_hash);
+    }
 }
