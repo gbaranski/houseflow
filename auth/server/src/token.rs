@@ -68,13 +68,14 @@ pub async fn exchange_refresh_token(
             error_description: Some(err.to_string()),
         })?;
 
-    let stored_refresh_token = token_store
-        .get(&refresh_token.payload.id)
-        .await?
-        .ok_or_else(|| AccessTokenRequestError {
-            error: AccessTokenRequestErrorKind::InvalidGrant,
-            error_description: Some("token does not exists in store".into()),
-        })?;
+    let stored_refresh_token =
+        token_store
+            .get(&refresh_token.id())
+            .await?
+            .ok_or_else(|| AccessTokenRequestError {
+                error: AccessTokenRequestErrorKind::InvalidGrant,
+                error_description: Some("token does not exists in store".into()),
+            })?;
 
     if *refresh_token != stored_refresh_token {
         return Err(AccessTokenRequestError {
@@ -87,9 +88,9 @@ pub async fn exchange_refresh_token(
     let expires_in = refresh_token.user_agent().refresh_token_duration();
     let expires_at = ExpirationDate::from_duration(expires_in);
     let access_token_payload = TokenPayload {
-        id: refresh_token.payload.user_id.clone(),
-        user_agent: refresh_token.payload.user_agent,
-        user_id: refresh_token.payload.user_id.clone(),
+        id: refresh_token.user_id().clone(),
+        user_agent: *refresh_token.user_agent(),
+        user_id: refresh_token.user_id().clone(),
         expires_at,
     };
     let access_token_signature = access_token_payload.sign(&app_data.access_key);
@@ -104,52 +105,19 @@ pub async fn exchange_refresh_token(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::*;
     use crate::MemoryTokenStore;
     use actix_web::test;
     use houseflow_db::MemoryDatabase;
     use rand::{random, Rng, RngCore};
     use std::time::{Duration, SystemTime};
 
-    fn get_token_store() -> web::Data<dyn TokenStore> {
-        use std::sync::Arc;
-        Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)
-    }
-
-    fn get_database() -> web::Data<dyn Database> {
-        use std::sync::Arc;
-        Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
-    }
-
-    fn get_app_data() -> crate::AppData {
-        let mut app_data = crate::AppData {
-            refresh_key: vec![0; 32],
-            access_key: vec![0; 32],
-        };
-        rand::thread_rng().fill_bytes(&mut app_data.refresh_key);
-        rand::thread_rng().fill_bytes(&mut app_data.access_key);
-        app_data
-    }
-
-    fn random_refresh_token(key: &[u8]) -> Token {
-        let refresh_token_payload = TokenPayload {
-            id: random(),
-            user_agent: random(),
-            user_id: random(),
-            expires_at: ExpirationDate::from_duration(Some(Duration::from_secs(10))),
-        };
-        let refresh_token_signature = refresh_token_payload.sign(key);
-        Token {
-            payload: refresh_token_payload,
-            signature: refresh_token_signature,
-        }
-    }
-
     #[actix_rt::test]
     async fn test_exchange_refresh_token() {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let refresh_token = random_refresh_token(&app_data.refresh_key);
+        let refresh_token = Token::new_refresh_token(&app_data.refresh_key, &random(), &random());
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(
             App::new().configure(|cfg| crate::config(cfg, token_store, database, app_data.clone())),
@@ -174,7 +142,7 @@ mod tests {
         let access_token = &response_body.access_token;
         let verify_result = response_body.access_token.verify(
             &app_data.access_key,
-            Some(&request_body.refresh_token.payload.user_agent),
+            Some(&request_body.refresh_token.user_agent()),
         );
         assert!(
             verify_result.is_ok(),
@@ -190,7 +158,7 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let refresh_token = random_refresh_token(&app_data.refresh_key);
+        let refresh_token = Token::new_refresh_token(&app_data.refresh_key, &random(), &random());
         let mut app = test::init_service(App::new().configure(|cfg| {
             crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
         }))
@@ -217,19 +185,7 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let refresh_token_payload = TokenPayload {
-            id: random(),
-            user_agent: random(),
-            user_id: random(),
-            expires_at: ExpirationDate::from_system_time(
-                SystemTime::now().checked_sub(Duration::from_secs(5)),
-            ),
-        };
-        let refresh_token_signature = refresh_token_payload.sign(&app_data.refresh_key);
-        let refresh_token = Token {
-            payload: refresh_token_payload,
-            signature: refresh_token_signature,
-        };
+        let refresh_token = Token::new_refresh_token(&app_data.refresh_key, &random(), &random());
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
             crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
