@@ -193,12 +193,60 @@ mod tests {
         assert_eq!(
             response.status(),
             400,
-            "status is not succesfull, body: {:?}",
+            "unexpected status code, body: {:?}",
             test::read_body(response).await
         );
         let response: LoginError = test::read_body_json(response).await;
         match response {
             LoginError::InvalidPassword => (),
+            _ => panic!("invalid error returned: {:?}", response),
+        }
+    }
+
+    #[actix_rt::test]
+    async fn test_login_not_existing_user() {
+        let token_store = get_token_store();
+        let database = get_database();
+        let app_data = get_app_data();
+        let password = String::from("SomePassword");
+        let password_hash = argon2::hash_encoded(
+            password.as_bytes(),
+            &app_data.password_salt,
+            &argon2::Config::default(),
+        )
+        .unwrap();
+        let user = User {
+            id: random(),
+            first_name: String::from("John"),
+            last_name: String::from("Smith"),
+            email: String::from("john_smith@example.com"),
+            password_hash,
+        };
+        let mut app =
+            test::init_service(App::new().configure(|cfg| {
+                crate::config(cfg, token_store.clone(), database, app_data.clone())
+            }))
+            .await;
+
+        let request_body = LoginRequest {
+            email: user.email,
+            password,
+            user_agent: random(),
+        };
+        let request = test::TestRequest::post()
+            .uri("/login")
+            .set_json(&request_body)
+            .to_request();
+        let response = test::call_service(&mut app, request).await;
+        assert_eq!(
+            response.status(),
+            404,
+            "unexpected status code, body: {:?}",
+            test::read_body(response).await
+        );
+        let response: LoginError = test::read_body_json(response).await;
+        match response {
+            LoginError::UserNotFound => (),
             _ => panic!("invalid error returned: {:?}", response),
         }
     }
