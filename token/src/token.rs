@@ -1,10 +1,12 @@
-use crate::{DecodeError, Decoder, Encoder, Payload, Signature, VerifyError, TokenID, ExpirationDate};
+use crate::{
+    DecodeError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID, VerifyError,
+};
 use houseflow_types::{UserAgent, UserID};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {
-    pub payload: Payload,
-    pub signature: Signature,
+    payload: Payload,
+    signature: Signature,
 }
 
 impl Token {
@@ -32,6 +34,49 @@ impl Token {
         self.payload.expires_at.has_expired()
     }
 
+    fn new_token(
+        key: impl AsRef<[u8]>,
+        user_id: &UserID,
+        user_agent: &UserAgent,
+        expires_in: Option<std::time::Duration>,
+    ) -> Token {
+        let expires_at = ExpirationDate::from_duration(expires_in);
+        let payload = Payload {
+            id: rand::random(),
+            user_agent: user_agent.clone(),
+            user_id: user_id.clone(),
+            expires_at,
+        };
+        let signature = payload.sign(key);
+        Token::new(payload, signature)
+    }
+
+    pub fn new_refresh_token(
+        key: impl AsRef<[u8]>,
+        user_id: &UserID,
+        user_agent: &UserAgent,
+    ) -> Token {
+        Self::new_token(
+            key,
+            user_id,
+            user_agent,
+            user_agent.refresh_token_duration(),
+        )
+    }
+
+    pub fn new_access_token(
+        key: impl AsRef<[u8]>,
+        user_id: &UserID,
+        user_agent: &UserAgent,
+    ) -> Token {
+        Self::new_token(
+            key,
+            user_id,
+            user_agent,
+            user_agent.access_token_duration(),
+        )
+    }
+
     #[inline]
     pub fn id(&self) -> &TokenID {
         &self.payload.id
@@ -52,7 +97,6 @@ impl Token {
         &self.payload.expires_at
     }
 }
-
 
 impl std::string::ToString for Token {
     fn to_string(&self) -> String {
