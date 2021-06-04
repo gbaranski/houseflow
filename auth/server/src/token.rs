@@ -185,7 +185,13 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let refresh_token = Token::new_refresh_token(&app_data.refresh_key, &random(), &random());
+        let refresh_token_payload = TokenPayload::new(
+            random(),
+            random(),
+            ExpirationDate::from_system_time(SystemTime::now().checked_sub(Duration::from_secs(5))),
+        );
+        let refresh_token_signature = refresh_token_payload.sign(&app_data.refresh_key);
+        let refresh_token = Token::new(refresh_token_payload, refresh_token_signature);
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
             crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
