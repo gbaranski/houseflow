@@ -30,7 +30,7 @@ impl Fulfillment {
         let response = client
             .post(url)
             .json(&SyncRequest::default())
-            .bearer_auth(access_token.into_base64())
+            .bearer_auth(access_token.to_string())
             .send()
             .await?
             .json::<SyncResponse>()
