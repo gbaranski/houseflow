@@ -29,6 +29,7 @@ pub struct AppState<TS: TokenStore, DB: Database> {
 pub struct AppData {
     refresh_key: Vec<u8>,
     access_key: Vec<u8>,
+    password_salt: Vec<u8>,
 }
 
 pub fn config(
@@ -40,6 +41,8 @@ pub fn config(
     cfg.data(app_data)
         .app_data(token_store)
         .app_data(database)
+        .service(auth::login)
+        .service(auth::register)
         .service(
             web::scope("/")
                 .app_data(exchange_refresh_token_form_config)
@@ -59,6 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_data = AppData {
         refresh_key: Vec::from("refresh-key"),
         access_key: Vec::from("access-key"),
+        password_salt: Vec::from("sea-salt"),
     };
 
     let server = HttpServer::new(move || {
@@ -71,4 +75,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     log::info!("Starting HTTP Server at `{}`", IP_ADDR);
     server.run().await?;
     Ok(())
+}
+
+#[cfg(test)]
+mod test_utils {
+    use super::{Database, MemoryDatabase, MemoryTokenStore, TokenStore};
+    use houseflow_token::{Token, Payload as TokenPayload, ExpirationDate};
+    use std::time::Duration;
+    use actix_web::web::Data;
+    use rand::{RngCore, random};
+    use std::sync::Arc;
+
+    pub fn get_app_data() -> crate::AppData {
+        let mut app_data = crate::AppData {
+            refresh_key: vec![0; 32],
+            access_key: vec![0; 32],
+            password_salt: vec![0; 32],
+        };
+        rand::thread_rng().fill_bytes(&mut app_data.refresh_key);
+        rand::thread_rng().fill_bytes(&mut app_data.access_key);
+        rand::thread_rng().fill_bytes(&mut app_data.password_salt);
+        app_data
+    }
+
+    pub fn get_token_store() -> Data<dyn TokenStore> {
+        Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)
+    }
+
+    pub fn get_database() -> Data<dyn Database> {
+        Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
+    }
 }
