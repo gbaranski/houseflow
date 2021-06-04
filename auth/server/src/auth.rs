@@ -61,10 +61,24 @@ pub async fn login(
 pub async fn register(
     request: Json<RegisterRequest>,
     app_data: Data<AppData>,
-    token_store: Data<dyn TokenStore>,
     db: Data<dyn Database>,
 ) -> Result<Json<RegisterResponseBody>, RegisterError> {
-    todo!()
+    let password_hash = argon2::hash_encoded(
+        request.password.as_bytes(),
+        &app_data.password_salt,
+        &argon2::Config::default(),
+    )
+    .unwrap();
+    let new_user = User {
+        id: random(),
+        first_name: request.first_name.clone(),
+        last_name: request.last_name.clone(),
+        email: request.email.clone(),
+        password_hash,
+    };
+    db.add_user(&new_user).await?;
+    let response = RegisterResponseBody {};
+    Ok(Json(response))
 }
 
 #[cfg(test)]
