@@ -19,7 +19,7 @@ CREATE TABLE devices (
     traits          TEXT[]      NOT NULL,
     name            TEXT        NOT NULL,
     will_push_state BOOL        NOT NULL,
-    room_hint       TEXT,
+    room            TEXT,
     model           TEXT        NOT NULL,
     hw_version      TEXT        NOT NULL,
     sw_version      TEXT        NOT NULL,
