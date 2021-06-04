@@ -1,5 +1,9 @@
-use actix_web::{http, web, App, HttpRequest, HttpServer};
-use houseflow_db::{Database, Error as DatabaseError, Options as DatabaseOptions};
+use actix_web::{
+    http,
+    web::{self, Data},
+    App, HttpRequest, HttpServer,
+};
+use houseflow_db::{Database, Error as DatabaseError, MemoryDatabase};
 use houseflow_token::Token;
 use houseflow_types::{User, UserAgent};
 use thiserror::Error;
@@ -66,10 +70,9 @@ impl actix_web::FromRequest for ActixUser {
 
     fn from_request(req: &HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
         let headers = req.headers();
-        let agent_state = req.app_data::<AgentState>().unwrap();
-        let token_key = agent_state.token_key.clone();
-        let expected_user_agent = agent_state.users_agent.clone();
-        let database = agent_state.database.clone();
+        let access_key = req.app_data::<AppData>().unwrap().access_key.clone();
+        let database = req.app_data::<Data<dyn Database>>().unwrap().clone();
+        let expected_user_agent = req.app_data::<AgentData>().unwrap().user_agent;
         let authorization_header = match headers
             .get(http::header::AUTHORIZATION)
             .ok_or(AuthorizationError::MissingHeader)
@@ -90,15 +93,15 @@ impl actix_web::FromRequest for ActixUser {
             if schema != "Bearer" {
                 return Err(AuthorizationError::InvalidHeaderSchema.into());
             }
-            let token = Token::from_base64(token)
+            let token = Token::from_str(token)
                 .map_err(|err| AuthorizationError::InvalidToken(err.into()))?;
 
             token
-                .verify(&token_key, &expected_user_agent)
+                .verify(&access_key, Some(&expected_user_agent))
                 .map_err(|err| AuthorizationError::InvalidToken(err.into()))?;
 
             let user = database
-                .get_user(&token.payload.user_id)
+                .get_user(&token.user_id())
                 .await?
                 .ok_or(AuthorizationError::UserNotFound)?;
 
@@ -110,10 +113,14 @@ impl actix_web::FromRequest for ActixUser {
 }
 
 #[derive(Clone)]
-pub struct AgentState {
-    database: Database,
-    users_agent: UserAgent,
-    token_key: Vec<u8>,
+pub struct AppData {
+    access_key: Vec<u8>,
+    refresh_key: Vec<u8>,
+}
+
+#[derive(Clone)]
+pub struct AgentData {
+    user_agent: UserAgent,
 }
 
 #[actix_web::main]
@@ -121,41 +128,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     log::info!("Starting fulfillment service");
 
-    // TODO: Replace those fixed values
-    let database_options = DatabaseOptions {
-        user: "postgres",
-        password: "haslo123",
-        host: "localhost",
-        port: 5432,
-        database_name: "houseflow",
-    };
-    let token_key = b"4a92c480aa4147ed-a3c36e5e667d8fbd";
-    let database = Database::new(&database_options).await?;
+    let database = MemoryDatabase::new();
     log::info!("Database initialized");
 
-    let common_agent_state = AgentState {
-        database,
-        token_key: token_key.to_vec(),
-        users_agent: UserAgent::default(),
+    let app_data = AppData {
+        refresh_key: Vec::from("refresh-key"),
+        access_key: Vec::from("access-key"),
     };
 
-    let internal_agent_state = AgentState {
-        users_agent: UserAgent::Internal,
-        ..common_agent_state.clone()
+    let internal_agent_data = AgentData {
+        user_agent: UserAgent::Internal,
     };
 
-    let _google_actions_agent_state = AgentState {
-        users_agent: UserAgent::GoogleSmartHome,
-        ..internal_agent_state.clone()
-    };
+    // let google_actions_agent_data = AgentData {
+    //     user_agent: UserAgent::GoogleSmartHome,
+    // };
 
     HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
-            // .wrap(auth)
+            .data(app_data.clone())
+            .app_data(database.clone())
             .service(
                 web::scope("/internal")
-                    .app_data(internal_agent_state.clone())
+                    .app_data(internal_agent_data.clone())
                     .service(internal::on_sync),
             )
     })
