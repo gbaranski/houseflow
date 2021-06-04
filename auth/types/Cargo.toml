@@ -11,6 +11,7 @@ thiserror = "1.0.25"
 
 actix-web = { version = "=4.0.0-beta.5", optional = true, default-features = false }
 houseflow-token = { path = "../../token", features = [ "serde" ] }
+houseflow-types = { path = "../../types", features = [ "serde" ] }
 
 houseflow-db = { path = "../../db", optional = true }
 
