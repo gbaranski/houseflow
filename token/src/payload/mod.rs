@@ -56,6 +56,15 @@ use sha2::Sha256;
 type HmacSha256 = Hmac<Sha256>;
 
 impl Payload {
+    pub fn new(user_agent: UserAgent, user_id: UserID, expires_at: ExpirationDate) -> Self {
+        Self {
+            id: rand::random(),
+            user_agent,
+            user_id,
+            expires_at,
+        }
+    }
+
     pub fn sign(&self, key: impl AsRef<[u8]>) -> Signature {
         let mut mac = HmacSha256::new_from_slice(key.as_ref()).unwrap();
         let mut bytes = BytesMut::with_capacity(Payload::SIZE);
