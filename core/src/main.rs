@@ -32,14 +32,22 @@ pub struct Opt {
     auth_url: Url,
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let opt = Opt::from_args();
-    loggerv::init_with_verbosity(opt.verbose as u64)?;
+fn main() -> anyhow::Result<()> {
+    actix_rt::System::with_tokio_rt(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap()
+    })
+    .block_on(async {
+        let opt = Opt::from_args();
+        loggerv::init_with_verbosity(opt.verbose as u64)?;
 
-    match opt.command {
-        Command::Login => auth::login(opt),
-        Command::Register => todo!(),
-    }
-    .await
+        match opt.command {
+            Command::Login(ref command) => auth::login(&opt, command).await,
+            Command::Register => todo!(),
+            Command::Run(ref command) => run::run(&opt, command).await,
+        }
+    })
 }
