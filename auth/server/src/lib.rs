@@ -2,7 +2,7 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use houseflow_db::{Database, MemoryDatabase};
+use houseflow_db::Database;
 use std::sync::Arc;
 
 pub use token_store::{
@@ -47,37 +47,36 @@ pub fn config(
         );
 }
 
-#[actix_web::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    const IP_ADDR: &str = "127.0.0.1:8080";
-    env_logger::init();
+pub async fn run(
+    address: impl std::net::ToSocketAddrs + std::fmt::Display + Clone,
+    token_store: impl TokenStore + 'static,
+    database: impl Database + 'static,
+    app_data: AppData,
+) -> std::io::Result<()> {
+    let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
+    let database = Data::from(Arc::new(database) as Arc<dyn Database>);
+
     log::info!("Starting `Auth` service");
-
-    let token_store = Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>);
-    let database = Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>);
-
-    let app_data = AppData {
-        refresh_key: Vec::from("refresh-key"),
-        access_key: Vec::from("access-key"),
-        password_salt: Vec::from("sea-salt"),
-    };
 
     let server = HttpServer::new(move || {
         App::new()
             .configure(|cfg| config(cfg, token_store.clone(), database.clone(), app_data.clone()))
             .wrap(actix_web::middleware::Logger::default())
     })
-    .bind(IP_ADDR)?;
+    .bind(address.clone())?;
 
-    log::info!("Starting HTTP Server at `{}`", IP_ADDR);
+    log::info!("Starting HTTP Server at `{}`", address);
+
     server.run().await?;
+
     Ok(())
 }
 
 #[cfg(test)]
 mod test_utils {
-    use super::{Database, MemoryDatabase, MemoryTokenStore, TokenStore};
-    
+    use super::{Database, MemoryTokenStore, TokenStore};
+    use houseflow_db::MemoryDatabase;
+
     use actix_web::web::Data;
     use rand::RngCore;
     use std::sync::Arc;
