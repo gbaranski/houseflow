@@ -7,7 +7,7 @@ members = [
   "auth/server",
   "auth/api",
   "db",
-  # "tui",
+
   "devices/virtual",
   "token",
   "types",
