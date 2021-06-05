@@ -93,7 +93,7 @@ impl Auth {
 
         let response = client
             .post(url)
-            .query(&request)
+            .json(&request)
             .send()
             .await?
             .json::<LoginResponse>()
