@@ -1,7 +1,6 @@
 use houseflow_auth_types::{
     AccessTokenError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginError, LoginRequest,
     LoginResponse, LoginResponseBody, RegisterError, RegisterRequest, RegisterResponse,
-    RegisterResponseBody,
 };
 use houseflow_token::Token;
 use reqwest::Client;
@@ -25,6 +24,9 @@ pub enum TokenStoreError {
 
     #[error("store write failed: `{0}`")]
     WriteError(tokio::io::Error),
+
+    #[error("store create parents failed: `{0}`")]
+    CreateParentsError(tokio::io::Error),
 
     #[error("store remove failed: `{0}`")]
     RemoveError(tokio::io::Error),
@@ -137,9 +139,17 @@ impl Auth {
     pub async fn save_refresh_token(&self, refresh_token: &Token) -> Result<(), Error> {
         use tokio::io::AsyncWriteExt;
 
+        if let Some(path) = self.config.token_store.path.parent() {
+            if path.exists() == false {
+                tokio::fs::create_dir_all(path)
+                    .await
+                    .map_err(|err| TokenStoreError::CreateParentsError(err))?;
+            }
+        }
+
         let mut file = tokio::fs::OpenOptions::new()
-            .create(true)
             .write(true)
+            .create(true)
             .open(&self.config.token_store.path)
             .await
             .map_err(|err| TokenStoreError::OpenError(err))?;
@@ -191,7 +201,7 @@ mod tests {
         );
 
         let path_string = format!(
-            "/tmp/houseflow-test-{}",
+            "/tmp/houseflow/tokens-{}",
             std::time::SystemTime::now()
                 .duration_since(std::time::SystemTime::UNIX_EPOCH)
                 .unwrap()
