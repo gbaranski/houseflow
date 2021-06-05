@@ -1,15 +1,14 @@
 use crate::{AppData, TokenStore};
-use actix_files::NamedFile;
 use actix_web::{
-    get, post,
-    web::{self, Data, Json, Query},
+    post,
+    web::{Data, Json},
 };
 use houseflow_auth_types::{
     LoginError, LoginRequest, LoginResponseBody, RegisterError, RegisterRequest,
     RegisterResponseBody,
 };
 use houseflow_db::Database;
-use houseflow_token::{ExpirationDate, Payload as TokenPayload, Token};
+use houseflow_token::Token;
 use houseflow_types::User;
 use rand::random;
 
@@ -85,11 +84,10 @@ pub async fn register(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use crate::MemoryTokenStore;
     use actix_web::{test, App};
-    use houseflow_db::MemoryDatabase;
-    use rand::{random, Rng, RngCore};
-    use std::time::{Duration, SystemTime};
+    
+    use rand::random;
+    
 
     #[actix_rt::test]
     async fn test_login() {

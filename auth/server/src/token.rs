@@ -1,19 +1,15 @@
 use crate::{AppData, TokenStore};
 use actix_web::{
-    get, post,
+    post,
     web::{self, Data, Form, FormConfig, Json},
-    App, HttpServer,
 };
 use houseflow_auth_types::{
     AccessTokenRequest, AccessTokenError, AccessTokenErrorKind,
-    AccessTokenResponse, AccessTokenResponseBody, GrantType, TokenType,
+    AccessTokenResponseBody, TokenType,
 };
-use houseflow_db::Database;
 use houseflow_token::{
-    ExpirationDate, Payload as TokenPayload, Signature as TokenSignature, Token, TokenID,
+    ExpirationDate, Payload as TokenPayload, Token,
 };
-use houseflow_types::{UserAgent, UserID};
-
 pub fn exchange_refresh_token_form_config() -> FormConfig {
     FormConfig::default().error_handler(|err, _| {
         actix_web::Error::from(AccessTokenError {
@@ -57,9 +53,6 @@ pub async fn exchange_refresh_token(
     token_store: Data<dyn TokenStore>,
     app_data: Data<AppData>,
 ) -> Result<Json<AccessTokenResponseBody>, RefreshTokenExchangeError> {
-    use std::convert::TryFrom;
-    use std::time::{Duration, SystemTime};
-
     let refresh_token = &request.refresh_token;
     refresh_token
         .verify(&app_data.refresh_key, None)
@@ -106,10 +99,9 @@ pub async fn exchange_refresh_token(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use crate::MemoryTokenStore;
-    use actix_web::test;
-    use houseflow_db::MemoryDatabase;
-    use rand::{random, Rng, RngCore};
+    use actix_web::{test, App};
+    use houseflow_auth_types::GrantType;
+    use rand::random;
     use std::time::{Duration, SystemTime};
 
     #[actix_rt::test]

@@ -1,11 +1,8 @@
-// TODO: remove that
-#![allow(unused_imports)]
-
 use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use houseflow_db::{Database, MemoryDatabase, PostgresDatabase};
+use houseflow_db::{Database, MemoryDatabase};
 use std::sync::Arc;
 
 pub use token_store::{
@@ -80,10 +77,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod test_utils {
     use super::{Database, MemoryDatabase, MemoryTokenStore, TokenStore};
-    use houseflow_token::{Token, Payload as TokenPayload, ExpirationDate};
-    use std::time::Duration;
+    
     use actix_web::web::Data;
-    use rand::{RngCore, random};
+    use rand::RngCore;
     use std::sync::Arc;
 
     pub fn get_app_data() -> crate::AppData {
