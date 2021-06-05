@@ -36,6 +36,4 @@ houseflow-token = { path = "../../token", features = [ "serde" ] }
 async-trait = "0.1.50"
 rand = "0.8.3"
 rust-argon2 = "0.8.3"
-
-[dev-dependencies]
 serde_json = "1.0.64"

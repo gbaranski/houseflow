@@ -1,6 +1,7 @@
 use houseflow_auth_types::{
     AccessTokenError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginError, LoginRequest,
     LoginResponse, LoginResponseBody, RegisterError, RegisterRequest, RegisterResponse,
+    RegisterResponseBody,
 };
 use houseflow_token::Token;
 use reqwest::Client;
@@ -72,19 +73,19 @@ impl Auth {
         Self { config }
     }
 
-    pub async fn register(&self, request: RegisterRequest) -> Result<(), Error> {
+    pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {
         let client = Client::new();
         let url = self.config.url.join("register").unwrap();
 
-        let _ = client
+        let response = client
             .post(url)
-            .query(&request)
+            .json(&request)
             .send()
             .await?
             .json::<RegisterResponse>()
-            .await??;
+            .await?;
 
-        Ok(())
+        Ok(response)
     }
 
     pub async fn login(&self, request: LoginRequest) -> Result<LoginResponseBody, Error> {

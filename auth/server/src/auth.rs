@@ -4,7 +4,7 @@ use actix_web::{
     web::{Data, Json},
 };
 use houseflow_auth_types::{
-    LoginError, LoginRequest, LoginResponseBody, RegisterError, RegisterRequest,
+    LoginError, LoginRequest, LoginResponseBody, RegisterError, RegisterRequest, RegisterResponse, LoginResponse,
     RegisterResponseBody,
 };
 use houseflow_db::Database;
@@ -35,7 +35,7 @@ pub async fn login(
     token_store: Data<dyn TokenStore>,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
-) -> Result<Json<LoginResponseBody>, LoginError> {
+) -> Result<Json<LoginResponse>, LoginError> {
     let user = db
         .get_user_by_email(&request.email)
         .await?
@@ -49,10 +49,10 @@ pub async fn login(
         .await
         .map_err(|err| LoginError::InternalError(err.to_string()))?;
 
-    let response = LoginResponseBody {
+    let response = LoginResponse::Ok(LoginResponseBody {
         refresh_token,
         access_token,
-    };
+    });
     Ok(Json(response))
 }
 
@@ -61,13 +61,14 @@ pub async fn register(
     request: Json<RegisterRequest>,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
-) -> Result<Json<RegisterResponseBody>, RegisterError> {
+) -> Result<Json<RegisterResponse>, RegisterError> {
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
         &app_data.password_salt,
         &argon2::Config::default(),
     )
     .unwrap();
+
     let new_user = User {
         id: random(),
         username: request.username.clone(),
@@ -75,7 +76,10 @@ pub async fn register(
         password_hash,
     };
     db.add_user(&new_user).await?;
-    let response = RegisterResponseBody {};
+
+    let response = RegisterResponse::Ok(RegisterResponseBody {
+        user_id: new_user.id,
+    });
     Ok(Json(response))
 }
 
@@ -84,9 +88,8 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{test, App};
-    
+
     use rand::random;
-    
 
     #[actix_rt::test]
     async fn test_login() {
@@ -102,8 +105,7 @@ mod tests {
         .unwrap();
         let user = User {
             id: random(),
-            first_name: String::from("John"),
-            last_name: String::from("Smith"),
+            username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash,
         };
@@ -165,8 +167,7 @@ mod tests {
         .unwrap();
         let user = User {
             id: random(),
-            first_name: String::from("John"),
-            last_name: String::from("Smith"),
+            username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash,
         };
@@ -214,8 +215,7 @@ mod tests {
         .unwrap();
         let user = User {
             id: random(),
-            first_name: String::from("John"),
-            last_name: String::from("Smith"),
+            username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash,
         };
@@ -267,8 +267,7 @@ mod tests {
 
         let request_body = RegisterRequest {
             password,
-            first_name: String::from("John"),
-            last_name: String::from("Smith"),
+            username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
         };
         let request = test::TestRequest::post()
@@ -282,14 +281,13 @@ mod tests {
             "status is not succesfull, body: {:?}",
             test::read_body(response).await
         );
-        let _: RegisterResponseBody = test::read_body_json(response).await;
+        let _: () = test::read_body_json(response).await;
         let db_user = database
             .get_user_by_email(&request_body.email)
             .await
             .unwrap()
             .expect("user not found in database");
-        assert_eq!(db_user.first_name, request_body.first_name);
-        assert_eq!(db_user.last_name, request_body.last_name);
+        assert_eq!(db_user.username, request_body.username);
         assert_eq!(db_user.email, request_body.email);
         assert_eq!(db_user.password_hash, password_hash);
     }

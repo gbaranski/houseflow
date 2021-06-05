@@ -1,5 +1,5 @@
 use houseflow_token::Token;
-use houseflow_types::UserAgent;
+use houseflow_types::{UserAgent, UserID};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -12,6 +12,7 @@ pub struct LoginRequest {
 pub type LoginResponse = Result<LoginResponseBody, LoginError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
+#[serde(tag = "error", content = "error_description")]
 pub enum LoginError {
     #[error("invalid password")]
     InvalidPassword,
@@ -24,6 +25,12 @@ pub enum LoginError {
     InternalError(String),
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LoginResponseBody {
+    pub refresh_token: Token,
+    pub access_token: Token,
+}
+
 #[cfg(feature = "houseflow-db")]
 impl From<houseflow_db::Error> for LoginError {
     fn from(v: houseflow_db::Error) -> Self {
@@ -31,11 +38,6 @@ impl From<houseflow_db::Error> for LoginError {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LoginResponseBody {
-    pub refresh_token: Token,
-    pub access_token: Token,
-}
 
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for LoginError {
@@ -50,10 +52,16 @@ impl actix_web::ResponseError for LoginError {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse {
-        let json = actix_web::web::Json(self);
+        let response = LoginResponse::Err(self.clone());
+        let json = actix_web::web::Json(response);
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }
+
+
+//
+// Register
+// 
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterRequest {
@@ -71,6 +79,11 @@ pub enum RegisterError {
     InternalError(String),
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RegisterResponseBody {
+    pub user_id: UserID,
+}
+
 #[cfg(feature = "houseflow-db")]
 impl From<houseflow_db::Error> for RegisterError {
     fn from(v: houseflow_db::Error) -> Self {
@@ -78,8 +91,6 @@ impl From<houseflow_db::Error> for RegisterError {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RegisterResponseBody {}
 
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for RegisterError {
@@ -92,7 +103,8 @@ impl actix_web::ResponseError for RegisterError {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse {
-        let json = actix_web::web::Json(self);
+        let response = RegisterResponse::Err(self.clone());
+        let json = actix_web::web::Json(response);
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }
