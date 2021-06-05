@@ -19,7 +19,7 @@ pub async fn login(opt: &Opt, command: &LoginCommand) -> anyhow::Result<()> {
     let auth = Auth {
         url: opt.auth_url.clone(),
         keystore: KeystoreConfig {
-            path: opt.keystore_path.clone(),
+            path: opt.keystore_path.clone().into(),
         },
     };
 
@@ -72,7 +72,7 @@ pub async fn register(opt: &Opt, command: &RegisterCommand) -> anyhow::Result<()
     let auth = Auth {
         url: opt.auth_url.clone(),
         keystore: KeystoreConfig {
-            path: opt.keystore_path.clone(),
+            path: opt.keystore_path.clone().into(),
         },
     };
     let theme = crate::cli::get_theme();

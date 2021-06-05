@@ -1009,10 +1009,11 @@ dependencies = [
  "houseflow-db",
  "houseflow-types",
  "log",
- "loggerv",
+ "simplelog",
  "structopt",
  "tokio",
  "url",
+ "xdg",
 ]
 
 [[package]]
@@ -2190,6 +2191,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "simplelog"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59d0fe306a0ced1c88a58042dc22fc2ddd000982c26d75f6aa09a394547c41e0"
+dependencies = [
+ "chrono",
+ "log",
+ "termcolor",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2871,6 +2883,12 @@ checksum = "0120db82e8a1e0b9fb3345a539c478767c0048d842860994d96113d5b667bd69"
 dependencies = [
  "winapi",
 ]
+
+[[package]]
+name = "xdg"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d089681aa106a86fade1b0128fb5daf07d5867a509ab036d99988dec80429a57"
 
 [[package]]
 name = "zeroize"
