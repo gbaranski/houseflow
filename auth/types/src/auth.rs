@@ -58,8 +58,7 @@ impl actix_web::ResponseError for LoginError {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterRequest {
     pub email: String,
-    pub first_name: String,
-    pub last_name: String,
+    pub username: String,
     pub password: String,
 }
 

@@ -24,7 +24,7 @@ impl Fulfillment {
     }
 
     pub async fn sync(&self) -> Result<Vec<Device>, Error> {
-        let access_token = self.auth.access_token().await?;
+        let access_token: houseflow_token::Token = unimplemented!();
         let client = Client::new();
         let url = self.url.join("sync").unwrap();
         let response = client

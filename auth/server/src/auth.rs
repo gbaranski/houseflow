@@ -70,8 +70,7 @@ pub async fn register(
     .unwrap();
     let new_user = User {
         id: random(),
-        first_name: request.first_name.clone(),
-        last_name: request.last_name.clone(),
+        username: request.username.clone(),
         email: request.email.clone(),
         password_hash,
     };

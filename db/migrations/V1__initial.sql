@@ -1,7 +1,6 @@
 CREATE TABLE users (
     id            CHAR(32)        NOT NULL,
-    first_name    TEXT            NOT NULL,
-    last_name     TEXT            NOT NULL,
+    name          TEXT            NOT NULL,
     email         TEXT     UNIQUE NOT NULL,
     password_hash TEXT            NOT NULL,
 

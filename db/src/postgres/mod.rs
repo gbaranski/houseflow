@@ -120,8 +120,7 @@ impl Database for PostgresDatabase {
         };
         let user = User {
             id: row.try_get("id")?,
-            first_name: row.try_get("first_name")?,
-            last_name: row.try_get("last_name")?,
+            username: row.try_get("username")?,
             email: row.try_get("email")?,
             password_hash: row.try_get("password_hash")?,
         };
@@ -138,8 +137,7 @@ impl Database for PostgresDatabase {
         };
         let user = User {
             id: row.try_get("id")?,
-            first_name: row.try_get("first_name")?,
-            last_name: row.try_get("last_name")?,
+            username: row.try_get("username")?,
             email: row.try_get("email")?,
             password_hash: row.try_get("password_hash")?,
         };
@@ -149,8 +147,8 @@ impl Database for PostgresDatabase {
 
     async fn add_user(&self, user: &User) -> Result<(), Error> {
         const QUERY: &str = "
-            INSERT INTO users(id, first_name, last_name, email, password_hash) 
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO users(id, username, email, password_hash) 
+            VALUES ($1, $2, $3, $4)
         ";
         let connection = self.pool.get().await?;
         let n = connection
@@ -158,8 +156,7 @@ impl Database for PostgresDatabase {
                 QUERY,
                 &[
                     &user.id,
-                    &user.first_name,
-                    &user.last_name,
+                    &user.username,
                     &user.email,
                     &user.password_hash,
                 ],

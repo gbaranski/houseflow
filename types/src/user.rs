@@ -54,11 +54,8 @@ pub struct User {
     /// Unique ID of the user
     pub id: UserID,
 
-    /// First name of the user
-    pub first_name: String,
-
-    /// Last name of the user
-    pub last_name: String,
+    /// Name of the user
+    pub username: String,
 
     /// Email of the user
     pub email: String,
