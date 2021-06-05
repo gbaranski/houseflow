@@ -44,8 +44,8 @@ pub async fn login(opt: &Opt, command: &LoginCommand) -> anyhow::Result<()> {
         user_agent: UserAgent::Internal,
     };
 
-    let login_response = auth.login(login_request).await?;
-    log::info!("Succesfully logged in");
+    let login_response = auth.login(login_request.clone()).await?;
+    log::info!("✔ Logged in as {}", login_request.email);
     auth.save_refresh_token(&login_response.refresh_token)
         .await?;
     log::debug!("Saved refresh token at {:?}", auth.keystore.path);
@@ -76,12 +76,6 @@ pub async fn register(opt: &Opt, command: &RegisterCommand) -> anyhow::Result<()
         },
     };
     let theme = crate::cli::get_theme();
-    let email = match command.email {
-        Some(ref email) => email.clone(),
-        None => Input::with_theme(&theme)
-            .with_prompt("Email")
-            .interact_text()?,
-    };
 
     let username = match command.username {
         Some(ref username) => username.clone(),
@@ -89,6 +83,13 @@ pub async fn register(opt: &Opt, command: &RegisterCommand) -> anyhow::Result<()
             .with_prompt("Username")
             .interact()?,
     };
+    let email = match command.email {
+        Some(ref email) => email.clone(),
+        None => Input::with_theme(&theme)
+            .with_prompt("Email")
+            .interact_text()?,
+    };
+
 
     let password = match command.password {
         Some(ref password) => password.clone(),
@@ -104,7 +105,7 @@ pub async fn register(opt: &Opt, command: &RegisterCommand) -> anyhow::Result<()
     };
 
     auth.register(register_request).await??;
-    log::info!("Succesfully registered");
+    log::info!("✔ Created new account");
 
     Ok(())
 }
