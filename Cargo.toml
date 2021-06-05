@@ -16,4 +16,5 @@ members = [
   "lighthouse/api",
   "lighthouse/types",
   "lighthouse/macros"
+  "core",
 ]
