@@ -10,7 +10,6 @@ use url::Url;
 #[cfg(any(feature = "token_store", test))]
 #[derive(Clone)]
 pub struct TokenStoreConfig {
-    pub enabled: bool,
     pub path: std::path::PathBuf,
 }
 
@@ -199,10 +198,7 @@ mod tests {
         );
         let path = std::path::Path::new(&path_string);
 
-        let token_store_config = TokenStoreConfig {
-            enabled: true,
-            path: path.into(),
-        };
+        let token_store_config = TokenStoreConfig { path: path.into() };
         let auth_config = AuthConfig {
             url: Url::parse("http://localhost:80").unwrap(),
             token_store: token_store_config,
