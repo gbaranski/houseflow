@@ -35,12 +35,12 @@ pub enum Error {
 }
 
 impl Auth {
-    pub async fn new(url: Url) -> Result<Self, Error> {
-        Ok(Self {
+    pub fn new(url: Url) -> Self {
+        Self {
             url,
             refresh_token: Default::default(),
             access_token: Default::default(),
-        })
+        }
     }
 
     pub async fn register(&self, request: RegisterRequest) -> Result<(), Error> {
