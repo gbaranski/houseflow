@@ -1000,10 +1000,13 @@ dependencies = [
 name = "houseflow"
 version = "0.1.0"
 dependencies = [
+ "actix-rt",
  "anyhow",
  "dialoguer",
  "houseflow-auth-api",
+ "houseflow-auth-server",
  "houseflow-auth-types",
+ "houseflow-db",
  "houseflow-types",
  "log",
  "loggerv",
