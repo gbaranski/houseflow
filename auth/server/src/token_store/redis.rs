@@ -2,7 +2,6 @@ use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
 use houseflow_token::{Token, TokenID};
 use redis_client::{aio::Connection, AsyncCommands, Client};
-use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
