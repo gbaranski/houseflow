@@ -1,19 +1,49 @@
 use houseflow_auth_types::{
     AccessTokenError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginError, LoginRequest,
-    LoginResponse, RegisterError, RegisterRequest, RegisterResponse,
+    LoginResponse, LoginResponseBody, RegisterError, RegisterRequest, RegisterResponse,
 };
 use houseflow_token::Token;
 use reqwest::Client;
-use std::sync::Arc;
 use thiserror::Error;
-use tokio::sync::Mutex;
 use url::Url;
+
+#[cfg(any(feature = "token_store", test))]
+#[derive(Clone)]
+pub struct TokenStoreConfig {
+    pub enabled: bool,
+    pub path: std::path::PathBuf,
+}
+
+#[cfg(any(feature = "token_store", test))]
+#[derive(Debug, thiserror::Error)]
+pub enum TokenStoreError {
+    #[error("store open failed: `{0}`")]
+    OpenError(tokio::io::Error),
+
+    #[error("store read failed: `{0}`")]
+    ReadError(tokio::io::Error),
+
+    #[error("store write failed: `{0}`")]
+    WriteError(tokio::io::Error),
+
+    #[error("store remove failed: `{0}`")]
+    RemoveError(tokio::io::Error),
+
+    #[error("invalid token: `{0}`")]
+    InvalidToken(houseflow_token::DecodeError),
+}
+
+#[derive(Clone)]
+pub struct AuthConfig {
+    pub url: Url,
+
+    #[cfg(any(feature = "token_store", test))]
+    pub token_store: TokenStoreConfig,
+}
 
 #[derive(Clone)]
 pub struct Auth {
-    url: Url,
-    refresh_token: Arc<Mutex<Option<Token>>>,
-    access_token: Arc<Mutex<Option<Token>>>,
+    config: AuthConfig,
 }
 
 #[derive(Debug, Error)]
@@ -32,20 +62,20 @@ pub enum Error {
 
     #[error("login failed: `{0}`")]
     LoginError(#[from] LoginError),
+
+    #[cfg(any(feature = "token_store", test))]
+    #[error("token store error: `{0}`")]
+    TokenStoreError(#[from] TokenStoreError),
 }
 
 impl Auth {
-    pub fn new(url: Url) -> Self {
-        Self {
-            url,
-            refresh_token: Default::default(),
-            access_token: Default::default(),
-        }
+    pub fn new(config: AuthConfig) -> Self {
+        Self { config }
     }
 
     pub async fn register(&self, request: RegisterRequest) -> Result<(), Error> {
         let client = Client::new();
-        let url = self.url.join("register").unwrap();
+        let url = self.config.url.join("register").unwrap();
 
         let _ = client
             .post(url)
@@ -58,9 +88,9 @@ impl Auth {
         Ok(())
     }
 
-    pub async fn login(&self, request: LoginRequest) -> Result<(), Error> {
+    pub async fn login(&self, request: LoginRequest) -> Result<LoginResponseBody, Error> {
         let client = Client::new();
-        let url = self.url.join("login").unwrap();
+        let url = self.config.url.join("login").unwrap();
 
         let response = client
             .post(url)
@@ -69,37 +99,11 @@ impl Auth {
             .await?
             .json::<LoginResponse>()
             .await??;
-        *self.refresh_token.lock().await = Some(response.refresh_token);
-        *self.access_token.lock().await = Some(response.access_token);
 
-        Ok(())
+        Ok(response)
     }
 
-    pub async fn refresh_token(&self) -> Result<Token, Error> {
-        let refresh_token = self.refresh_token.lock().await;
-        match refresh_token.as_ref() {
-            Some(token) => Ok(token.clone()),
-            None => Err(Error::NotLoggedIn),
-        }
-    }
-
-    pub async fn access_token(&self) -> Result<Token, Error> {
-        let mut access_token = self.access_token.lock().await;
-        let refresh_token = self.refresh_token().await?;
-
-        let access_token = match access_token.as_ref() {
-            Some(token) if !token.has_expired() => token.clone(),
-            Some(_) | None => {
-                let new_access_token = Self::fetch_access_token(&self.url, &refresh_token).await?;
-                *access_token = Some(new_access_token.clone());
-                new_access_token
-            }
-        };
-
-        Ok(access_token)
-    }
-
-    async fn fetch_access_token(url: &Url, refresh_token: &Token) -> Result<Token, Error> {
+    pub async fn fetch_access_token(url: &Url, refresh_token: &Token) -> Result<Token, Error> {
         let client = Client::new();
         let request = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
@@ -116,5 +120,102 @@ impl Auth {
             .await??;
 
         Ok(response.access_token)
+    }
+
+    #[cfg(any(feature = "token_store", test))]
+    pub async fn remove_refresh_token(&self) -> Result<(), Error> {
+        if self.config.token_store.path.exists() {
+            Ok(tokio::fs::remove_file(&self.config.token_store.path)
+                .await
+                .map_err(|err| TokenStoreError::RemoveError(err))?)
+        } else {
+            Ok(())
+        }
+    }
+
+    #[cfg(any(feature = "token_store", test))]
+    pub async fn save_refresh_token(&self, refresh_token: &Token) -> Result<(), Error> {
+        use tokio::io::AsyncWriteExt;
+
+        let mut file = tokio::fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(&self.config.token_store.path)
+            .await
+            .map_err(|err| TokenStoreError::OpenError(err))?;
+
+        file.set_len(0_u64)
+            .await
+            .map_err(|err| TokenStoreError::WriteError(err))?;
+
+        file.write_all(refresh_token.to_string().as_bytes())
+            .await
+            .map_err(|err| TokenStoreError::WriteError(err))?;
+
+        Ok(())
+    }
+
+    #[cfg(any(feature = "token_store", test))]
+    pub async fn read_refresh_token(&self) -> Result<Option<Token>, Error> {
+        use tokio::io::AsyncReadExt;
+
+        if self.config.token_store.path.exists() == false {
+            return Ok(None);
+        }
+
+        let mut file = tokio::fs::OpenOptions::new()
+            .read(true)
+            .open(&self.config.token_store.path)
+            .await
+            .map_err(|err| TokenStoreError::OpenError(err))?;
+
+        let mut string = String::with_capacity(Token::BASE64_SIZE);
+        file.read_to_string(&mut string)
+            .await
+            .map_err(|err| TokenStoreError::ReadError(err))?;
+        let token = Token::from_str(&string).map_err(|err| TokenStoreError::InvalidToken(err))?;
+        Ok(Some(token))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_token_store() {
+        let token = Token::new_refresh_token(
+            b"some-key",
+            &rand::random(),
+            &houseflow_token::UserAgent::Internal,
+        );
+
+        let path_string = format!(
+            "/tmp/houseflow-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        );
+        let path = std::path::Path::new(&path_string);
+
+        let token_store_config = TokenStoreConfig {
+            enabled: true,
+            path: path.into(),
+        };
+        let auth_config = AuthConfig {
+            url: Url::parse("http://localhost:80").unwrap(),
+            token_store: token_store_config,
+        };
+        let auth = Auth::new(auth_config);
+
+        auth.save_refresh_token(&token).await.unwrap();
+        auth.save_refresh_token(&token).await.unwrap();
+        let read_token = auth.read_refresh_token().await.unwrap().unwrap();
+        assert_eq!(token, read_token);
+        auth.remove_refresh_token().await.unwrap();
+        assert!(path.exists() == false);
+        auth.remove_refresh_token().await.unwrap();
+        assert_eq!(auth.read_refresh_token().await.unwrap(), None);
     }
 }
