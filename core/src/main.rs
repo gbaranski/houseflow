@@ -28,7 +28,7 @@ pub struct Opt {
     token_store_path: PathBuf,
 
     /// URL of the Auth service
-    #[structopt(long, default_value = "http://localhost:8080")]
+    #[structopt(long, default_value = "http://localhost:6001")]
     auth_url: Url,
 }
 
