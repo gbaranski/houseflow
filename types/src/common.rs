@@ -196,10 +196,22 @@ struct CredentialVisitor<const N: usize>;
 
 #[cfg(feature = "serde")]
 impl<'de, const N: usize> Visitor<'de> for CredentialVisitor<N> {
-    type Value = [u8; N];
+    type Value = Credential<N>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         formatter.write_str(&format!("an array of length {}", N))
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Credential::from_str(v).map_err(|err| {
+            E::invalid_value(
+                serde::de::Unexpected::Other(err.to_string().as_str()),
+                &"hex encoded credential",
+            )
+        })
     }
 }
 
@@ -210,7 +222,7 @@ impl<'de, const N: usize> Deserialize<'de> for Credential<N> {
         D: Deserializer<'de>,
     {
         deserializer
-            .deserialize_bytes(CredentialVisitor::<N>)
+            .deserialize_str(CredentialVisitor::<N>)
             .map(|bytes| bytes.try_into().unwrap())
     }
 }
@@ -221,7 +233,7 @@ impl<const N: usize> Serialize for Credential<N> {
     where
         S: Serializer,
     {
-        serializer.serialize_bytes(&self.inner)
+        serializer.serialize_str(&self.to_string())
     }
 }
 
