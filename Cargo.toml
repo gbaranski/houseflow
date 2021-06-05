@@ -3,18 +3,24 @@ members = [
   "fulfillment/api",
   "fulfillment/server",
   "fulfillment/types",
-  "auth/types",
-  "auth/server",
-  "auth/api",
-  "db",
 
-  "devices/virtual",
-  "token",
-  "types",
   "lighthouse/proto",
   "lighthouse/broker",
   "lighthouse/api",
   "lighthouse/types",
-  "lighthouse/macros"
+  "lighthouse/macros",
+
+  "auth/types",
+  "auth/server",
+  "auth/api",
+
+  "devices/virtual",
+
+  "token",
+
+  "types",
+
+  "db",
+
   "core",
 ]
