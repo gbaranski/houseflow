@@ -12,7 +12,7 @@ enum Command {
     Login(auth::LoginCommand),
 
     /// Register new Houseflow account
-    Register,
+    Register(auth::RegisterCommand),
 
     /// Run service/s
     Run(run::RunCommand),
@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()> {
 
         match opt.command {
             Command::Login(ref command) => auth::login(&opt, command).await,
-            Command::Register => todo!(),
+            Command::Register(ref command) => auth::register(&opt, command).await,
             Command::Run(ref command) => run::run(&opt, command).await,
         }
     })
