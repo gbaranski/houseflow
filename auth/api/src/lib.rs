@@ -7,28 +7,28 @@ use reqwest::Client;
 use thiserror::Error;
 use url::Url;
 
-#[cfg(any(feature = "token_store", test))]
-#[derive(Clone)]
-pub struct TokenStoreConfig {
+#[cfg(any(feature = "keystore", test))]
+#[derive(Debug, Clone)]
+pub struct KeystoreConfig {
     pub path: std::path::PathBuf,
 }
 
-#[cfg(any(feature = "token_store", test))]
+#[cfg(any(feature = "keystore", test))]
 #[derive(Debug, thiserror::Error)]
-pub enum TokenStoreError {
-    #[error("store open failed: `{0}`")]
+pub enum KeystoreError {
+    #[error("open failed: `{0}`")]
     OpenError(tokio::io::Error),
 
-    #[error("store read failed: `{0}`")]
+    #[error("read failed: `{0}`")]
     ReadError(tokio::io::Error),
 
-    #[error("store write failed: `{0}`")]
+    #[error("write failed: `{0}`")]
     WriteError(tokio::io::Error),
 
-    #[error("store create parents failed: `{0}`")]
+    #[error("create parents failed: `{0}`")]
     CreateParentsError(tokio::io::Error),
 
-    #[error("store remove failed: `{0}`")]
+    #[error("remove failed: `{0}`")]
     RemoveError(tokio::io::Error),
 
     #[error("invalid token: `{0}`")]
@@ -36,16 +36,11 @@ pub enum TokenStoreError {
 }
 
 #[derive(Clone)]
-pub struct AuthConfig {
+pub struct Auth {
     pub url: Url,
 
-    #[cfg(any(feature = "token_store", test))]
-    pub token_store: TokenStoreConfig,
-}
-
-#[derive(Clone)]
-pub struct Auth {
-    config: AuthConfig,
+    #[cfg(any(feature = "keystore", test))]
+    pub keystore: KeystoreConfig,
 }
 
 #[derive(Debug, Error)]
@@ -65,19 +60,15 @@ pub enum Error {
     #[error("login failed: `{0}`")]
     LoginError(#[from] LoginError),
 
-    #[cfg(any(feature = "token_store", test))]
-    #[error("token store error: `{0}`")]
-    TokenStoreError(#[from] TokenStoreError),
+    #[cfg(any(feature = "keystore", test))]
+    #[error("keystore error: `{0}`")]
+    KeystoreError(#[from] KeystoreError),
 }
 
 impl Auth {
-    pub fn new(config: AuthConfig) -> Self {
-        Self { config }
-    }
-
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {
         let client = Client::new();
-        let url = self.config.url.join("register").unwrap();
+        let url = self.url.join("register").unwrap();
 
         let response = client
             .post(url)
@@ -92,7 +83,7 @@ impl Auth {
 
     pub async fn login(&self, request: LoginRequest) -> Result<LoginResponseBody, Error> {
         let client = Client::new();
-        let url = self.config.url.join("login").unwrap();
+        let url = self.url.join("login").unwrap();
 
         let response = client
             .post(url)
@@ -124,66 +115,66 @@ impl Auth {
         Ok(response.access_token)
     }
 
-    #[cfg(any(feature = "token_store", test))]
+    #[cfg(any(feature = "keystore", test))]
     pub async fn remove_refresh_token(&self) -> Result<(), Error> {
-        if self.config.token_store.path.exists() {
-            Ok(tokio::fs::remove_file(&self.config.token_store.path)
+        if self.keystore.path.exists() {
+            Ok(tokio::fs::remove_file(&self.keystore.path)
                 .await
-                .map_err(|err| TokenStoreError::RemoveError(err))?)
+                .map_err(|err| KeystoreError::RemoveError(err))?)
         } else {
             Ok(())
         }
     }
 
-    #[cfg(any(feature = "token_store", test))]
+    #[cfg(any(feature = "keystore", test))]
     pub async fn save_refresh_token(&self, refresh_token: &Token) -> Result<(), Error> {
         use tokio::io::AsyncWriteExt;
 
-        if let Some(path) = self.config.token_store.path.parent() {
+        if let Some(path) = self.keystore.path.parent() {
             if path.exists() == false {
                 tokio::fs::create_dir_all(path)
                     .await
-                    .map_err(|err| TokenStoreError::CreateParentsError(err))?;
+                    .map_err(|err| KeystoreError::CreateParentsError(err))?;
             }
         }
 
         let mut file = tokio::fs::OpenOptions::new()
             .write(true)
             .create(true)
-            .open(&self.config.token_store.path)
+            .open(&self.keystore.path)
             .await
-            .map_err(|err| TokenStoreError::OpenError(err))?;
+            .map_err(|err| KeystoreError::OpenError(err))?;
 
         file.set_len(0_u64)
             .await
-            .map_err(|err| TokenStoreError::WriteError(err))?;
+            .map_err(|err| KeystoreError::WriteError(err))?;
 
         file.write_all(refresh_token.to_string().as_bytes())
             .await
-            .map_err(|err| TokenStoreError::WriteError(err))?;
+            .map_err(|err| KeystoreError::WriteError(err))?;
 
         Ok(())
     }
 
-    #[cfg(any(feature = "token_store", test))]
+    #[cfg(any(feature = "keystore", test))]
     pub async fn read_refresh_token(&self) -> Result<Option<Token>, Error> {
         use tokio::io::AsyncReadExt;
 
-        if self.config.token_store.path.exists() == false {
+        if self.keystore.path.exists() == false {
             return Ok(None);
         }
 
         let mut file = tokio::fs::OpenOptions::new()
             .read(true)
-            .open(&self.config.token_store.path)
+            .open(&self.keystore.path)
             .await
-            .map_err(|err| TokenStoreError::OpenError(err))?;
+            .map_err(|err| KeystoreError::OpenError(err))?;
 
         let mut string = String::with_capacity(Token::BASE64_SIZE);
         file.read_to_string(&mut string)
             .await
-            .map_err(|err| TokenStoreError::ReadError(err))?;
-        let token = Token::from_str(&string).map_err(|err| TokenStoreError::InvalidToken(err))?;
+            .map_err(|err| KeystoreError::ReadError(err))?;
+        let token = Token::from_str(&string).map_err(|err| KeystoreError::InvalidToken(err))?;
         Ok(Some(token))
     }
 }
@@ -193,7 +184,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_token_store() {
+    async fn test_keystore() {
         let token = Token::new_refresh_token(
             b"some-key",
             &rand::random(),
@@ -209,12 +200,10 @@ mod tests {
         );
         let path = std::path::Path::new(&path_string);
 
-        let token_store_config = TokenStoreConfig { path: path.into() };
-        let auth_config = AuthConfig {
-            url: Url::parse("http://localhost:80").unwrap(),
-            token_store: token_store_config,
+        let auth = Auth {
+            url: Url::parse("http://localhost:8080").unwrap(),
+            keystore: KeystoreConfig { path: path.into() },
         };
-        let auth = Auth::new(auth_config);
 
         auth.save_refresh_token(&token).await.unwrap();
         auth.save_refresh_token(&token).await.unwrap();

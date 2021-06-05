@@ -1,5 +1,5 @@
 use crate::Opt;
-use houseflow_auth_api::{Auth, AuthConfig, TokenStoreConfig};
+use houseflow_auth_api::{Auth, KeystoreConfig};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -16,13 +16,13 @@ pub async fn login(opt: &Opt, command: &LoginCommand) -> anyhow::Result<()> {
     use houseflow_auth_types::LoginRequest;
     use houseflow_types::UserAgent;
 
-    let auth_config = AuthConfig {
+    let auth = Auth {
         url: opt.auth_url.clone(),
-        token_store: TokenStoreConfig {
-            path: opt.token_store_path.clone(),
+        keystore: KeystoreConfig {
+            path: opt.keystore_path.clone(),
         },
     };
-    let auth = Auth::new(auth_config.clone());
+
     let theme = crate::cli::get_theme();
     let email = match command.email {
         Some(ref email) => email.clone(),
@@ -48,7 +48,7 @@ pub async fn login(opt: &Opt, command: &LoginCommand) -> anyhow::Result<()> {
     log::info!("Succesfully logged in");
     auth.save_refresh_token(&login_response.refresh_token)
         .await?;
-    log::debug!("Saved refresh token at {:?}", auth_config.token_store.path);
+    log::debug!("Saved refresh token at {:?}", auth.keystore.path);
 
     Ok(())
 }
@@ -69,13 +69,12 @@ pub async fn register(opt: &Opt, command: &RegisterCommand) -> anyhow::Result<()
     use dialoguer::{Input, Password};
     use houseflow_auth_types::RegisterRequest;
 
-    let auth_config = AuthConfig {
+    let auth = Auth {
         url: opt.auth_url.clone(),
-        token_store: TokenStoreConfig {
-            path: opt.token_store_path.clone(),
+        keystore: KeystoreConfig {
+            path: opt.keystore_path.clone(),
         },
     };
-    let auth = Auth::new(auth_config.clone());
     let theme = crate::cli::get_theme();
     let email = match command.email {
         Some(ref email) => email.clone(),

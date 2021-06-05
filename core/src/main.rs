@@ -27,9 +27,9 @@ pub struct Opt {
     #[structopt(short, long, parse(from_occurrences))]
     verbose: u8,
 
-    /// Path to Token store, used to store persistant sessions
-    #[structopt(long, default_value = "~/.cache/houseflow/token")]
-    token_store_path: PathBuf,
+    /// Path to Keystore, used to store persistant sessions
+    #[structopt(long, default_value = "~/.cache/houseflow/token", parse(from_os_str))]
+    keystore_path: PathBuf,
 
     /// URL of the Auth service
     #[structopt(long, default_value = "http://localhost:6001")]
