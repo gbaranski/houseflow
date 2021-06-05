@@ -24,9 +24,9 @@ pub struct AppState<TS: TokenStore, DB: Database> {
 
 #[derive(Clone)]
 pub struct AppData {
-    refresh_key: Vec<u8>,
-    access_key: Vec<u8>,
-    password_salt: Vec<u8>,
+    pub refresh_key: Vec<u8>,
+    pub access_key: Vec<u8>,
+    pub password_salt: Vec<u8>,
 }
 
 pub fn config(
