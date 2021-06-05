@@ -1,17 +1,21 @@
+use std::path::PathBuf;
 use structopt::StructOpt;
 use url::Url;
-use std::path::PathBuf;
 
 mod auth;
 mod cli;
+mod run;
 
 #[derive(StructOpt)]
 enum Command {
     /// Log in to existing Houseflow account
-    Login,
+    Login(auth::LoginCommand),
 
     /// Register new Houseflow account
     Register,
+
+    /// Run service/s
+    Run(run::RunCommand),
 }
 
 #[derive(StructOpt)]

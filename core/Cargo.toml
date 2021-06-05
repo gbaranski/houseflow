@@ -10,6 +10,10 @@ edition = "2018"
 houseflow-types = { path = "../types/" }
 houseflow-auth-api = { path = "../auth/api/", features = [ "token_store" ] }
 houseflow-auth-types = { path = "../auth/types/" }
+houseflow-auth-server = { path = "../auth/server/" }
+houseflow-db = { path = "../db/" }
+
+actix-rt = "2.2.0"
 
 structopt = "0.3.21"
 tokio = { version = "1.6.1", features = ["sync", "rt-multi-thread", "macros"] }

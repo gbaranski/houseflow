@@ -1,26 +1,42 @@
 use crate::Opt;
 use houseflow_auth_api::{Auth, AuthConfig, TokenStoreConfig};
+use structopt::StructOpt;
 
-pub async fn login(opt: Opt) -> anyhow::Result<()> {
+#[derive(StructOpt)]
+pub struct LoginCommand {
+    /// Email used to log in, if not defined it will ask at runtime
+    pub email: Option<String>,
+
+    /// Password used to log in, if not defined it will ask at runtime
+    pub password: Option<String>,
+}
+
+pub async fn login(opt: &Opt, command: &LoginCommand) -> anyhow::Result<()> {
     use dialoguer::{Input, Password};
     use houseflow_auth_types::LoginRequest;
     use houseflow_types::UserAgent;
 
     let auth_config = AuthConfig {
-        url: opt.auth_url,
+        url: opt.auth_url.clone(),
         token_store: TokenStoreConfig {
-            path: opt.token_store_path,
+            path: opt.token_store_path.clone(),
         },
     };
     let auth = Auth::new(auth_config.clone());
     let theme = crate::cli::get_theme();
-    let email: String = Input::with_theme(&theme)
-        .with_prompt("Email")
-        .interact_text()?;
+    let email = match command.email {
+        Some(ref email) => email.clone(),
+        None => Input::with_theme(&theme)
+            .with_prompt("Email")
+            .interact_text()?,
+    };
 
-    let password: String = Password::with_theme(&theme)
-        .with_prompt("Password")
-        .interact()?;
+    let password = match command.password {
+        Some(ref password) => password.clone(),
+        None => Password::with_theme(&theme)
+            .with_prompt("Password")
+            .interact()?,
+    };
 
     let login_request = LoginRequest {
         email,
