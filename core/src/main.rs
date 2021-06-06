@@ -1,4 +1,6 @@
-use std::path::PathBuf;
+use async_trait::async_trait;
+use auth::{AuthCommand, KeystorePath};
+use run::RunCommand;
 use structopt::StructOpt;
 use url::Url;
 
@@ -7,58 +9,33 @@ mod cli;
 mod run;
 
 #[derive(StructOpt)]
-enum Command {
+enum RootCommand {
     /// Login, register, logout, and refresh your authentication
-    Auth(auth::Command),
+    Auth(AuthCommand),
 
     /// Run service/s
-    Run(run::RunCommand),
+    Run(RunCommand),
 }
 
-#[derive(Clone)]
-struct KeystorePath(PathBuf);
-
-impl Default for KeystorePath {
-    fn default() -> Self {
-        Self(
-            xdg::BaseDirectories::with_prefix("houseflow")
-                .unwrap()
-                .get_data_home()
-                .join("token"),
-        )
+#[async_trait(?Send)]
+impl Command for RootCommand {
+    async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
+        match self {
+            Self::Auth(cmd) => cmd.run(&opt).await,
+            Self::Run(cmd) => cmd.run(&opt).await,
+        }
     }
 }
 
-impl std::ops::Deref for KeystorePath {
-    type Target = PathBuf;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl Into<PathBuf> for KeystorePath {
-    fn into(self) -> PathBuf {
-        self.0
-    }
-}
-
-impl From<&std::ffi::OsStr> for KeystorePath {
-    fn from(str: &std::ffi::OsStr) -> Self {
-        Self(PathBuf::from(str))
-    }
-}
-
-impl std::fmt::Display for KeystorePath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.display().fmt(f)
-    }
+#[async_trait(?Send)]
+pub trait Command {
+    async fn run(&self, opt: &Opt) -> anyhow::Result<()>;
 }
 
 #[derive(StructOpt)]
 pub struct Opt {
     #[structopt(subcommand)]
-    command: Command,
+    command: RootCommand,
 
     /// Path to Keystore, used to store persistant sessions
     #[structopt(long, default_value, parse(from_os_str))]
@@ -107,10 +84,5 @@ fn main() -> anyhow::Result<()> {
             .build()
             .unwrap()
     })
-    .block_on(async {
-        match opt.command {
-            Command::Auth(ref command) => auth::auth(&opt, command).await,
-            Command::Run(ref command) => run::run(&opt, command).await,
-        }
-    })
+    .block_on(async { opt.command.run(&opt).await })
 }
