@@ -8,11 +8,8 @@ mod run;
 
 #[derive(StructOpt)]
 enum Command {
-    /// Log in to existing Houseflow account
-    Login(auth::LoginCommand),
-
-    /// Register new Houseflow account
-    Register(auth::RegisterCommand),
+    /// Login, register, logout, and refresh your authentication
+    Auth(auth::Command),
 
     /// Run service/s
     Run(run::RunCommand),
@@ -112,8 +109,7 @@ fn main() -> anyhow::Result<()> {
     })
     .block_on(async {
         match opt.command {
-            Command::Login(ref command) => auth::login(&opt, command).await,
-            Command::Register(ref command) => auth::register(&opt, command).await,
+            Command::Auth(ref command) => auth::auth(&opt, command).await,
             Command::Run(ref command) => run::run(&opt, command).await,
         }
     })

@@ -3,6 +3,22 @@ use houseflow_auth_api::{Auth, KeystoreConfig};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
+pub enum Command {
+    /// Log in to existing Houseflow account
+    Login(LoginCommand),
+
+    /// Register a new Houseflow account
+    Register(RegisterCommand),
+}
+
+pub async fn auth(opt: &Opt, command: &Command) -> anyhow::Result<()> {
+    match command {
+        Command::Login(command) => login(opt, command).await,
+        Command::Register(command) => register(opt, command).await,
+    }
+}
+
+#[derive(StructOpt)]
 pub struct LoginCommand {
     /// Email used to log in, if not defined it will ask at runtime
     pub email: Option<String>,
