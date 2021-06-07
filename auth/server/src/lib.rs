@@ -13,6 +13,7 @@ use token::{exchange_refresh_token, exchange_refresh_token_form_config};
 pub use token_store::TokenStore;
 
 mod auth;
+mod whoami;
 mod token;
 mod token_store;
 
@@ -40,6 +41,7 @@ pub fn config(
         .app_data(database)
         .service(auth::login)
         .service(auth::register)
+        .service(whoami::whoami)
         .service(
             web::scope("/")
                 .app_data(exchange_refresh_token_form_config)
