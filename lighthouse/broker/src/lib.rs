@@ -1,12 +1,12 @@
 use actix_web::{get, http, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web_actors::ws;
-use types::{DeviceID, DevicePassword};
 use itertools::Itertools;
 use lighthouse_proto::{command, command_response};
 use session::Session;
 use std::collections::HashMap;
 use std::str::FromStr;
 use tokio::sync::Mutex;
+use types::{DeviceID, DevicePassword};
 
 mod aliases;
 mod session;
@@ -93,24 +93,35 @@ async fn on_command(
     Ok(HttpResponse::Ok().json(response))
 }
 
-struct AppState {
+pub(crate) struct AppState {
     sessions: Mutex<HashMap<DeviceID, actix::Addr<Session>>>,
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init();
-    let addr = "127.0.0.1:8080";
+pub(crate) fn config(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState>) {
+    cfg.app_data(app_state)
+        .service(on_websocket)
+        .service(on_command);
+}
+
+pub async fn run(
+    address: impl std::net::ToSocketAddrs + std::fmt::Display + Clone,
+) -> std::io::Result<()> {
     let app_state = web::Data::new(AppState {
         sessions: Default::default(),
     });
+
+    log::info!("Starting Lighthouse Broker");
+
     let server = HttpServer::new(move || {
         App::new()
-            .app_data(app_state.clone())
-            .service(on_websocket)
-            .service(on_command)
+            .configure(|cfg| config(cfg, app_state.clone()))
+            .wrap(actix_web::middleware::Logger::default())
     })
-    .bind(&addr)?;
+    .bind(address.clone())?;
 
-    server.run().await
+    log::info!("Starting HTTP Server at `{}`", address);
+
+    server.run().await?;
+
+    Ok(())
 }
