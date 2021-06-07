@@ -96,18 +96,11 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let password = String::from("SomePassword");
-        let password_hash = argon2::hash_encoded(
-            password.as_bytes(),
-            &app_data.password_salt,
-            &argon2::Config::default(),
-        )
-        .unwrap();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
-            password_hash,
+            password_hash: PASSWORD_HASH.into(),
         };
         database.add_user(&user).await.unwrap();
         let mut app =
@@ -118,7 +111,7 @@ mod tests {
 
         let request_body = LoginRequest {
             email: user.email,
-            password,
+            password: PASSWORD.into(),
             user_agent: random(),
         };
         let request = test::TestRequest::post()
@@ -161,19 +154,11 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let password = String::from("SomePassword");
-        let password_invalid = String::from("SomeOtherPassword");
-        let password_hash = argon2::hash_encoded(
-            password.as_bytes(),
-            &app_data.password_salt,
-            &argon2::Config::default(),
-        )
-        .unwrap();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
-            password_hash,
+            password_hash: PASSWORD_HASH.into(),
         };
         database.add_user(&user).await.unwrap();
         let mut app =
@@ -184,7 +169,7 @@ mod tests {
 
         let request_body = LoginRequest {
             email: user.email,
-            password: password_invalid,
+            password: PASSWORD_INVALID.into(),
             user_agent: random(),
         };
         let request = test::TestRequest::post()
@@ -210,18 +195,11 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let password = String::from("SomePassword");
-        let password_hash = argon2::hash_encoded(
-            password.as_bytes(),
-            &app_data.password_salt,
-            &argon2::Config::default(),
-        )
-        .unwrap();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
-            password_hash,
+            password_hash: PASSWORD_HASH.into(),
         };
         let mut app =
             test::init_service(App::new().configure(|cfg| {
@@ -231,7 +209,7 @@ mod tests {
 
         let request_body = LoginRequest {
             email: user.email,
-            password,
+            password: PASSWORD.into(),
             user_agent: random(),
         };
         let request = test::TestRequest::post()
@@ -257,20 +235,13 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let app_data = get_app_data();
-        let password = String::from("SomePassword");
-        let password_hash = argon2::hash_encoded(
-            password.as_bytes(),
-            &app_data.password_salt,
-            &argon2::Config::default(),
-        )
-        .unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
             crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
         }))
         .await;
 
         let request_body = RegisterRequest {
-            password,
+            password: PASSWORD.into(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
         };
@@ -298,6 +269,6 @@ mod tests {
         assert_eq!(db_user.id, user_id);
         assert_eq!(db_user.username, request_body.username);
         assert_eq!(db_user.email, request_body.email);
-        assert_eq!(db_user.password_hash, password_hash);
+        assert!(verify_password(&db_user.password_hash, PASSWORD).is_ok());
     }
 }
