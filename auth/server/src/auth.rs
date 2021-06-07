@@ -4,8 +4,8 @@ use actix_web::{
     web::{Data, Json},
 };
 use houseflow_auth_types::{
-    LoginError, LoginRequest, LoginResponseBody, RegisterError, RegisterRequest, RegisterResponse, LoginResponse,
-    RegisterResponseBody,
+    LoginError, LoginRequest, LoginResponse, LoginResponseBody, RegisterError, RegisterRequest,
+    RegisterResponse, RegisterResponseBody,
 };
 use houseflow_db::Database;
 use houseflow_token::Token;
@@ -132,7 +132,11 @@ mod tests {
             "status is not succesfull, body: {:?}",
             test::read_body(response).await
         );
-        let response: LoginResponseBody = test::read_body_json(response).await;
+        let response: LoginResponse = test::read_body_json(response).await;
+        let response = match response {
+            LoginResponse::Ok(response) => response,
+            LoginResponse::Err(err) => panic!("unexpected login error: {:?}", err),
+        };
         let (at, rt) = (response.access_token, response.refresh_token);
         let verify_result = at.verify(&app_data.access_key, Some(&request_body.user_agent));
         assert!(
@@ -194,10 +198,10 @@ mod tests {
             "unexpected status code, body: {:?}",
             test::read_body(response).await
         );
-        let response: LoginError = test::read_body_json(response).await;
+        let response: LoginResponse = test::read_body_json(response).await;
         match response {
-            LoginError::InvalidPassword => (),
-            _ => panic!("invalid error returned: {:?}", response),
+            Err(LoginError::InvalidPassword) => (),
+            _ => panic!("unexpected response returned: {:?}", response),
         }
     }
 
@@ -241,10 +245,10 @@ mod tests {
             "unexpected status code, body: {:?}",
             test::read_body(response).await
         );
-        let response: LoginError = test::read_body_json(response).await;
+        let response: LoginResponse = test::read_body_json(response).await;
         match response {
-            LoginError::UserNotFound => (),
-            _ => panic!("invalid error returned: {:?}", response),
+            Err(LoginError::UserNotFound) => (),
+            _ => panic!("invalid response returned: {:?}", response),
         }
     }
 
@@ -281,12 +285,17 @@ mod tests {
             "status is not succesfull, body: {:?}",
             test::read_body(response).await
         );
-        let _: () = test::read_body_json(response).await;
+        let response: RegisterResponse = test::read_body_json(response).await;
+        let user_id = match response {
+            Ok(response) => response.user_id,
+            Err(err) => panic!("received unexpected error: {:?}", err),
+        };
         let db_user = database
             .get_user_by_email(&request_body.email)
             .await
             .unwrap()
             .expect("user not found in database");
+        assert_eq!(db_user.id, user_id);
         assert_eq!(db_user.username, request_body.username);
         assert_eq!(db_user.email, request_body.email);
         assert_eq!(db_user.password_hash, password_hash);
