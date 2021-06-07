@@ -123,7 +123,7 @@ impl Auth {
         let url = self.url.join("whoami").unwrap();
 
         let response = client
-            .post(url)
+            .get(url)
             .bearer_auth(access_token.to_string())
             .send()
             .await?
