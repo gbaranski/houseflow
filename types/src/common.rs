@@ -78,25 +78,6 @@ impl<const N: usize> Into<String> for Credential<N> {
     }
 }
 
-impl<const N: usize> TryFrom<String> for Credential<N> {
-    type Error = CredentialError;
-
-    fn try_from(v: String) -> Result<Self, Self::Error> {
-        // N * 2 because encoding with hex doubles the size
-
-        if v.len() != N * 2 {
-            Err(CredentialError::InvalidSize {
-                expected: N * 2,
-                received: v.len(),
-            })
-        } else {
-            Ok(Self {
-                inner: hex::decode(v)?.try_into().unwrap(),
-            })
-        }
-    }
-}
-
 impl<const N: usize> FromStr for Credential<N> {
     type Err = CredentialError;
 
