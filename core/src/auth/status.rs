@@ -1,63 +1,64 @@
 use crate::{Command, Opt};
 use async_trait::async_trait;
 use houseflow_auth_api::{Auth, KeystoreConfig};
+use houseflow_auth_types::{WhoamiError, WhoamiResponseBody};
+use houseflow_token::Token;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
 pub struct StatusCommand {
-    /// Email used to register, if not defined it will ask at runtime
-    pub email: Option<String>,
+    /// Display the auth token
+    #[structopt(short = "t", long = "--show-token")]
+    pub show_token: bool,
+}
 
-    /// Username used to register, if not defined it will ask at runtime
-    pub username: Option<String>,
+impl StatusCommand {
+    fn no_saved_credentials(&self, opt: &Opt) {
+        println!("❌ No saved credentials at {}", opt.keystore_path);
+    }
 
-    /// Password used to register, if not defined it will ask at runtime
-    pub password: Option<String>,
+    fn logged_in(&self, opt: &Opt, whoami_response: WhoamiResponseBody, token: Token) {
+        let token = match self.show_token {
+            true => token.to_string(),
+            false => std::iter::repeat("*")
+                .take(token.to_string().len())
+                .collect(),
+        };
+
+        println!("✔ Logged in");
+        println!("  Username: {}", whoami_response.username);
+        println!("  Email: {}", whoami_response.email);
+        println!("  Token({}): {}", opt.keystore_path, token);
+    }
+
+    fn error(&self, error: WhoamiError) {
+        println!("❌ Error: {}", error);
+    }
 }
 
 #[async_trait(?Send)]
 impl Command for StatusCommand {
     async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
-        use dialoguer::{Input, Password};
-        use houseflow_auth_types::RegisterRequest;
-
         let auth = Auth {
             url: opt.auth_url.clone(),
             keystore: KeystoreConfig {
                 path: opt.keystore_path.clone().into(),
             },
         };
-        let theme = crate::cli::get_theme();
-
-        let username = match self.username {
-            Some(ref username) => username.clone(),
-            None => Input::with_theme(&theme)
-                .with_prompt("Username")
-                .interact()?,
-        };
-        let email = match self.email {
-            Some(ref email) => email.clone(),
-            None => Input::with_theme(&theme)
-                .with_prompt("Email")
-                .interact_text()?,
+        let token = match auth.read_refresh_token().await? {
+            Some(token) => token,
+            None => {
+                return {
+                    self.no_saved_credentials(opt);
+                    Ok(())
+                }
+            }
         };
 
-        let password = match self.password {
-            Some(ref password) => password.clone(),
-            None => Password::with_theme(&theme)
-                .with_prompt("Password")
-                .interact()?,
+        match auth.whoami(&token).await? {
+            Ok(response) => self.logged_in(opt, response, token),
+            Err(err) => self.error(err),
         };
-
-        let register_request = RegisterRequest {
-            email,
-            password,
-            username,
-        };
-
-        auth.register(register_request).await??;
-        log::info!("✔ Created new account");
-
         Ok(())
     }
 }
