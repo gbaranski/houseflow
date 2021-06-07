@@ -1,6 +1,6 @@
 use crate::{DecodeError, Decoder, Encoder, Framed};
 use bytes::{Buf, BufMut};
-use macros::decoder;
+use lighthouse_macros::decoder;
 
 impl Decoder for serde_json::Value {
     const MIN_SIZE: usize = 0;

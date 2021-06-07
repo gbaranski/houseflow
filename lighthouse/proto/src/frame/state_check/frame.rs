@@ -1,6 +1,6 @@
 use crate::{DecodeError, Decoder, Encoder, Framed, Frame};
 use bytes::{Buf, BufMut};
-use macros::decoder;
+use lighthouse_macros::decoder;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
