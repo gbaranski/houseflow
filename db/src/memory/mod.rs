@@ -1,6 +1,6 @@
 use crate::{Database, DatabaseInternalError, Error};
 use async_trait::async_trait;
-use houseflow_types::{Device, DeviceID, User, UserID};
+use types::{Device, DeviceID, User, UserID};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;

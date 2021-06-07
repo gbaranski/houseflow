@@ -1,7 +1,7 @@
 use crate::{Database, DatabaseInternalError, Error};
 use async_trait::async_trait;
 use deadpool_postgres::Pool;
-use houseflow_types::{Device, DeviceID, User, UserID};
+use types::{Device, DeviceID, User, UserID};
 use semver::Version;
 use tokio_postgres::NoTls;
 
