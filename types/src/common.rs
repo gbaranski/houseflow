@@ -1,6 +1,6 @@
 use bytes::{Buf, BufMut};
 use std::{
-    convert::{TryFrom, TryInto},
+    convert::TryInto,
     str::FromStr,
 };
 use thiserror::Error;
@@ -45,13 +45,14 @@ impl<const N: usize> AsRef<[u8]> for Credential<N> {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CredentialError {
     #[error("Invalid size, expected: {expected}, received: {received}")]
     InvalidSize { expected: usize, received: usize },
 
     #[error("Invalid encoding: {0}")]
-    InvalidEncoding(#[from] hex::FromHexError),
+    InvalidEncoding(String),
 }
 
 impl<const N: usize> From<[u8; N]> for Credential<N> {
@@ -91,7 +92,10 @@ impl<const N: usize> FromStr for Credential<N> {
             })
         } else {
             Ok(Self {
-                inner: hex::decode(v)?.try_into().unwrap(),
+                inner: hex::decode(v)
+                    .map_err(|err| CredentialError::InvalidEncoding(err.to_string()))?
+                    .try_into()
+                    .unwrap(),
             })
         }
     }
