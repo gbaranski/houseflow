@@ -47,7 +47,7 @@ impl Command for LoginCommand {
             user_agent: UserAgent::Internal,
         };
 
-        let login_response = auth.login(login_request.clone()).await?;
+        let login_response = auth.login(login_request.clone()).await??;
         log::info!("✔ Logged in as {}", login_request.email);
         auth.save_refresh_token(&login_response.refresh_token)
             .await?;

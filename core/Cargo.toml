@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 houseflow-types = { path = "../types/" }
+houseflow-token = { path = "../token/" }
 houseflow-auth-api = { path = "../auth/api/", features = [ "keystore" ] }
 houseflow-auth-types = { path = "../auth/types/" }
 houseflow-auth-server = { path = "../auth/server/" }
