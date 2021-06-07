@@ -26,7 +26,7 @@ pub enum WhoamiError {
     InvalidHeaderSchema(String),
 
     #[error("invalid token: {0}")]
-    InvalidToken(#[from] houseflow_token::Error),
+    InvalidToken(#[from] token::Error),
 
     #[error("token not found in store")]
     TokenNotInStore,

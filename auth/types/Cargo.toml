@@ -7,16 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0.25"
+token      = { path = "../../token", package = "houseflow-token" }
+types      = { path = "../../types", package = "houseflow-types" }
+db         = { path = "../../db"   , package = "houseflow-db", optional = true }
 
-actix-web = { version = "=4.0.0-beta.5", optional = true, default-features = false }
-houseflow-token = { path = "../../token", features = [ "serde" ] }
-houseflow-types = { path = "../../types", features = [ "serde" ] }
-
-houseflow-db = { path = "../../db", optional = true }
-
-serde = { version = "1.0", features = [ "derive" ] }
+actix-web  = { version = "=4.0.0-beta.5", optional = true, default-features = false }
+serde      = { version = "1.0", features = [ "derive" ] }
 serde_json = { version = "1.0.64", optional = true }
+thiserror  = "1.0.25"
 
 [features]
 actix = [ "actix-web", "serde_json" ]

@@ -7,22 +7,22 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types = { path = "../../types" }
-lighthouse-proto = { path = "../../lighthouse/proto" }
+types             = { path = "../../types", package = "houseflow-types" }
+lighthouse-proto  = { path = "../../lighthouse/proto", package = "houseflow-lighthouse-proto" }
 
-tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "fs" ] }
-bytes = "1.0"
-futures-util = "0.3"
+hyper             = { version = "0.14", features = [ "client", "http1" ] }
+tokio             = { version = "1.5", features = [ "rt-multi-thread", "macros", "fs" ] }
+bytes             = "1.0"
+futures-util      = "0.3"
 tokio-tungstenite = "0.14"
-tungstenite = "0.13"
-hyper = { version = "0.14", features = [ "client", "http1" ] }
-hyper-tls = "0.5"
-http = "0.2.4"
+tungstenite       = "0.13"
+hyper-tls         = "0.5"
+http              = "0.2.4"
 
-loggerv = "0.7"
-log = "0.4"
+loggerv           = "0.7"
+log               = "0.4"
 
-structopt = "0.3"
-anyhow = "1.0"
-url = "2.2"
+structopt         = "0.3"
+anyhow            = "1.0"
+url               = "2.2"
 

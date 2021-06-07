@@ -7,19 +7,20 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-auth-types = { path = "../types" }
-houseflow-token = { path = "../../token" }
-serde = "1.0"
+auth-types = { path = "../types"   , package = "houseflow-auth-types" }
+token      = { path = "../../token", package = "houseflow-token" }
+
+tokio      = { version = "1.6.0", features = ["sync"] }
+reqwest    = { version = "0.11" , features = [ "json" ] }
+serde      = "1.0"
 serde_json = "1.0"
-thiserror = "1.0"
-reqwest = { version = "0.11", features = [ "json" ] }
-url = "2.2"
-tokio = { version = "1.6.0", features = ["sync"] }
+thiserror  = "1.0"
+url        = "2.2"
 
 [features]
-keystore = ["tokio/fs"]
+keystore   = ["tokio/fs"]
 
 [dev-dependencies]
-tokio = { version = "1.6.0", features = ["macros", "rt", "fs"] }
-houseflow-types = { path = "../../types" }
-rand = "0.8.3"
+tokio      = { version = "1.6.0", features = ["macros", "rt", "fs"] }
+types      = { path = "../../types", package = "houseflow-types" }
+rand       = "0.8.3"

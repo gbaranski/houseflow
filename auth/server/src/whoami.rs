@@ -4,10 +4,10 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_auth_types::{WhoamiError, WhoamiResponse, WhoamiResponseBody};
-use houseflow_db::Database;
-use houseflow_token::Token;
-use houseflow_types::UserAgent;
+use auth_types::{WhoamiError, WhoamiResponse, WhoamiResponseBody};
+use db::Database;
+use token::Token;
+use types::UserAgent;
 
 #[get("/whoami")]
 pub async fn whoami(
@@ -62,7 +62,7 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{test, App, ResponseError};
-    use houseflow_types::User;
+    use types::User;
 
     use rand::random;
 
@@ -216,8 +216,8 @@ mod tests {
 
         assert_eq!(
             response.status(),
-            WhoamiError::InvalidToken(houseflow_token::Error::VerifyError(
-                houseflow_token::VerifyError::InvalidSignature
+            WhoamiError::InvalidToken(token::Error::VerifyError(
+                token::VerifyError::InvalidSignature
             ))
             .status_code(),
             "unexpected status: {}, body: {:?}",
@@ -226,8 +226,8 @@ mod tests {
         );
         let response: WhoamiResponse = test::read_body_json(response).await;
         match response {
-            Err(WhoamiError::InvalidToken(houseflow_token::Error::VerifyError(
-                houseflow_token::VerifyError::InvalidSignature,
+            Err(WhoamiError::InvalidToken(token::Error::VerifyError(
+                token::VerifyError::InvalidSignature,
             ))) => (),
             _ => panic!("unexpected response: {:?}", response),
         };

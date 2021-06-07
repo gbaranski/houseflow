@@ -3,13 +3,13 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use houseflow_auth_types::{
+use auth_types::{
     LoginError, LoginRequest, LoginResponse, LoginResponseBody, RegisterError, RegisterRequest,
     RegisterResponse, RegisterResponseBody,
 };
-use houseflow_db::Database;
-use houseflow_token::Token;
-use houseflow_types::User;
+use db::Database;
+use token::Token;
+use types::User;
 use rand::random;
 
 struct SomeWrapper([u8; 10]);

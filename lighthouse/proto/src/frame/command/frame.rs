@@ -2,7 +2,7 @@ use super::Code;
 use crate::{FrameID, Framed, Frame};
 use crate::{DecodeError, Decoder, Encoder};
 use bytes::{Buf, BufMut};
-use lighthouse_macros::decoder;
+use macros::decoder;
 use serde::{Deserialize, Serialize};
 use std::mem::size_of;
 

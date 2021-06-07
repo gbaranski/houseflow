@@ -1,5 +1,5 @@
 [package]
-name = "broker"
+name = "houseflow-lighthouse-broker"
 version = "0.1.0"
 authors = ["gbaranski <root@gbaranski.com>"]
 edition = "2018"
@@ -7,23 +7,23 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types = { path = "../../types", features = [ "serde" ] }
-lighthouse-proto = { path = "../proto" }
-lighthouse-types = { path = "../types" }
+lighthouse-proto = { path = "../proto"   , package = "houseflow-lighthouse-proto" }
+lighthouse-types = { path = "../types"   , package = "houseflow-lighthouse-types"}
+types  		 = { path = "../../types", package = "houseflow-types" }
 
 # Update versions when this resolves https://github.com/actix/actix-web/issues/2195
-actix = "0.11.1"
-actix-web = "=4.0.0-beta.5" 
+actix 	 	 = "0.11.1"
+actix-web 	 = "=4.0.0-beta.5" 
 actix-web-actors = "=4.0.0-beta.4"
-actix-service = "=2.0.0-beta.5"
-tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync" ] }
+actix-service 	 = "=2.0.0-beta.5"
+tokio            = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync" ] }
 
-thiserror = "1.0"
-env_logger = "0.8"
-log = "0.4"
+thiserror        = "1.0"
+env_logger       = "0.8"
+log              = "0.4"
 
-itertools = "0.10"
+itertools        = "0.10"
 
-bytes = "1.0"
-serde = "1.0"
-serde_json = "1.0"
+bytes            = "1.0"
+serde            = "1.0"
+serde_json       = "1.0"

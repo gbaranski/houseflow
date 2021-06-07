@@ -17,14 +17,14 @@ impl Command for RunAuthCommand {
 
         let address = address.first().unwrap();
 
-        let token_store = houseflow_auth_server::MemoryTokenStore::new();
-        let database = houseflow_db::MemoryDatabase::new();
-        let app_data = houseflow_auth_server::AppData {
+        let token_store = auth_server::MemoryTokenStore::new();
+        let database = db::MemoryDatabase::new();
+        let app_data = auth_server::AppData {
             refresh_key: Vec::from("some-refresh-key"),
             access_key: Vec::from("some-access-key"),
             password_salt: Vec::from("some-password-salt"),
         };
-        houseflow_auth_server::run(address, token_store, database, app_data).await?;
+        auth_server::run(address, token_store, database, app_data).await?;
 
         Ok(())
     }

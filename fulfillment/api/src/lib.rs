@@ -1,6 +1,7 @@
-use houseflow_auth_api::Auth;
-use houseflow_fulfillment_types::{SyncRequest, SyncResponse};
-use houseflow_types::Device;
+use auth_api::Auth;
+use token::Token;
+use fulfillment_types::{SyncRequest, SyncResponse};
+use types::Device;
 use reqwest::Client;
 use url::Url;
 
@@ -12,7 +13,7 @@ pub struct Fulfillment {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Auth API Error: `{0}`")]
-    AuthError(#[from] houseflow_auth_api::Error),
+    AuthError(#[from] auth_api::Error),
 
     #[error("Sending request failed: `{0}`")]
     ReqwestError(#[from] reqwest::Error),
@@ -24,7 +25,7 @@ impl Fulfillment {
     }
 
     pub async fn sync(&self) -> Result<Vec<Device>, Error> {
-        let access_token: houseflow_token::Token = unimplemented!();
+        let access_token: Token = unimplemented!();
         let client = Client::new();
         let url = self.url.join("sync").unwrap();
         let response = client

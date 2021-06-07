@@ -1,6 +1,6 @@
 use crate::{DecodeError, Decoder, Encoder, Framed};
 use bytes::{Buf, BufMut};
-use lighthouse_macros::decoder;
+use macros::decoder;
 use serde::{Deserialize, Serialize};
 use std::mem::size_of;
 

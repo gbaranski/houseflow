@@ -7,21 +7,21 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types = { path = "../types/" }
-houseflow-token = { path = "../token/" }
-houseflow-auth-api = { path = "../auth/api/", features = [ "keystore" ] }
-houseflow-auth-types = { path = "../auth/types/" }
-houseflow-auth-server = { path = "../auth/server/" }
-houseflow-db = { path = "../db/" }
+types             = { path = "../types/"            , package = "houseflow-types" }
+token             = { path = "../token/"            , package = "houseflow-token" }
+auth-api          = { path = "../auth/api/"         , package = "houseflow-auth-api", features = [ "keystore" ] }
+auth-types        = { path = "../auth/types/"       , package = "houseflow-auth-types" }
+auth-server       = { path = "../auth/server/"      , package = "houseflow-auth-server" }
+db                = { path = "../db/"               , package = "houseflow-db" }
+lighthouse-broker = { path = "../lighthouse/broker/", package = "houseflow-lighthouse-broker" }
 
-actix-rt = "2.2.0"
-
-structopt = "0.3.21"
-tokio = { version = "1.6.1", features = ["sync", "rt-multi-thread", "macros"] }
-url = "2.2.2"
-dialoguer = "0.8.0"
-anyhow = "1.0.40"
-log = "0.4.14"
-xdg = "2.2.0"
-simplelog = "0.10.0"
-async-trait = "0.1.50"
+tokio             = { version = "1.6.1"             , features = ["sync", "rt-multi-thread", "macros"] }
+actix-rt          = "2.2.0"
+structopt         = "0.3.21"
+url               = "2.2.2"
+dialoguer         = "0.8.0"
+anyhow            = "1.0.40"
+log               = "0.4.14"
+xdg               = "2.2.0"
+simplelog         = "0.10.0"
+async-trait       = "0.1.50"

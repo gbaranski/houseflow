@@ -1,8 +1,8 @@
-use houseflow_auth_types::{
+use auth_types::{
     AccessTokenError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginError, LoginRequest,
     LoginResponse, RegisterError, RegisterRequest, RegisterResponse, WhoamiResponse
 };
-use houseflow_token::Token;
+use token::Token;
 use reqwest::Client;
 use thiserror::Error;
 use url::Url;
@@ -32,7 +32,7 @@ pub enum KeystoreError {
     RemoveError(tokio::io::Error),
 
     #[error("invalid token: `{0}`")]
-    InvalidToken(houseflow_token::DecodeError),
+    InvalidToken(token::DecodeError),
 }
 
 #[derive(Clone)]
@@ -206,7 +206,7 @@ mod tests {
         let token = Token::new_refresh_token(
             b"some-key",
             &rand::random(),
-            &houseflow_token::UserAgent::Internal,
+            &token::UserAgent::Internal,
         );
 
         let path_string = format!(

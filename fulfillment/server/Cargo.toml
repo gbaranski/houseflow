@@ -1,5 +1,5 @@
 [package]
-name = "houseflow-fulfillment"
+name = "houseflow-fulfillment-server"
 version = "0.1.0"
 authors = ["gbaranski <root@gbaranski.com>"]
 edition = "2018"
@@ -7,17 +7,15 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-db = { path = "../../db" }
-houseflow-token = { path = "../../token" }
-houseflow-types = { path = "../../types" }
-houseflow-fulfillment-types = { path = "../types" }
-lighthouse-api = { path = "../../lighthouse/api" }
+db                = { path = "../../db"   	   , package = "houseflow-db" }
+token             = { path = "../../token"	   , package = "houseflow-token" }
+types             = { path = "../../types"	   , package = "houseflow-types" }
+fulfillment-types = { path = "../types"   	   , package = "houseflow-fulfillment-types" }
+lighthouse-api    = { path = "../../lighthouse/api", package = "houseflow-lighthouse-api" }
 
-actix-web = "=4.0.0-beta.5" 
-
-log = "0.4"
-env_logger = "0.8"
-
-serde = "1"
-serde_json = "1"
-thiserror = "1.0"
+actix-web         =   "=4.0.0-beta.5" 
+log               =   "0.4"
+env_logger        =   "0.8"
+serde             =   "1"
+serde_json        =   "1"
+thiserror         =   "1.0"

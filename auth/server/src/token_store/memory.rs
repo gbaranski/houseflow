@@ -1,6 +1,6 @@
 use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
-use houseflow_token::{Token, TokenID};
+use token::{Token, TokenID};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

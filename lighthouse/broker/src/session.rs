@@ -4,7 +4,7 @@ use crate::aliases::{
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
-use houseflow_types::DeviceID;
+use types::DeviceID;
 use lighthouse_proto::{
     command, command_response, state, state_check, Decoder, Encoder, Frame, FrameID,
 };

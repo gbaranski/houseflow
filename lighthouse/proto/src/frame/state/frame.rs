@@ -1,7 +1,7 @@
 use bytes::{BufMut, Buf};
 use serde::{Deserialize, Serialize};
 use crate::{DecodeError, Decoder, Encoder, Frame};
-use lighthouse_macros::decoder;
+use macros::decoder;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct StateFrame {

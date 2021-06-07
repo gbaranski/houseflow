@@ -2,14 +2,14 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use houseflow_db::Database;
+use db::Database;
 use std::sync::Arc;
 
 pub use token_store::{
     MemoryTokenStore, MemoryTokenStoreError, RedisTokenStore, RedisTokenStoreError,
 };
 
-use token::{exchange_refresh_token, exchange_refresh_token_form_config};
+use crate::token::{exchange_refresh_token, exchange_refresh_token_form_config};
 pub use token_store::TokenStore;
 
 mod auth;
@@ -77,7 +77,7 @@ pub async fn run(
 #[cfg(test)]
 mod test_utils {
     use super::{Database, MemoryTokenStore, TokenStore};
-    use houseflow_db::MemoryDatabase;
+    use db::MemoryDatabase;
 
     use actix_web::web::Data;
     use rand::RngCore;

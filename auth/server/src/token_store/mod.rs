@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use houseflow_token::{DecodeError, Token, TokenID};
+use token::{DecodeError, Token, TokenID};
 
 mod memory;
 mod redis;

@@ -1,4 +1,4 @@
-use houseflow_token::Token;
+use token::Token;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};

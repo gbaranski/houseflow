@@ -1,7 +1,7 @@
-use houseflow_types::DeviceID;
-use lighthouse_proto::{command, command_response};
 use lighthouse_types::DeviceError;
+use lighthouse_proto::{command, command_response};
 use thiserror::Error;
+use types::DeviceID;
 use url::Url;
 
 #[derive(Debug, Error)]

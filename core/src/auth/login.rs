@@ -1,6 +1,6 @@
 use crate::{Command, Opt};
 use async_trait::async_trait;
-use houseflow_auth_api::{Auth, KeystoreConfig};
+use auth_api::{Auth, KeystoreConfig};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -16,8 +16,8 @@ pub struct LoginCommand {
 impl Command for LoginCommand {
     async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
         use dialoguer::{Input, Password};
-        use houseflow_auth_types::LoginRequest;
-        use houseflow_types::UserAgent;
+        use auth_types::LoginRequest;
+        use types::UserAgent;
 
         let auth = Auth {
             url: opt.auth_url.clone(),

@@ -1,8 +1,8 @@
 use crate::{Command, Opt};
 use async_trait::async_trait;
-use houseflow_auth_api::{Auth, KeystoreConfig};
-use houseflow_auth_types::{WhoamiError, WhoamiResponseBody};
-use houseflow_token::Token;
+use auth_api::{Auth, KeystoreConfig};
+use auth_types::{WhoamiError, WhoamiResponseBody};
+use token::Token;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]

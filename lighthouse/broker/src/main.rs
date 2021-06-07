@@ -1,6 +1,6 @@
 use actix_web::{get, http, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web_actors::ws;
-use houseflow_types::{DeviceID, DevicePassword};
+use types::{DeviceID, DevicePassword};
 use itertools::Itertools;
 use lighthouse_proto::{command, command_response};
 use session::Session;

@@ -3,11 +3,11 @@ use actix_web::{
     post,
     web::{self, Data, Form, FormConfig, Json},
 };
-use houseflow_auth_types::{
+use auth_types::{
     AccessTokenRequest, AccessTokenError, AccessTokenErrorKind,
     AccessTokenResponseBody, TokenType,
 };
-use houseflow_token::{
+use token::{
     ExpirationDate, Payload as TokenPayload, Token,
 };
 pub fn exchange_refresh_token_form_config() -> FormConfig {
@@ -100,7 +100,7 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{test, App};
-    use houseflow_auth_types::GrantType;
+    use auth_types::GrantType;
     use rand::random;
     use std::time::{Duration, SystemTime};
 

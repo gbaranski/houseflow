@@ -1,8 +1,8 @@
 use crate::{Command, Opt};
 use async_trait::async_trait;
-use auth::RunAuthCommand;
 use structopt::StructOpt;
 
+use auth::RunAuthCommand;
 mod auth;
 
 #[derive(StructOpt)]

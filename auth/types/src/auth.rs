@@ -1,5 +1,5 @@
-use houseflow_token::Token;
-use houseflow_types::{UserAgent, UserID};
+use token::Token;
+use types::{UserAgent, UserID};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -31,9 +31,9 @@ pub struct LoginResponseBody {
     pub access_token: Token,
 }
 
-#[cfg(feature = "houseflow-db")]
-impl From<houseflow_db::Error> for LoginError {
-    fn from(v: houseflow_db::Error) -> Self {
+#[cfg(feature = "db")]
+impl From<db::Error> for LoginError {
+    fn from(v: db::Error) -> Self {
         Self::InternalError(v.to_string())
     }
 }
@@ -84,9 +84,9 @@ pub struct RegisterResponseBody {
     pub user_id: UserID,
 }
 
-#[cfg(feature = "houseflow-db")]
-impl From<houseflow_db::Error> for RegisterError {
-    fn from(v: houseflow_db::Error) -> Self {
+#[cfg(feature = "db")]
+impl From<db::Error> for RegisterError {
+    fn from(v: db::Error) -> Self {
         Self::InternalError(v.to_string())
     }
 }

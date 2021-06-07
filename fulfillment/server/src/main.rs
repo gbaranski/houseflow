@@ -3,9 +3,9 @@ use actix_web::{
     web::{self, Data},
     App, HttpRequest, HttpServer,
 };
-use houseflow_db::{Database, Error as DatabaseError, MemoryDatabase};
-use houseflow_token::Token;
-use houseflow_types::{User, UserAgent};
+use db::{Database, Error as DatabaseError, MemoryDatabase};
+use token::Token;
+use types::{User, UserAgent};
 use thiserror::Error;
 
 mod gactions;
@@ -26,7 +26,7 @@ pub enum AuthorizationError {
     InvalidHeaderSchema,
 
     #[error("token is invalid: `{0}`")]
-    InvalidToken(#[from] houseflow_token::Error),
+    InvalidToken(#[from] token::Error),
 
     #[error("user has not been found in database")]
     UserNotFound,

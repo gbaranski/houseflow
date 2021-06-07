@@ -1,6 +1,6 @@
 use crate::{Command, Opt};
 use async_trait::async_trait;
-use houseflow_auth_api::{Auth, KeystoreConfig};
+use auth_api::{Auth, KeystoreConfig};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -19,7 +19,7 @@ pub struct RegisterCommand {
 impl Command for RegisterCommand {
     async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
     use dialoguer::{Input, Password};
-    use houseflow_auth_types::RegisterRequest;
+    use auth_types::RegisterRequest;
 
     let auth = Auth {
         url: opt.auth_url.clone(),
