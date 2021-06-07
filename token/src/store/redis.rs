@@ -1,6 +1,6 @@
 use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
-use token::{Token, TokenID};
+use crate::{Token, TokenID};
 use redis_client::{aio::Connection, AsyncCommands, Client};
 use std::sync::Arc;
 use tokio::sync::Mutex;

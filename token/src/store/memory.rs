@@ -1,6 +1,6 @@
 use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
-use token::{Token, TokenID};
+use crate::{Token, TokenID};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},

@@ -2,6 +2,8 @@ mod payload;
 mod signature;
 mod token;
 
+#[cfg(feature = "store")]
+mod store;
 pub use payload::*;
 pub use signature::*;
 pub use token::*;
