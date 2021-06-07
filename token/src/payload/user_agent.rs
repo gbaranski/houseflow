@@ -1,5 +1,5 @@
 use crate::{DecodeError, Decoder, Encoder};
-use houseflow_types::UserAgent;
+use types::UserAgent;
 use std::convert::TryFrom;
 
 impl Decoder for UserAgent {

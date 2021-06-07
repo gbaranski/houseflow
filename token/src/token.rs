@@ -1,7 +1,7 @@
 use crate::{
     DecodeError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID, VerifyError,
 };
-use houseflow_types::{UserAgent, UserID};
+use types::{UserAgent, UserID};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Token {

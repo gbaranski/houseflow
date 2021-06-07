@@ -1,7 +1,7 @@
 use crate::{DecodeError, Decoder, Encoder, Signature, VerifyError};
-use houseflow_types::{UserAgent, UserID};
+use types::{UserAgent, UserID};
 
-pub type TokenID = houseflow_types::Credential<16>;
+pub type TokenID = types::Credential<16>;
 mod exp_date;
 mod user_agent;
 pub use exp_date::ExpirationDate;

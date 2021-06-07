@@ -3,7 +3,8 @@ mod signature;
 mod token;
 
 #[cfg(feature = "store")]
-mod store;
+pub mod store;
+
 pub use payload::*;
 pub use signature::*;
 pub use token::*;
@@ -21,10 +22,10 @@ pub enum DecodeError {
     InvalidTimestamp(u64),
 
     #[error("received invalid TokenID: `{0}`")]
-    InvalidTokenID(houseflow_types::CredentialError),
+    InvalidTokenID(types::CredentialError),
 
     #[error("received invalid UserID: `{0}`")]
-    InvalidUserID(houseflow_types::CredentialError),
+    InvalidUserID(types::CredentialError),
 
     #[error("unknown user agent: `{0}`")]
     UnknownUserAgent(u8),
@@ -33,7 +34,7 @@ pub enum DecodeError {
     InvalidEncoding(String),
 }
 
-pub use houseflow_types::UserAgent;
+pub use types::UserAgent;
 
 #[derive(Debug, Clone, thiserror::Error)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -78,7 +79,7 @@ pub trait Encoder {
 mod tests {
     use super::*;
     use bytes::BytesMut;
-    use houseflow_types::UserID;
+    use types::UserID;
     use rand::random;
     use std::time::{Duration, SystemTime};
     const KEY: &[u8] = b"some hmac key";
