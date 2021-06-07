@@ -6,7 +6,11 @@ pub use payload::*;
 pub use signature::*;
 pub use token::*;
 
-#[derive(Debug, thiserror::Error)]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DecodeError {
     #[error("expected size: `{expected}`, received: `{received}`")]
     InvalidLength { expected: usize, received: usize },
@@ -23,13 +27,14 @@ pub enum DecodeError {
     #[error("unknown user agent: `{0}`")]
     UnknownUserAgent(u8),
 
-    #[error("encoding base64 failed: `{0}`")]
-    InvalidBase64Encoding(#[from] base64::DecodeError),
+    #[error("invalid encoding: `{0}`")]
+    InvalidEncoding(String),
 }
 
 pub use houseflow_types::UserAgent;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, thiserror::Error)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum VerifyError {
     #[error("token is expired since:  `{date}`")]
     Expired { date: ExpirationDate },
@@ -44,7 +49,8 @@ pub enum VerifyError {
     InvalidSignature,
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, thiserror::Error)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Error {
     #[error("token failed to verify: `{0}`")]
     VerifyError(#[from] VerifyError),
@@ -197,7 +203,6 @@ mod tests {
         let stringified = base64::decode(token.to_string()).unwrap();
         assert_eq!(buf, stringified);
     }
-
 
     #[test]
     fn test_bytes_conversions() {

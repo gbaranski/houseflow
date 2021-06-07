@@ -69,12 +69,7 @@ impl Token {
         user_id: &UserID,
         user_agent: &UserAgent,
     ) -> Token {
-        Self::new_token(
-            key,
-            user_id,
-            user_agent,
-            user_agent.access_token_duration(),
-        )
+        Self::new_token(key, user_id, user_agent, user_agent.access_token_duration())
     }
 
     #[inline]
@@ -119,7 +114,7 @@ impl std::str::FromStr for Token {
                 received: s.len(),
             });
         }
-        let s = base64::decode(s)?;
+        let s = base64::decode(s).map_err(|err| DecodeError::InvalidEncoding(err.to_string()))?;
         let mut s = BytesMut::from(s.as_slice());
         Self::decode(&mut s)
     }
@@ -175,7 +170,7 @@ impl<'de> Deserialize<'de> for Token {
                 E: de::Error,
             {
                 let result = Token::from_str(value).map_err(|err| match err {
-                    DecodeError::InvalidBase64Encoding(_) => {
+                    DecodeError::InvalidEncoding(_) => {
                         de::Error::invalid_value(de::Unexpected::Str(value), &"valid base64 str")
                     }
                     DecodeError::InvalidLength { expected, received } => {

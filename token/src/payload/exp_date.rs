@@ -4,6 +4,7 @@ use std::time::{Duration, SystemTime};
 use crate::{Decoder, Encoder};
 
 #[derive(Debug, Clone, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExpirationDate {
     system_time: Option<SystemTime>,
 }
