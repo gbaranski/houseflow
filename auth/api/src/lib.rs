@@ -1,6 +1,6 @@
 use houseflow_auth_types::{
     AccessTokenError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginError, LoginRequest,
-    LoginResponse, LoginResponseBody, RegisterError, RegisterRequest, RegisterResponse,
+    LoginResponse, RegisterError, RegisterRequest, RegisterResponse, WhoamiResponse
 };
 use houseflow_token::Token;
 use reqwest::Client;
@@ -81,7 +81,7 @@ impl Auth {
         Ok(response)
     }
 
-    pub async fn login(&self, request: LoginRequest) -> Result<LoginResponseBody, Error> {
+    pub async fn login(&self, request: LoginRequest) -> Result<LoginResponse, Error> {
         let client = Client::new();
         let url = self.url.join("login").unwrap();
 
@@ -91,18 +91,21 @@ impl Auth {
             .send()
             .await?
             .json::<LoginResponse>()
-            .await??;
+            .await?;
 
         Ok(response)
     }
 
-    pub async fn fetch_access_token(url: &Url, refresh_token: &Token) -> Result<Token, Error> {
+    pub async fn fetch_access_token(
+        &self,
+        refresh_token: &Token,
+    ) -> Result<AccessTokenResponse, Error> {
         let client = Client::new();
         let request = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
             refresh_token: refresh_token.clone(),
         };
-        let url = url.join("token").unwrap();
+        let url = self.url.join("token").unwrap();
 
         let response = client
             .post(url)
@@ -110,9 +113,24 @@ impl Auth {
             .send()
             .await?
             .json::<AccessTokenResponse>()
-            .await??;
+            .await?;
 
-        Ok(response.access_token)
+        Ok(response)
+    }
+
+    pub async fn whoami(&self, access_token: &Token) -> Result<WhoamiResponse, Error> {
+        let client = Client::new();
+        let url = self.url.join("whoami").unwrap();
+
+        let response = client
+            .post(url)
+            .bearer_auth(access_token.to_string())
+            .send()
+            .await?
+            .json::<WhoamiResponse>()
+            .await?;
+
+        Ok(response)
     }
 
     #[cfg(any(feature = "keystore", test))]
