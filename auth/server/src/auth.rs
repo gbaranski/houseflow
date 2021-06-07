@@ -1,4 +1,5 @@
-use crate::{AppData, TokenStore};
+use crate::AppData;
+use token::store::TokenStore;
 use actix_web::{
     post,
     web::{Data, Json},

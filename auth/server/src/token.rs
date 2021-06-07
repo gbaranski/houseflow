@@ -25,7 +25,7 @@ pub enum RefreshTokenExchangeError {
     InvalidRequest(#[from] AccessTokenError),
 
     #[error("error with token_store: `{0}`")]
-    TokenStoreError(#[from] crate::token_store::Error),
+    TokenStoreError(#[from] token::store::Error),
 }
 
 impl actix_web::ResponseError for RefreshTokenExchangeError {

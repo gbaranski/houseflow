@@ -1021,7 +1021,6 @@ dependencies = [
  "actix-files",
  "actix-rt",
  "actix-web",
- "async-trait",
  "env_logger",
  "houseflow-auth-types",
  "houseflow-db",
@@ -1029,7 +1028,6 @@ dependencies = [
  "houseflow-types",
  "log",
  "rand",
- "redis",
  "rust-argon2",
  "serde_json",
  "thiserror",
@@ -1201,16 +1199,19 @@ dependencies = [
 name = "houseflow-token"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "base64",
  "bytes",
  "hex",
  "hmac 0.11.0",
  "houseflow-types",
  "rand",
+ "redis",
  "serde",
  "serde_json",
  "sha2",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]

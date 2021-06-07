@@ -5,17 +5,12 @@ use actix_web::{
 use db::Database;
 use std::sync::Arc;
 
-pub use token_store::{
-    MemoryTokenStore, MemoryTokenStoreError, RedisTokenStore, RedisTokenStoreError,
-};
-
 use crate::token::{exchange_refresh_token, exchange_refresh_token_form_config};
-pub use token_store::TokenStore;
+use ::token::store::TokenStore;
 
 mod auth;
-mod whoami;
 mod token;
-mod token_store;
+mod whoami;
 
 #[derive(Clone)]
 pub struct AppState<TS: TokenStore, DB: Database> {
@@ -76,7 +71,8 @@ pub async fn run(
 
 #[cfg(test)]
 mod test_utils {
-    use super::{Database, MemoryTokenStore, TokenStore};
+    use super::{Database, TokenStore};
+    use token::store::MemoryTokenStore;
     use db::MemoryDatabase;
 
     use actix_web::web::Data;
