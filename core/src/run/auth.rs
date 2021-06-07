@@ -1,5 +1,6 @@
 use crate::{Command, Opt};
 use async_trait::async_trait;
+use token::store::MemoryTokenStore;
 use structopt::StructOpt;
 
 const AUTH_PORT: u16 = 6001;
@@ -17,7 +18,7 @@ impl Command for RunAuthCommand {
 
         let address = address.first().unwrap();
 
-        let token_store = auth_server::MemoryTokenStore::new();
+        let token_store = MemoryTokenStore::new();
         let database = db::MemoryDatabase::new();
         let app_data = auth_server::AppData {
             refresh_key: Vec::from("some-refresh-key"),
