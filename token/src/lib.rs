@@ -45,7 +45,7 @@ pub enum VerifyError {
         received: UserAgent,
     },
 
-    #[error("invald signature")]
+    #[error("invalid signature")]
     InvalidSignature,
 }
 
