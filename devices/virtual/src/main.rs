@@ -1,6 +1,6 @@
-use houseflow_types::{DeviceID, DevicePassword};
 use session::{Options as SessionOptions, Session};
 use structopt::StructOpt;
+use types::{DeviceID, DevicePassword};
 use url::Url;
 
 mod session;

@@ -1,9 +1,9 @@
 use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
-use houseflow_types::{DeviceID, DevicePassword};
 use lighthouse_proto::{command_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
+use types::{DeviceID, DevicePassword};
 use url::Url;
 
 #[derive(Debug, Clone)]
