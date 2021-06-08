@@ -1,4 +1,4 @@
-use crate::{Command, Opt};
+use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
 use structopt::StructOpt;
 
@@ -22,54 +22,12 @@ pub enum AuthCommand {
 }
 
 #[async_trait(?Send)]
-impl Command for AuthCommand {
-    async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
+impl ClientCommand for AuthCommand {
+    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
         match self {
-            Self::Login(cmd) => cmd.run(opt).await,
-            Self::Register(cmd) => cmd.run(opt).await,
-            Self::Status(cmd) => cmd.run(opt).await,
+            Self::Login(cmd) => cmd.run(cfg).await,
+            Self::Register(cmd) => cmd.run(cfg).await,
+            Self::Status(cmd) => cmd.run(cfg).await,
         }
-    }
-}
-
-use std::path::PathBuf;
-
-#[derive(Clone)]
-pub struct KeystorePath(PathBuf);
-
-impl Default for KeystorePath {
-    fn default() -> Self {
-        Self(
-            xdg::BaseDirectories::with_prefix("houseflow")
-                .unwrap()
-                .get_data_home()
-                .join("token"),
-        )
-    }
-}
-
-impl std::ops::Deref for KeystorePath {
-    type Target = PathBuf;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl Into<PathBuf> for KeystorePath {
-    fn into(self) -> PathBuf {
-        self.0
-    }
-}
-
-impl From<&std::ffi::OsStr> for KeystorePath {
-    fn from(str: &std::ffi::OsStr) -> Self {
-        Self(PathBuf::from(str))
-    }
-}
-
-impl std::fmt::Display for KeystorePath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.display().fmt(f)
     }
 }

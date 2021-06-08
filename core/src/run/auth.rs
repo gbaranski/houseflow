@@ -1,29 +1,29 @@
-use crate::{Command, Opt};
+use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
 use token::store::MemoryTokenStore;
 use structopt::StructOpt;
+use serde::{Serialize, Deserialize};
 
-const AUTH_PORT: u16 = 6001;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuthServerConfig {
+    password_salt: String,
+}
 
 #[derive(StructOpt)]
 pub struct RunAuthCommand {}
 
 #[async_trait(?Send)]
-impl Command for RunAuthCommand {
-    async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
-        let address = opt
-            .auth_url
-            .socket_addrs(|| Some(AUTH_PORT))
-            .expect("invalid address");
+impl ServerCommand for RunAuthCommand {
+    async fn run(&self, config: ServerConfig) -> anyhow::Result<()> {
+        use std::net::{SocketAddrV4, Ipv4Addr};
 
-        let address = address.first().unwrap();
-
+        let address = SocketAddrV4::new(Ipv4Addr::new(127,0,0,1), config.auth.port);
         let token_store = MemoryTokenStore::new();
         let database = db::MemoryDatabase::new();
         let app_data = auth_server::AppData {
-            refresh_key: Vec::from("some-refresh-key"),
-            access_key: Vec::from("some-access-key"),
-            password_salt: Vec::from("some-password-salt"),
+            refresh_key: config.refresh_key.into(),
+            access_key: config.access_key.into(),
+            password_salt: config.auth.password_salt.into(),
         };
         auth_server::run(address, token_store, database, app_data).await?;
 

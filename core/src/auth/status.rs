@@ -1,9 +1,9 @@
-use crate::{Command, Opt};
+use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
 use auth_api::{Auth, KeystoreConfig};
 use auth_types::{WhoamiError, WhoamiResponseBody};
-use token::Token;
 use structopt::StructOpt;
+use token::Token;
 
 #[derive(StructOpt)]
 pub struct StatusCommand {
@@ -13,11 +13,14 @@ pub struct StatusCommand {
 }
 
 impl StatusCommand {
-    fn no_saved_credentials(&self, opt: &Opt) {
-        println!("❌ No saved credentials at {}", opt.keystore_path);
+    fn no_saved_credentials(&self, cfg: ClientConfig) {
+        println!(
+            "❌ No saved credentials at {}",
+            cfg.keystore_path.to_str().unwrap_or("none")
+        );
     }
 
-    fn logged_in(&self, opt: &Opt, whoami_response: WhoamiResponseBody, token: Token) {
+    fn logged_in(&self, cfg: ClientConfig, whoami_response: WhoamiResponseBody, token: Token) {
         let token = match self.show_token {
             true => token.to_string(),
             false => std::iter::repeat("*")
@@ -28,7 +31,11 @@ impl StatusCommand {
         println!("✔ Logged in");
         println!("  Username: {}", whoami_response.username);
         println!("  Email: {}", whoami_response.email);
-        println!("  Token({}): {}", opt.keystore_path, token);
+        println!(
+            "  Token({}): {}",
+            cfg.keystore_path.to_str().unwrap_or("none"),
+            token
+        );
     }
 
     fn error(&self, error: WhoamiError) {
@@ -37,26 +44,26 @@ impl StatusCommand {
 }
 
 #[async_trait(?Send)]
-impl Command for StatusCommand {
-    async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
+impl ClientCommand for StatusCommand {
+    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
         let auth = Auth {
-            url: opt.auth_url.clone(),
+            url: cfg.auth_url.clone(),
             keystore: KeystoreConfig {
-                path: opt.keystore_path.clone().into(),
+                path: cfg.keystore_path.clone().into(),
             },
         };
         let token = match auth.read_refresh_token().await? {
             Some(token) => token,
             None => {
                 return {
-                    self.no_saved_credentials(opt);
+                    self.no_saved_credentials(cfg);
                     Ok(())
                 }
             }
         };
 
         match auth.whoami(&token).await? {
-            Ok(response) => self.logged_in(opt, response, token),
+            Ok(response) => self.logged_in(cfg, response, token),
             Err(err) => self.error(err),
         };
         Ok(())

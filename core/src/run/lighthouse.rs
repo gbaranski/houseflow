@@ -1,4 +1,4 @@
-use crate::{Command, Opt};
+use crate::{ServerConfig, ServerCommand};
 use async_trait::async_trait;
 use std::net::SocketAddr;
 use structopt::StructOpt;
@@ -10,8 +10,8 @@ pub struct RunLighthouseCommand {
 }
 
 #[async_trait(?Send)]
-impl Command for RunLighthouseCommand {
-    async fn run(&self, _opt: &Opt) -> anyhow::Result<()> {
+impl ServerCommand for RunLighthouseCommand {
+    async fn run(&self, _cfg: ServerConfig) -> anyhow::Result<()> {
         lighthouse_broker::run(self.address).await?;
 
         Ok(())

@@ -1,4 +1,4 @@
-use crate::{Command, Opt};
+use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
 use auth_api::{Auth, KeystoreConfig};
 use structopt::StructOpt;
@@ -13,16 +13,16 @@ pub struct LoginCommand {
 }
 
 #[async_trait(?Send)]
-impl Command for LoginCommand {
-    async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
+impl ClientCommand for LoginCommand {
+    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
         use dialoguer::{Input, Password};
         use auth_types::LoginRequest;
         use types::UserAgent;
 
         let auth = Auth {
-            url: opt.auth_url.clone(),
+            url: cfg.auth_url.clone(),
             keystore: KeystoreConfig {
-                path: opt.keystore_path.clone().into(),
+                path: cfg.keystore_path.clone().into(),
             },
         };
 

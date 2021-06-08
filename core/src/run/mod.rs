@@ -1,4 +1,4 @@
-use crate::{Command, Opt};
+use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
 use structopt::StructOpt;
 
@@ -20,11 +20,11 @@ pub struct RunCommand {
 }
 
 #[async_trait(?Send)]
-impl Command for RunCommand {
-    async fn run(&self, opt: &Opt) -> anyhow::Result<()> {
+impl ServerCommand for RunCommand {
+    async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()> {
         match self.service {
-            Service::Auth(ref cmd) => cmd.run(opt).await,
-            Service::Lighthouse(ref cmd) => cmd.run(opt).await,
+            Service::Auth(ref cmd) => cmd.run(cfg).await,
+            Service::Lighthouse(ref cmd) => cmd.run(cfg).await,
         }
     }
 }
