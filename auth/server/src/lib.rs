@@ -12,6 +12,7 @@ mod auth;
 mod token;
 mod whoami;
 
+
 #[derive(Clone)]
 pub struct AppState<TS: TokenStore, DB: Database> {
     token_store: TS,
@@ -25,7 +26,7 @@ pub struct AppData {
     pub password_salt: Vec<u8>,
 }
 
-pub fn config(
+pub(crate) fn config(
     cfg: &mut web::ServiceConfig,
     token_store: Data<dyn TokenStore>,
     database: Data<dyn Database>,
