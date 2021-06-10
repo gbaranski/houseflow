@@ -21,7 +21,7 @@ pub struct ServerConfig {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuthServerConfig {
-    #[serde(default = "default_lighthouse_port")]
+    #[serde(default = "default_auth_port")]
     pub port: u16,
 
     /// Key used to sign access tokens. Must be secret and should be farily random.
@@ -30,7 +30,7 @@ pub struct AuthServerConfig {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LighthouseServerConfig {
-    #[serde(default = "default_auth_port")]
+    #[serde(default = "default_lighthouse_port")]
     pub port: u16,
 }
 
