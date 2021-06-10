@@ -9,6 +9,7 @@ pub use server::*;
 
 use crate::Target;
 use anyhow::Context;
+use indoc::indoc;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumString;
 
@@ -103,23 +104,21 @@ fn generate_config_string(target: &Target) -> String {
                 rand.next().unwrap(),
                 rand.next().unwrap(),
             );
-
             format!(
-                r#"
-# Houseflow server configuration
+                indoc! {r#"# Houseflow server configuration
 
-# Randomly generated keys, keep it safe, don't share this with anyone 
-refresh_key = "{}"
-access_key = "{}"
+                    # Randomly generated keys, keep them safe, don't share with anyone
+                    refresh_key = "{}"
+                    access_key = "{}"
 
-# Configuration of Auth service
-[auth]
-# Randomly generated password salt, keep it safe, don't share with anyone.
-password_salt = "{}"
+                    # Configuration of the Auth service
+                    [auth]
+                    # Randomly generated password salt, keep it safe, don't share with anyone.
+                    password_salt = "{}"
 
-# Configuration of Lighthouse service
-[lighthouse]
-                "#,
+                    # Configuration of the Lighthouse service
+                    [lighthouse]
+                "#},
                 refresh_key, access_key, password_salt
             )
         }
