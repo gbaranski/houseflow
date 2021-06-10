@@ -7,19 +7,26 @@ mod cli;
 mod config;
 mod run;
 
-use crate::config::{
-    read_config_files, CliConfig, ClientConfig, Command, LogLevel, ServerConfig,
-};
+use config::{CliConfig, ClientConfig, Config, ConfigCommand, LogLevel, ServerConfig, Subcommand};
+use strum_macros::{EnumIter, EnumString};
 
-// #[async_trait(?Send)]
-// impl Command for RootCommand {
-//     async fn run(&self, cfg: &Config) -> anyhow::Result<()> {
-//         match self {
-//             Self::Auth(cmd) => cmd.run(&opt).await,
-//             Self::Run(cmd) => cmd.run(&opt).await,
-//         }
-//     }
-// }
+#[derive(Clone, Debug, EnumString, strum_macros::Display, EnumIter)]
+pub enum Target {
+    Server,
+    Client,
+}
+
+impl Target {
+    pub fn config_path(&self) -> std::path::PathBuf {
+        let base_path = xdg::BaseDirectories::with_prefix(clap::crate_name!())
+            .unwrap()
+            .get_config_home();
+        match self {
+            Target::Server => base_path.join("server.toml"),
+            Target::Client => base_path.join("client.toml"),
+        }
+    }
+}
 
 #[async_trait(?Send)]
 pub trait ClientCommand {
@@ -29,6 +36,17 @@ pub trait ClientCommand {
 #[async_trait(?Send)]
 pub trait ServerCommand {
     async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()>;
+}
+
+#[async_trait(?Send)]
+pub trait Command {
+    async fn run(&self, cfg: Config) -> anyhow::Result<()>;
+}
+
+// Consider changing name here
+#[async_trait(?Send)]
+pub trait SetupCommand {
+    async fn run(&self) -> anyhow::Result<()>;
 }
 
 fn setup_logging(log_level: &LogLevel) {
@@ -48,12 +66,6 @@ fn main() -> anyhow::Result<()> {
     use clap::Clap;
 
     let cli_config = CliConfig::parse();
-    let config = read_config_files()?;
-    let log_level = match cli_config.command {
-        Command::Client(_) => &config.client.log_level,
-        Command::Server(_) => &config.server.log_level,
-    };
-    setup_logging(log_level);
     actix_rt::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
             .worker_threads(2)
@@ -62,9 +74,21 @@ fn main() -> anyhow::Result<()> {
             .unwrap()
     })
     .block_on(async {
-        match cli_config.command {
-            Command::Client(cmd) => cmd.run(config.client).await,
-            Command::Server(cmd) => cmd.run(config.server).await,
+        match cli_config.subcommand {
+            Subcommand::Setup(cmd) => {
+                setup_logging(&LogLevel::Info);
+                cmd.run().await
+            }
+            Subcommand::Client(cmd) => {
+                let config = config::read_files()?;
+                setup_logging(&config.client.log_level);
+                cmd.run(config.client).await
+            }
+            Subcommand::Server(cmd) => {
+                let config = config::read_files()?;
+                setup_logging(&config.server.log_level);
+                cmd.run(config.server).await
+            }
         }
     })
 }

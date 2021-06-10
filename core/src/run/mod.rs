@@ -23,9 +23,9 @@ pub struct RunCommand {
 #[async_trait(?Send)]
 impl ServerCommand for RunCommand {
     async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()> {
-        match self.service {
-            Service::Auth(ref cmd) => cmd.run(cfg).await,
-            Service::Lighthouse(ref cmd) => cmd.run(cfg).await,
+        match &self.service {
+            Service::Auth(cmd) => cmd.run(cfg).await,
+            Service::Lighthouse(cmd) => cmd.run(cfg).await,
         }
     }
 }

@@ -1,12 +1,17 @@
-use crate::{AuthCommand, ClientConfig, RunCommand, ServerConfig};
+use crate::{AuthCommand, ClientConfig, RunCommand, ServerConfig, ConfigCommand};
 use clap::Clap;
 use async_trait::async_trait;
 
 #[derive(Clap)]
-pub enum Command {
+pub enum Subcommand {
+    #[clap(flatten)]
     Client(ClientCommand),
 
+    #[clap(flatten)]
     Server(ServerCommand),
+
+    #[clap(flatten)]
+    Setup(SetupCommand)
 }
 
 #[derive(Clap)]
@@ -20,6 +25,13 @@ pub enum ServerCommand {
     /// Run server(s)
     Run(RunCommand),
 }
+
+#[derive(Clap)]
+pub enum SetupCommand {
+    /// Manage configurations
+    Config(ConfigCommand),
+}
+
 
 #[async_trait(?Send)]
 impl crate::ClientCommand for ClientCommand {
@@ -39,13 +51,22 @@ impl crate::ServerCommand for ServerCommand {
     }
 }
 
+#[async_trait(?Send)]
+impl crate::SetupCommand for SetupCommand {
+    async fn run(&self) -> anyhow::Result<()> {
+        match self {
+            Self::Config(cmd) => cmd.run().await,
+        }
+    }
+}
+
 
 use std::path::PathBuf;
 
 #[derive(Clap)]
 pub struct CliConfig {
     #[clap(subcommand)]
-    pub command: Command,
+    pub subcommand: Subcommand,
 
     /// Server config in TOML format, can be used to pass configuration as argument instead of
     /// editing the config file

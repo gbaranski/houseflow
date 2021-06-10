@@ -1,10 +1,14 @@
 mod cli;
 mod client;
+mod command;
 mod server;
 pub use cli::*;
 pub use client::*;
+pub use command::*;
 pub use server::*;
 
+use crate::Target;
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumString;
 
@@ -60,7 +64,7 @@ pub struct Config {
 use serde::de::DeserializeOwned;
 use std::path::PathBuf;
 
-fn read_config_file<T: DeserializeOwned>(path: &PathBuf) -> anyhow::Result<T> {
+fn read_file<T: DeserializeOwned>(path: &PathBuf) -> anyhow::Result<T> {
     if path.exists() == false {
         let msg = format!("not found at `{}`", path.to_str().unwrap_or("none"));
         return Err(anyhow::Error::msg(msg));
@@ -73,13 +77,71 @@ fn read_config_file<T: DeserializeOwned>(path: &PathBuf) -> anyhow::Result<T> {
     Ok(config)
 }
 
-pub fn read_config_files() -> anyhow::Result<Config> {
-    let path = xdg::BaseDirectories::with_prefix(clap::crate_name!())?.get_config_home();
-    let server = read_config_file(&path.join("server.toml"))?;
-    let client = read_config_file(&path.join("client.toml"))?;
+pub fn read_files() -> anyhow::Result<Config> {
+    fn read_target_config_file<T: DeserializeOwned>(target: Target) -> anyhow::Result<T> {
+        read_file(&target.config_path()).with_context(|| format!("{} config", target))
+    }
+
+    let server = read_target_config_file(Target::Server)?;
+    let client = read_target_config_file(Target::Client)?;
 
     let config = Config { client, server };
 
     Ok(config)
 }
 
+fn generate_config_string(target: &Target) -> String {
+    match target {
+        Target::Server => {
+            let mut rand = std::iter::repeat_with(|| {
+                let random: [u8; 16] = rand::random();
+                hex::encode(random)
+            });
+
+            let (refresh_key, access_key, password_salt) = (
+                rand.next().unwrap(),
+                rand.next().unwrap(),
+                rand.next().unwrap(),
+            );
+
+            format!(
+                r#"
+# Houseflow server configuration
+
+# Randomly generated keys, keep it safe, don't share this with anyone 
+refresh_key = "{}"
+access_key = "{}"
+
+# Configuration of Auth service
+[auth]
+# Randomly generated password salt, keep it safe, don't share with anyone.
+password_salt = "{}"
+
+# Configuration of Lighthouse service
+[lighthouse]
+                "#,
+                refresh_key, access_key, password_salt
+            )
+        }
+        Target::Client => {
+            format!("# Houseflow client configuration")
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_config_client() {
+        let client = generate_config_string(&Target::Client);
+        let _: ClientConfig = toml::from_str(&client).unwrap();
+    }
+
+    #[test]
+    fn test_generate_config_server() {
+        let server = generate_config_string(&Target::Server);
+        let _: ServerConfig = toml::from_str(&server).unwrap();
+    }
+}
