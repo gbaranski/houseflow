@@ -68,7 +68,6 @@ fn main() -> anyhow::Result<()> {
     let cli_config = CliConfig::parse();
     actix_rt::System::with_tokio_rt(|| {
         tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(2)
             .enable_all()
             .build()
             .unwrap()
