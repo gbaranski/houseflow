@@ -1,23 +1,21 @@
-use crate::{AuthCommand, ClientConfig, Config, RunCommand, ServerConfig};
+use crate::{AuthCommand, ClientConfig, RunCommand, ServerConfig};
+use clap::Clap;
 use async_trait::async_trait;
-use structopt::StructOpt;
 
-#[derive(StructOpt)]
+#[derive(Clap)]
 pub enum Command {
-    #[structopt(flatten)]
     Client(ClientCommand),
 
-    #[structopt(flatten)]
     Server(ServerCommand),
 }
 
-#[derive(StructOpt)]
+#[derive(Clap)]
 pub enum ClientCommand {
     /// Login, register, logout, and refresh your authentication
     Auth(AuthCommand),
 }
 
-#[derive(StructOpt)]
+#[derive(Clap)]
 pub enum ServerCommand {
     /// Run server(s)
     Run(RunCommand),
@@ -41,11 +39,31 @@ impl crate::ServerCommand for ServerCommand {
     }
 }
 
-#[derive(StructOpt)]
+
+use std::path::PathBuf;
+
+#[derive(Clap)]
 pub struct CliConfig {
-    #[structopt(subcommand)]
+    #[clap(subcommand)]
     pub command: Command,
 
-    #[structopt(flatten)]
-    pub config: Config,
+    /// Server config in TOML format, can be used to pass configuration as argument instead of
+    /// editing the config file
+    #[clap(long)]
+    pub server_config: Option<String>,
+
+    /// Client config in TOML format, can be used to pass configuration as argument instead of
+    /// editing the config file
+    #[clap(long)]
+    pub client_config: Option<String>,
+
+    /// Path to the server config.
+    /// Uses `$XDG_CONFIG_HOME/houseflow/server.toml` by default
+    #[clap(long)]
+    pub server_config_path: Option<PathBuf>,
+
+    /// Path to the server config.
+    /// Uses `$XDG_CONFIG_HOME/houseflow/server.toml` by default
+    #[clap(long)]
+    pub client_config_path: Option<PathBuf>,
 }

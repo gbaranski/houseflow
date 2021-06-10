@@ -1,21 +1,22 @@
 use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
-use structopt::StructOpt;
 
 use auth::RunAuthCommand;
 use lighthouse::RunLighthouseCommand;
 mod auth;
 mod lighthouse;
 
-#[derive(StructOpt)]
+use clap::Clap;
+
+#[derive(Clap)]
 pub enum Service {
     Auth(RunAuthCommand),
     Lighthouse(RunLighthouseCommand),
 }
 
-#[derive(StructOpt)]
+#[derive(Clap)]
 pub struct RunCommand {
-    #[structopt(subcommand)]
+    #[clap(subcommand)]
     pub service: Service,
 }
 

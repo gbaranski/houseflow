@@ -1,9 +1,10 @@
 use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
 use auth_api::{Auth, KeystoreConfig};
-use structopt::StructOpt;
 
-#[derive(StructOpt)]
+use clap::Clap;
+
+#[derive(Clap)]
 pub struct RegisterCommand {
     /// Email used to register, if not defined it will ask at runtime
     pub email: Option<String>,

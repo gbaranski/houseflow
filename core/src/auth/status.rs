@@ -2,13 +2,14 @@ use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
 use auth_api::{Auth, KeystoreConfig};
 use auth_types::{WhoamiError, WhoamiResponseBody};
-use structopt::StructOpt;
 use token::Token;
 
-#[derive(StructOpt)]
+use clap::Clap;
+
+#[derive(Clap)]
 pub struct StatusCommand {
     /// Display the auth token
-    #[structopt(short = "t", long = "--show-token")]
+    #[clap(long = "--show-token")]
     pub show_token: bool,
 }
 

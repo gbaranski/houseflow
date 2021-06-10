@@ -1,7 +1,6 @@
 use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
 use token::store::MemoryTokenStore;
-use structopt::StructOpt;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -9,7 +8,9 @@ pub struct AuthServerConfig {
     password_salt: String,
 }
 
-#[derive(StructOpt)]
+use clap::Clap;
+
+#[derive(Clap)]
 pub struct RunAuthCommand {}
 
 #[async_trait(?Send)]

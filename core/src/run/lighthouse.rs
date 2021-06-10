@@ -1,18 +1,19 @@
-use crate::{ServerConfig, ServerCommand};
+use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
-use std::net::SocketAddr;
-use structopt::StructOpt;
 
-#[derive(StructOpt)]
-pub struct RunLighthouseCommand {
-    #[structopt(long, default_value = "127.0.0.1:6002")]
-    pub address: SocketAddr,
-}
+use clap::Clap;
+
+#[derive(Clap)]
+pub struct RunLighthouseCommand {}
 
 #[async_trait(?Send)]
 impl ServerCommand for RunLighthouseCommand {
-    async fn run(&self, _cfg: ServerConfig) -> anyhow::Result<()> {
-        lighthouse_broker::run(self.address).await?;
+    async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()> {
+        let address = std::net::SocketAddr::new(
+            std::net::Ipv4Addr::new(127, 0, 0, 1).into(),
+            cfg.lighthouse.port,
+        );
+        lighthouse_broker::run(address).await?;
 
         Ok(())
     }

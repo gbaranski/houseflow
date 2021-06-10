@@ -6,10 +6,9 @@ pub use client::*;
 pub use server::*;
 
 use serde::{Deserialize, Serialize};
-use structopt::StructOpt;
 use strum_macros::EnumString;
 
-#[derive(Clone, Debug, Serialize, Deserialize, StructOpt, EnumString)]
+#[derive(Clone, Debug, Serialize, Deserialize, EnumString)]
 #[strum(serialize_all = "snake_case")]
 pub enum LogLevel {
     /// A level lower than all log levels.
@@ -45,14 +44,42 @@ impl Into<log::LevelFilter> for LogLevel {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, StructOpt)]
+impl Default for LogLevel {
+    fn default() -> Self {
+        Self::Info
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    #[structopt(flatten)]
     pub client: ClientConfig,
 
-    #[structopt(flatten)]
     pub server: ServerConfig,
-
-    #[structopt(short = "-l", long = "--log-level")]
-    pub log_level: LogLevel,
 }
+
+use serde::de::DeserializeOwned;
+use std::path::PathBuf;
+
+fn read_config_file<T: DeserializeOwned>(path: &PathBuf) -> anyhow::Result<T> {
+    if path.exists() == false {
+        let msg = format!("not found at `{}`", path.to_str().unwrap_or("none"));
+        return Err(anyhow::Error::msg(msg));
+    }
+
+    let content = std::fs::read_to_string(path)?;
+    let content = content.as_str();
+    let config: T = toml::from_str(content)?;
+
+    Ok(config)
+}
+
+pub fn read_config_files() -> anyhow::Result<Config> {
+    let path = xdg::BaseDirectories::with_prefix(clap::crate_name!())?.get_config_home();
+    let server = read_config_file(&path.join("server.toml"))?;
+    let client = read_config_file(&path.join("client.toml"))?;
+
+    let config = Config { client, server };
+
+    Ok(config)
+}
+

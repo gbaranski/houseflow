@@ -1,6 +1,5 @@
 use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
-use structopt::StructOpt;
 
 use login::LoginCommand;
 use register::RegisterCommand;
@@ -10,7 +9,9 @@ mod login;
 mod register;
 mod status;
 
-#[derive(StructOpt)]
+use clap::Clap;
+
+#[derive(Clap)]
 pub enum AuthCommand {
     /// Log in to existing Houseflow account
     Login(LoginCommand),
