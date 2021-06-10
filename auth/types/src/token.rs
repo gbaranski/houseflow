@@ -39,7 +39,7 @@ pub struct AccessTokenResponseBody {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-#[error("kind: `{error}`, description: `{}`")]
+#[error("kind: `{error}`, description: `{error_description:?}`")]
 pub struct AccessTokenError {
     pub error: AccessTokenErrorKind,
     pub error_description: Option<String>,
@@ -95,8 +95,8 @@ impl actix_web::ResponseError for AccessTokenError {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse {
-        let json = actix_web::web::Json(self);
-
+        let response = AccessTokenResponse::Err(self.clone());
+        let json = actix_web::web::Json(response);
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }

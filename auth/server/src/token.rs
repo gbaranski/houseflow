@@ -4,12 +4,10 @@ use actix_web::{
     web::{self, Data, Form, FormConfig, Json},
 };
 use auth_types::{
-    AccessTokenRequest, AccessTokenError, AccessTokenErrorKind,
+    AccessTokenError, AccessTokenErrorKind, AccessTokenRequest, AccessTokenResponse,
     AccessTokenResponseBody, TokenType,
 };
-use token::{
-    ExpirationDate, Payload as TokenPayload, Token,
-};
+use token::{ExpirationDate, Payload as TokenPayload, Token};
 pub fn exchange_refresh_token_form_config() -> FormConfig {
     FormConfig::default().error_handler(|err, _| {
         actix_web::Error::from(AccessTokenError {
@@ -52,7 +50,7 @@ pub async fn exchange_refresh_token(
     request: Form<AccessTokenRequest>,
     token_store: Data<dyn TokenStore>,
     app_data: Data<AppData>,
-) -> Result<Json<AccessTokenResponseBody>, RefreshTokenExchangeError> {
+) -> Result<Json<AccessTokenResponse>, RefreshTokenExchangeError> {
     let refresh_token = &request.refresh_token;
     refresh_token
         .verify(&app_data.refresh_key, None)
@@ -88,11 +86,13 @@ pub async fn exchange_refresh_token(
     };
     let access_token_signature = access_token_payload.sign(&app_data.access_key);
     let access_token = Token::new(access_token_payload, access_token_signature);
-    Ok(web::Json(AccessTokenResponseBody {
-        access_token,
-        token_type: TokenType::Bearer,
-        expires_in,
-    }))
+    Ok(web::Json(AccessTokenResponse::Ok(
+        AccessTokenResponseBody {
+            access_token,
+            token_type: TokenType::Bearer,
+            expires_in,
+        },
+    )))
 }
 
 #[cfg(test)]
@@ -166,10 +166,7 @@ mod tests {
         let response = test::call_service(&mut app, request).await;
         assert_eq!(response.status(), 400);
         let response_body: AccessTokenError = test::read_body_json(response).await;
-        assert_eq!(
-            response_body.error,
-            AccessTokenErrorKind::InvalidGrant,
-        );
+        assert_eq!(response_body.error, AccessTokenErrorKind::InvalidGrant,);
     }
 
     #[actix_rt::test]
