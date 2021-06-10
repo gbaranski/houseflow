@@ -53,7 +53,7 @@ impl ClientCommand for StatusCommand {
                 path: cfg.keystore_path.clone().into(),
             },
         };
-        let token = match auth.read_refresh_token().await? {
+        let refresh_token = match auth.read_refresh_token().await? {
             Some(token) => token,
             None => {
                 return {
@@ -62,9 +62,10 @@ impl ClientCommand for StatusCommand {
                 }
             }
         };
+        let access_token = auth.fetch_access_token(&refresh_token).await??.access_token;
 
-        match auth.whoami(&token).await? {
-            Ok(response) => self.logged_in(cfg, response, token),
+        match auth.whoami(&access_token).await? {
+            Ok(response) => self.logged_in(cfg, response, access_token),
             Err(err) => self.error(err),
         };
         Ok(())
