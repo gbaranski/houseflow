@@ -109,7 +109,7 @@ impl Auth {
 
         let response = client
             .post(url)
-            .query(&request)
+            .form(&request)
             .send()
             .await?
             .json::<AccessTokenResponse>()
