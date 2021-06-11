@@ -1,7 +1,8 @@
 use crate::{ServerCommand, ServerConfig};
+use anyhow::Context;
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use token::store::RedisTokenStore;
-use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuthServerConfig {
@@ -16,10 +17,12 @@ pub struct RunAuthCommand {}
 #[async_trait(?Send)]
 impl ServerCommand for RunAuthCommand {
     async fn run(&self, config: ServerConfig) -> anyhow::Result<()> {
-        use std::net::{SocketAddrV4, Ipv4Addr};
+        use std::net::{Ipv4Addr, SocketAddrV4};
 
-        let address = SocketAddrV4::new(Ipv4Addr::new(127,0,0,1), config.auth.port);
-        let token_store = RedisTokenStore::new().await?;
+        let address = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), config.auth.port);
+        let token_store = RedisTokenStore::new()
+            .await
+            .with_context(|| "connect to redis failed, is redis on?")?;
         let database = db::MemoryDatabase::new();
         let app_data = auth_server::AppData {
             refresh_key: config.refresh_key.into(),

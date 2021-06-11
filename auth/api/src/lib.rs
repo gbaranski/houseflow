@@ -1,10 +1,11 @@
 use auth_types::{
-    AccessTokenResponseError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginResponseError, LoginRequest,
-    LoginResponse, RegisterResponseError, RegisterRequest, RegisterResponse, WhoamiResponse
+    AccessTokenRequest, AccessTokenResponse, AccessTokenResponseError, GrantType, LoginRequest,
+    LoginResponse, LoginResponseError, LogoutResponse, RegisterRequest, RegisterResponse,
+    RegisterResponseError, WhoamiResponse,
 };
-use token::Token;
 use reqwest::Client;
 use thiserror::Error;
+use token::Token;
 use url::Url;
 
 #[cfg(any(feature = "keystore", test))]
@@ -91,6 +92,21 @@ impl Auth {
             .send()
             .await?
             .json::<LoginResponse>()
+            .await?;
+
+        Ok(response)
+    }
+
+    pub async fn logout(&self, refresh_token: &Token) -> Result<LogoutResponse, Error> {
+        let client = Client::new();
+        let url = self.url.join("logout").unwrap();
+
+        let response = client
+            .post(url)
+            .bearer_auth(refresh_token.to_string())
+            .send()
+            .await?
+            .json::<LogoutResponse>()
             .await?;
 
         Ok(response)
@@ -203,11 +219,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_keystore() {
-        let token = Token::new_refresh_token(
-            b"some-key",
-            &rand::random(),
-            &token::UserAgent::Internal,
-        );
+        let token =
+            Token::new_refresh_token(b"some-key", &rand::random(), &token::UserAgent::Internal);
 
         let path_string = format!(
             "/tmp/houseflow/tokens-{}",
