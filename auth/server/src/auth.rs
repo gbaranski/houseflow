@@ -5,7 +5,7 @@ use actix_web::{
     web::{Data, Json},
 };
 use auth_types::{
-    LoginError, LoginRequest, LoginResponse, LoginResponseBody, RegisterError, RegisterRequest,
+    LoginResponseError, LoginRequest, LoginResponse, LoginResponseBody, RegisterError, RegisterRequest,
     RegisterResponse, RegisterResponseBody,
 };
 use db::Database;
@@ -23,10 +23,10 @@ impl std::ops::Deref for SomeWrapper {
     }
 }
 
-fn verify_password(hash: &str, password: &str) -> Result<(), LoginError> {
+fn verify_password(hash: &str, password: &str) -> Result<(), LoginResponseError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
         true => Ok(()),
-        false => Err(LoginError::InvalidPassword),
+        false => Err(LoginResponseError::InvalidPassword),
     }
 }
 
@@ -36,11 +36,11 @@ pub async fn login(
     token_store: Data<dyn TokenStore>,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
-) -> Result<Json<LoginResponse>, LoginError> {
+) -> Result<Json<LoginResponse>, LoginResponseError> {
     let user = db
         .get_user_by_email(&request.email)
         .await?
-        .ok_or(LoginError::UserNotFound)?;
+        .ok_or(LoginResponseError::UserNotFound)?;
     verify_password(&user.password_hash, &request.password)?;
     let refresh_token =
         Token::new_refresh_token(&app_data.refresh_key, &user.id, &request.user_agent);
@@ -48,7 +48,7 @@ pub async fn login(
     token_store
         .add(&refresh_token)
         .await
-        .map_err(|err| LoginError::InternalError(err.to_string()))?;
+        .map_err(|err| LoginResponseError::InternalError(err.to_string()))?;
 
     let response = LoginResponse::Ok(LoginResponseBody {
         refresh_token,
@@ -186,7 +186,7 @@ mod tests {
         );
         let response: LoginResponse = test::read_body_json(response).await;
         match response {
-            Err(LoginError::InvalidPassword) => (),
+            LoginResponse::Err(LoginResponseError::InvalidPassword) => (),
             _ => panic!("unexpected response returned: {:?}", response),
         }
     }
@@ -226,7 +226,7 @@ mod tests {
         );
         let response: LoginResponse = test::read_body_json(response).await;
         match response {
-            Err(LoginError::UserNotFound) => (),
+            LoginResponse::Err(LoginResponseError::UserNotFound) => (),
             _ => panic!("invalid response returned: {:?}", response),
         }
     }

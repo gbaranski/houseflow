@@ -9,11 +9,16 @@ pub struct LoginRequest {
     pub user_agent: UserAgent,
 }
 
-pub type LoginResponse = Result<LoginResponseBody, LoginError>;
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum LoginResponse {
+    Ok(LoginResponseBody),
+    Err(LoginResponseError)
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(tag = "error", content = "error_description")]
-pub enum LoginError {
+pub enum LoginResponseError {
     #[error("invalid password")]
     InvalidPassword,
 
@@ -32,7 +37,7 @@ pub struct LoginResponseBody {
 }
 
 #[cfg(feature = "db")]
-impl From<db::Error> for LoginError {
+impl From<db::Error> for LoginResponseError {
     fn from(v: db::Error) -> Self {
         Self::InternalError(v.to_string())
     }
@@ -40,7 +45,7 @@ impl From<db::Error> for LoginError {
 
 
 #[cfg(feature = "actix")]
-impl actix_web::ResponseError for LoginError {
+impl actix_web::ResponseError for LoginResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
 
