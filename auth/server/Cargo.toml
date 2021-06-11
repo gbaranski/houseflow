@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 auth-types   = { path = "../types"   , package = "houseflow-auth-types", features = [ "actix", "db" ] }
 types        = { path = "../../types", package = "houseflow-types" }
-token        = { path = "../../token", package = "houseflow-token", features = [ "store" ] }
+token        = { path = "../../token", package = "houseflow-token", features = [ "store", "actix" ] }
 db           = { path = "../../db"   , package = "houseflow-db" }
 
 tokio        = { version = "1.6.0", features = [ "macros", "rt-multi-thread" ] }

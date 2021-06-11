@@ -12,22 +12,14 @@ pub struct WhoamiResponseBody {
     pub email: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, thiserror::Error)]
+#[serde(tag = "error", content = "error_description")]
 pub enum WhoamiResponseError {
-    #[error("missing authorization header")]
-    MissingAuthorizationHeader,
+    #[error("decode token header error: {0}")]
+    DecodeHeaderError(#[from] token::DecodeHeaderError),
 
-    #[error("invalid header encoding: {0}")]
-    InvalidHeaderEncoding(String),
-
-    #[error("invalid header syntax")]
-    InvalidHeaderSyntax,
-
-    #[error("invalid header schema: {0}")]
-    InvalidHeaderSchema(String),
-
-    #[error("invalid token: {0}")]
-    InvalidToken(#[from] token::Error),
+    #[error("verify token error: {0}")]
+    VerifyError(#[from] token::VerifyError),
 
     #[error("token not found in store")]
     TokenNotInStore,
@@ -46,11 +38,8 @@ impl actix_web::ResponseError for WhoamiResponseError {
 
         match self {
             Self::UserNotFound => StatusCode::NOT_FOUND,
-            Self::MissingAuthorizationHeader => StatusCode::BAD_REQUEST,
-            Self::InvalidHeaderEncoding(_) => StatusCode::BAD_REQUEST,
-            Self::InvalidHeaderSyntax => StatusCode::BAD_REQUEST,
-            Self::InvalidHeaderSchema(_) => StatusCode::BAD_REQUEST,
-            Self::InvalidToken(_) => StatusCode::BAD_REQUEST,
+            Self::DecodeHeaderError(_) => StatusCode::BAD_REQUEST,
+            Self::VerifyError(_) => StatusCode::UNAUTHORIZED,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::TokenNotInStore => StatusCode::UNAUTHORIZED,
         }

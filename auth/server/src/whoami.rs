@@ -1,8 +1,7 @@
 use crate::AppData;
 use actix_web::{
-    get, http,
-    web::{Data, Json},
-    HttpRequest,
+    get,
+    web::{Data, HttpRequest, Json},
 };
 use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use db::Database;
@@ -11,30 +10,12 @@ use types::UserAgent;
 
 #[get("/whoami")]
 pub async fn whoami(
-    req: HttpRequest,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
+    req: HttpRequest,
 ) -> Result<Json<WhoamiResponse>, WhoamiResponseError> {
-    let authorization_header = req
-        .headers()
-        .get(http::header::AUTHORIZATION)
-        .ok_or(WhoamiResponseError::MissingAuthorizationHeader)?;
-
-    let (schema, token) = authorization_header
-        .to_str()
-        .map_err(|err| WhoamiResponseError::InvalidHeaderEncoding(err.to_string()))?
-        .split_once(' ')
-        .ok_or(WhoamiResponseError::InvalidHeaderSyntax)?;
-
-    if schema != "Bearer" {
-        return Err(WhoamiResponseError::InvalidHeaderSchema(schema.to_string()));
-    }
-    let token =
-        Token::from_str(token).map_err(|err| WhoamiResponseError::InvalidToken(err.into()))?;
-    token
-        .verify(&app_data.access_key, Some(&UserAgent::Internal))
-        .map_err(|err| WhoamiResponseError::InvalidToken(err.into()))?;
-
+    let token = Token::from_request(&req)?;
+    token.verify(&app_data.access_key, Some(&UserAgent::Internal))?;
     let user = db
         .get_user(token.user_id())
         .await
@@ -53,7 +34,7 @@ pub async fn whoami(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::{test, App, ResponseError};
+    use actix_web::{http, test, App, ResponseError};
     use types::User;
 
     use rand::random;
@@ -118,19 +99,17 @@ mod tests {
 
         let request = test::TestRequest::get().uri("/whoami").to_request();
         let response = test::call_service(&mut app, request).await;
+        const EXPECTED_ERROR: WhoamiResponseError =  WhoamiResponseError::DecodeHeaderError(token::DecodeHeaderError::MissingHeader);
 
         assert_eq!(
             response.status(),
-            WhoamiResponseError::MissingAuthorizationHeader.status_code(),
+            EXPECTED_ERROR.status_code(),
             "unexpected status: {}, body: {:?}",
             response.status(),
             test::read_body(response).await
         );
-        let response: WhoamiResponse = test::read_body_json(response).await;
-        match response {
-            WhoamiResponse::Err(WhoamiResponseError::MissingAuthorizationHeader) => (),
-            _ => panic!("unexpected response: {:?}", response),
-        };
+        let response: WhoamiResponseError = test::read_body_json(response).await;
+        assert_eq!(response, EXPECTED_ERROR);
     }
 
     #[actix_rt::test]
@@ -159,23 +138,16 @@ mod tests {
             ))
             .to_request();
         let response = test::call_service(&mut app, request).await;
+        const EXPECTED_ERROR: WhoamiResponseError =  WhoamiResponseError::VerifyError(token::VerifyError::InvalidSignature);
 
         assert_eq!(
             response.status(),
-            WhoamiResponseError::InvalidToken(token::Error::VerifyError(
-                token::VerifyError::InvalidSignature
-            ))
-            .status_code(),
+            EXPECTED_ERROR.status_code(),
             "unexpected status: {}, body: {:?}",
             response.status(),
             test::read_body(response).await
         );
-        let response: WhoamiResponse = test::read_body_json(response).await;
-        match response {
-            WhoamiResponse::Err(WhoamiResponseError::InvalidToken(token::Error::VerifyError(
-                token::VerifyError::InvalidSignature,
-            ))) => (),
-            _ => panic!("unexpected response: {:?}", response),
-        };
+        let response: WhoamiResponseError = test::read_body_json(response).await;
+        assert_eq!(response, EXPECTED_ERROR);
     }
 }

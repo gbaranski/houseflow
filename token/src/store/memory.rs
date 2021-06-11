@@ -1,9 +1,10 @@
 use super::{TokenStore, TokenStoreInternalError};
-use async_trait::async_trait;
 use crate::{Token, TokenID};
+use async_trait::async_trait;
+use tokio::sync::Mutex;
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -27,18 +28,22 @@ impl MemoryTokenStore {
 #[async_trait]
 impl TokenStore for MemoryTokenStore {
     async fn exists(&self, id: &TokenID) -> Result<bool, super::Error> {
-        Ok(self.store.lock().unwrap().contains_key(id))
+        Ok(self.store.lock().await.contains_key(id))
     }
 
     async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
-        Ok(self.store.lock().unwrap().get(id).map(|v| v.clone()))
+        Ok(self.store.lock().await.get(id).map(|v| v.clone()))
     }
 
     async fn add(&self, token: &Token) -> Result<(), super::Error> {
         self.store
             .lock()
-            .unwrap()
+            .await
             .insert(token.id().clone(), token.clone());
         Ok(())
+    }
+
+    async fn remove(&self, id: &TokenID) -> Result<bool, super::Error> {
+        Ok(self.store.lock().await.remove(id).is_some())
     }
 }

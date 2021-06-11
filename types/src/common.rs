@@ -45,7 +45,7 @@ impl<const N: usize> AsRef<[u8]> for Credential<N> {
     }
 }
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Clone, Error, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CredentialError {
     #[error("Invalid size, expected: {expected}, received: {received}")]

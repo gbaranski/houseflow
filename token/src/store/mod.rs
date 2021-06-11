@@ -28,5 +28,7 @@ pub trait TokenStore: Send + Sync {
 
     async fn get(&self, id: &TokenID) -> Result<Option<Token>, Error>;
 
+    async fn remove(&self, id: &TokenID) -> Result<bool, Error>;
+
     async fn add(&self, token: &Token) -> Result<(), Error>;
 }

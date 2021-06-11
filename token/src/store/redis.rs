@@ -35,6 +35,20 @@ impl TokenStore for RedisTokenStore {
             .await?)
     }
 
+    async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
+        let token: Option<String> = self.connection.lock().await.get(id.to_string()).await?;
+        let token: Option<Token> = match token.map(|token| Token::from_str(token.as_str())) {
+            Some(token) => Some(token?),
+            None => None,
+        };
+        Ok(token)
+    }
+
+    async fn remove(&self, id: &TokenID) -> Result<bool, super::Error> {
+        let removed: bool = self.connection.lock().await.del(id.to_string()).await?;
+        Ok(removed)
+    }
+
     async fn add(&self, token: &Token) -> Result<(), super::Error> {
         self.connection
             .lock()
@@ -43,14 +57,5 @@ impl TokenStore for RedisTokenStore {
             .await?;
 
         Ok(())
-    }
-
-    async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
-        let token: Option<String> = self.connection.lock().await.get(id.to_string()).await?;
-        let token: Option<Token> = match token.map(|token| Token::from_str(token.as_str())) {
-            Some(token) => Some(token?),
-            None => None,
-        };
-        Ok(token)
     }
 }

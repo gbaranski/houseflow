@@ -12,7 +12,7 @@ pub use token::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DecodeError {
     #[error("expected size: `{expected}`, received: `{received}`")]
@@ -34,9 +34,30 @@ pub enum DecodeError {
     InvalidEncoding(String),
 }
 
+
+#[cfg(feature = "actix")]
+#[derive(Clone, Debug, thiserror::Error, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum DecodeHeaderError {
+    #[error("decode error: {0}")]
+    DecodeError(#[from] DecodeError),
+
+    #[error("header is missing")]
+    MissingHeader,
+
+    #[error("invalid header encoding: {0}")]
+    InvalidEncoding(String),
+
+    #[error("invalid header value syntax")]
+    InvalidSyntax,
+
+    #[error("invalid header schema: {0}")]
+    InvalidSchema(String),
+}
+
 pub use types::UserAgent;
 
-#[derive(Debug, Clone, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum VerifyError {
     #[error("token is expired since:  `{date}`")]

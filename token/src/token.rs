@@ -1,5 +1,6 @@
 use crate::{
-    DecodeError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID, VerifyError,
+    DecodeError, DecodeHeaderError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID,
+    VerifyError,
 };
 use types::{UserAgent, UserID};
 
@@ -70,6 +71,25 @@ impl Token {
         user_agent: &UserAgent,
     ) -> Token {
         Self::new_token(key, user_id, user_agent, user_agent.access_token_duration())
+    }
+
+    #[cfg(feature = "actix")]
+    pub fn from_request(req: &actix_web::HttpRequest) -> Result<Self, DecodeHeaderError> {
+        let header_str = req
+            .headers()
+            .get(actix_web::http::header::AUTHORIZATION)
+            .ok_or(DecodeHeaderError::MissingHeader)?
+            .to_str()
+            .map_err(|err| DecodeHeaderError::InvalidEncoding(err.to_string()))?;
+
+        let (schema, token) = header_str
+            .split_once(' ')
+            .ok_or(DecodeHeaderError::InvalidSyntax)?;
+        if schema != "Bearer" {
+            return Err(DecodeHeaderError::InvalidSchema(schema.to_string()));
+        }
+        let token = Token::from_str(token)?;
+        Ok(token)
     }
 
     #[inline]

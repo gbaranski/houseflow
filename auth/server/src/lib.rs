@@ -35,8 +35,9 @@ pub(crate) fn config(
     cfg.data(app_data)
         .app_data(token_store)
         .app_data(database)
-        .service(auth::login)
-        .service(auth::register)
+        .service(auth::login::login)
+        .service(auth::register::register)
+        .service(auth::logout::logout)
         .service(whoami::whoami)
         .service(
             web::scope("/")
