@@ -1,6 +1,6 @@
 use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
-use token::store::MemoryTokenStore;
+use token::store::RedisTokenStore;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -19,7 +19,7 @@ impl ServerCommand for RunAuthCommand {
         use std::net::{SocketAddrV4, Ipv4Addr};
 
         let address = SocketAddrV4::new(Ipv4Addr::new(127,0,0,1), config.auth.port);
-        let token_store = MemoryTokenStore::new();
+        let token_store = RedisTokenStore::new().await?;
         let database = db::MemoryDatabase::new();
         let app_data = auth_server::AppData {
             refresh_key: config.refresh_key.into(),
