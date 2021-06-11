@@ -11,49 +11,6 @@ use crate::Target;
 use anyhow::Context;
 use indoc::indoc;
 use serde::{Deserialize, Serialize};
-use strum_macros::EnumString;
-
-#[derive(Clone, Debug, Serialize, Deserialize, EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum LogLevel {
-    /// A level lower than all log levels.
-    Off,
-
-    /// Corresponds to the `Error` log level.
-    Error,
-
-    /// Corresponds to the `Warn` log level.
-    Warn,
-
-    /// Corresponds to the `Info` log level.
-    Info,
-
-    /// Corresponds to the `Debug` log level.
-    Debug,
-
-    /// Corresponds to the `Trace` log level.
-    Trace,
-}
-
-impl Into<log::LevelFilter> for LogLevel {
-    fn into(self) -> log::LevelFilter {
-        use log::LevelFilter;
-        match self {
-            LogLevel::Off => LevelFilter::Off,
-            LogLevel::Error => LevelFilter::Error,
-            LogLevel::Warn => LevelFilter::Warn,
-            LogLevel::Info => LevelFilter::Info,
-            LogLevel::Debug => LevelFilter::Debug,
-            LogLevel::Trace => LevelFilter::Trace,
-        }
-    }
-}
-
-impl Default for LogLevel {
-    fn default() -> Self {
-        Self::Info
-    }
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {

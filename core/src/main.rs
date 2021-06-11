@@ -7,7 +7,7 @@ mod cli;
 mod config;
 mod run;
 
-use config::{CliConfig, ClientConfig, Config, ConfigCommand, LogLevel, ServerConfig, Subcommand};
+use config::{CliConfig, ClientConfig, Config, ConfigCommand, ServerConfig, Subcommand};
 use strum_macros::{EnumIter, EnumString};
 
 #[derive(Clone, Debug, EnumString, strum_macros::Display, EnumIter)]
@@ -49,21 +49,10 @@ pub trait SetupCommand {
     async fn run(&self) -> anyhow::Result<()>;
 }
 
-fn setup_logging(log_level: &LogLevel) {
-    use simplelog::{ColorChoice, LevelFilter, TermLogger, TerminalMode};
-    let level_filter: LevelFilter = log_level.clone().into();
-
-    TermLogger::init(
-        level_filter,
-        simplelog::Config::default(),
-        TerminalMode::Mixed,
-        ColorChoice::Auto,
-    )
-    .unwrap();
-}
-
 fn main() -> anyhow::Result<()> {
     use clap::Clap;
+    
+    pretty_env_logger::init();
 
     let cli_config = CliConfig::parse();
     actix_rt::System::with_tokio_rt(|| {
@@ -75,17 +64,14 @@ fn main() -> anyhow::Result<()> {
     .block_on(async {
         match cli_config.subcommand {
             Subcommand::Setup(cmd) => {
-                setup_logging(&LogLevel::Info);
                 cmd.run().await
             }
             Subcommand::Client(cmd) => {
                 let config = config::read_files()?;
-                setup_logging(&config.client.log_level);
                 cmd.run(config.client).await
             }
             Subcommand::Server(cmd) => {
                 let config = config::read_files()?;
-                setup_logging(&config.server.log_level);
                 cmd.run(config.server).await
             }
         }

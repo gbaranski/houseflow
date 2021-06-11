@@ -1,13 +1,9 @@
 use serde::{Deserialize, Serialize};
-use crate::LogLevel;
 use std::path::PathBuf;
 use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ClientConfig {
-    #[serde(default)]
-    pub log_level: LogLevel,
-
     /// Path to keystore, used to store persistant sessions
     /// Default: $XDG_DATA_HOME/houseflow/keystore
     #[serde(default = "default_keystore_path")]

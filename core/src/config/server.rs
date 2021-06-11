@@ -1,11 +1,7 @@
-use crate::LogLevel;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ServerConfig {
-    #[serde(default)]
-    pub log_level: LogLevel,
-
     /// Key used to sign refresh tokens. Must be secret and should be farily random.
     pub refresh_key: String,
 
