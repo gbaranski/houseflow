@@ -189,11 +189,10 @@ mod tests {
             .to_request();
         let response = test::call_service(&mut app, request).await;
         assert_eq!(response.status(), 400);
-        dbg!(test::read_body(response).await);
-        // let response_body: AccessTokenResponseError = test::read_body_json(response).await;
-        // match response_body {
-        //     AccessTokenResponseError::InvalidGrant(_) => (),
-        //     _ => panic!("unexpected error received: {:?}", response_body)
-        // }
+        let response_body: AccessTokenResponseError = test::read_body_json(response).await;
+        match response_body {
+            AccessTokenResponseError::InvalidGrant(_) => (),
+            _ => panic!("unexpected error received: {:?}", response_body)
+        }
     }
 }
