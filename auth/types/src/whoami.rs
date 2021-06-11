@@ -3,7 +3,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WhoamiRequest {}
 
-pub type WhoamiResponse = Result<WhoamiResponseBody, WhoamiError>;
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum WhoamiResponse {
+    Ok(WhoamiResponseBody),
+    Err(WhoamiResponseError)
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WhoamiResponseBody {
@@ -12,7 +17,7 @@ pub struct WhoamiResponseBody {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-pub enum WhoamiError {
+pub enum WhoamiResponseError {
     #[error("missing authorization header")]
     MissingAuthorizationHeader,
 
@@ -39,7 +44,7 @@ pub enum WhoamiError {
 }
 
 #[cfg(feature = "actix")]
-impl actix_web::ResponseError for WhoamiError {
+impl actix_web::ResponseError for WhoamiResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
 

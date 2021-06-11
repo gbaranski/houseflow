@@ -4,7 +4,7 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use auth_types::{WhoamiError, WhoamiResponse, WhoamiResponseBody};
+use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use db::Database;
 use token::Token;
 use types::UserAgent;
@@ -14,31 +14,32 @@ pub async fn whoami(
     req: HttpRequest,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
-) -> Result<Json<WhoamiResponse>, WhoamiError> {
+) -> Result<Json<WhoamiResponse>, WhoamiResponseError> {
     let authorization_header = req
         .headers()
         .get(http::header::AUTHORIZATION)
-        .ok_or(WhoamiError::MissingAuthorizationHeader)?;
+        .ok_or(WhoamiResponseError::MissingAuthorizationHeader)?;
 
     let (schema, token) = authorization_header
         .to_str()
-        .map_err(|err| WhoamiError::InvalidHeaderEncoding(err.to_string()))?
+        .map_err(|err| WhoamiResponseError::InvalidHeaderEncoding(err.to_string()))?
         .split_once(' ')
-        .ok_or(WhoamiError::InvalidHeaderSyntax)?;
+        .ok_or(WhoamiResponseError::InvalidHeaderSyntax)?;
 
     if schema != "Bearer" {
-        return Err(WhoamiError::InvalidHeaderSchema(schema.to_string()));
+        return Err(WhoamiResponseError::InvalidHeaderSchema(schema.to_string()));
     }
-    let token = Token::from_str(token).map_err(|err| WhoamiError::InvalidToken(err.into()))?;
+    let token =
+        Token::from_str(token).map_err(|err| WhoamiResponseError::InvalidToken(err.into()))?;
     token
         .verify(&app_data.access_key, Some(&UserAgent::Internal))
-        .map_err(|err| WhoamiError::InvalidToken(err.into()))?;
+        .map_err(|err| WhoamiResponseError::InvalidToken(err.into()))?;
 
     let user = db
         .get_user(token.user_id())
         .await
-        .map_err(|err| WhoamiError::InternalError(err.to_string()))?
-        .ok_or(WhoamiError::UserNotFound)?;
+        .map_err(|err| WhoamiResponseError::InternalError(err.to_string()))?
+        .ok_or(WhoamiResponseError::UserNotFound)?;
 
     let response = WhoamiResponseBody {
         username: user.username,
@@ -91,13 +92,12 @@ mod tests {
         );
         let response: WhoamiResponse = test::read_body_json(response).await;
         let response = match response {
-            Ok(response) => response,
-            Err(err) => panic!("unexpected error: {}", err),
+            WhoamiResponse::Ok(response) => response,
+            WhoamiResponse::Err(err) => panic!("unexpected error: {}", err),
         };
         assert_eq!(user.email, response.email);
         assert_eq!(user.username, response.username);
     }
-
 
     #[actix_rt::test]
     async fn missing_header() {
@@ -121,14 +121,14 @@ mod tests {
 
         assert_eq!(
             response.status(),
-            WhoamiError::MissingAuthorizationHeader.status_code(),
+            WhoamiResponseError::MissingAuthorizationHeader.status_code(),
             "unexpected status: {}, body: {:?}",
             response.status(),
             test::read_body(response).await
         );
         let response: WhoamiResponse = test::read_body_json(response).await;
         match response {
-            Err(WhoamiError::MissingAuthorizationHeader) => (),
+            WhoamiResponse::Err(WhoamiResponseError::MissingAuthorizationHeader) => (),
             _ => panic!("unexpected response: {:?}", response),
         };
     }
@@ -162,7 +162,7 @@ mod tests {
 
         assert_eq!(
             response.status(),
-            WhoamiError::InvalidToken(token::Error::VerifyError(
+            WhoamiResponseError::InvalidToken(token::Error::VerifyError(
                 token::VerifyError::InvalidSignature
             ))
             .status_code(),
@@ -172,7 +172,7 @@ mod tests {
         );
         let response: WhoamiResponse = test::read_body_json(response).await;
         match response {
-            Err(WhoamiError::InvalidToken(token::Error::VerifyError(
+            WhoamiResponse::Err(WhoamiResponseError::InvalidToken(token::Error::VerifyError(
                 token::VerifyError::InvalidSignature,
             ))) => (),
             _ => panic!("unexpected response: {:?}", response),
