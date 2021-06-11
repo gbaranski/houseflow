@@ -5,7 +5,7 @@ use actix_web::{
     web::{Data, Json},
 };
 use auth_types::{
-    LoginResponseError, LoginRequest, LoginResponse, LoginResponseBody, RegisterError, RegisterRequest,
+    LoginResponseError, LoginRequest, LoginResponse, LoginResponseBody, RegisterResponseError, RegisterRequest,
     RegisterResponse, RegisterResponseBody,
 };
 use db::Database;
@@ -62,7 +62,7 @@ pub async fn register(
     request: Json<RegisterRequest>,
     app_data: Data<AppData>,
     db: Data<dyn Database>,
-) -> Result<Json<RegisterResponse>, RegisterError> {
+) -> Result<Json<RegisterResponse>, RegisterResponseError> {
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
         &app_data.password_salt,
@@ -257,17 +257,13 @@ mod tests {
             "status is not succesfull, body: {:?}",
             test::read_body(response).await
         );
-        let response: RegisterResponse = test::read_body_json(response).await;
-        let user_id = match response {
-            Ok(response) => response.user_id,
-            Err(err) => panic!("received unexpected error: {:?}", err),
-        };
+        let response: RegisterResponseBody = test::read_body_json(response).await;
         let db_user = database
             .get_user_by_email(&request_body.email)
             .await
             .unwrap()
             .expect("user not found in database");
-        assert_eq!(db_user.id, user_id);
+        assert_eq!(db_user.id, response.user_id);
         assert_eq!(db_user.username, request_body.username);
         assert_eq!(db_user.email, request_body.email);
         assert!(verify_password(&db_user.password_hash, PASSWORD).is_ok());

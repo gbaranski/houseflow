@@ -57,7 +57,7 @@ impl ClientCommand for RegisterCommand {
         username,
     };
 
-    auth.register(register_request).await??;
+    auth.register(register_request).await?.into_result()?;
     log::info!("✔ Created new account");
 
     Ok(())

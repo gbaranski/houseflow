@@ -1,24 +1,10 @@
 use serde::{Deserialize, Serialize};
+use super::ResultTagged;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WhoamiRequest {}
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(tag = "status", rename_all = "snake_case")]
-pub enum WhoamiResponse {
-    Ok(WhoamiResponseBody),
-    Err(WhoamiResponseError)
-}
-
-impl WhoamiResponse {
-    pub fn into_result(self) -> Result<WhoamiResponseBody, WhoamiResponseError> {
-        match self {
-            Self::Ok(body) => Ok(body),
-            Self::Err(err) => Err(err),
-        }
-    }
-}
-
+pub type WhoamiResponse = ResultTagged<WhoamiResponseBody, WhoamiResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WhoamiResponseBody {

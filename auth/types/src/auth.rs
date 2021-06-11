@@ -1,4 +1,5 @@
 use token::Token;
+use super::ResultTagged;
 use types::{UserAgent, UserID};
 use serde::{Deserialize, Serialize};
 
@@ -9,21 +10,7 @@ pub struct LoginRequest {
     pub user_agent: UserAgent,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(tag = "status", rename_all = "snake_case")]
-pub enum LoginResponse {
-    Ok(LoginResponseBody),
-    Err(LoginResponseError)
-}
-
-impl LoginResponse {
-    pub fn into_result(self) -> Result<LoginResponseBody, LoginResponseError> {
-        match self {
-            Self::Ok(body) => Ok(body),
-            Self::Err(err) => Err(err),
-        }
-    }
-}
+pub type LoginResponse = ResultTagged<LoginResponseBody, LoginResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(tag = "error", content = "error_description")]
@@ -84,10 +71,10 @@ pub struct RegisterRequest {
     pub password: String,
 }
 
-pub type RegisterResponse = Result<RegisterResponseBody, RegisterError>;
+pub type RegisterResponse = ResultTagged<RegisterResponseBody, RegisterResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-pub enum RegisterError {
+pub enum RegisterResponseError {
     #[error("internal error: `{0}`")]
     // Replace it with better type if needed
     InternalError(String),
@@ -99,7 +86,7 @@ pub struct RegisterResponseBody {
 }
 
 #[cfg(feature = "db")]
-impl From<db::Error> for RegisterError {
+impl From<db::Error> for RegisterResponseError {
     fn from(v: db::Error) -> Self {
         Self::InternalError(v.to_string())
     }
@@ -107,7 +94,7 @@ impl From<db::Error> for RegisterError {
 
 
 #[cfg(feature = "actix")]
-impl actix_web::ResponseError for RegisterError {
+impl actix_web::ResponseError for RegisterResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
 

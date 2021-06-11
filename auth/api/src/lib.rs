@@ -1,6 +1,6 @@
 use auth_types::{
     AccessTokenResponseError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginResponseError, LoginRequest,
-    LoginResponse, RegisterError, RegisterRequest, RegisterResponse, WhoamiResponse
+    LoginResponse, RegisterResponseError, RegisterRequest, RegisterResponse, WhoamiResponse
 };
 use token::Token;
 use reqwest::Client;
@@ -55,7 +55,7 @@ pub enum Error {
     NotLoggedIn,
 
     #[error("registration failed: `{0}`")]
-    RegisterError(#[from] RegisterError),
+    RegisterError(#[from] RegisterResponseError),
 
     #[error("login failed: `{0}`")]
     LoginError(#[from] LoginResponseError),
