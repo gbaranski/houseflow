@@ -1,7 +1,7 @@
 use crate::{ClientCommand, ClientConfig};
 use async_trait::async_trait;
 use auth_api::{Auth, KeystoreConfig};
-use auth_types::{WhoamiError, WhoamiResponseBody};
+use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use token::Token;
 
 use clap::Clap;
@@ -39,7 +39,7 @@ impl StatusCommand {
         );
     }
 
-    fn error(&self, error: WhoamiError) {
+    fn error(&self, error: WhoamiResponseError) {
         println!("❌ Error: {}", error);
     }
 }
@@ -62,11 +62,15 @@ impl ClientCommand for StatusCommand {
                 }
             }
         };
-        let access_token = auth.fetch_access_token(&refresh_token).await??.access_token;
+        let access_token = auth
+            .fetch_access_token(&refresh_token)
+            .await?
+            .into_result()?
+            .access_token;
 
         match auth.whoami(&access_token).await? {
-            Ok(response) => self.logged_in(cfg, response, access_token),
-            Err(err) => self.error(err),
+            WhoamiResponse::Ok(response) => self.logged_in(cfg, response, access_token),
+            WhoamiResponse::Err(err) => self.error(err),
         };
         Ok(())
     }

@@ -16,8 +16,8 @@ pub struct LoginCommand {
 #[async_trait(?Send)]
 impl ClientCommand for LoginCommand {
     async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
-        use dialoguer::{Input, Password};
         use auth_types::LoginRequest;
+        use dialoguer::{Input, Password};
         use types::UserAgent;
 
         let auth = Auth {
@@ -48,7 +48,7 @@ impl ClientCommand for LoginCommand {
             user_agent: UserAgent::Internal,
         };
 
-        let login_response = auth.login(login_request.clone()).await??;
+        let login_response = auth.login(login_request.clone()).await?.into_result()?;
         log::info!("✔ Logged in as {}", login_request.email);
         auth.save_refresh_token(&login_response.refresh_token)
             .await?;

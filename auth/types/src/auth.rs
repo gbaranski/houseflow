@@ -16,6 +16,15 @@ pub enum LoginResponse {
     Err(LoginResponseError)
 }
 
+impl LoginResponse {
+    pub fn into_result(self) -> Result<LoginResponseBody, LoginResponseError> {
+        match self {
+            Self::Ok(body) => Ok(body),
+            Self::Err(err) => Err(err),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(tag = "error", content = "error_description")]
 pub enum LoginResponseError {

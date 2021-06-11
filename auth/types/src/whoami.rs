@@ -10,6 +10,16 @@ pub enum WhoamiResponse {
     Err(WhoamiResponseError)
 }
 
+impl WhoamiResponse {
+    pub fn into_result(self) -> Result<WhoamiResponseBody, WhoamiResponseError> {
+        match self {
+            Self::Ok(body) => Ok(body),
+            Self::Err(err) => Err(err),
+        }
+    }
+}
+
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WhoamiResponseBody {
     pub username: String,

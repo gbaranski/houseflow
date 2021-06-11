@@ -30,6 +30,15 @@ pub enum AccessTokenResponse {
     Err(AccessTokenResponseError)
 }
 
+impl AccessTokenResponse {
+    pub fn into_result(self) -> Result<AccessTokenResponseBody, AccessTokenResponseError> {
+        match self {
+            Self::Ok(body) => Ok(body),
+            Self::Err(err) => Err(err),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AccessTokenResponseBody {
     /// The access token string as issued by the authorization server.

@@ -1,5 +1,5 @@
 use auth_types::{
-    AccessTokenError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginError, LoginRequest,
+    AccessTokenResponseError, AccessTokenRequest, AccessTokenResponse, GrantType, LoginResponseError, LoginRequest,
     LoginResponse, RegisterError, RegisterRequest, RegisterResponse, WhoamiResponse
 };
 use token::Token;
@@ -49,7 +49,7 @@ pub enum Error {
     ReqwestError(#[from] reqwest::Error),
 
     #[error("refreshing access token failed with: `{0}`")]
-    RefreshAccessTokenError(#[from] AccessTokenError),
+    RefreshAccessTokenError(#[from] AccessTokenResponseError),
 
     #[error("not logged in")]
     NotLoggedIn,
@@ -58,7 +58,7 @@ pub enum Error {
     RegisterError(#[from] RegisterError),
 
     #[error("login failed: `{0}`")]
-    LoginError(#[from] LoginError),
+    LoginError(#[from] LoginResponseError),
 
     #[cfg(any(feature = "keystore", test))]
     #[error("keystore error: `{0}`")]
