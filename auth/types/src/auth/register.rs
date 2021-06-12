@@ -1,11 +1,16 @@
 use crate::ResultTagged;
 use serde::{Deserialize, Serialize};
 use types::UserID;
+use validator::Validate;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 pub struct RegisterRequest {
+    #[validate(email)]
     pub email: String,
+
     pub username: String,
+
+    #[validate(length(min = 8))]
     pub password: String,
 }
 
@@ -21,6 +26,24 @@ pub enum RegisterResponseError {
     #[error("internal error: `{0}`")]
     // Replace it with better type if needed
     InternalError(String),
+
+    #[error("{0}")]
+    ValidationError(#[from] validator::ValidationError),
+}
+
+impl From<validator::ValidationErrors> for RegisterResponseError {
+    fn from(val: validator::ValidationErrors) -> Self {
+        Self::ValidationError(
+            val.field_errors()
+                .iter()
+                .next()
+                .unwrap()
+                .1
+                .first()
+                .unwrap()
+                .clone(),
+        )
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -42,6 +65,7 @@ impl actix_web::ResponseError for RegisterResponseError {
 
         match self {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
         }
     }
 

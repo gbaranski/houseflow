@@ -2,11 +2,16 @@ use crate::ResultTagged;
 use serde::{Deserialize, Serialize};
 use token::Token;
 use types::UserAgent;
+use validator::Validate;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 pub struct LoginRequest {
+    #[validate(email)]
     pub email: String,
+
+    #[validate(length(min = 8))]
     pub password: String,
+
     pub user_agent: UserAgent,
 }
 
@@ -25,9 +30,27 @@ pub enum LoginResponseError {
     #[error("user not found")]
     UserNotFound,
 
+    #[error("validation error: {0}")]
+    ValidationError(#[from] validator::ValidationError),
+
     #[error("internal error: `{0}`")]
     // Replace it with better type if needed
     InternalError(String),
+}
+
+impl From<validator::ValidationErrors> for LoginResponseError {
+    fn from(val: validator::ValidationErrors) -> Self {
+        Self::ValidationError(
+            val.field_errors()
+                .iter()
+                .next()
+                .unwrap()
+                .1
+                .first()
+                .unwrap()
+                .clone(),
+        )
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -51,6 +74,7 @@ impl actix_web::ResponseError for LoginResponseError {
         match self {
             Self::InvalidPassword => StatusCode::BAD_REQUEST,
             Self::UserNotFound => StatusCode::NOT_FOUND,
+            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

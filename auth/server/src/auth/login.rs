@@ -23,6 +23,8 @@ pub async fn login(
     app_data: Data<AppData>,
     db: Data<dyn Database>,
 ) -> Result<Json<LoginResponse>, LoginResponseError> {
+    validator::Validate::validate(&request.0)?;
+
     let user = db
         .get_user_by_email(&request.email)
         .await?

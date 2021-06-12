@@ -14,6 +14,8 @@ pub async fn register(
     app_data: Data<AppData>,
     db: Data<dyn Database>,
 ) -> Result<Json<RegisterResponse>, RegisterResponseError> {
+    validator::Validate::validate(&request.0)?;
+
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
         &app_data.password_salt,
