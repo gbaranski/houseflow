@@ -29,6 +29,9 @@ pub enum RegisterResponseError {
 
     #[error("{0}")]
     ValidationError(#[from] validator::ValidationError),
+
+    #[error("User already exists")]
+    UserAlreadyExists,
 }
 
 impl From<validator::ValidationErrors> for RegisterResponseError {
@@ -64,6 +67,7 @@ impl actix_web::ResponseError for RegisterResponseError {
         use actix_web::http::StatusCode;
 
         match self {
+            Self::UserAlreadyExists => StatusCode::BAD_REQUEST,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
         }

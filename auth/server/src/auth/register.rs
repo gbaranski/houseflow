@@ -29,7 +29,10 @@ pub async fn register(
         email: request.email.clone(),
         password_hash,
     };
-    db.add_user(&new_user).await?;
+    db.add_user(&new_user).await.map_err(|err| match err {
+        db::Error::AlreadyExists => RegisterResponseError::UserAlreadyExists,
+        _ => err.into(),
+    })?;
 
     let response = RegisterResponse::Ok(RegisterResponseBody {
         user_id: new_user.id,
