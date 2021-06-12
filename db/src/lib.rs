@@ -14,6 +14,9 @@ pub enum Error {
 
     #[error("Query did not modify anything")]
     NotModified,
+
+    #[error("Row already exists")]
+    AlreadyExists,
 }
 
 impl<T: DatabaseInternalError + 'static> From<T> for Error {

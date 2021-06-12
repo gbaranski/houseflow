@@ -143,14 +143,41 @@ impl Database for PostgresDatabase {
     }
 
     async fn add_user(&self, user: &User) -> Result<(), Error> {
-        const QUERY: &str = "
+        let connection = self.pool.get().await?;
+        let check_exists_statement = connection.prepare(
+            r#"
+            SELECT 1
+            FROM users 
+            WHERE email = $1
+            OR username = $2
+            "#,
+        );
+
+        let insert_statement = connection.prepare(
+            r#"
             INSERT INTO users(id, username, email, password_hash) 
             VALUES ($1, $2, $3, $4)
-        ";
-        let connection = self.pool.get().await?;
+            "#,
+        );
+
+        let (check_exists_statement, insert_statement) =
+            tokio::join!(check_exists_statement, insert_statement);
+
+        let (check_exists_statement, insert_statement) =
+            (check_exists_statement?, insert_statement?);
+
+        let exists = connection
+            .query_opt(&check_exists_statement, &[&user.email, &user.username])
+            .await?
+            .is_some();
+
+        if exists {
+            return Err(Error::AlreadyExists);
+        }
+
         let n = connection
             .execute(
-                QUERY,
+                &insert_statement,
                 &[&user.id, &user.username, &user.email, &user.password_hash],
             )
             .await?;
