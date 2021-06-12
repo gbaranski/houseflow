@@ -13,6 +13,9 @@ pub struct ServerConfig {
 
     /// Configuration of the lighthouse service
     pub lighthouse: LighthouseServerConfig,
+
+    /// Configuration of the fulfillment service
+    pub fulfillment: FulfillmentServerConfig,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -30,10 +33,21 @@ pub struct LighthouseServerConfig {
     pub port: u16,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct FulfillmentServerConfig {
+    #[serde(default = "default_fulfillment_port")]
+    pub port: u16,
+}
+
+
+const fn default_auth_port() -> u16 {
+    6001
+}
+
 const fn default_lighthouse_port() -> u16 {
     6002
 }
 
-const fn default_auth_port() -> u16 {
-    6001
+const fn default_fulfillment_port() -> u16 {
+    6003
 }

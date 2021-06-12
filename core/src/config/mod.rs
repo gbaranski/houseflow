@@ -75,6 +75,9 @@ fn generate_config_string(target: &Target) -> String {
 
                     # Configuration of the Lighthouse service
                     [lighthouse]
+
+                    # Configuration of the Fulfillment service
+                    [fulfillment]
                 "#},
                 refresh_key, access_key, password_salt
             )

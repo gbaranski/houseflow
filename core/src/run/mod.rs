@@ -3,8 +3,10 @@ use async_trait::async_trait;
 
 use auth::RunAuthCommand;
 use lighthouse::RunLighthouseCommand;
+use fulfillment::RunFulfillmentCommand;
 mod auth;
 mod lighthouse;
+mod fulfillment;
 
 use clap::Clap;
 
@@ -12,6 +14,7 @@ use clap::Clap;
 pub enum Service {
     Auth(RunAuthCommand),
     Lighthouse(RunLighthouseCommand),
+    Fulfillment(RunFulfillmentCommand),
 }
 
 #[derive(Clap)]
@@ -26,6 +29,7 @@ impl ServerCommand for RunCommand {
         match &self.service {
             Service::Auth(cmd) => cmd.run(cfg).await,
             Service::Lighthouse(cmd) => cmd.run(cfg).await,
+            Service::Fulfillment(cmd) => cmd.run(cfg).await,
         }
     }
 }
