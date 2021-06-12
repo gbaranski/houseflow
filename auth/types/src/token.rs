@@ -1,4 +1,4 @@
-use super::ResultUntagged;
+use types::ResultUntagged;
 use std::time::Duration;
 use token::Token;
 

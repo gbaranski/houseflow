@@ -1,4 +1,4 @@
-use super::ResultTagged;
+use types::ResultTagged;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

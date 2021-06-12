@@ -1,4 +1,4 @@
-use crate::ResultTagged;
+use types::ResultTagged;
 use serde::{Deserialize, Serialize};
 use types::UserID;
 use validator::Validate;
