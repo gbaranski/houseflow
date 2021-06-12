@@ -4,7 +4,13 @@ use async_trait::async_trait;
 use clap::Clap;
 
 #[derive(Clap)]
-pub enum ConfigCommand {
+pub struct ConfigCommand {
+    #[clap(subcommand)]
+    pub subcommand: ConfigSubcommand,
+}
+
+#[derive(Clap)]
+pub enum ConfigSubcommand {
     /// Generates a new configuration for specified targets, if none specified then it will generate for all targets.
     Generate(ConfigGenerateCommand),
 }
@@ -12,8 +18,8 @@ pub enum ConfigCommand {
 #[async_trait(?Send)]
 impl SetupCommand for ConfigCommand {
     async fn run(&self) -> anyhow::Result<()> {
-        match self {
-            Self::Generate(cmd) => cmd.run().await,
+        match &self.subcommand {
+            ConfigSubcommand::Generate(cmd) => cmd.run().await,
         }
     }
 }

@@ -6,11 +6,11 @@ use clap::Clap;
 
 #[derive(Clap)]
 pub struct RegisterCommand {
-    /// Email used to register, if not defined it will ask at runtime
-    pub email: Option<String>,
-
     /// Username used to register, if not defined it will ask at runtime
     pub username: Option<String>,
+
+    /// Email used to register, if not defined it will ask at runtime
+    pub email: Option<String>,
 
     /// Password used to register, if not defined it will ask at runtime
     pub password: Option<String>,
