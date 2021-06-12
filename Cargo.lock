@@ -1023,7 +1023,7 @@ dependencies = [
  "houseflow-auth-server",
  "houseflow-auth-types",
  "houseflow-db",
- "houseflow-lighthouse-broker",
+ "houseflow-lighthouse-server",
  "houseflow-token",
  "houseflow-types",
  "indoc",
@@ -1184,27 +1184,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "houseflow-lighthouse-broker"
-version = "0.1.0"
-dependencies = [
- "actix",
- "actix-service",
- "actix-web",
- "actix-web-actors",
- "bytes",
- "env_logger",
- "houseflow-lighthouse-proto",
- "houseflow-lighthouse-types",
- "houseflow-types",
- "itertools",
- "log",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
-]
-
-[[package]]
 name = "houseflow-lighthouse-macros"
 version = "0.1.0"
 dependencies = [
@@ -1224,6 +1203,27 @@ dependencies = [
  "serde_json",
  "strum 0.20.0",
  "strum_macros 0.20.1",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "houseflow-lighthouse-server"
+version = "0.1.0"
+dependencies = [
+ "actix",
+ "actix-service",
+ "actix-web",
+ "actix-web-actors",
+ "bytes",
+ "env_logger",
+ "houseflow-lighthouse-proto",
+ "houseflow-lighthouse-types",
+ "houseflow-types",
+ "itertools",
+ "log",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
 ]

@@ -5,7 +5,7 @@ members = [
   "fulfillment/types",
 
   "lighthouse/proto",
-  "lighthouse/broker",
+  "lighthouse/server",
   "lighthouse/api",
   "lighthouse/types",
   "lighthouse/macros",
