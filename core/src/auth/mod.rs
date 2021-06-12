@@ -2,6 +2,7 @@ use crate::{ClientCommand, ClientCommandState};
 use async_trait::async_trait;
 
 use login::LoginCommand;
+use logout::LogoutCommand;
 use register::RegisterCommand;
 use status::StatusCommand;
 
@@ -15,13 +16,16 @@ use clap::Clap;
 #[derive(Clap)]
 pub struct AuthCommand {
     #[clap(subcommand)]
-    pub subcommand: AuthSubcommand
+    pub subcommand: AuthSubcommand,
 }
 
 #[derive(Clap)]
 pub enum AuthSubcommand {
     /// Log in to existing Houseflow account
     Login(LoginCommand),
+
+    /// Logout from currently logged account
+    Logout(LogoutCommand),
 
     /// Register a new Houseflow account
     Register(RegisterCommand),
@@ -37,6 +41,7 @@ impl ClientCommand for AuthCommand {
             AuthSubcommand::Login(cmd) => cmd.run(state).await,
             AuthSubcommand::Register(cmd) => cmd.run(state).await,
             AuthSubcommand::Status(cmd) => cmd.run(state).await,
+            AuthSubcommand::Logout(cmd) => cmd.run(state).await,
         }
     }
 }
