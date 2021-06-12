@@ -19,7 +19,7 @@ pub enum ResultUntagged<T, E> {
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum ResultTagged<T, E> {
     Ok(T),
-    Err(E)
+    Err(E),
 }
 
 impl<T, E> ResultTagged<T, E> {
@@ -31,7 +31,6 @@ impl<T, E> ResultTagged<T, E> {
     }
 }
 
-
 impl<T, E> ResultUntagged<T, E> {
     pub fn into_result(self) -> Result<T, E> {
         match self {
@@ -40,4 +39,3 @@ impl<T, E> ResultUntagged<T, E> {
         }
     }
 }
-

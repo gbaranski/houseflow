@@ -1,7 +1,7 @@
-use token::Token;
 use crate::ResultTagged;
-use types::UserAgent;
 use serde::{Deserialize, Serialize};
+use token::Token;
+use types::UserAgent;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LoginRequest {
@@ -13,7 +13,11 @@ pub struct LoginRequest {
 pub type LoginResponse = ResultTagged<LoginResponseBody, LoginResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-#[serde(tag = "error", content = "error_description", rename_all = "snake_case")]
+#[serde(
+    tag = "error",
+    content = "error_description",
+    rename_all = "snake_case"
+)]
 pub enum LoginResponseError {
     #[error("invalid password")]
     InvalidPassword,
@@ -38,7 +42,6 @@ impl From<db::Error> for LoginResponseError {
         Self::InternalError(v.to_string())
     }
 }
-
 
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for LoginResponseError {

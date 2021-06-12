@@ -3,9 +3,7 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use auth_types::{
-    LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError,
-};
+use auth_types::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError};
 use db::Database;
 
 use token::store::TokenStore;
@@ -17,7 +15,6 @@ fn verify_password(hash: &str, password: &str) -> Result<(), auth_types::LoginRe
         false => Err(auth_types::LoginResponseError::InvalidPassword),
     }
 }
-
 
 #[post("/login")]
 pub async fn login(
@@ -45,7 +42,6 @@ pub async fn login(
     });
     Ok(Json(response))
 }
-
 
 #[cfg(test)]
 mod tests {

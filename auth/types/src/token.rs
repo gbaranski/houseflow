@@ -1,6 +1,6 @@
 use super::ResultUntagged;
-use token::Token;
 use std::time::Duration;
+use token::Token;
 
 use serde::{Deserialize, Serialize};
 
@@ -40,7 +40,11 @@ pub struct AccessTokenResponseBody {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, thiserror::Error)]
-#[serde(rename_all = "snake_case", tag = "error", content = "error_description")]
+#[serde(
+    rename_all = "snake_case",
+    tag = "error",
+    content = "error_description"
+)]
 pub enum AccessTokenResponseError {
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.

@@ -1,5 +1,5 @@
-use lighthouse_types::DeviceError;
 use lighthouse_proto::{command, command_response};
+use lighthouse_types::DeviceError;
 use thiserror::Error;
 use types::DeviceID;
 use url::Url;

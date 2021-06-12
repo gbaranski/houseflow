@@ -1,6 +1,6 @@
-use crate::{AuthCommand, ClientConfig, RunCommand, ServerConfig, ConfigCommand};
-use clap::Clap;
+use crate::{AuthCommand, ClientConfig, ConfigCommand, RunCommand, ServerConfig};
 use async_trait::async_trait;
+use clap::Clap;
 
 #[derive(Clap)]
 pub enum Subcommand {
@@ -11,7 +11,7 @@ pub enum Subcommand {
     Server(ServerCommand),
 
     #[clap(flatten)]
-    Setup(SetupCommand)
+    Setup(SetupCommand),
 }
 
 #[derive(Clap)]
@@ -31,7 +31,6 @@ pub enum SetupCommand {
     /// Manage configurations
     Config(ConfigCommand),
 }
-
 
 #[async_trait(?Send)]
 impl crate::ClientCommand for ClientCommand {
@@ -59,7 +58,6 @@ impl crate::SetupCommand for SetupCommand {
         }
     }
 }
-
 
 use std::path::PathBuf;
 

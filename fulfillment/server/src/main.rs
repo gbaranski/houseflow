@@ -4,9 +4,9 @@ use actix_web::{
     App, HttpRequest, HttpServer,
 };
 use db::{Database, Error as DatabaseError, MemoryDatabase};
+use thiserror::Error;
 use token::Token;
 use types::{User, UserAgent};
-use thiserror::Error;
 
 mod gactions;
 mod internal;

@@ -1,5 +1,5 @@
-use async_trait::async_trait;
 use crate::{DecodeError, Token, TokenID};
+use async_trait::async_trait;
 
 mod memory;
 mod redis;

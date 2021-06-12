@@ -1,5 +1,5 @@
 use super::{Code, Error};
-use crate::{DecodeError, Decoder, Encoder, FrameID, Framed, Frame};
+use crate::{DecodeError, Decoder, Encoder, Frame, FrameID, Framed};
 use bytes::{Buf, BufMut};
 use lighthouse_macros::decoder;
 use serde::{Deserialize, Serialize};

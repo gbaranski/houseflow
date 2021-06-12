@@ -79,9 +79,7 @@ fn generate_config_string(target: &Target) -> String {
                 refresh_key, access_key, password_salt
             )
         }
-        Target::Client => {
-            "# Houseflow client configuration".to_string()
-        }
+        Target::Client => "# Houseflow client configuration".to_string(),
     }
 }
 

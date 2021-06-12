@@ -85,7 +85,8 @@ impl From<SystemTime> for ExpirationDate {
 
 impl ExpirationDate {
     pub fn unix_timestamp(&self) -> Option<Duration> {
-        self.system_time.map(|system_time| system_time.duration_since(SystemTime::UNIX_EPOCH).unwrap())
+        self.system_time
+            .map(|system_time| system_time.duration_since(SystemTime::UNIX_EPOCH).unwrap())
     }
 
     pub fn has_expired(&self) -> bool {

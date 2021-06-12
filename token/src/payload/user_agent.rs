@@ -1,6 +1,6 @@
 use crate::{DecodeError, Decoder, Encoder};
-use types::UserAgent;
 use std::convert::TryFrom;
+use types::UserAgent;
 
 impl Decoder for UserAgent {
     const SIZE: usize = std::mem::size_of::<UserAgent>();
@@ -25,4 +25,3 @@ impl Encoder for UserAgent {
         buf.put_u8(*self as u8)
     }
 }
-

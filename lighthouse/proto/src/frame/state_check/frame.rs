@@ -1,4 +1,4 @@
-use crate::{DecodeError, Decoder, Encoder, Framed, Frame};
+use crate::{DecodeError, Decoder, Encoder, Frame, Framed};
 use bytes::{Buf, BufMut};
 use lighthouse_macros::decoder;
 use serde::{Deserialize, Serialize};

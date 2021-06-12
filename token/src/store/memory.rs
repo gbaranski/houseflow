@@ -1,11 +1,8 @@
 use super::{TokenStore, TokenStoreInternalError};
 use crate::{Token, TokenID};
 use async_trait::async_trait;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
-use std::{
-    collections::HashMap,
-    sync::Arc,
-};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {}

@@ -1,9 +1,9 @@
 use crate::{Database, DatabaseInternalError, Error};
 use async_trait::async_trait;
 use deadpool_postgres::Pool;
-use types::{Device, DeviceID, User, UserID};
 use semver::Version;
 use tokio_postgres::NoTls;
+use types::{Device, DeviceID, User, UserID};
 
 use refinery::embed_migrations;
 embed_migrations!("migrations");
@@ -73,10 +73,7 @@ impl PostgresDatabase {
 
 #[async_trait]
 impl Database for PostgresDatabase {
-    async fn get_device(
-        &self,
-        device_id: &DeviceID,
-    ) -> Result<Option<Device>, Error> {
+    async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
         const QUERY: &str = "SELECT * FROM devices WHERE id = $1";
         let connection = self.pool.get().await?;
         let row = match connection.query_opt(QUERY, &[&device_id]).await? {
@@ -154,12 +151,7 @@ impl Database for PostgresDatabase {
         let n = connection
             .execute(
                 QUERY,
-                &[
-                    &user.id,
-                    &user.username,
-                    &user.email,
-                    &user.password_hash,
-                ],
+                &[&user.id, &user.username, &user.email, &user.password_hash],
             )
             .await?;
 
@@ -180,5 +172,4 @@ impl Database for PostgresDatabase {
             _ => unreachable!(),
         }
     }
-
 }

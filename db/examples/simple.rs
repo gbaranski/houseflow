@@ -1,6 +1,6 @@
-use houseflow_db::{PostgresDatabase, Database};
-use std::time::Instant;
+use houseflow_db::{Database, PostgresDatabase};
 use std::str::FromStr;
+use std::time::Instant;
 
 const DATABASE_USER: &str = "postgres";
 const DATABASE_PASSWORD: &str = "haslo123";
@@ -51,4 +51,3 @@ async fn main() {
     println!("Deleted user");
     println!("All actions took: {:#?}", start.elapsed())
 }
-

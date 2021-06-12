@@ -5,4 +5,3 @@ pub fn get_theme() -> impl Theme {
         ..ColorfulTheme::default()
     }
 }
-

@@ -52,9 +52,7 @@ pub trait SetupCommand {
 fn main() -> anyhow::Result<()> {
     use clap::Clap;
 
-    env_logger::init_from_env(
-        env_logger::Env::default().filter_or("HOUSEFLOW_LOG", "info"),
-    );
+    env_logger::init_from_env(env_logger::Env::default().filter_or("HOUSEFLOW_LOG", "info"));
 
     let cli_config = CliConfig::parse();
     actix_rt::System::with_tokio_rt(|| {

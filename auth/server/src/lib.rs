@@ -12,7 +12,6 @@ mod auth;
 mod token;
 mod whoami;
 
-
 #[derive(Clone)]
 pub struct AppState<TS: TokenStore, DB: Database> {
     token_store: TS,
@@ -74,8 +73,8 @@ pub async fn run(
 #[cfg(test)]
 mod test_utils {
     use super::{Database, TokenStore};
-    use token::store::MemoryTokenStore;
     use db::MemoryDatabase;
+    use token::store::MemoryTokenStore;
 
     use actix_web::web::Data;
     use rand::RngCore;

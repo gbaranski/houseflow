@@ -4,7 +4,6 @@ use crate::aliases::{
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
-use types::DeviceID;
 use lighthouse_proto::{
     command, command_response, state, state_check, Decoder, Encoder, Frame, FrameID,
 };
@@ -14,6 +13,7 @@ use std::net::SocketAddr;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::sync::{broadcast, oneshot};
+use types::DeviceID;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const STATE_CHANNEL_SIZE: usize = 4;

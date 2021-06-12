@@ -27,7 +27,6 @@ impl Decoder for FrameID {
 
 impl<'de> Framed<'de> for FrameID {}
 
-
 impl rand::distributions::Distribution<FrameID> for rand::distributions::Standard {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> FrameID {
         FrameID { inner: rng.gen() }

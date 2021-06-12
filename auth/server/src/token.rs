@@ -158,7 +158,7 @@ mod tests {
         let response_body: AccessTokenResponseError = test::read_body_json(response).await;
         match response_body {
             AccessTokenResponseError::InvalidGrant(_) => (),
-            _ => panic!("unexpected error received: {:?}", response_body)
+            _ => panic!("unexpected error received: {:?}", response_body),
         }
     }
 
@@ -192,7 +192,7 @@ mod tests {
         let response_body: AccessTokenResponseError = test::read_body_json(response).await;
         match response_body {
             AccessTokenResponseError::InvalidGrant(_) => (),
-            _ => panic!("unexpected error received: {:?}", response_body)
+            _ => panic!("unexpected error received: {:?}", response_body),
         }
     }
 }

@@ -1,7 +1,7 @@
-use bytes::{BufMut, Buf};
-use serde::{Deserialize, Serialize};
 use crate::{DecodeError, Decoder, Encoder, Frame};
+use bytes::{Buf, BufMut};
 use lighthouse_macros::decoder;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct StateFrame {
@@ -15,9 +15,7 @@ impl Decoder for StateFrame {
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
         let state = serde_json::Value::decode(buf)?;
 
-        Ok(Self {
-            state,
-        })
+        Ok(Self { state })
     }
 }
 

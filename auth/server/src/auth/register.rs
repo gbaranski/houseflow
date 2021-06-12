@@ -3,9 +3,7 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use auth_types::{
-    RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError,
-};
+use auth_types::{RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError};
 use db::Database;
 use rand::random;
 use types::User;
@@ -75,7 +73,7 @@ mod tests {
             .await
             .unwrap()
             .expect("user not found in database");
-        
+
         assert_eq!(db_user.id, response.user_id);
         assert_eq!(db_user.username, request_body.username);
         assert_eq!(db_user.email, request_body.email);

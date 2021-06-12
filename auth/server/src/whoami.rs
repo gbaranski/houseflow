@@ -99,7 +99,8 @@ mod tests {
 
         let request = test::TestRequest::get().uri("/whoami").to_request();
         let response = test::call_service(&mut app, request).await;
-        const EXPECTED_ERROR: WhoamiResponseError =  WhoamiResponseError::DecodeHeaderError(token::DecodeHeaderError::MissingHeader);
+        const EXPECTED_ERROR: WhoamiResponseError =
+            WhoamiResponseError::DecodeHeaderError(token::DecodeHeaderError::MissingHeader);
 
         assert_eq!(
             response.status(),
@@ -138,7 +139,8 @@ mod tests {
             ))
             .to_request();
         let response = test::call_service(&mut app, request).await;
-        const EXPECTED_ERROR: WhoamiResponseError =  WhoamiResponseError::VerifyError(token::VerifyError::InvalidSignature);
+        const EXPECTED_ERROR: WhoamiResponseError =
+            WhoamiResponseError::VerifyError(token::VerifyError::InvalidSignature);
 
         assert_eq!(
             response.status(),

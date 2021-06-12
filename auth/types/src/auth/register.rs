@@ -12,7 +12,11 @@ pub struct RegisterRequest {
 pub type RegisterResponse = ResultTagged<RegisterResponseBody, RegisterResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-#[serde(tag = "error", content = "error_description", rename_all = "snake_case")]
+#[serde(
+    tag = "error",
+    content = "error_description",
+    rename_all = "snake_case"
+)]
 pub enum RegisterResponseError {
     #[error("internal error: `{0}`")]
     // Replace it with better type if needed
@@ -47,4 +51,3 @@ impl actix_web::ResponseError for RegisterResponseError {
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }
-

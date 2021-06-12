@@ -5,5 +5,3 @@ pub use frame::CommandResponseFrame as Frame;
 mod code;
 mod error;
 mod frame;
-
-

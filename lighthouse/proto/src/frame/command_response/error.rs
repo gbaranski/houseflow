@@ -50,4 +50,3 @@ impl rand::distributions::Distribution<CommandResponseError> for rand::distribut
             .unwrap()
     }
 }
-

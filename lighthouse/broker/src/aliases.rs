@@ -23,13 +23,11 @@ pub struct ActorCommandResponseFrame {
     inner: command_response::Frame,
 }
 
-
 impl From<command_response::Frame> for ActorCommandResponseFrame {
     fn from(v: command_response::Frame) -> Self {
         Self { inner: v }
     }
 }
-
 
 impl From<ActorCommandResponseFrame> for command_response::Frame {
     fn from(val: ActorCommandResponseFrame) -> Self {
@@ -56,7 +54,6 @@ pub struct ActorStateFrame {
     #[allow(dead_code)]
     inner: state::Frame,
 }
-
 
 impl From<state::Frame> for ActorStateFrame {
     fn from(v: state::Frame) -> Self {
