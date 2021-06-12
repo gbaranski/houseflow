@@ -1,4 +1,4 @@
-use crate::{AuthCommand, ClientConfig, ConfigCommand, RunCommand, ServerConfig};
+use crate::{AuthCommand, ConfigCommand, RunCommand, ServerConfig, ClientCommandState};
 use async_trait::async_trait;
 use clap::Clap;
 
@@ -34,9 +34,9 @@ pub enum SetupCommand {
 
 #[async_trait(?Send)]
 impl crate::ClientCommand for ClientCommand {
-    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
+    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         match self {
-            Self::Auth(cmd) => cmd.run(cfg).await,
+            Self::Auth(cmd) => cmd.run(state).await,
         }
     }
 }

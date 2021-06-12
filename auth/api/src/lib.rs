@@ -8,40 +8,9 @@ use thiserror::Error;
 use token::Token;
 use url::Url;
 
-#[cfg(any(feature = "keystore", test))]
-#[derive(Debug, Clone)]
-pub struct KeystoreConfig {
-    pub path: std::path::PathBuf,
-}
-
-#[cfg(any(feature = "keystore", test))]
-#[derive(Debug, thiserror::Error)]
-pub enum KeystoreError {
-    #[error("open failed: `{0}`")]
-    OpenError(tokio::io::Error),
-
-    #[error("read failed: `{0}`")]
-    ReadError(tokio::io::Error),
-
-    #[error("write failed: `{0}`")]
-    WriteError(tokio::io::Error),
-
-    #[error("create parents failed: `{0}`")]
-    CreateParentsError(tokio::io::Error),
-
-    #[error("remove failed: `{0}`")]
-    RemoveError(tokio::io::Error),
-
-    #[error("invalid token: `{0}`")]
-    InvalidToken(token::DecodeError),
-}
-
 #[derive(Clone)]
 pub struct Auth {
     pub url: Url,
-
-    #[cfg(any(feature = "keystore", test))]
-    pub keystore: KeystoreConfig,
 }
 
 #[derive(Debug, Error)]
@@ -60,10 +29,6 @@ pub enum Error {
 
     #[error("login failed: `{0}`")]
     LoginError(#[from] LoginResponseError),
-
-    #[cfg(any(feature = "keystore", test))]
-    #[error("keystore error: `{0}`")]
-    KeystoreError(#[from] KeystoreError),
 }
 
 impl Auth {
@@ -149,101 +114,5 @@ impl Auth {
         Ok(response)
     }
 
-    #[cfg(any(feature = "keystore", test))]
-    pub async fn remove_refresh_token(&self) -> Result<(), Error> {
-        if self.keystore.path.exists() {
-            Ok(tokio::fs::remove_file(&self.keystore.path)
-                .await
-                .map_err(KeystoreError::RemoveError)?)
-        } else {
-            Ok(())
-        }
-    }
-
-    #[cfg(any(feature = "keystore", test))]
-    pub async fn save_refresh_token(&self, refresh_token: &Token) -> Result<(), Error> {
-        use tokio::io::AsyncWriteExt;
-
-        if let Some(path) = self.keystore.path.parent() {
-            if !path.exists() {
-                tokio::fs::create_dir_all(path)
-                    .await
-                    .map_err(KeystoreError::CreateParentsError)?;
-            }
-        }
-
-        let mut file = tokio::fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(&self.keystore.path)
-            .await
-            .map_err(KeystoreError::OpenError)?;
-
-        file.set_len(0_u64)
-            .await
-            .map_err(KeystoreError::WriteError)?;
-
-        file.write_all(refresh_token.to_string().as_bytes())
-            .await
-            .map_err(KeystoreError::WriteError)?;
-
-        Ok(())
-    }
-
-    #[cfg(any(feature = "keystore", test))]
-    pub async fn read_refresh_token(&self) -> Result<Option<Token>, Error> {
-        use std::str::FromStr;
-        use tokio::io::AsyncReadExt;
-
-        if !self.keystore.path.exists() {
-            return Ok(None);
-        }
-
-        let mut file = tokio::fs::OpenOptions::new()
-            .read(true)
-            .open(&self.keystore.path)
-            .await
-            .map_err(KeystoreError::OpenError)?;
-
-        let mut string = String::with_capacity(Token::BASE64_SIZE);
-        file.read_to_string(&mut string)
-            .await
-            .map_err(KeystoreError::ReadError)?;
-        let token = Token::from_str(&string).map_err(KeystoreError::InvalidToken)?;
-        Ok(Some(token))
-    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_keystore() {
-        let token =
-            Token::new_refresh_token(b"some-key", &rand::random(), &token::UserAgent::Internal);
-
-        let path_string = format!(
-            "/tmp/houseflow/tokens-{}",
-            std::time::SystemTime::now()
-                .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_secs()
-        );
-        let path = std::path::Path::new(&path_string);
-
-        let auth = Auth {
-            url: Url::parse("http://localhost:8080").unwrap(),
-            keystore: KeystoreConfig { path: path.into() },
-        };
-
-        auth.save_refresh_token(&token).await.unwrap();
-        auth.save_refresh_token(&token).await.unwrap();
-        let read_token = auth.read_refresh_token().await.unwrap().unwrap();
-        assert_eq!(token, read_token);
-        auth.remove_refresh_token().await.unwrap();
-        assert!(path.exists() == false);
-        auth.remove_refresh_token().await.unwrap();
-        assert_eq!(auth.read_refresh_token().await.unwrap(), None);
-    }
-}

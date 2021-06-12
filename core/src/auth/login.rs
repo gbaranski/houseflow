@@ -1,6 +1,6 @@
-use crate::{ClientCommand, ClientConfig};
+use crate::{ClientCommand, KeystoreFile, ClientCommandState};
 use async_trait::async_trait;
-use auth_api::{Auth, KeystoreConfig};
+
 
 use clap::Clap;
 
@@ -15,17 +15,10 @@ pub struct LoginCommand {
 
 #[async_trait(?Send)]
 impl ClientCommand for LoginCommand {
-    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
+    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         use auth_types::LoginRequest;
         use dialoguer::{Input, Password};
         use types::UserAgent;
-
-        let auth = Auth {
-            url: cfg.auth_url.clone(),
-            keystore: KeystoreConfig {
-                path: cfg.keystore_path.clone(),
-            },
-        };
 
         let theme = crate::cli::get_theme();
         let email = match self.email {
@@ -48,11 +41,14 @@ impl ClientCommand for LoginCommand {
             user_agent: UserAgent::Internal,
         };
 
-        let login_response = auth.login(login_request.clone()).await?.into_result()?;
+        let login_response = state.auth.login(login_request.clone()).await?.into_result()?;
         log::info!("✔ Logged in as {}", login_request.email);
-        auth.save_refresh_token(&login_response.refresh_token)
-            .await?;
-        log::debug!("Saved refresh token at {:?}", auth.keystore.path);
+        let keystore_file = KeystoreFile {
+            refresh_token: login_response.refresh_token,
+            access_token: login_response.access_token,
+        };
+        state.keystore.save(&keystore_file).await?;
+        log::debug!("Saved refresh token at {:?}", state.keystore.path);
 
         Ok(())
     }

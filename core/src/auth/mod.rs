@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientConfig};
+use crate::{ClientCommand, ClientCommandState};
 use async_trait::async_trait;
 
 use login::LoginCommand;
@@ -6,6 +6,7 @@ use register::RegisterCommand;
 use status::StatusCommand;
 
 mod login;
+mod logout;
 mod register;
 mod status;
 
@@ -31,11 +32,11 @@ pub enum AuthSubcommand {
 
 #[async_trait(?Send)]
 impl ClientCommand for AuthCommand {
-    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
+    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         match &self.subcommand {
-            AuthSubcommand::Login(cmd) => cmd.run(cfg).await,
-            AuthSubcommand::Register(cmd) => cmd.run(cfg).await,
-            AuthSubcommand::Status(cmd) => cmd.run(cfg).await,
+            AuthSubcommand::Login(cmd) => cmd.run(state).await,
+            AuthSubcommand::Register(cmd) => cmd.run(state).await,
+            AuthSubcommand::Status(cmd) => cmd.run(state).await,
         }
     }
 }

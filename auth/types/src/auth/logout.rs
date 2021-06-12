@@ -1,6 +1,9 @@
 use crate::ResultTagged;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LogoutRequest {}
+
 pub type LogoutResponse = ResultTagged<LogoutResponseBody, LogoutResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

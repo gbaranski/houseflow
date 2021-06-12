@@ -1,8 +1,6 @@
-use crate::{ClientCommand, ClientConfig};
+use crate::{ClientCommand, ClientCommandState, KeystoreFile};
 use async_trait::async_trait;
-use auth_api::{Auth, KeystoreConfig};
 use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
-use token::Token;
 
 use clap::Clap;
 
@@ -14,29 +12,36 @@ pub struct StatusCommand {
 }
 
 impl StatusCommand {
-    fn no_saved_credentials(&self, cfg: ClientConfig) {
-        println!(
-            "❌ No saved credentials at {}",
-            cfg.keystore_path.to_str().unwrap_or("none")
-        );
-    }
-
-    fn logged_in(&self, cfg: ClientConfig, whoami_response: WhoamiResponseBody, token: Token) {
-        let token = match self.show_token {
-            true => token.to_string(),
-            false => std::iter::repeat("*")
-                .take(token.to_string().len())
-                .collect(),
+    fn logged_in(
+        &self,
+        state: &ClientCommandState,
+        whoami_response: WhoamiResponseBody,
+        keystore_file: KeystoreFile,
+    ) {
+        let (access_token, refresh_token) =
+            (keystore_file.access_token, keystore_file.refresh_token);
+        let censor = |s: &str| std::iter::repeat("*").take(s.len()).collect();
+        let (access_token, refresh_token) = match self.show_token {
+            true => (access_token.to_string(), refresh_token.to_string()),
+            false => (
+                censor(&access_token.to_string()),
+                censor(&refresh_token.to_string()),
+            ),
         };
 
         println!("✔ Logged in");
         println!("  Username: {}", whoami_response.username);
         println!("  Email: {}", whoami_response.email);
         println!(
-            "  Token({}): {}",
-            cfg.keystore_path.to_str().unwrap_or("none"),
-            token
+            "  Keystore: {}",
+            state
+                .config
+                .keystore_path
+                .to_str()
+                .unwrap_or("INVALID_PATH")
         );
+        println!("  Access token: {}", access_token);
+        println!("  Refresh token: {}", refresh_token);
     }
 
     fn error(&self, error: WhoamiResponseError) {
@@ -46,30 +51,11 @@ impl StatusCommand {
 
 #[async_trait(?Send)]
 impl ClientCommand for StatusCommand {
-    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
-        let auth = Auth {
-            url: cfg.auth_url.clone(),
-            keystore: KeystoreConfig {
-                path: cfg.keystore_path.clone(),
-            },
-        };
-        let refresh_token = match auth.read_refresh_token().await? {
-            Some(token) => token,
-            None => {
-                return {
-                    self.no_saved_credentials(cfg);
-                    Ok(())
-                }
-            }
-        };
-        let access_token = auth
-            .fetch_access_token(&refresh_token)
-            .await?
-            .into_result()?
-            .access_token;
+    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+        let keystore_file = state.keystore.read().await?;
 
-        match auth.whoami(&access_token).await? {
-            WhoamiResponse::Ok(response) => self.logged_in(cfg, response, access_token),
+        match state.auth.whoami(&keystore_file.access_token).await? {
+            WhoamiResponse::Ok(response) => self.logged_in(&state, response, keystore_file),
             WhoamiResponse::Err(err) => self.error(err),
         };
         Ok(())

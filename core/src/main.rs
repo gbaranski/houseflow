@@ -5,7 +5,10 @@ use run::RunCommand;
 mod auth;
 mod cli;
 mod config;
+mod keystore;
 mod run;
+
+pub use keystore::{Keystore, KeystoreFile};
 
 use config::{CliConfig, ClientConfig, Config, ConfigCommand, ServerConfig, Subcommand};
 use strum_macros::{EnumIter, EnumString};
@@ -28,9 +31,16 @@ impl Target {
     }
 }
 
+#[derive(Clone)]
+pub struct ClientCommandState {
+    pub config: ClientConfig,
+    pub keystore: Keystore,
+    pub auth: auth_api::Auth,
+}
+
 #[async_trait(?Send)]
 pub trait ClientCommand {
-    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()>;
+    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()>;
 }
 
 #[async_trait(?Send)]
@@ -65,8 +75,19 @@ fn main() -> anyhow::Result<()> {
         match cli_config.subcommand {
             Subcommand::Setup(cmd) => cmd.run().await,
             Subcommand::Client(cmd) => {
-                let config = config::read_files()?;
-                cmd.run(config.client).await
+                let config = config::read_files()?.client;
+                let keystore = Keystore {
+                    path: config.keystore_path.clone(),
+                };
+                let auth = auth_api::Auth {
+                    url: config.auth_url.clone(),
+                };
+                let state = ClientCommandState {
+                    config,
+                    keystore,
+                    auth,
+                };
+                cmd.run(state).await
             }
             Subcommand::Server(cmd) => {
                 let config = config::read_files()?;

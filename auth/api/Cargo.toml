@@ -17,9 +17,6 @@ serde_json = "1.0"
 thiserror  = "1.0"
 url        = "2.2"
 
-[features]
-keystore   = ["tokio/fs"]
-
 [dev-dependencies]
 tokio      = { version = "1.6.0", features = ["macros", "rt", "fs"] }
 types      = { path = "../../types", package = "houseflow-types" }

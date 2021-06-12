@@ -9,13 +9,13 @@ edition = "2018"
 [dependencies]
 types             = { path = "../types/"            , package = "houseflow-types" }
 token             = { path = "../token/"            , package = "houseflow-token", features = [ "store" ] }
-auth-api          = { path = "../auth/api/"         , package = "houseflow-auth-api", features = [ "keystore" ] }
+auth-api          = { path = "../auth/api/"         , package = "houseflow-auth-api" }
 auth-types        = { path = "../auth/types/"       , package = "houseflow-auth-types" }
 auth-server       = { path = "../auth/server/"      , package = "houseflow-auth-server" }
 db                = { path = "../db/"               , package = "houseflow-db" }
 lighthouse-broker = { path = "../lighthouse/broker/", package = "houseflow-lighthouse-broker" }
 
-tokio             = { version = "1.6.1"             , features = ["sync", "rt-multi-thread", "macros"] }
+tokio             = { version = "1.6.1"             , features = ["sync", "rt-multi-thread", "macros", "fs"] }
 url               = { version = "2.2.2"             , features = ["serde"] }
 actix-rt          = "2.2.0"
 dialoguer         = "0.8.0"
@@ -33,3 +33,4 @@ rand              = "0.8.3"
 hex               = "0.4.3"
 indoc             = "1.0.3"
 env_logger = "0.8.4"
+serde_json = "1.0.64"

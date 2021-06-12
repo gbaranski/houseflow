@@ -1,6 +1,5 @@
-use crate::{ClientCommand, ClientConfig};
+use crate::{ClientCommand, ClientCommandState};
 use async_trait::async_trait;
-use auth_api::{Auth, KeystoreConfig};
 
 use clap::Clap;
 
@@ -18,16 +17,10 @@ pub struct RegisterCommand {
 
 #[async_trait(?Send)]
 impl ClientCommand for RegisterCommand {
-    async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
+    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         use auth_types::RegisterRequest;
         use dialoguer::{Input, Password};
 
-        let auth = Auth {
-            url: cfg.auth_url.clone(),
-            keystore: KeystoreConfig {
-                path: cfg.keystore_path.clone(),
-            },
-        };
         let theme = crate::cli::get_theme();
 
         let username = match self.username {
@@ -56,7 +49,7 @@ impl ClientCommand for RegisterCommand {
             password,
         };
 
-        auth.register(register_request).await?.into_result()?;
+        state.auth.register(register_request).await?.into_result()?;
         log::info!("✔ Created new account");
 
         Ok(())
