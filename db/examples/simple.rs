@@ -1,6 +1,6 @@
 use houseflow_db::{PostgresDatabase, Database};
 use std::time::Instant;
-use std::convert::TryFrom;
+use std::str::FromStr;
 
 const DATABASE_USER: &str = "postgres";
 const DATABASE_PASSWORD: &str = "haslo123";
@@ -10,8 +10,7 @@ const DATABASE_NAME: &str = "houseflow";
 
 const SALT: &[u8] = b"SomeSalt";
 const USER_ID: &str = "19632fc07d08424ab80adfd907c3932c";
-const USER_FIRST_NAME: &str = "John";
-const USER_LAST_NAME: &str = "Smith";
+const USERNAME: &str = "gbaranski";
 const USER_EMAIL: &str = "username@example.com";
 const USER_PASSWORD: &str = "somepassword";
 
@@ -19,10 +18,9 @@ const USER_PASSWORD: &str = "somepassword";
 async fn main() {
     let password_hash =
         argon2::hash_encoded(USER_PASSWORD.as_bytes(), SALT, &argon2::Config::default()).unwrap();
-    let user = houseflow_types::User {
-        id: houseflow_types::UserID::try_from(String::from(USER_ID)).unwrap(),
-        first_name: USER_FIRST_NAME.into(),
-        last_name: USER_LAST_NAME.into(),
+    let user = types::User {
+        id: types::UserID::from_str(USER_ID).unwrap(),
+        username: USERNAME.into(),
         email: USER_EMAIL.into(),
         password_hash,
     };
