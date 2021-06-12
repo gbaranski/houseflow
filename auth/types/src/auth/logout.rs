@@ -9,7 +9,7 @@ pub struct LogoutResponseBody {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-#[serde(tag = "error", content = "error_description")]
+#[serde(tag = "error", content = "error_description", rename_all = "snake_case")]
 pub enum LogoutResponseError {
     #[error("invalid token: {0}")]
     InvalidToken(#[from] token::VerifyError),

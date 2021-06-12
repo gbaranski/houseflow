@@ -13,7 +13,7 @@ pub struct LoginRequest {
 pub type LoginResponse = ResultTagged<LoginResponseBody, LoginResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-#[serde(tag = "error", content = "error_description")]
+#[serde(tag = "error", content = "error_description", rename_all = "snake_case")]
 pub enum LoginResponseError {
     #[error("invalid password")]
     InvalidPassword,

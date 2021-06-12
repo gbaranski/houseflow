@@ -13,7 +13,7 @@ pub struct WhoamiResponseBody {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, thiserror::Error)]
-#[serde(tag = "error", content = "error_description")]
+#[serde(tag = "error", content = "error_description", rename_all = "snake_case")]
 pub enum WhoamiResponseError {
     #[error("decode token header error: {0}")]
     DecodeHeaderError(#[from] token::DecodeHeaderError),
