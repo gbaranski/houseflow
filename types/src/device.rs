@@ -55,7 +55,9 @@ pub enum DeviceTrait {}
 /// Type of the device
 #[derive(Debug, Clone, strum_macros::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum DeviceType {}
+pub enum DeviceType {
+    Gate
+}
 
 #[cfg(feature = "postgres-types")]
 impl<'a> postgres_types::FromSql<'a> for DeviceType {
