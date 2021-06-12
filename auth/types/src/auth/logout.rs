@@ -15,7 +15,7 @@ pub enum LogoutResponseError {
     InvalidToken(#[from] token::VerifyError),
 
     #[error("invalid token: {0}")]
-    DecodeError(#[from] token::DecodeHeaderError),
+    DecodeHeaderError(#[from] token::DecodeHeaderError),
 }
 
 #[cfg(feature = "actix")]
@@ -25,7 +25,7 @@ impl actix_web::ResponseError for LogoutResponseError {
 
         match self {
             Self::InvalidToken(_) => StatusCode::BAD_REQUEST,
-            Self::DecodeError(_) => StatusCode::BAD_REQUEST,
+            Self::DecodeHeaderError(_) => StatusCode::BAD_REQUEST,
         }
     }
 

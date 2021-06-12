@@ -35,7 +35,6 @@ pub enum DecodeError {
 }
 
 
-#[cfg(feature = "actix")]
 #[derive(Clone, Debug, thiserror::Error, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DecodeHeaderError {

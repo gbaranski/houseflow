@@ -1,7 +1,11 @@
 use crate::{
-    DecodeError, DecodeHeaderError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID,
+    DecodeError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID,
     VerifyError,
 };
+
+#[cfg(feature = "actix")]
+use crate::DecodeHeaderError;
+
 use types::{UserAgent, UserID};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
