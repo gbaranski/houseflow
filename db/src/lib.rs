@@ -30,6 +30,7 @@ use types::{Device, DeviceID, User, UserID};
 #[async_trait]
 pub trait Database: Send + Sync {
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
+    async fn add_device(&self, device: &Device) -> Result<(), Error>;
 
     async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
     async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;

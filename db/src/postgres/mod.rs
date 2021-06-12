@@ -108,6 +108,41 @@ impl Database for PostgresDatabase {
         Ok(Some(device))
     }
 
+    async fn add_device(&self, device: &Device) -> Result<(), Error> {
+        let connection = self.pool.get().await?;
+        let insert_statement = connection.prepare(
+            r#"
+            INSERT INTO devices(id, password_hash, type, traits, name, will_push_state, room, model, hw_version, sw_version, attributes) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            "#,
+        ).await?;
+
+        let n = connection
+            .execute(
+                &insert_statement,
+                &[
+                    &device.id,
+                    &device.password_hash,
+                    &device.device_type.to_string(),
+                    &device.traits.iter().map(|t| t.to_string()).collect::<Vec<String>>(),
+                    &device.name,
+                    &device.will_push_state,
+                    &device.room,
+                    &device.model,
+                    &device.hw_version.to_string(),
+                    &device.sw_version.to_string(),
+                    &device.attributes,
+                ],
+            )
+            .await?;
+
+        match n {
+            0 => Err(Error::NotModified),
+            1 => Ok(()),
+            _ => unreachable!(),
+        }
+    }
+
     async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error> {
         const QUERY: &str = "SELECT * FROM users WHERE id = $1";
         let connection = self.pool.get().await?;

@@ -28,6 +28,12 @@ impl Database for MemoryDatabase {
         Ok(self.devices.lock().await.get(device_id).cloned())
     }
 
+    async fn add_device(&self, device: &Device) -> Result<(), Error> {
+        let mut devices = self.devices.lock().await;
+        devices.insert(device.id.clone(), device.clone());
+        Ok(())
+    }
+
     async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error> {
         Ok(self.users.lock().await.get(user_id).cloned())
     }
