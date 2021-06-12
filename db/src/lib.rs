@@ -5,7 +5,7 @@ mod postgres;
 pub use memory::{MemoryDatabase, MemoryDatabaseError};
 pub use postgres::{PostgresConfig, PostgresDatabase, PostgresError};
 
-pub trait DatabaseInternalError: std::fmt::Debug + std::error::Error {}
+pub trait DatabaseInternalError: std::fmt::Debug + std::error::Error + Send + Sync {}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

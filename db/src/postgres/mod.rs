@@ -19,7 +19,7 @@ pub enum PostgresError {
     #[error("Column `{column}` is invalid: `{error}`")]
     InvalidColumn {
         column: &'static str,
-        error: Box<dyn std::error::Error>,
+        error: Box<dyn std::error::Error + Send + Sync>,
     },
 
     #[error("Error when running migrations: `{0}`")]
@@ -93,13 +93,13 @@ impl Database for PostgresDatabase {
             hw_version: Version::parse(row.try_get("hw_version")?).map_err(|err| {
                 PostgresError::InvalidColumn {
                     column: "hw_version",
-                    error: err.into(),
+                    error: Box::new(err),
                 }
             })?,
             sw_version: Version::parse(row.try_get("sw_version")?).map_err(|err| {
                 PostgresError::InvalidColumn {
                     column: "sw_version",
-                    error: err.into(),
+                    error: Box::new(err),
                 }
             })?,
             attributes: row.try_get("attributes")?,
