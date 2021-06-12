@@ -23,7 +23,16 @@ impl ServerCommand for RunAuthCommand {
         let token_store = RedisTokenStore::new()
             .await
             .with_context(|| "connect to redis failed, is redis on?")?;
-        let database = db::MemoryDatabase::new();
+        let database_config = db::PostgresConfig {
+            user: "postgres",
+            password: "",
+            host: "localhost",
+            port: 5432,
+            database_name: "houseflow",
+        };
+        let database = db::PostgresDatabase::new(&database_config)
+            .await
+            .with_context(|| "connecting to postgres failed, is postgres on?")?;
         let app_data = auth_server::AppData {
             refresh_key: config.refresh_key.into(),
             access_key: config.access_key.into(),
