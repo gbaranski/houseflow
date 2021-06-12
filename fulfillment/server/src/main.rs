@@ -53,9 +53,9 @@ impl From<User> for ActixUser {
     }
 }
 
-impl Into<User> for ActixUser {
-    fn into(self) -> User {
-        self.inner
+impl From<ActixUser> for User {
+    fn from(val: ActixUser) -> Self {
+        val.inner
     }
 }
 
@@ -69,6 +69,8 @@ impl actix_web::FromRequest for ActixUser {
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
 
     fn from_request(req: &HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
+        use std::str::FromStr;
+
         let headers = req.headers();
         let access_key = req.app_data::<AppData>().unwrap().access_key.clone();
         let database = req.app_data::<Data<dyn Database>>().unwrap().clone();

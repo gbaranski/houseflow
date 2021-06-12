@@ -46,7 +46,7 @@ impl Decoder for ExpirationDate {
         let timestamp = buf.get_u64();
         let expiration_date = match timestamp {
             0 => Self { system_time: None },
-            timestamp @ _ => {
+            timestamp => {
                 let timestamp = Duration::from_secs(timestamp);
                 let system_time = SystemTime::UNIX_EPOCH
                     .checked_add(timestamp)
@@ -85,10 +85,7 @@ impl From<SystemTime> for ExpirationDate {
 
 impl ExpirationDate {
     pub fn unix_timestamp(&self) -> Option<Duration> {
-        match self.system_time {
-            Some(system_time) => Some(system_time.duration_since(SystemTime::UNIX_EPOCH).unwrap()),
-            None => None,
-        }
+        self.system_time.map(|system_time| system_time.duration_since(SystemTime::UNIX_EPOCH).unwrap())
     }
 
     pub fn has_expired(&self) -> bool {

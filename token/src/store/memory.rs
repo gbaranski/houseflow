@@ -12,16 +12,14 @@ pub enum Error {}
 
 impl TokenStoreInternalError for Error {}
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct MemoryTokenStore {
     store: Arc<Mutex<HashMap<TokenID, Token>>>,
 }
 
 impl MemoryTokenStore {
     pub fn new() -> Self {
-        Self {
-            store: Default::default(),
-        }
+        Default::default()
     }
 }
 
@@ -31,8 +29,8 @@ impl TokenStore for MemoryTokenStore {
         Ok(self.store.lock().await.contains_key(id))
     }
 
-    async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
-        Ok(self.store.lock().await.get(id).map(|v| v.clone()))
+    async fn get(&self, id: &TokenID) -> Result<Option<Token>, super::Error> {
+        Ok(self.store.lock().await.get(id).cloned())
     }
 
     async fn add(&self, token: &Token) -> Result<(), super::Error> {

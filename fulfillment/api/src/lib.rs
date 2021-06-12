@@ -1,10 +1,8 @@
 use auth_api::Auth;
-use token::Token;
-use fulfillment_types::{SyncRequest, SyncResponse};
 use types::Device;
-use reqwest::Client;
 use url::Url;
 
+#[allow(dead_code)]
 pub struct Fulfillment {
     url: Url,
     auth: Auth,
@@ -25,18 +23,20 @@ impl Fulfillment {
     }
 
     pub async fn sync(&self) -> Result<Vec<Device>, Error> {
-        let access_token: Token = unimplemented!();
-        let client = Client::new();
-        let url = self.url.join("sync").unwrap();
-        let response = client
-            .post(url)
-            .json(&SyncRequest::default())
-            .bearer_auth(access_token.to_string())
-            .send()
-            .await?
-            .json::<SyncResponse>()
-            .await?;
+        //         let access_token: Token = unimplemented!();
+        //         let client = Client::new();
+        //         let url = self.url.join("sync").unwrap();
+        //         let response = client
+        //             .post(url)
+        //             .json(&SyncRequest::default())
+        //             .bearer_auth(access_token.to_string())
+        //             .send()
+        //             .await?
+        //             .json::<SyncResponse>()
+        //             .await?;
+        //
+        //         Ok(response)
 
-        Ok(response)
+        unimplemented!()
     }
 }

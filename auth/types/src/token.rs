@@ -151,6 +151,6 @@ mod token_expiration {
     where
         D: de::Deserializer<'de>,
     {
-        Ok(d.deserialize_option(TokenExpirationVisitor)?)
+        d.deserialize_option(TokenExpirationVisitor)
     }
 }

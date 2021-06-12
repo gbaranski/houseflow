@@ -29,7 +29,7 @@ pub trait Database: Send + Sync {
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
 
     async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
-    async fn get_user_by_email(&self, email: &String) -> Result<Option<User>, Error>;
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;
     async fn add_user(&self, user: &User) -> Result<(), Error>;
     async fn delete_user(&self, user_id: &UserID) -> Result<(), Error>;
 }

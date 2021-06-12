@@ -34,7 +34,6 @@ pub enum DecodeError {
     InvalidEncoding(String),
 }
 
-
 #[derive(Clone, Debug, thiserror::Error, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DecodeHeaderError {
@@ -99,9 +98,10 @@ pub trait Encoder {
 mod tests {
     use super::*;
     use bytes::BytesMut;
-    use types::UserID;
     use rand::random;
+    use std::str::FromStr;
     use std::time::{Duration, SystemTime};
+    use types::UserID;
     const KEY: &[u8] = b"some hmac key";
 
     #[test]

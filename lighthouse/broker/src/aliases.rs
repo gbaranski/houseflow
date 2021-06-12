@@ -12,9 +12,9 @@ impl From<command::Frame> for ActorCommandFrame {
     }
 }
 
-impl Into<command::Frame> for ActorCommandFrame {
-    fn into(self) -> command::Frame {
-        self.inner
+impl From<ActorCommandFrame> for command::Frame {
+    fn from(val: ActorCommandFrame) -> Self {
+        val.inner
     }
 }
 
@@ -31,9 +31,9 @@ impl From<command_response::Frame> for ActorCommandResponseFrame {
 }
 
 
-impl Into<command_response::Frame> for ActorCommandResponseFrame {
-    fn into(self) -> command_response::Frame {
-        self.inner
+impl From<ActorCommandResponseFrame> for command_response::Frame {
+    fn from(val: ActorCommandResponseFrame) -> Self {
+        val.inner
     }
 }
 
@@ -45,9 +45,9 @@ pub struct ActorStateCheckFrame {
     inner: state_check::Frame,
 }
 
-impl Into<state_check::Frame> for ActorStateCheckFrame {
-    fn into(self) -> state_check::Frame {
-        self.inner
+impl From<ActorStateCheckFrame> for state_check::Frame {
+    fn from(val: ActorStateCheckFrame) -> Self {
+        val.inner
     }
 }
 

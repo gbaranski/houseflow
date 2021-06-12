@@ -138,7 +138,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
             ws::Message::Binary(mut bytes) => {
                 let frame = Frame::decode(&mut bytes).expect("failed decoding");
                 match frame {
-                    Frame::NoOperation(_frame) => return,
+                    Frame::NoOperation(_frame) => (),
                     Frame::State(frame) => {
                         self.state_channel.send(frame).expect("failed sending");
                     }

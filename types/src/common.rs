@@ -1,8 +1,5 @@
 use bytes::{Buf, BufMut};
-use std::{
-    convert::TryInto,
-    str::FromStr,
-};
+use std::{convert::TryInto, str::FromStr};
 use thiserror::Error;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -61,9 +58,9 @@ impl<const N: usize> From<[u8; N]> for Credential<N> {
     }
 }
 
-impl<const N: usize> Into<[u8; N]> for Credential<N> {
-    fn into(self) -> [u8; N] {
-        self.inner
+impl<const N: usize> From<Credential<N>> for [u8; N] {
+    fn from(val: Credential<N>) -> Self {
+        val.inner
     }
 }
 
@@ -73,9 +70,9 @@ impl<const N: usize> Default for Credential<N> {
     }
 }
 
-impl<const N: usize> Into<String> for Credential<N> {
-    fn into(self) -> String {
-        hex::encode(self.inner)
+impl<const N: usize> From<Credential<N>> for String {
+    fn from(val: Credential<N>) -> Self {
+        hex::encode(val.inner)
     }
 }
 
@@ -206,9 +203,7 @@ impl<'de, const N: usize> Deserialize<'de> for Credential<N> {
     where
         D: Deserializer<'de>,
     {
-        deserializer
-            .deserialize_str(CredentialVisitor::<N>)
-            .map(|bytes| bytes.try_into().unwrap())
+        deserializer.deserialize_str(CredentialVisitor::<N>)
     }
 }
 

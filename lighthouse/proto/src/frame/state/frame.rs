@@ -27,8 +27,8 @@ impl Encoder for StateFrame {
     }
 }
 
-impl Into<Frame> for StateFrame {
-    fn into(self) -> Frame {
-        Frame::State(self)
+impl From<StateFrame> for Frame {
+    fn from(val: StateFrame) -> Self {
+        Frame::State(val)
     }
 }

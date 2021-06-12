@@ -15,7 +15,7 @@ fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePass
     let header = req
         .headers()
         .get(http::header::AUTHORIZATION)
-        .ok_or(String::from("`Authorization` header is missing"))?
+        .ok_or_else(|| String::from("`Authorization` header is missing"))?
         .to_str()
         .map_err(|err| format!("Invalid string `Authorization` header, error: `{}`", err))?;
 
@@ -31,7 +31,7 @@ fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePass
         .ok_or("Missing credentials in `Authorization` header")?;
 
     let (device_id, device_password) = credentials
-        .split_terminator(":")
+        .split_terminator(':')
         .take(2)
         .next_tuple()
         .ok_or("Missing ID/Password in `Authorization` header")?;
@@ -82,7 +82,7 @@ async fn on_command(
         .lock()
         .await
         .get(&device_id)
-        .ok_or(HttpResponse::NotFound().body("Device not found"))?
+        .ok_or_else(|| HttpResponse::NotFound().body("Device not found"))?
         .send(aliases::ActorCommandFrame::from(frame.into_inner()))
         .await
         .unwrap()

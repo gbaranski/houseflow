@@ -154,7 +154,7 @@ impl Auth {
         if self.keystore.path.exists() {
             Ok(tokio::fs::remove_file(&self.keystore.path)
                 .await
-                .map_err(|err| KeystoreError::RemoveError(err))?)
+                .map_err(KeystoreError::RemoveError)?)
         } else {
             Ok(())
         }
@@ -165,10 +165,10 @@ impl Auth {
         use tokio::io::AsyncWriteExt;
 
         if let Some(path) = self.keystore.path.parent() {
-            if path.exists() == false {
+            if !path.exists() {
                 tokio::fs::create_dir_all(path)
                     .await
-                    .map_err(|err| KeystoreError::CreateParentsError(err))?;
+                    .map_err(KeystoreError::CreateParentsError)?;
             }
         }
 
@@ -177,24 +177,25 @@ impl Auth {
             .create(true)
             .open(&self.keystore.path)
             .await
-            .map_err(|err| KeystoreError::OpenError(err))?;
+            .map_err(KeystoreError::OpenError)?;
 
         file.set_len(0_u64)
             .await
-            .map_err(|err| KeystoreError::WriteError(err))?;
+            .map_err(KeystoreError::WriteError)?;
 
         file.write_all(refresh_token.to_string().as_bytes())
             .await
-            .map_err(|err| KeystoreError::WriteError(err))?;
+            .map_err(KeystoreError::WriteError)?;
 
         Ok(())
     }
 
     #[cfg(any(feature = "keystore", test))]
     pub async fn read_refresh_token(&self) -> Result<Option<Token>, Error> {
+        use std::str::FromStr;
         use tokio::io::AsyncReadExt;
 
-        if self.keystore.path.exists() == false {
+        if !self.keystore.path.exists() {
             return Ok(None);
         }
 
@@ -202,13 +203,13 @@ impl Auth {
             .read(true)
             .open(&self.keystore.path)
             .await
-            .map_err(|err| KeystoreError::OpenError(err))?;
+            .map_err(KeystoreError::OpenError)?;
 
         let mut string = String::with_capacity(Token::BASE64_SIZE);
         file.read_to_string(&mut string)
             .await
-            .map_err(|err| KeystoreError::ReadError(err))?;
-        let token = Token::from_str(&string).map_err(|err| KeystoreError::InvalidToken(err))?;
+            .map_err(KeystoreError::ReadError)?;
+        let token = Token::from_str(&string).map_err(KeystoreError::InvalidToken)?;
         Ok(Some(token))
     }
 }

@@ -43,8 +43,8 @@ impl Encoder for CommandResponseFrame {
     }
 }
 
-impl Into<Frame> for CommandResponseFrame {
-    fn into(self) -> Frame {
-        Frame::CommandResponse(self)
+impl From<CommandResponseFrame> for Frame {
+    fn from(val: CommandResponseFrame) -> Self {
+        Frame::CommandResponse(val)
     }
 }

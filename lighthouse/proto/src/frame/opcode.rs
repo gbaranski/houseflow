@@ -12,9 +12,9 @@ pub(crate) enum Opcode {
     CommandResponse,
 }
 
-impl Into<u8> for Opcode {
-    fn into(self) -> u8 {
-        self as u8
+impl From<Opcode> for u8 {
+    fn from(val: Opcode) -> Self {
+        val as u8
     }
 }
 

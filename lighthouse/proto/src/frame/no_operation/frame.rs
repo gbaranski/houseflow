@@ -21,8 +21,8 @@ impl Encoder for NoOperationFrame {
 
 impl<'de> Framed<'de> for NoOperationFrame {}
 
-impl Into<Frame> for NoOperationFrame {
-    fn into(self) -> Frame {
-        Frame::NoOperation(self)
+impl From<NoOperationFrame> for Frame {
+    fn from(val: NoOperationFrame) -> Self {
+        Frame::NoOperation(val)
     }
 }

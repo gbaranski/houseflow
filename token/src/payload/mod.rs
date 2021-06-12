@@ -27,8 +27,8 @@ impl Decoder for Payload {
                 received: buf.remaining(),
             });
         }
-        let token_id = TokenID::decode(buf).map_err(|err| DecodeError::InvalidTokenID(err))?;
-        let user_id = UserID::decode(buf).map_err(|err| DecodeError::InvalidUserID(err))?;
+        let token_id = TokenID::decode(buf).map_err(DecodeError::InvalidTokenID)?;
+        let user_id = UserID::decode(buf).map_err(DecodeError::InvalidUserID)?;
         let user_agent = UserAgent::decode(buf)?;
         let exp_date = ExpirationDate::decode(buf)?;
 
@@ -79,7 +79,7 @@ impl Payload {
         match user_agent {
             Some(user_agent) if self.user_agent != *user_agent => {
                 Err(VerifyError::InvalidUserAgent {
-                    expected: user_agent.clone(),
+                    expected: *user_agent,
                     received: self.user_agent,
                 })
             }

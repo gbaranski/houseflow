@@ -20,10 +20,10 @@ pub struct Config {
 }
 
 use serde::de::DeserializeOwned;
-use std::path::PathBuf;
+use std::path::Path;
 
-fn read_file<T: DeserializeOwned>(path: &PathBuf) -> anyhow::Result<T> {
-    if path.exists() == false {
+fn read_file<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {
+    if !path.exists() {
         let msg = format!("not found at `{}`", path.to_str().unwrap_or("none"));
         return Err(anyhow::Error::msg(msg));
     }
@@ -80,7 +80,7 @@ fn generate_config_string(target: &Target) -> String {
             )
         }
         Target::Client => {
-            format!("# Houseflow client configuration")
+            "# Houseflow client configuration".to_string()
         }
     }
 }

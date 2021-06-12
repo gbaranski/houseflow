@@ -57,7 +57,7 @@ impl PostgresDatabase {
 
     /// This function connect with database and runs migrations on it, after doing so it's fully
     /// ready for operations
-    pub async fn new<'a>(opts: &PostgresConfig<'a>) -> Result<Self, Error> {
+    pub async fn new(opts: &PostgresConfig<'_>) -> Result<Self, Error> {
         use std::ops::DerefMut;
 
         let pool_config = Self::get_pool_config(&opts);
@@ -128,10 +128,10 @@ impl Database for PostgresDatabase {
         Ok(Some(user))
     }
 
-    async fn get_user_by_email(&self, email: &String) -> Result<Option<User>, Error> {
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error> {
         const QUERY: &str = "SELECT * FROM users WHERE email = $1";
         let connection = self.pool.get().await?;
-        let row = match connection.query_opt(QUERY, &[email]).await? {
+        let row = match connection.query_opt(QUERY, &[&email.to_string()]).await? {
             Some(row) => row,
             None => return Ok(None),
         };

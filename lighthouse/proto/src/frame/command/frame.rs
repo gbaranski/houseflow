@@ -41,9 +41,9 @@ impl Encoder for CommandFrame {
     }
 }
 
-impl Into<Frame> for CommandFrame {
-    fn into(self) -> Frame {
-        Frame::Command(self)
+impl From<CommandFrame> for Frame {
+    fn from(val: CommandFrame) -> Self {
+        Frame::Command(val)
     }
 }
 

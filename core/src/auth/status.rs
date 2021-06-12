@@ -50,7 +50,7 @@ impl ClientCommand for StatusCommand {
         let auth = Auth {
             url: cfg.auth_url.clone(),
             keystore: KeystoreConfig {
-                path: cfg.keystore_path.clone().into(),
+                path: cfg.keystore_path.clone(),
             },
         };
         let refresh_token = match auth.read_refresh_token().await? {

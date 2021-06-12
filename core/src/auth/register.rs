@@ -19,48 +19,46 @@ pub struct RegisterCommand {
 #[async_trait(?Send)]
 impl ClientCommand for RegisterCommand {
     async fn run(&self, cfg: ClientConfig) -> anyhow::Result<()> {
-    use dialoguer::{Input, Password};
-    use auth_types::RegisterRequest;
+        use auth_types::RegisterRequest;
+        use dialoguer::{Input, Password};
 
-    let auth = Auth {
-        url: cfg.auth_url.clone(),
-        keystore: KeystoreConfig {
-            path: cfg.keystore_path.clone().into(),
-        },
-    };
-    let theme = crate::cli::get_theme();
+        let auth = Auth {
+            url: cfg.auth_url.clone(),
+            keystore: KeystoreConfig {
+                path: cfg.keystore_path.clone(),
+            },
+        };
+        let theme = crate::cli::get_theme();
 
-    let username = match self.username {
-        Some(ref username) => username.clone(),
-        None => Input::with_theme(&theme)
-            .with_prompt("Username")
-            .interact()?,
-    };
-    let email = match self.email {
-        Some(ref email) => email.clone(),
-        None => Input::with_theme(&theme)
-            .with_prompt("Email")
-            .interact_text()?,
-    };
+        let username = match self.username {
+            Some(ref username) => username.clone(),
+            None => Input::with_theme(&theme)
+                .with_prompt("Username")
+                .interact()?,
+        };
+        let email = match self.email {
+            Some(ref email) => email.clone(),
+            None => Input::with_theme(&theme)
+                .with_prompt("Email")
+                .interact_text()?,
+        };
 
+        let password = match self.password {
+            Some(ref password) => password.clone(),
+            None => Password::with_theme(&theme)
+                .with_prompt("Password")
+                .interact()?,
+        };
 
-    let password = match self.password {
-        Some(ref password) => password.clone(),
-        None => Password::with_theme(&theme)
-            .with_prompt("Password")
-            .interact()?,
-    };
+        let register_request = RegisterRequest {
+            email,
+            username,
+            password,
+        };
 
-    let register_request = RegisterRequest {
-        email,
-        password,
-        username,
-    };
+        auth.register(register_request).await?.into_result()?;
+        log::info!("✔ Created new account");
 
-    auth.register(register_request).await?.into_result()?;
-    log::info!("✔ Created new account");
-
-    Ok(())
-
+        Ok(())
     }
 }

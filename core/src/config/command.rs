@@ -32,7 +32,7 @@ impl SetupCommand for ConfigGenerateCommand {
         let create_config = |target: Target| async move {
             let config = super::generate_config_string(&target);
             let path = target.config_path();
-            if path.exists() && self.force == false {
+            if path.exists() && !self.force {
                 println!(
                     "{} config already exists, use -f argument to overwrite",
                     target

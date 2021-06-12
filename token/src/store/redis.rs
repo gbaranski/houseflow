@@ -1,6 +1,6 @@
 use super::{TokenStore, TokenStoreInternalError};
-use async_trait::async_trait;
 use crate::{Token, TokenID};
+use async_trait::async_trait;
 use redis_client::{aio::Connection, AsyncCommands, Client};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -35,7 +35,9 @@ impl TokenStore for RedisTokenStore {
             .await?)
     }
 
-    async fn get(self: &Self, id: &TokenID) -> Result<Option<Token>, super::Error> {
+    async fn get(&self, id: &TokenID) -> Result<Option<Token>, super::Error> {
+        use std::str::FromStr;
+
         let token: Option<String> = self.connection.lock().await.get(id.to_string()).await?;
         let token: Option<Token> = match token.map(|token| Token::from_str(token.as_str())) {
             Some(token) => Some(token?),

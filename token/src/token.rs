@@ -1,6 +1,5 @@
 use crate::{
-    DecodeError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID,
-    VerifyError,
+    DecodeError, Decoder, Encoder, ExpirationDate, Payload, Signature, TokenID, VerifyError,
 };
 
 #[cfg(feature = "actix")]
@@ -31,10 +30,6 @@ impl Token {
         Ok(())
     }
 
-    pub fn from_str(s: &str) -> Result<Self, DecodeError> {
-        std::str::FromStr::from_str(s)
-    }
-
     pub fn has_expired(&self) -> bool {
         self.payload.expires_at.has_expired()
     }
@@ -48,7 +43,7 @@ impl Token {
         let expires_at = ExpirationDate::from_duration(expires_in);
         let payload = Payload {
             id: rand::random(),
-            user_agent: user_agent.clone(),
+            user_agent: *user_agent,
             user_id: user_id.clone(),
             expires_at,
         };
@@ -79,6 +74,7 @@ impl Token {
 
     #[cfg(feature = "actix")]
     pub fn from_request(req: &actix_web::HttpRequest) -> Result<Self, DecodeHeaderError> {
+        use std::str::FromStr;
         let header_str = req
             .headers()
             .get(actix_web::http::header::AUTHORIZATION)
@@ -193,7 +189,9 @@ impl<'de> Deserialize<'de> for Token {
             where
                 E: de::Error,
             {
-                let result = Token::from_str(value).map_err(|err| match err {
+                use std::str::FromStr;
+
+                Token::from_str(value).map_err(|err| match err {
                     DecodeError::InvalidEncoding(_) => {
                         de::Error::invalid_value(de::Unexpected::Str(value), &"valid base64 str")
                     }
@@ -209,8 +207,7 @@ impl<'de> Deserialize<'de> for Token {
                         de::Unexpected::Unsigned(value as u64),
                         &"valid UserAgent",
                     ),
-                });
-                Ok(result?)
+                })
             }
         }
 

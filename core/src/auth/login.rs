@@ -23,7 +23,7 @@ impl ClientCommand for LoginCommand {
         let auth = Auth {
             url: cfg.auth_url.clone(),
             keystore: KeystoreConfig {
-                path: cfg.keystore_path.clone().into(),
+                path: cfg.keystore_path.clone(),
             },
         };
 
