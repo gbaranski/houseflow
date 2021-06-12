@@ -763,25 +763,12 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.7.1"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
+checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
 dependencies = [
  "atty",
- "humantime 1.3.0",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17392a012ea30ef05a610aa97dfb49496e71c9f676b27879922ea5bdf60d9d3f"
-dependencies = [
- "atty",
- "humantime 2.1.0",
+ "humantime",
  "log",
  "regex",
  "termcolor",
@@ -1029,6 +1016,7 @@ dependencies = [
  "async-trait",
  "clap 3.0.0-beta.2",
  "dialoguer",
+ "env_logger",
  "futures",
  "hex",
  "houseflow-auth-api",
@@ -1040,7 +1028,6 @@ dependencies = [
  "houseflow-types",
  "indoc",
  "log",
- "pretty_env_logger",
  "rand",
  "serde",
  "strum 0.21.0",
@@ -1074,7 +1061,7 @@ dependencies = [
  "actix-files",
  "actix-rt",
  "actix-web",
- "env_logger 0.8.3",
+ "env_logger",
  "houseflow-auth-types",
  "houseflow-db",
  "houseflow-token",
@@ -1106,7 +1093,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "deadpool-postgres",
- "env_logger 0.8.3",
+ "env_logger",
  "houseflow-types",
  "log",
  "refinery",
@@ -1160,7 +1147,7 @@ name = "houseflow-fulfillment-server"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "env_logger 0.8.3",
+ "env_logger",
  "houseflow-db",
  "houseflow-fulfillment-types",
  "houseflow-lighthouse-api",
@@ -1202,7 +1189,7 @@ dependencies = [
  "actix-web",
  "actix-web-actors",
  "bytes",
- "env_logger 0.8.3",
+ "env_logger",
  "houseflow-lighthouse-proto",
  "houseflow-lighthouse-types",
  "houseflow-types",
@@ -1322,15 +1309,6 @@ name = "httpdate"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05842d0d43232b23ccb7060ecb0f0626922c21f30012e97b767b30afd4a5d4b9"
-
-[[package]]
-name = "humantime"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
-dependencies = [
- "quick-error",
-]
 
 [[package]]
 name = "humantime"
@@ -1852,16 +1830,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
-name = "pretty_env_logger"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "926d36b9553851b8b0005f1275891b392ee4d2d833852c417ed025477350fb9d"
-dependencies = [
- "env_logger 0.7.1",
- "log",
-]
-
-[[package]]
 name = "proc-macro-error"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1905,12 +1873,6 @@ checksum = "f0d8caf72986c1a598726adc988bb5984792ef84f5ee5aa50209145ee8077038"
 dependencies = [
  "unicode-xid",
 ]
-
-[[package]]
-name = "quick-error"
-version = "1.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"

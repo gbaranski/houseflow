@@ -51,8 +51,10 @@ pub trait SetupCommand {
 
 fn main() -> anyhow::Result<()> {
     use clap::Clap;
-    
-    pretty_env_logger::init();
+
+    env_logger::init_from_env(
+        env_logger::Env::default().filter_or("HOUSEFLOW_LOG", "info"),
+    );
 
     let cli_config = CliConfig::parse();
     actix_rt::System::with_tokio_rt(|| {
@@ -63,9 +65,7 @@ fn main() -> anyhow::Result<()> {
     })
     .block_on(async {
         match cli_config.subcommand {
-            Subcommand::Setup(cmd) => {
-                cmd.run().await
-            }
+            Subcommand::Setup(cmd) => cmd.run().await,
             Subcommand::Client(cmd) => {
                 let config = config::read_files()?;
                 cmd.run(config.client).await
