@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = Credential<32>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Device {
     /// Identifier of the device
@@ -45,6 +45,15 @@ pub struct Device {
     pub attributes: HashMap<String, Option<String>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct DevicePermission {
+    pub read: bool,
+    pub write: bool,
+    pub execute: bool,
+}
+
+
 use strum_macros::EnumString;
 
 /// Traits defines what functionality device supports
@@ -53,7 +62,7 @@ use strum_macros::EnumString;
 pub enum DeviceTrait {}
 
 /// Type of the device
-#[derive(Debug, Clone, strum_macros::Display, EnumString)]
+#[derive(Debug, Clone, PartialEq, Eq, strum_macros::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DeviceType {
     Gate
