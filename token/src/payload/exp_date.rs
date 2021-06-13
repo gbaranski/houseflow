@@ -23,6 +23,14 @@ impl std::fmt::Display for ExpirationDate {
     }
 }
 
+impl std::ops::Deref for ExpirationDate {
+    type Target = Option<SystemTime>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.system_time
+    }
+}
+
 impl PartialEq for ExpirationDate {
     fn eq(&self, other: &Self) -> bool {
         self.unix_timestamp().map(|v| v.as_secs()) == other.unix_timestamp().map(|v| v.as_secs())
