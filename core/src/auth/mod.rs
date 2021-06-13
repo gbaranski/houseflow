@@ -5,11 +5,13 @@ use login::LoginCommand;
 use logout::LogoutCommand;
 use register::RegisterCommand;
 use status::StatusCommand;
+use refresh::RefreshCommand;
 
 mod login;
 mod logout;
 mod register;
 mod status;
+mod refresh;
 
 use clap::Clap;
 
@@ -32,6 +34,9 @@ pub enum AuthSubcommand {
 
     /// Check current authentication status
     Status(StatusCommand),
+
+    /// Refresh access token
+    Refresh(RefreshCommand),
 }
 
 #[async_trait(?Send)]
@@ -42,6 +47,7 @@ impl ClientCommand for AuthCommand {
             AuthSubcommand::Register(cmd) => cmd.run(state).await,
             AuthSubcommand::Status(cmd) => cmd.run(state).await,
             AuthSubcommand::Logout(cmd) => cmd.run(state).await,
+            AuthSubcommand::Refresh(cmd) => cmd.run(state).await,
         }
     }
 }
