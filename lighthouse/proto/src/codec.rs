@@ -42,8 +42,8 @@ impl Decoder for Frame {
             NoOperation => no_operation::Frame::decode(buf)?.into(),
             State => state::Frame::decode(buf)?.into(),
             StateCheck => state_check::Frame::decode(buf)?.into(),
-            Command => command::Frame::decode(buf)?.into(),
-            CommandResponse => command_response::Frame::decode(buf)?.into(),
+            Execute => execute::Frame::decode(buf)?.into(),
+            ExecuteResponse => execute_response::Frame::decode(buf)?.into(),
         };
         Ok(frame)
     }
@@ -58,8 +58,8 @@ impl Encoder for Frame {
             NoOperation(frame) => frame.encode(buf),
             State(frame) => frame.encode(buf),
             StateCheck(frame) => frame.encode(buf),
-            Command(frame) => frame.encode(buf),
-            CommandResponse(frame) => frame.encode(buf),
+            Execute(frame) => frame.encode(buf),
+            ExecuteResponse(frame) => frame.encode(buf),
         }
     }
 }
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn command() {
+    fn execute() {
         let params = r#"
                 {
                     "on": true,
@@ -127,16 +127,16 @@ mod tests {
                     "openPercent": 20
                 }
                 "#;
-        let frame = frame::command::Frame {
+        let frame = frame::execute::Frame {
             id: random(),
-            code: random(),
+            command: random(),
             params: serde_json::from_str(params).unwrap(),
         };
         test_frame_codec(frame)
     }
 
     #[test]
-    fn command_response() {
+    fn execute_response() {
         let state = r#"
             {
                 "on": true,
@@ -144,9 +144,9 @@ mod tests {
                 "openPercent": 20
             }
             "#;
-        let frame = frame::command_response::Frame {
+        let frame = frame::execute_response::Frame {
             id: random(),
-            code: random(),
+            status: random(),
             error: random(),
             state: serde_json::from_str(state).unwrap(),
         };

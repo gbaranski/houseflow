@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
 #[repr(u16)]
-pub enum CommandResponseError {
+pub enum ExecuteResponseError {
     /// No error occurred
     None = 0x0000,
 
@@ -17,25 +17,27 @@ pub enum CommandResponseError {
     FunctionNotSupported = 0x0001,
 }
 
-impl Decoder for CommandResponseError {
+impl Decoder for ExecuteResponseError {
     const MIN_SIZE: usize = size_of::<Self>();
 
     #[decoder]
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
         let v = buf.get_u16();
-        Self::try_from(v).map_err(|_| DecodeError::InvalidField { field: "error" })
+        Self::try_from(v).map_err(|_| DecodeError::InvalidField {
+            field: std::any::type_name::<Self>(),
+        })
     }
 }
 
-impl Encoder for CommandResponseError {
+impl Encoder for ExecuteResponseError {
     fn encode(&self, buf: &mut impl BufMut) {
         buf.put_u16(self.clone() as u16);
     }
 }
 
-impl<'de> Framed<'de> for CommandResponseError {}
+impl<'de> Framed<'de> for ExecuteResponseError {}
 
-impl TryFrom<u16> for CommandResponseError {
+impl TryFrom<u16> for ExecuteResponseError {
     type Error = ();
 
     fn try_from(v: u16) -> Result<Self, Self::Error> {
@@ -43,10 +45,10 @@ impl TryFrom<u16> for CommandResponseError {
     }
 }
 
-impl rand::distributions::Distribution<CommandResponseError> for rand::distributions::Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> CommandResponseError {
-        CommandResponseError::iter()
-            .nth(rng.gen_range(0..CommandResponseError::iter().len()))
+impl rand::distributions::Distribution<ExecuteResponseError> for rand::distributions::Standard {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> ExecuteResponseError {
+        ExecuteResponseError::iter()
+            .nth(rng.gen_range(0..ExecuteResponseError::iter().len()))
             .unwrap()
     }
 }

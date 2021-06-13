@@ -1,5 +1,5 @@
-pub mod command;
-pub mod command_response;
+pub mod execute;
+pub mod execute_response;
 
 pub mod state;
 pub mod state_check;
@@ -36,12 +36,12 @@ pub enum Frame {
     /// Packet which will be send to execute some action on client side
     ///
     /// Opcode: 0x01
-    Command(command::Frame),
+    Execute(execute::Frame),
 
     /// Packet which will be send as a response to Execute request from server
     ///
     /// Opcode: 0x02
-    CommandResponse(command_response::Frame),
+    ExecuteResponse(execute_response::Frame),
 }
 
 pub trait Framed<'de>:
@@ -56,8 +56,8 @@ impl Frame {
             Frame::NoOperation(_) => Opcode::NoOperation,
             Frame::State(_) => Opcode::State,
             Frame::StateCheck(_) => Opcode::StateCheck,
-            Frame::Command(_) => Opcode::Command,
-            Frame::CommandResponse(_) => Opcode::CommandResponse,
+            Frame::Execute(_) => Opcode::Execute,
+            Frame::ExecuteResponse(_) => Opcode::ExecuteResponse,
         }
     }
 }

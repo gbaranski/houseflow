@@ -8,8 +8,8 @@ pub(crate) enum Opcode {
     NoOperation,
     State,
     StateCheck,
-    Command,
-    CommandResponse,
+    Execute,
+    ExecuteResponse,
 }
 
 impl From<Opcode> for u8 {
