@@ -8,3 +8,13 @@ edition = "2018"
 
 [dependencies]
 types = { path = "../../types", package = "houseflow-types" }
+token = { path = "../../token", package = "houseflow-token" }
+db    = { path = "../../db"   , package = "houseflow-db", optional = true }
+
+serde      = { version = "1.0.126", features = ["derive"] }
+serde_json = { version = "1.0.64", optional = true }
+actix-web  = { version = "=4.0.0-beta.5", optional = true, default-features = false }
+thiserror  = "1.0.25"
+
+[features]
+actix = [ "actix-web", "serde_json" ]
