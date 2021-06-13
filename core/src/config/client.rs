@@ -13,6 +13,11 @@ pub struct ClientConfig {
     /// Default: http://127.0.0.1:6001
     #[serde(default = "default_auth_url")]
     pub auth_url: Url,
+
+    /// URL of the Fulfillment service
+    /// Default: http://127.0.0.1:6003/internal
+    #[serde(default = "default_fulfillment_url")]
+    pub fulfillment_url: Url,
 }
 
 fn default_keystore_path() -> PathBuf {
@@ -24,4 +29,8 @@ fn default_keystore_path() -> PathBuf {
 
 fn default_auth_url() -> Url {
     Url::parse("http://127.0.0.1:6001").unwrap()
+}
+
+fn default_fulfillment_url() -> Url {
+    Url::parse("http://127.0.0.1:6003").unwrap()
 }

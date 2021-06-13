@@ -27,6 +27,7 @@ pub(crate) fn config(
 ) {
     cfg.data(app_data)
         .app_data(database)
+        .service(just_for_testing)
         .service(
             web::scope("/internal")
                 .app_data(AgentData {
@@ -34,6 +35,45 @@ pub(crate) fn config(
                 })
                 .service(internal::on_sync),
         );
+}
+
+// TODO: remove that
+#[actix_web::get("/just-for-testing")]
+async fn just_for_testing(db: Data<dyn Database>) -> impl actix_web::Responder {
+    use actix_web::HttpResponse;
+    use semver::Version;
+    use std::str::FromStr;
+    use types::{Device, DevicePermission, DeviceType, UserID};
+
+    let user_id = UserID::from_str("eeb3f58b28b8bd1815c3cc1bd0028fee").unwrap();
+
+    let device = Device {
+        id: rand::random(),
+        password_hash: "$argon2i$v=19$m=4096,t=3,p=1$NjNjMTdhODU2YTJkNTdiZDViYjJkNTBhY2IxNmI4MzE$chXOPqhv21hnnp/C2Pv/UKm1tjSAXkBY3vkQzBNU9w8".to_string(),
+        device_type: DeviceType::Gate,
+        traits: vec![],
+        name: "Gate".to_string(),
+        will_push_state: true,
+        room: None,
+        model: "super-gate".to_string(),
+        hw_version: Version::parse("0.1.0").unwrap(),
+        sw_version: Version::parse("0.1.0").unwrap(),
+        attributes: Default::default(),
+    };
+    db.add_device(&device).await.unwrap();
+    db.add_user_device(
+        &device.id,
+        &user_id,
+        &DevicePermission {
+            read: true,
+            write: true,
+            execute: true,
+        },
+    )
+    .await
+    .unwrap();
+
+    HttpResponse::Ok()
 }
 
 pub async fn run(
@@ -48,13 +88,7 @@ pub async fn run(
     let server = HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
-            .configure(|cfg| {
-                config(
-                    cfg,
-                    database.clone(),
-                    app_data.clone(),
-                )
-            })
+            .configure(|cfg| config(cfg, database.clone(), app_data.clone()))
     })
     .bind(address.clone())?;
 
@@ -69,7 +103,7 @@ pub async fn run(
 mod test_utils {
     use super::Database;
     use db::MemoryDatabase;
-    use types::{User, UserID, Device, DeviceType};
+    use types::{Device, DeviceType, User, UserID};
 
     use actix_web::web::Data;
     use rand::RngCore;
@@ -108,7 +142,7 @@ mod test_utils {
             password_hash: PASSWORD_HASH.into(),
             device_type: DeviceType::Gate,
             traits: vec![],
-            name:  String::from("SuperTestingGate"),
+            name: String::from("SuperTestingGate"),
             will_push_state: true,
             room: Some(String::from("SuperTestingRoom")),
             model: String::from("gate-1200"),
@@ -117,5 +151,4 @@ mod test_utils {
             attributes: std::collections::HashMap::new(),
         }
     }
-
 }

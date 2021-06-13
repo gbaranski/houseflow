@@ -64,8 +64,10 @@ pub enum DeviceTrait {}
 /// Type of the device
 #[derive(Debug, Clone, PartialEq, Eq, strum_macros::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum DeviceType {
-    Gate
+    Gate,
+    Garage,
 }
 
 #[cfg(feature = "postgres-types")]
@@ -81,7 +83,7 @@ impl<'a> postgres_types::FromSql<'a> for DeviceType {
     }
 
     fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::TEXT_ARRAY
+        *ty == postgres_types::Type::TEXT
     }
 }
 
@@ -98,6 +100,6 @@ impl<'a> postgres_types::FromSql<'a> for DeviceTrait {
     }
 
     fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::TEXT_ARRAY
+        *ty == postgres_types::Type::TEXT
     }
 }

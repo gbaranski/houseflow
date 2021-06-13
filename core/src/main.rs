@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 use auth::AuthCommand;
+use fulfillment::FulfillmentCommand;
 use run::RunCommand;
 
 mod auth;
 mod cli;
 mod config;
+mod fulfillment;
 mod keystore;
 mod run;
 
@@ -36,6 +38,7 @@ pub struct ClientCommandState {
     pub config: ClientConfig,
     pub keystore: Keystore,
     pub auth: auth_api::Auth,
+    pub fulfillment: fulfillment_api::Fulfillment,
 }
 
 #[async_trait(?Send)]
@@ -82,10 +85,12 @@ fn main() -> anyhow::Result<()> {
                 let auth = auth_api::Auth {
                     url: config.auth_url.clone(),
                 };
+                let fulfillment = fulfillment_api::Fulfillment { url: config.fulfillment_url.clone() };
                 let state = ClientCommandState {
                     config,
                     keystore,
                     auth,
+                    fulfillment,
                 };
                 cmd.run(state).await
             }

@@ -1,4 +1,4 @@
-use crate::{AuthCommand, ConfigCommand, RunCommand, ServerConfig, ClientCommandState};
+use crate::{AuthCommand, ConfigCommand, RunCommand, ServerConfig, ClientCommandState, FulfillmentCommand};
 use async_trait::async_trait;
 use clap::Clap;
 
@@ -18,6 +18,9 @@ pub enum Subcommand {
 pub enum ClientCommand {
     /// Login, register, logout, and refresh your authentication
     Auth(AuthCommand),
+
+    /// Manage the fulfillment service, sync devices, execute command, query state
+    Fulfillment(FulfillmentCommand)
 }
 
 #[derive(Clap)]
@@ -37,6 +40,7 @@ impl crate::ClientCommand for ClientCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         match self {
             Self::Auth(cmd) => cmd.run(state).await,
+            Self::Fulfillment(cmd) => cmd.run(state).await,
         }
     }
 }

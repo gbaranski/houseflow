@@ -1,11 +1,11 @@
-use auth_api::Auth;
-use types::Device;
+use fulfillment_types::{SyncRequest, SyncResponse};
+use reqwest::Client;
+use token::Token;
 use url::Url;
 
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct Fulfillment {
-    url: Url,
-    auth: Auth,
+    pub url: Url,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -18,25 +18,22 @@ pub enum Error {
 }
 
 impl Fulfillment {
-    pub fn new(url: Url, auth: Auth) -> Self {
-        Self { url, auth }
+    pub fn new(url: Url) -> Self {
+        Self { url }
     }
 
-    pub async fn sync(&self) -> Result<Vec<Device>, Error> {
-        //         let access_token: Token = unimplemented!();
-        //         let client = Client::new();
-        //         let url = self.url.join("sync").unwrap();
-        //         let response = client
-        //             .post(url)
-        //             .json(&SyncRequest::default())
-        //             .bearer_auth(access_token.to_string())
-        //             .send()
-        //             .await?
-        //             .json::<SyncResponse>()
-        //             .await?;
-        //
-        //         Ok(response)
+    pub async fn sync(&self, access_token: &Token) -> Result<SyncResponse, Error> {
+        let client = Client::new();
+        let url = self.url.join("internal/sync").unwrap();
+        let response = client
+            .get(url)
+            .json(&SyncRequest {})
+            .bearer_auth(access_token.to_string())
+            .send()
+            .await?
+            .json::<SyncResponse>()
+            .await?;
 
-        unimplemented!()
+        Ok(response)
     }
 }
