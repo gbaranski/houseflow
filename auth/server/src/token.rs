@@ -66,7 +66,7 @@ pub async fn exchange_refresh_token(
         .into());
     }
 
-    let expires_in = refresh_token.user_agent().refresh_token_duration();
+    let expires_in = refresh_token.user_agent().access_token_duration();
     let expires_at = ExpirationDate::from_duration(expires_in);
     let access_token_payload = TokenPayload {
         id: refresh_token.user_id().clone(),
