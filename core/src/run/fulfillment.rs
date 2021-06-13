@@ -1,5 +1,4 @@
 use crate::{ServerCommand, ServerConfig};
-use token::store::RedisTokenStore;
 use anyhow::Context;
 use async_trait::async_trait;
 
@@ -14,10 +13,6 @@ impl ServerCommand for RunFulfillmentCommand {
         use std::net::{Ipv4Addr, SocketAddrV4};
 
         let address = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), config.fulfillment.port);
-        let token_store = RedisTokenStore::new()
-            .await
-            .with_context(|| "connect to redis failed, is redis on?")?;
-
         let database_config = db::PostgresConfig {
             user: "postgres",
             password: "",
@@ -33,7 +28,7 @@ impl ServerCommand for RunFulfillmentCommand {
             refresh_key: config.refresh_key.into(),
             access_key: config.access_key.into(),
         };
-        fulfillment_server::run(address, token_store, database, app_data).await?;
+        fulfillment_server::run(address, database, app_data).await?;
 
         Ok(())
     }
