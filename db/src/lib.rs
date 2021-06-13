@@ -25,12 +25,25 @@ impl<T: DatabaseInternalError + 'static> From<T> for Error {
     }
 }
 
-use types::{Device, DeviceID, User, UserID};
+use types::{Device, DeviceID, DevicePermission, User, UserID};
 
 #[async_trait]
 pub trait Database: Send + Sync {
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
     async fn add_device(&self, device: &Device) -> Result<(), Error>;
+
+    async fn get_user_devices(
+        &self,
+        user_id: &UserID,
+        permission: &DevicePermission,
+    ) -> Result<Vec<Device>, Error>;
+
+    async fn add_user_device(
+        &self,
+        device_id: &DeviceID,
+        user_id: &UserID,
+        permission: &DevicePermission,
+    ) -> Result<(), Error>;
 
     async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
     async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;

@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use deadpool_postgres::Pool;
 use semver::Version;
 use tokio_postgres::NoTls;
-use types::{Device, DeviceID, User, UserID};
+use types::{Device, DeviceID, DevicePermission, User, UserID};
 
 use refinery::embed_migrations;
 embed_migrations!("migrations");
@@ -124,7 +124,11 @@ impl Database for PostgresDatabase {
                     &device.id,
                     &device.password_hash,
                     &device.device_type.to_string(),
-                    &device.traits.iter().map(|t| t.to_string()).collect::<Vec<String>>(),
+                    &device
+                        .traits
+                        .iter()
+                        .map(|t| t.to_string())
+                        .collect::<Vec<String>>(),
                     &device.name,
                     &device.will_push_state,
                     &device.room,
@@ -132,6 +136,103 @@ impl Database for PostgresDatabase {
                     &device.hw_version.to_string(),
                     &device.sw_version.to_string(),
                     &device.attributes,
+                ],
+            )
+            .await?;
+
+        match n {
+            0 => Err(Error::NotModified),
+            1 => Ok(()),
+            _ => unreachable!(),
+        }
+    }
+
+    async fn get_user_devices(
+        &self,
+        user_id: &UserID,
+        permission: &DevicePermission,
+    ) -> Result<Vec<Device>, Error> {
+        let connection = self.pool.get().await?;
+        let query_statement = connection
+            .prepare(
+                r#"
+            SELECT *
+            FROM devices
+            WHERE id IN (
+                SELECT device_id 
+                FROM user_devices 
+                WHERE user_id = $1
+                AND read >= $2
+                AND write >= $3
+                AND execute >= $4
+            )"#,
+            )
+            .await?;
+        let row = connection
+            .query(
+                &query_statement,
+                &[
+                    &user_id,
+                    &permission.read,
+                    &permission.write,
+                    &permission.execute,
+                ],
+            )
+            .await?;
+        let devices = row.iter().map(|row| {
+            Ok::<Device, Error>(Device {
+                id: row.try_get("id")?,
+                password_hash: row.try_get("password_hash")?,
+                device_type: row.try_get("type")?,
+                traits: row.try_get("traits")?,
+                name: row.try_get("name")?,
+                will_push_state: row.try_get("will_push_state")?,
+                room: row.try_get("room")?,
+                model: row.try_get("model")?,
+                hw_version: Version::parse(row.try_get("hw_version")?).map_err(|err| {
+                    PostgresError::InvalidColumn {
+                        column: "hw_version",
+                        error: Box::new(err),
+                    }
+                })?,
+                sw_version: Version::parse(row.try_get("sw_version")?).map_err(|err| {
+                    PostgresError::InvalidColumn {
+                        column: "sw_version",
+                        error: Box::new(err),
+                    }
+                })?,
+                attributes: row.try_get("attributes")?,
+            })
+        });
+        let devices: Result<Vec<Device>, Error> = devices.collect();
+        devices
+    }
+
+    async fn add_user_device(
+        &self,
+        device_id: &DeviceID,
+        user_id: &UserID,
+        permission: &DevicePermission,
+    ) -> Result<(), Error> {
+        let connection = self.pool.get().await?;
+        let insert_statement = connection
+            .prepare(
+                r#"
+            INSERT INTO user_devices(user_id, device_id, read, write, execute) 
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+            )
+            .await?;
+
+        let n = connection
+            .execute(
+                &insert_statement,
+                &[
+                    &user_id,
+                    &device_id,
+                    &permission.read,
+                    &permission.write,
+                    &permission.execute,
                 ],
             )
             .await?;
