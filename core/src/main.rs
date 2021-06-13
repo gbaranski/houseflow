@@ -1,7 +1,4 @@
 use async_trait::async_trait;
-use auth::AuthCommand;
-use fulfillment::FulfillmentCommand;
-use run::RunCommand;
 
 mod auth;
 mod cli;
@@ -11,8 +8,13 @@ mod keystore;
 mod run;
 
 pub use keystore::{Keystore, KeystoreFile};
+pub use auth::AuthCommand;
+pub use fulfillment::FulfillmentCommand;
+pub use run::RunCommand;
+pub use config::ConfigCommand;
 
-use config::{CliConfig, ClientConfig, Config, ConfigCommand, ServerConfig, Subcommand};
+use cli::{CliConfig, Subcommand};
+use config::{ClientConfig, Config, ServerConfig};
 use strum_macros::{EnumIter, EnumString};
 
 #[derive(Clone, Debug, EnumString, strum_macros::Display, EnumIter)]
@@ -85,7 +87,9 @@ fn main() -> anyhow::Result<()> {
                 let auth = auth_api::Auth {
                     url: config.auth_url.clone(),
                 };
-                let fulfillment = fulfillment_api::Fulfillment { url: config.fulfillment_url.clone() };
+                let fulfillment = fulfillment_api::Fulfillment {
+                    url: config.fulfillment_url.clone(),
+                };
                 let state = ClientCommandState {
                     config,
                     keystore,
