@@ -6,16 +6,8 @@ use db::Database;
 use std::sync::Arc;
 use types::UserAgent;
 
-use token::store::TokenStore;
-
 mod gactions;
 mod internal;
-
-#[derive(Clone)]
-pub struct AppState<TS: TokenStore, DB: Database> {
-    token_store: TS,
-    database: DB,
-}
 
 #[derive(Clone)]
 pub struct AppData {
@@ -30,35 +22,28 @@ pub struct AgentData {
 
 pub(crate) fn config(
     cfg: &mut web::ServiceConfig,
-    token_store: Data<dyn TokenStore>,
     database: Data<dyn Database>,
     app_data: AppData,
-    internal_agent_data: AgentData,
 ) {
     cfg.data(app_data)
-        .app_data(token_store)
         .app_data(database)
         .service(
             web::scope("/internal")
-                .app_data(internal_agent_data.clone())
+                .app_data(AgentData {
+                    user_agent: UserAgent::Internal,
+                })
                 .service(internal::on_sync),
         );
 }
 
 pub async fn run(
     address: impl std::net::ToSocketAddrs + std::fmt::Display + Clone,
-    token_store: impl TokenStore + 'static,
     database: impl Database + 'static,
     app_data: AppData,
 ) -> std::io::Result<()> {
-    let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
     let database = Data::from(Arc::new(database) as Arc<dyn Database>);
 
     log::info!("Starting `Auth` service");
-
-    let internal_agent_data = AgentData {
-        user_agent: UserAgent::Internal,
-    };
 
     let server = HttpServer::new(move || {
         App::new()
@@ -66,10 +51,8 @@ pub async fn run(
             .configure(|cfg| {
                 config(
                     cfg,
-                    token_store.clone(),
                     database.clone(),
                     app_data.clone(),
-                    internal_agent_data.clone(),
                 )
             })
     })
@@ -84,16 +67,14 @@ pub async fn run(
 
 #[cfg(test)]
 mod test_utils {
-    use super::{Database, TokenStore};
+    use super::Database;
     use db::MemoryDatabase;
-    use token::store::MemoryTokenStore;
+    use types::{User, UserID, Device, DeviceType};
 
     use actix_web::web::Data;
     use rand::RngCore;
     use std::sync::Arc;
 
-    pub const PASSWORD: &str = "SomePassword";
-    pub const PASSWORD_INVALID: &str = "SomeOtherPassword";
     pub const PASSWORD_HASH: &str = "$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU";
 
     pub fn get_app_data() -> crate::AppData {
@@ -106,11 +87,35 @@ mod test_utils {
         app_data
     }
 
-    pub fn get_token_store() -> Data<dyn TokenStore> {
-        Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)
-    }
-
     pub fn get_database() -> Data<dyn Database> {
         Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
     }
+
+    pub fn get_user() -> User {
+        let id: UserID = rand::random();
+        User {
+            id: id.clone(),
+            username: format!("john-{}", id.clone()),
+            email: format!("john-{}@example.com", id.clone()),
+            password_hash: PASSWORD_HASH.into(),
+        }
+    }
+
+    pub fn get_device() -> Device {
+        use semver::Version;
+        Device {
+            id: rand::random(),
+            password_hash: PASSWORD_HASH.into(),
+            device_type: DeviceType::Gate,
+            traits: vec![],
+            name:  String::from("SuperTestingGate"),
+            will_push_state: true,
+            room: Some(String::from("SuperTestingRoom")),
+            model: String::from("gate-1200"),
+            hw_version: Version::new(1, 0, 0),
+            sw_version: Version::new(1, 0, 1),
+            attributes: std::collections::HashMap::new(),
+        }
+    }
+
 }
