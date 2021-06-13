@@ -9,7 +9,7 @@ pub struct SyncCommand {}
 #[async_trait(?Send)]
 impl ClientCommand for SyncCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        let access_token = state.keystore.read().await?.access_token;
+        let access_token = state.access_token().await?;
         let response = state.fulfillment.sync(&access_token).await?.into_result()?;
 
         println!("Synced {} devices", response.devices.len());
