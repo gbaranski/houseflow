@@ -2,7 +2,7 @@ use bytes::{Buf, BufMut};
 use std::{convert::TryInto, str::FromStr};
 use thiserror::Error;
 
-#[derive(Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, PartialOrd, Ord, Clone)]
 pub struct Credential<const N: usize> {
     inner: [u8; N],
 }
