@@ -41,6 +41,9 @@ void Lighthouse::onEvent(WStype_t type, uint8_t *payload, size_t length) {
     break;
   case WStype_BIN:
     Serial.printf("[Lighthouse] received binary, len: %zu\n", length);
+    digitalWrite(LED_PIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_PIN, LOW);
     break;
   case WStype_PING:
     Serial.printf("[Lighthouse] received ping\n");

@@ -26,8 +26,14 @@ void setupSerial()
   Serial.println("Starting serial");
 }
 
+void setupGPIO() 
+{
+    pinMode(LED_PIN, OUTPUT);
+}
+
 void setup() 
 {
+  setupGPIO();
   setupSerial();
   setupWifi();
   lighthouse.setup_websocket_client();
