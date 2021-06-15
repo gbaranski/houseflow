@@ -160,6 +160,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
             }
             ws::Message::Ping(bytes) => {
                 log::info!("Received ping: {:?}", bytes);
+                ctx.pong(b"");
             }
             ws::Message::Pong(bytes) => {
                 log::info!("Received pong: {:?}", bytes);
