@@ -9,9 +9,7 @@ edition = "2018"
 [dependencies]
 types              = { path = "../types/"             , package = "houseflow-types" }
 token              = { path = "../token/"             , package = "houseflow-token", features = [ "store" ] }
-auth-api           = { path = "../auth/api/"          , package = "houseflow-auth-api" }
-auth-types         = { path = "../auth/types/"        , package = "houseflow-auth-types" }
-auth-server        = { path = "../auth/server/"       , package = "houseflow-auth-server" }
+auth               = { path = "../auth/core/"         , package = "houseflow-auth"     }
 db                 = { path = "../db/"                , package = "houseflow-db" }
 lighthouse         = { path = "../lighthouse/core"    , package = "houseflow-lighthouse" }
 fulfillment        = { path = "../fulfillment/core"   , package = "houseflow-fulfillment" }

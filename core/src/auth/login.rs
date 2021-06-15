@@ -16,7 +16,7 @@ pub struct LoginCommand {
 #[async_trait(?Send)]
 impl ClientCommand for LoginCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        use auth_types::LoginRequest;
+        use auth::types::LoginRequest;
         use dialoguer::{Input, Password};
         use types::UserAgent;
 

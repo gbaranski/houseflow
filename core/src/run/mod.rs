@@ -1,7 +1,7 @@
 use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
 
-use auth::RunAuthCommand;
+use self::auth::RunAuthCommand;
 use self::lighthouse::RunLighthouseCommand;
 use self::fulfillment::RunFulfillmentCommand;
 

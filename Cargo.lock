@@ -1019,9 +1019,7 @@ dependencies = [
  "env_logger",
  "futures",
  "hex",
- "houseflow-auth-api",
- "houseflow-auth-server",
- "houseflow-auth-types",
+ "houseflow-auth",
  "houseflow-db",
  "houseflow-fulfillment",
  "houseflow-lighthouse",
@@ -1039,6 +1037,15 @@ dependencies = [
  "toml",
  "url",
  "xdg",
+]
+
+[[package]]
+name = "houseflow-auth"
+version = "0.1.0"
+dependencies = [
+ "houseflow-auth-api",
+ "houseflow-auth-server",
+ "houseflow-auth-types",
 ]
 
 [[package]]

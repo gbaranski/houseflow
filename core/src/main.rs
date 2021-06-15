@@ -7,12 +7,13 @@ mod fulfillment;
 mod keystore;
 mod run;
 
-pub use auth::AuthCommand;
+pub use crate::auth::AuthCommand;
 pub use config::ConfigCommand;
 pub use crate::fulfillment::FulfillmentCommand;
 pub use keystore::{Keystore, KeystoreFile};
 pub use run::RunCommand;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
+use ::auth::api::Auth as AuthAPI;
 
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, Config, ServerConfig};
@@ -41,7 +42,7 @@ impl Target {
 pub struct ClientCommandState {
     pub config: ClientConfig,
     pub keystore: Keystore,
-    pub auth: auth_api::Auth,
+    pub auth: AuthAPI,
     pub fulfillment: FulfillmentAPI,
 }
 
@@ -118,7 +119,7 @@ fn main() -> anyhow::Result<()> {
                 let keystore = Keystore {
                     path: config.keystore_path.clone(),
                 };
-                let auth = auth_api::Auth {
+                let auth = AuthAPI {
                     url: config.auth_url.clone(),
                 };
                 let fulfillment = FulfillmentAPI {

@@ -33,12 +33,12 @@ impl ServerCommand for RunAuthCommand {
         let database = db::PostgresDatabase::new(&database_config)
             .await
             .with_context(|| "connecting to postgres failed, is postgres on?")?;
-        let app_data = auth_server::AppData {
+        let app_data = auth::server::AppData {
             refresh_key: config.refresh_key.into(),
             access_key: config.access_key.into(),
             password_salt: config.auth.password_salt.into(),
         };
-        auth_server::run(address, token_store, database, app_data).await?;
+        auth::server::run(address, token_store, database, app_data).await?;
 
         Ok(())
     }

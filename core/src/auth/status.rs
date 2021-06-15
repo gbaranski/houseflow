@@ -1,6 +1,6 @@
 use crate::{ClientCommand, ClientCommandState};
 use async_trait::async_trait;
-use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
+use auth::types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use token::Token;
 
 use clap::Clap;
