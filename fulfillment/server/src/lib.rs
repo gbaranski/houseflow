@@ -3,6 +3,7 @@ use actix_web::{
     App, HttpServer,
 };
 use db::Database;
+use lighthouse_api::prelude::Lighthouse;
 use std::sync::Arc;
 use types::UserAgent;
 
@@ -23,16 +24,19 @@ pub struct AgentData {
 pub(crate) fn config(
     cfg: &mut web::ServiceConfig,
     database: Data<dyn Database>,
+    lighthouse: Data<dyn Lighthouse>,
     app_data: AppData,
 ) {
     cfg.data(app_data)
         .app_data(database)
+        .app_data(lighthouse)
         .service(just_for_testing)
         .service(
             web::scope("/internal")
                 .app_data(AgentData {
                     user_agent: UserAgent::Internal,
                 })
+                .service(internal::on_execute)
                 .service(internal::on_sync),
         );
 }
@@ -79,16 +83,18 @@ async fn just_for_testing(db: Data<dyn Database>) -> impl actix_web::Responder {
 pub async fn run(
     address: impl std::net::ToSocketAddrs + std::fmt::Display + Clone,
     database: impl Database + 'static,
+    lighthouse: impl Lighthouse + 'static,
     app_data: AppData,
 ) -> std::io::Result<()> {
     let database = Data::from(Arc::new(database) as Arc<dyn Database>);
+    let lighthouse = Data::from(Arc::new(lighthouse) as Arc<dyn Lighthouse>);
 
     log::info!("Starting `Auth` service");
 
     let server = HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
-            .configure(|cfg| config(cfg, database.clone(), app_data.clone()))
+            .configure(|cfg| config(cfg, database.clone(), lighthouse.clone(), app_data.clone()))
     })
     .bind(address.clone())?;
 
@@ -103,11 +109,15 @@ pub async fn run(
 mod test_utils {
     use super::Database;
     use db::MemoryDatabase;
+
+    use lighthouse_api::LighthouseMock;
+    use lighthouse_proto::{execute, execute_response};
     use types::{Device, DeviceType, User, UserID};
 
     use actix_web::web::Data;
     use rand::RngCore;
     use std::sync::Arc;
+    use tokio::sync::mpsc;
 
     pub const PASSWORD_HASH: &str = "$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU";
 
@@ -123,6 +133,23 @@ mod test_utils {
 
     pub fn get_database() -> Data<dyn Database> {
         Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
+    }
+
+    pub fn get_lighthouse() -> (
+        Arc<lighthouse_api::LighthouseMock>,
+        mpsc::Receiver<execute::Frame>,
+        mpsc::Sender<execute_response::Frame>,
+    ) {
+        let (request_sender, request_receiver) = mpsc::channel(8);
+        let (response_sender, response_receiver) = mpsc::channel(8);
+        (
+            Arc::new(LighthouseMock {
+                request_sender,
+                response_receiver: tokio::sync::Mutex::new(response_receiver),
+            }),
+            request_receiver,
+            response_sender,
+        )
     }
 
     pub fn get_user() -> User {

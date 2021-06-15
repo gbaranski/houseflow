@@ -11,6 +11,7 @@ db                = { path = "../../db"   	   , package = "houseflow-db" }
 types             = { path = "../../types"	   , package = "houseflow-types" }
 fulfillment-types = { path = "../types"   	   , package = "houseflow-fulfillment-types", features = [ "actix", "db" ] }
 lighthouse-api    = { path = "../../lighthouse/api", package = "houseflow-lighthouse-api" }
+lighthouse-proto  = { path = "../../lighthouse/proto", package = "houseflow-lighthouse-proto" }
 token             = { path = "../../token"         , package = "houseflow-token", features = [ "actix" ] }
 
 
@@ -21,6 +22,7 @@ thiserror         =   "1.0"
 actix-rt = "2.2.0"
 rand = "0.8.3"
 semver = "1.0.3"
+tokio = { version = "1.6.1", features = ["macros"] }
 
 [dev-dependencies]
 futures = "0.3.15"

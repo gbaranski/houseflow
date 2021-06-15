@@ -41,6 +41,8 @@ mod tests {
     use crate::test_utils::*;
     use actix_web::{http, test, App};
     use types::{Device, UserID};
+    use std::sync::Arc;
+    use lighthouse_api::prelude::Lighthouse;
 
     async fn get_authorized_device(db: &dyn Database, user_id: &UserID) -> Device {
         let device = get_device();
@@ -58,12 +60,14 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_login() {
+    async fn sync() {
         use futures::future::join_all;
         use std::iter::repeat_with;
 
         let database = get_database();
         let app_data = get_app_data();
+        let (lighthouse, _, _) = get_lighthouse();
+        let actix_lighthouse = Data::from(lighthouse as Arc<dyn Lighthouse>);
         let user = get_user();
         let access_token =
             Token::new_access_token(&app_data.access_key, &user.id, &UserAgent::Internal);
@@ -86,7 +90,7 @@ mod tests {
         .await;
 
         let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, database, app_data.clone())),
+            App::new().configure(|cfg| crate::config(cfg, database, actix_lighthouse.clone(), app_data.clone())),
         )
         .await;
 
