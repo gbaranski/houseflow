@@ -208,6 +208,42 @@ impl Database for PostgresDatabase {
         devices
     }
 
+    async fn check_user_device_permission(
+        &self,
+        user_id: &UserID,
+        device_id: &DeviceID,
+        permission: &DevicePermission,
+    ) -> Result<bool, Error> {
+        let connection = self.pool.get().await?;
+        let query_statement = connection
+            .prepare(
+                r#"
+            SELECT 1
+            FROM user_devices
+            WHERE user_id = $1
+            AND device_id = $2
+            AND read >= $3
+            AND write >= $4
+            AND execute >= $5
+            "#,
+            )
+            .await?;
+        let result = connection
+            .query_opt(
+                &query_statement,
+                &[
+                    user_id,
+                    device_id,
+                    &permission.read,
+                    &permission.write,
+                    &permission.execute,
+                ],
+            )
+            .await?;
+
+        Ok(result.is_some())
+    }
+
     async fn add_user_device(
         &self,
         device_id: &DeviceID,

@@ -50,7 +50,14 @@ impl Database for MemoryDatabase {
                     && d_permission.write >= permission.write
                     && d_permission.execute >= permission.execute
                 {
-                    Some(devices.iter().find(|device| device.0 == d_device_id).unwrap().1.clone())
+                    Some(
+                        devices
+                            .iter()
+                            .find(|device| device.0 == d_device_id)
+                            .unwrap()
+                            .1
+                            .clone(),
+                    )
                 } else {
                     None
                 }
@@ -60,7 +67,30 @@ impl Database for MemoryDatabase {
         Ok(user_devices)
     }
 
-    async fn add_user_device(&self, device_id: &DeviceID, user_id: &UserID, permission: &DevicePermission) -> Result<(), Error> {
+    async fn check_user_device_permission(
+        &self,
+        user_id: &UserID,
+        device_id: &DeviceID,
+        permission: &DevicePermission,
+    ) -> Result<bool, Error> {
+        let user_devices = self.user_devices.lock().await;
+        Ok(user_devices
+            .iter()
+            .any(|((d_user_id, d_device_id), d_permission)| {
+                d_user_id == user_id
+                    && d_device_id == device_id
+                    && d_permission.read >= permission.read
+                    && d_permission.write >= permission.write
+                    && d_permission.execute >= permission.execute
+            }))
+    }
+
+    async fn add_user_device(
+        &self,
+        device_id: &DeviceID,
+        user_id: &UserID,
+        permission: &DevicePermission,
+    ) -> Result<(), Error> {
         let mut user_devices = self.user_devices.lock().await;
         user_devices.insert((user_id.clone(), device_id.clone()), permission.clone());
 
