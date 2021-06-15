@@ -1,11 +1,11 @@
 use crate::aliases::{
-    ActorCommandFrame, ActorCommandResponseFrame, ActorStateCheckFrame, ActorStateFrame,
+    ActorExecuteFrame, ActorCommandResponseFrame, ActorStateCheckFrame, ActorStateFrame,
 };
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
 use lighthouse_proto::{
-    command, command_response, state, state_check, Decoder, Encoder, Frame, FrameID,
+    execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID,
 };
 use lighthouse_types::DeviceError;
 use std::collections::HashMap;
@@ -27,7 +27,7 @@ pub enum SessionError {
 pub struct Session {
     device_id: DeviceID,
     address: SocketAddr,
-    pub command_channels: HashMap<FrameID, oneshot::Sender<command_response::Frame>>,
+    pub execute_channels: HashMap<FrameID, oneshot::Sender<execute_response::Frame>>,
     pub state_channel: broadcast::Sender<state::Frame>,
 }
 
@@ -39,7 +39,7 @@ impl Session {
             device_id,
             address,
             state_channel,
-            command_channels: Default::default(),
+            execute_channels: Default::default(),
         }
     }
 }
@@ -86,18 +86,18 @@ impl Handler<ActorStateCheckFrame> for Session {
     }
 }
 
-impl Handler<ActorCommandFrame> for Session {
+impl Handler<ActorExecuteFrame> for Session {
     type Result =
         actix::ResponseActFuture<Self, std::result::Result<ActorCommandResponseFrame, DeviceError>>;
 
-    fn handle(&mut self, frame: ActorCommandFrame, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
-        let frame: command::Frame = frame.into();
+        let frame: execute::Frame = frame.into();
 
         let mut buf = BytesMut::with_capacity(512);
         let (tx, rx) = oneshot::channel();
         let request_id = frame.id.clone();
-        self.command_channels.insert(request_id.clone(), tx);
+        self.execute_channels.insert(request_id.clone(), tx);
         frame.encode(&mut buf);
         ctx.binary(buf);
 
@@ -111,7 +111,7 @@ impl Handler<ActorCommandFrame> for Session {
         }
         .into_actor(self)
         .map(move |res, session: &mut Self, _| {
-            session.command_channels.remove(&request_id);
+            session.execute_channels.remove(&request_id);
             res
         });
 
@@ -143,10 +143,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                         self.state_channel.send(frame).expect("failed sending");
                     }
                     Frame::StateCheck(_frame) => panic!("Unexpected state check received"),
-                    Frame::Command(_) => panic!("Unexpected command received"),
-                    Frame::CommandResponse(frame) => {
+                    Frame::Execute(_) => panic!("Unexpected command received"),
+                    Frame::ExecuteResponse(frame) => {
                         log::debug!("Received CommandResponse, ID: {:?}", frame.id);
-                        self.command_channels
+                        self.execute_channels
                             .remove(&frame.id)
                             .expect("no one was waiting for response")
                             .send(frame)

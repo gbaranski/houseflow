@@ -1,7 +1,7 @@
 use actix_web::{get, http, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web_actors::ws;
 use itertools::Itertools;
-use lighthouse_proto::{command, command_response};
+use lighthouse_proto::{execute, execute_response};
 use session::Session;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -67,23 +67,23 @@ async fn on_websocket(
     Ok(response)
 }
 
-#[post("/command/{device_id}")]
+#[post("/execute/{device_id}")]
 async fn on_command(
     path: web::Path<String>,
-    frame: web::Json<command::Frame>,
+    frame: web::Json<execute::Frame>,
     app_state: web::Data<AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let device_id = path.into_inner();
     let device_id = DeviceID::from_str(&device_id)
         .map_err(|err| HttpResponse::BadRequest().body(format!("Invalid DeviceID: {}", err)))?;
 
-    let response: command_response::Frame = app_state
+    let response: execute_response::Frame = app_state
         .sessions
         .lock()
         .await
         .get(&device_id)
         .ok_or_else(|| HttpResponse::NotFound().body("Device not found"))?
-        .send(aliases::ActorCommandFrame::from(frame.into_inner()))
+        .send(aliases::ActorExecuteFrame::from(frame.into_inner()))
         .await
         .unwrap()
         .unwrap()

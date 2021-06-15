@@ -1,41 +1,41 @@
 use actix::{Message, MessageResponse};
-use lighthouse_proto::{command, command_response, state, state_check};
+use lighthouse_proto::{execute, execute_response, state, state_check};
 use lighthouse_types::DeviceError;
 
-pub struct ActorCommandFrame {
-    inner: command::Frame,
+pub struct ActorExecuteFrame {
+    inner: execute::Frame,
 }
 
-impl From<command::Frame> for ActorCommandFrame {
-    fn from(v: command::Frame) -> Self {
+impl From<execute::Frame> for ActorExecuteFrame {
+    fn from(v: execute::Frame) -> Self {
         Self { inner: v }
     }
 }
 
-impl From<ActorCommandFrame> for command::Frame {
-    fn from(val: ActorCommandFrame) -> Self {
+impl From<ActorExecuteFrame> for execute::Frame {
+    fn from(val: ActorExecuteFrame) -> Self {
         val.inner
     }
 }
 
 #[derive(MessageResponse)]
 pub struct ActorCommandResponseFrame {
-    inner: command_response::Frame,
+    inner: execute_response::Frame,
 }
 
-impl From<command_response::Frame> for ActorCommandResponseFrame {
-    fn from(v: command_response::Frame) -> Self {
+impl From<execute_response::Frame> for ActorCommandResponseFrame {
+    fn from(v: execute_response::Frame) -> Self {
         Self { inner: v }
     }
 }
 
-impl From<ActorCommandResponseFrame> for command_response::Frame {
+impl From<ActorCommandResponseFrame> for execute_response::Frame {
     fn from(val: ActorCommandResponseFrame) -> Self {
         val.inner
     }
 }
 
-impl Message for ActorCommandFrame {
+impl Message for ActorExecuteFrame {
     type Result = Result<ActorCommandResponseFrame, DeviceError>;
 }
 
