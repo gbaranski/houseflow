@@ -1,15 +1,17 @@
+#include <Arduino.h>
+#include <WebSocketsClient.h>
 #include "lighthouse.hpp"
 #include "config.hpp"
-#include <WebSocketsClient.h>
+
+#define AUTHORIZATION_HEADER                                                   \
+  "Authorization: Basic " DEVICE_ID ":" DEVICE_PASSWORD
 
 Lighthouse::Lighthouse() {
   Serial.println("Constructor called");
   websocketClient = WebSocketsClient();
 }
 
-void Lighthouse::loop() {
-  websocketClient.loop();
-}
+void Lighthouse::loop() { websocketClient.loop(); }
 
 void Lighthouse::setup_websocket_client() {
   static auto *this_ptr = this;
@@ -17,7 +19,8 @@ void Lighthouse::setup_websocket_client() {
     this_ptr->onEvent(type, payload, length);
   };
 
-  websocketClient.begin(LIGHTHOUSE_ADDRESS, LIGHTHOUSE_PORT, LIGHTHOUSE_PATH);
+  websocketClient.begin(LIGHTHOUSE_HOST, LIGHTHOUSE_PORT, LIGHTHOUSE_PATH);
+  websocketClient.setExtraHeaders(AUTHORIZATION_HEADER);
   websocketClient.onEvent(handler);
   websocketClient.setReconnectInterval(LIGHTHOUSE_RECONNECT_INTERVAL);
   websocketClient.enableHeartbeat(LIGHTHOUSE_PING_INTERVAL,
