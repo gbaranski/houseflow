@@ -1,0 +1,12 @@
+[package]
+name = "houseflow-auth"
+version = "0.1.0"
+authors = ["gbaranski <root@gbaranski.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+auth-api    = { path = "../auth/api/"   , package = "houseflow-auth-api" }
+auth-types  = { path = "../auth/types/" , package = "houseflow-auth-types" }
+auth-server = { path = "../auth/server/", package = "houseflow-auth-server" }
