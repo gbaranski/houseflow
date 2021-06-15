@@ -20,7 +20,7 @@ impl ServerCommand for RunFulfillmentCommand {
             port: 5432,
             database_name: "houseflow",
         };
-        let lighthouse = lighthouse_api::Lighthouse {
+        let lighthouse = lighthouse::api::Lighthouse {
             url: url::Url::parse("http://127.0.0.1:6002").unwrap(),
         };
         let database = db::PostgresDatabase::new(&database_config)

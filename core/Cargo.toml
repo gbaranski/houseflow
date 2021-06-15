@@ -13,8 +13,7 @@ auth-api           = { path = "../auth/api/"          , package = "houseflow-aut
 auth-types         = { path = "../auth/types/"        , package = "houseflow-auth-types" }
 auth-server        = { path = "../auth/server/"       , package = "houseflow-auth-server" }
 db                 = { path = "../db/"                , package = "houseflow-db" }
-lighthouse-server  = { path = "../lighthouse/server/" , package = "houseflow-lighthouse-server" }
-lighthouse-api     = { path = "../lighthouse/api/"    , package = "houseflow-lighthouse-api" }
+lighthouse         = { path = "../lighthouse/core"    , package = "houseflow-lighthouse" }
 fulfillment        = { path = "../fulfillment/core"   , package = "houseflow-fulfillment" }
 
 tokio              = { version = "1.6.1"             , features = ["sync", "rt-multi-thread", "macros", "fs"] }

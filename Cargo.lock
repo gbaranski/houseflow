@@ -1024,8 +1024,7 @@ dependencies = [
  "houseflow-auth-types",
  "houseflow-db",
  "houseflow-fulfillment",
- "houseflow-lighthouse-api",
- "houseflow-lighthouse-server",
+ "houseflow-lighthouse",
  "houseflow-token",
  "houseflow-types",
  "humantime",
@@ -1190,6 +1189,16 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+]
+
+[[package]]
+name = "houseflow-lighthouse"
+version = "0.1.0"
+dependencies = [
+ "houseflow-lighthouse-api",
+ "houseflow-lighthouse-proto",
+ "houseflow-lighthouse-server",
+ "houseflow-lighthouse-types",
 ]
 
 [[package]]

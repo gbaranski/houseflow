@@ -13,7 +13,7 @@ impl ServerCommand for RunLighthouseCommand {
             std::net::Ipv4Addr::new(127, 0, 0, 1).into(),
             cfg.lighthouse.port,
         );
-        lighthouse_server::run(address).await?;
+        lighthouse::server::run(address).await?;
 
         Ok(())
     }
