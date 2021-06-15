@@ -1,6 +1,6 @@
 use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
-use lighthouse_proto::{command_response, Decoder, Encoder, Frame};
+use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 use types::{DeviceID, DevicePassword};
@@ -71,14 +71,14 @@ impl Session {
                     let frame = Frame::decode(&mut bytes)?;
                     log::info!("Received frame: {:?}", frame);
                     match frame {
-                        Frame::Command(frame) => {
-                            let response_frame = command_response::Frame {
+                        Frame::Execute(frame) => {
+                            let response_frame = execute_response::Frame {
                                 id: frame.id,
-                                code: command_response::Code::Success,
-                                error: command_response::Error::None,
+                                status: execute_response::Status::Success,
+                                error: execute_response::Error::None,
                                 state: frame.params,
                             };
-                            let response_frame = Frame::CommandResponse(response_frame);
+                            let response_frame = Frame::ExecuteResponse(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);
                             events
                                 .send(response_event)
