@@ -93,10 +93,11 @@ impl Handler<ActorExecuteFrame> for Session {
     fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
         let frame: execute::Frame = frame.into();
+        let request_id = frame.id.clone();
+        let frame = Frame::Execute(frame);
 
         let mut buf = BytesMut::with_capacity(512);
         let (tx, rx) = oneshot::channel();
-        let request_id = frame.id.clone();
         self.execute_channels.insert(request_id.clone(), tx);
         frame.encode(&mut buf);
         ctx.binary(buf);

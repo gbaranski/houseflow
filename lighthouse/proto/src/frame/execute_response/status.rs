@@ -7,7 +7,7 @@ use std::mem::size_of;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum_macros::Display)]
 #[repr(u8)]
 pub enum ExecuteResponseStatus {
     /// Confirm that the command succeeded.

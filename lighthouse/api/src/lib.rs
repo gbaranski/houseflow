@@ -32,7 +32,7 @@ impl prelude::Lighthouse for Lighthouse {
         let device_id_string = device_id.to_string();
         let url = self
             .url
-            .join("command/")
+            .join("execute/")
             .unwrap()
             .join(&device_id_string)
             .unwrap();

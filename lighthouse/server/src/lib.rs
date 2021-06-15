@@ -52,6 +52,7 @@ async fn on_websocket(
     let (device_id, device_password) = match parse_authorization_header(&req) {
         Ok(v) => v,
         Err(err) => {
+            log::debug!("session init error: {}", err);
             return Ok::<HttpResponse, actix_web::Error>(HttpResponse::BadRequest().body(err))
         } // TODO: Consider changing Ok to Err
     };
