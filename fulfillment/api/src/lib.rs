@@ -10,9 +10,6 @@ pub struct Fulfillment {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Auth API Error: `{0}`")]
-    AuthError(#[from] auth_api::Error),
-
     #[error("Sending request failed: `{0}`")]
     ReqwestError(#[from] reqwest::Error),
 }
