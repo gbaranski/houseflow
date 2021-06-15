@@ -20,6 +20,9 @@ impl ServerCommand for RunFulfillmentCommand {
             port: 5432,
             database_name: "houseflow",
         };
+        let lighthouse = lighthouse_api::Lighthouse {
+            url: url::Url::parse("http://127.0.0.1:6002").unwrap(),
+        };
         let database = db::PostgresDatabase::new(&database_config)
             .await
             .with_context(|| "connecting to postgres failed, is postgres on?")?;
@@ -28,7 +31,7 @@ impl ServerCommand for RunFulfillmentCommand {
             refresh_key: config.refresh_key.into(),
             access_key: config.access_key.into(),
         };
-        fulfillment_server::run(address, database, app_data).await?;
+        fulfillment_server::run(address, database, lighthouse, app_data).await?;
 
         Ok(())
     }

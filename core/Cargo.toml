@@ -14,6 +14,7 @@ auth-types         = { path = "../auth/types/"        , package = "houseflow-aut
 auth-server        = { path = "../auth/server/"       , package = "houseflow-auth-server" }
 db                 = { path = "../db/"                , package = "houseflow-db" }
 lighthouse-server  = { path = "../lighthouse/server/" , package = "houseflow-lighthouse-server" }
+lighthouse-api     = { path = "../lighthouse/api/"    , package = "houseflow-lighthouse-api" }
 fulfillment-server = { path = "../fulfillment/server/", package = "houseflow-fulfillment-server" }
 fulfillment-types  = { path = "../fulfillment/types/" , package = "houseflow-fulfillment-types" }
 fulfillment-api    = { path = "../fulfillment/api/"   , package = "houseflow-fulfillment-api" }
