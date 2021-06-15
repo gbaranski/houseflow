@@ -1023,9 +1023,7 @@ dependencies = [
  "houseflow-auth-server",
  "houseflow-auth-types",
  "houseflow-db",
- "houseflow-fulfillment-api",
- "houseflow-fulfillment-server",
- "houseflow-fulfillment-types",
+ "houseflow-fulfillment",
  "houseflow-lighthouse-api",
  "houseflow-lighthouse-server",
  "houseflow-token",
@@ -1133,6 +1131,15 @@ dependencies = [
  "tokio-tungstenite",
  "tungstenite",
  "url",
+]
+
+[[package]]
+name = "houseflow-fulfillment"
+version = "0.1.0"
+dependencies = [
+ "houseflow-fulfillment-api",
+ "houseflow-fulfillment-server",
+ "houseflow-fulfillment-types",
 ]
 
 [[package]]

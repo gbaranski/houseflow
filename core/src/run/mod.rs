@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 use auth::RunAuthCommand;
 use lighthouse::RunLighthouseCommand;
-use fulfillment::RunFulfillmentCommand;
+use self::fulfillment::RunFulfillmentCommand;
 mod auth;
 mod lighthouse;
 mod fulfillment;

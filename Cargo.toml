@@ -3,6 +3,7 @@ members = [
   "fulfillment/api",
   "fulfillment/server",
   "fulfillment/types",
+  "fulfillment/core",
 
   "lighthouse/proto",
   "lighthouse/server",

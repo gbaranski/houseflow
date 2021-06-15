@@ -27,11 +27,11 @@ impl ServerCommand for RunFulfillmentCommand {
             .await
             .with_context(|| "connecting to postgres failed, is postgres on?")?;
 
-        let app_data = fulfillment_server::AppData {
+        let app_data = fulfillment::server::AppData {
             refresh_key: config.refresh_key.into(),
             access_key: config.access_key.into(),
         };
-        fulfillment_server::run(address, database, lighthouse, app_data).await?;
+        fulfillment::server::run(address, database, lighthouse, app_data).await?;
 
         Ok(())
     }
