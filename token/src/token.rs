@@ -51,6 +51,7 @@ impl Token {
         Token::new(payload, signature)
     }
 
+    /// Creates new refresh token for given credentials
     pub fn new_refresh_token(
         key: impl AsRef<[u8]>,
         user_id: &UserID,
@@ -64,6 +65,7 @@ impl Token {
         )
     }
 
+    /// Creates new access token for given credentials
     pub fn new_access_token(
         key: impl AsRef<[u8]>,
         user_id: &UserID,

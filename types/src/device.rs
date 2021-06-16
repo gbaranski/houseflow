@@ -45,6 +45,7 @@ pub struct Device {
     pub attributes: HashMap<String, Option<String>>,
 }
 
+/// User permission to a device
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DevicePermission {

@@ -3,6 +3,7 @@ use std::time::{Duration, SystemTime};
 
 use crate::{Decoder, Encoder};
 
+/// Token expiration date
 #[derive(Debug, Clone, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExpirationDate {
