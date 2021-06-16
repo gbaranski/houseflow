@@ -33,9 +33,23 @@ void LighthouseClient::onBinary(uint8_t *payload, size_t length) {
   Iterable iter(payload, length);
   uint8_t opcode = iter.get_u8();
   switch (opcode) {
+  case Frame::Opcode::NoOperation:
+    break;
   case Frame::Opcode::Execute: {
-    auto executeFrame = ExecuteFrame::decode(iter);
-    Serial.printf("execute frame, command: %x\n", executeFrame.command);
+    auto executeFrame = ExecuteFrame::decode(&iter);
+    Serial.printf("execute frame ID: %u, command: %x\n", executeFrame.id, executeFrame.command);
+
+    ExecuteResponseFrame executeResponseFrame(
+        executeFrame.id, ExecuteResponseFrame::Status::Success,
+        ExecuteResponseFrame::FunctionNotSupported, (char *)"{}");
+
+    uint8_t buf[512];
+    Iterable iter(buf, 512);
+    iter.put_u8(Frame::Opcode::ExecuteResponse);
+    executeResponseFrame.encode(&iter);
+
+    websocketClient.sendBIN(buf, iter.position - iter.begin);
+
     break;
   }
   default:

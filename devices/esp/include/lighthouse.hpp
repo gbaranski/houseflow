@@ -21,7 +21,7 @@ struct Iterable {
   uint8_t *end;
   uint8_t *position;
 
-  Iterable(uint8_t *begin, size_t size)
+  Iterable(u8 *begin, size_t size)
       : begin(begin), end(begin + size), position(begin) {}
 
   uint8_t get_u8() {
@@ -38,6 +38,22 @@ struct Iterable {
 
     return msb | (lsb << 8);
   }
+
+  void put_u8(u8 v) {
+    *position = v;
+    position++;
+  }
+
+  void put_u16(u16 v) {
+    put_u8(v >> 8);
+    put_u8(v & 0xFF);
+  }
+
+  void put_string(char *s) {
+    for (uint32_t i = 0; s[i] != '\0'; i++) {
+      put_u8((uint8_t)s[i]);
+    }
+  }
 };
 
 struct Frame {
@@ -51,7 +67,7 @@ struct Frame {
 };
 
 struct ExecuteFrame {
-  static ExecuteFrame decode(Iterable iter);
+  static ExecuteFrame decode(Iterable *iter);
 
   enum Command { NoOperation = 0x0000, OnOff = 0x0001 };
 
@@ -61,7 +77,6 @@ struct ExecuteFrame {
 };
 
 struct ExecuteResponseFrame {
-  static ExecuteResponseFrame decode(Iterable iter);
 
   enum Status {
     Success = 0x0,
@@ -77,6 +92,15 @@ struct ExecuteResponseFrame {
   Status status;
   enum Error error;
   char *state;
+
+  void encode(Iterable *iter);
+
+  ExecuteResponseFrame(u16 _id, Status _status, enum Error _error, char *_state) {
+    id = _id;
+    status = _status;
+    error = _error;
+    state = _state;
+  }
 };
 
 #endif
