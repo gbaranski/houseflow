@@ -6,7 +6,7 @@
 #include "lighthouse.hpp"
 #include "config.hpp"
 
-static Lighthouse lighthouse;
+static LighthouseClient lighthouseClient;
 
 void setupWifi() 
 {
@@ -36,10 +36,10 @@ void setup()
   setupGPIO();
   setupSerial();
   setupWifi();
-  lighthouse.setup_websocket_client();
+  lighthouseClient.setup_websocket_client();
 }
 
 void loop() 
 {
-  lighthouse.loop();
+  lighthouseClient.loop();
 }
