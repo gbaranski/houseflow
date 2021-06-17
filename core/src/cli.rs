@@ -7,7 +7,7 @@ pub fn get_theme() -> impl Theme {
 }
 
 use crate::{
-    AuthCommand, ConfigCommand, FulfillmentCommand, RunCommand,
+    AuthCommand, ConfigCommand, FulfillmentCommand, ServerCommand, 
 };
 use clap::Clap;
 
@@ -17,11 +17,11 @@ pub enum Subcommand {
     /// Login, register, logout, and refresh your authentication
     Auth(AuthCommand),
 
+    /// Login, register, logout, and refresh your authentication
+    Server(ServerCommand),
+
     /// Manage the fulfillment service, sync devices, execute command, query state
     Fulfillment(FulfillmentCommand),
-
-    /// Run specific parts of project
-    Run(RunCommand),
 
     /// Manage configuration(s)
     Config(ConfigCommand),

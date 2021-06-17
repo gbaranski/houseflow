@@ -6,7 +6,7 @@ mod config;
 mod device;
 mod fulfillment;
 mod keystore;
-mod run;
+mod server;
 
 pub use crate::auth::AuthCommand;
 pub use crate::device::RunDeviceCommand;
@@ -15,7 +15,7 @@ use ::auth::api::Auth as AuthAPI;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
 pub use config::ConfigCommand;
 pub use keystore::{Keystore, KeystoreFile};
-pub use run::RunCommand;
+pub use server::ServerCommand;
 
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, DeviceConfig, ServerConfig};
@@ -149,7 +149,7 @@ fn main() -> anyhow::Result<()> {
         match cli_config.subcommand {
             Subcommand::Auth(cmd) => cmd.run(client_command_state().await?).await,
             Subcommand::Fulfillment(cmd) => cmd.run(client_command_state().await?).await,
-            Subcommand::Run(cmd) => cmd.run(server_command_state().await?).await,
+            Subcommand::Server(cmd) => cmd.run(server_command_state().await?).await,
             Subcommand::Config(cmd) => cmd.run(()).await,
         }
     })
