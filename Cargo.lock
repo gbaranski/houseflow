@@ -762,6 +762,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "enum_dispatch"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd53b3fde38a39a06b2e66dc282f3e86191e53bd04cc499929c15742beae3df8"
+dependencies = [
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1016,11 +1028,13 @@ dependencies = [
  "async-trait",
  "clap 3.0.0-beta.2",
  "dialoguer",
+ "enum_dispatch",
  "env_logger",
  "futures",
  "hex",
  "houseflow-auth",
  "houseflow-db",
+ "houseflow-device",
  "houseflow-fulfillment",
  "houseflow-lighthouse",
  "houseflow-token",

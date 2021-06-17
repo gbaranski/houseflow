@@ -1,4 +1,4 @@
-use crate::{ServerCommand, ServerConfig};
+use crate::{Command, ServerCommandState};
 use anyhow::Context;
 use async_trait::async_trait;
 
@@ -8,11 +8,11 @@ use clap::Clap;
 pub struct RunFulfillmentCommand {}
 
 #[async_trait(?Send)]
-impl ServerCommand for RunFulfillmentCommand {
-    async fn run(&self, config: ServerConfig) -> anyhow::Result<()> {
+impl Command<ServerCommandState> for RunFulfillmentCommand {
+    async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
         use std::net::{Ipv4Addr, SocketAddrV4};
 
-        let address = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), config.fulfillment.port);
+        let address = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), state.config.fulfillment.port);
         let database_config = db::PostgresConfig {
             user: "postgres",
             password: "",
@@ -28,8 +28,8 @@ impl ServerCommand for RunFulfillmentCommand {
             .with_context(|| "connecting to postgres failed, is postgres on?")?;
 
         let app_data = fulfillment::server::AppData {
-            refresh_key: config.refresh_key.into(),
-            access_key: config.access_key.into(),
+            refresh_key: state.config.refresh_key.into(),
+            access_key: state.config.access_key.into(),
         };
         fulfillment::server::run(address, database, lighthouse, app_data).await?;
 

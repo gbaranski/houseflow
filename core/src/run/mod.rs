@@ -1,4 +1,4 @@
-use crate::{ServerCommand, ServerConfig};
+use crate::{Command, ServerCommandState};
 use async_trait::async_trait;
 
 use self::auth::RunAuthCommand;
@@ -10,7 +10,9 @@ mod fulfillment;
 mod lighthouse;
 
 use clap::Clap;
+use enum_dispatch::enum_dispatch;
 
+#[enum_dispatch(Command)]
 #[derive(Clap)]
 pub enum Service {
     Auth(RunAuthCommand),
@@ -25,12 +27,12 @@ pub struct RunCommand {
 }
 
 #[async_trait(?Send)]
-impl ServerCommand for RunCommand {
-    async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()> {
+impl Command<ServerCommandState> for RunCommand {
+    async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
         match &self.service {
-            Service::Auth(cmd) => cmd.run(cfg).await,
-            Service::Lighthouse(cmd) => cmd.run(cfg).await,
-            Service::Fulfillment(cmd) => cmd.run(cfg).await,
+            Service::Auth(cmd) => cmd.run(state).await,
+            Service::Lighthouse(cmd) => cmd.run(state).await,
+            Service::Fulfillment(cmd) => cmd.run(state).await,
         }
     }
 }

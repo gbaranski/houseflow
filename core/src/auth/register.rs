@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -16,7 +16,7 @@ pub struct RegisterCommand {
 }
 
 #[async_trait(?Send)]
-impl ClientCommand for RegisterCommand {
+impl Command<ClientCommandState> for RegisterCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         use auth::types::RegisterRequest;
         use dialoguer::{Input, Password};

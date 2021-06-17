@@ -13,6 +13,7 @@ auth               = { path = "../auth/core/"         , package = "houseflow-aut
 db                 = { path = "../db/"                , package = "houseflow-db" }
 lighthouse         = { path = "../lighthouse/core"    , package = "houseflow-lighthouse" }
 fulfillment        = { path = "../fulfillment/core"   , package = "houseflow-fulfillment" }
+device             = { path = "../devices/virtual"    , package = "houseflow-device" }
 
 tokio              = { version = "1.6.1"             , features = ["sync", "rt-multi-thread", "macros", "fs"] }
 url                = { version = "2.2.2"             , features = ["serde"] }
@@ -33,4 +34,5 @@ hex                = "0.4.3"
 indoc              = "1.0.3"
 env_logger         = "0.8.4"
 serde_json         = "1.0.64"
+enum_dispatch      = "0.3.7"
 humantime = "2.1.0"

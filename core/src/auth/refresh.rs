@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState, KeystoreFile};
+use crate::{Command, ClientCommandState, KeystoreFile};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -7,7 +7,7 @@ use clap::Clap;
 pub struct RefreshCommand {}
 
 #[async_trait(?Send)]
-impl ClientCommand for RefreshCommand {
+impl Command<ClientCommandState> for RefreshCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let keystore_file = state.keystore.read().await?;
         let response = state

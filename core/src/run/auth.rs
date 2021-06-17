@@ -1,4 +1,4 @@
-use crate::{ServerCommand, ServerConfig};
+use crate::{Command, ServerCommandState};
 use anyhow::Context;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -15,11 +15,11 @@ use clap::Clap;
 pub struct RunAuthCommand {}
 
 #[async_trait(?Send)]
-impl ServerCommand for RunAuthCommand {
-    async fn run(&self, config: ServerConfig) -> anyhow::Result<()> {
+impl Command<ServerCommandState> for RunAuthCommand {
+    async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
         use std::net::{Ipv4Addr, SocketAddrV4};
 
-        let address = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), config.auth.port);
+        let address = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), state.config.auth.port);
         let token_store = RedisTokenStore::new()
             .await
             .with_context(|| "connect to redis failed, is redis on?")?;
@@ -34,9 +34,9 @@ impl ServerCommand for RunAuthCommand {
             .await
             .with_context(|| "connecting to postgres failed, is postgres on?")?;
         let app_data = auth::server::AppData {
-            refresh_key: config.refresh_key.into(),
-            access_key: config.access_key.into(),
-            password_salt: config.auth.password_salt.into(),
+            refresh_key: state.config.refresh_key.into(),
+            access_key: state.config.access_key.into(),
+            password_salt: state.config.auth.password_salt.into(),
         };
         auth::server::run(address, token_store, database, app_data).await?;
 

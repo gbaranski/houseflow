@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -7,7 +7,7 @@ use clap::Clap;
 pub struct LogoutCommand {}
 
 #[async_trait(?Send)]
-impl ClientCommand for LogoutCommand {
+impl Command<ClientCommandState> for LogoutCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let keystore_file = state.keystore.read().await?;
 

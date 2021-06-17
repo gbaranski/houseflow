@@ -7,70 +7,24 @@ pub fn get_theme() -> impl Theme {
 }
 
 use crate::{
-    AuthCommand, ClientCommandState, ConfigCommand, FulfillmentCommand, RunCommand, ServerConfig,
+    AuthCommand, ConfigCommand, FulfillmentCommand, RunCommand,
 };
-use async_trait::async_trait;
 use clap::Clap;
+
 
 #[derive(Clap)]
 pub enum Subcommand {
-    #[clap(flatten)]
-    Client(ClientCommand),
-
-    #[clap(flatten)]
-    Server(ServerCommand),
-
-    #[clap(flatten)]
-    Setup(SetupCommand),
-}
-
-#[derive(Clap)]
-pub enum ClientCommand {
     /// Login, register, logout, and refresh your authentication
     Auth(AuthCommand),
 
     /// Manage the fulfillment service, sync devices, execute command, query state
     Fulfillment(FulfillmentCommand),
-}
 
-#[derive(Clap)]
-pub enum ServerCommand {
-    /// Run server(s)
+    /// Run specific parts of project
     Run(RunCommand),
-}
 
-#[derive(Clap)]
-pub enum SetupCommand {
-    /// Manage configurations
+    /// Manage configuration(s)
     Config(ConfigCommand),
-}
-
-#[async_trait(?Send)]
-impl crate::ClientCommand for ClientCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        match self {
-            Self::Auth(cmd) => cmd.run(state).await,
-            Self::Fulfillment(cmd) => cmd.run(state).await,
-        }
-    }
-}
-
-#[async_trait(?Send)]
-impl crate::ServerCommand for ServerCommand {
-    async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()> {
-        match self {
-            Self::Run(cmd) => cmd.run(cfg).await,
-        }
-    }
-}
-
-#[async_trait(?Send)]
-impl crate::SetupCommand for SetupCommand {
-    async fn run(&self) -> anyhow::Result<()> {
-        match self {
-            Self::Config(cmd) => cmd.run().await,
-        }
-    }
 }
 
 use std::path::PathBuf;

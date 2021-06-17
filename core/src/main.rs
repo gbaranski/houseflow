@@ -3,11 +3,13 @@ use async_trait::async_trait;
 mod auth;
 mod cli;
 mod config;
+mod device;
 mod fulfillment;
 mod keystore;
 mod run;
 
 pub use crate::auth::AuthCommand;
+pub use crate::device::RunDeviceCommand;
 pub use crate::fulfillment::FulfillmentCommand;
 use ::auth::api::Auth as AuthAPI;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
@@ -16,7 +18,7 @@ pub use keystore::{Keystore, KeystoreFile};
 pub use run::RunCommand;
 
 use cli::{CliConfig, Subcommand};
-use config::{ClientConfig, Config, ServerConfig};
+use config::{ClientConfig, DeviceConfig, ServerConfig};
 use strum_macros::{EnumIter, EnumString};
 use token::Token;
 
@@ -24,6 +26,7 @@ use token::Token;
 pub enum Target {
     Server,
     Client,
+    Device,
 }
 
 impl Target {
@@ -34,9 +37,14 @@ impl Target {
         match self {
             Target::Server => base_path.join("server.toml"),
             Target::Client => base_path.join("client.toml"),
+            Target::Device => base_path.join("device.toml"),
         }
     }
 }
+
+pub trait CommandState {}
+
+impl<T> CommandState for T {}
 
 #[derive(Clone)]
 pub struct ClientCommandState {
@@ -44,6 +52,11 @@ pub struct ClientCommandState {
     pub keystore: Keystore,
     pub auth: AuthAPI,
     pub fulfillment: FulfillmentAPI,
+}
+
+#[derive(Clone)]
+pub struct ServerCommandState {
+    pub config: ServerConfig,
 }
 
 impl ClientCommandState {
@@ -79,24 +92,8 @@ impl ClientCommandState {
 }
 
 #[async_trait(?Send)]
-pub trait ClientCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()>;
-}
-
-#[async_trait(?Send)]
-pub trait ServerCommand {
-    async fn run(&self, cfg: ServerConfig) -> anyhow::Result<()>;
-}
-
-#[async_trait(?Send)]
-pub trait Command {
-    async fn run(&self, cfg: Config) -> anyhow::Result<()>;
-}
-
-// Consider changing name here
-#[async_trait(?Send)]
-pub trait SetupCommand {
-    async fn run(&self) -> anyhow::Result<()>;
+pub trait Command<T: CommandState> {
+    async fn run(&self, state: T) -> anyhow::Result<()>;
 }
 
 fn main() -> anyhow::Result<()> {
@@ -112,31 +109,48 @@ fn main() -> anyhow::Result<()> {
             .unwrap()
     })
     .block_on(async {
-        match cli_config.subcommand {
-            Subcommand::Setup(cmd) => cmd.run().await,
-            Subcommand::Client(cmd) => {
-                let config = config::read_files()?.client;
-                let keystore = Keystore {
-                    path: config.keystore_path.clone(),
-                };
-                let auth = AuthAPI {
+        use config::read_config_file;
+
+        let client_command_state = || async {
+            use anyhow::Context;
+            let config: ClientConfig =
+                read_config_file::<ClientConfig>(&Target::Client.config_path())
+                    .await
+                    .with_context(|| "read client config file")?
+                    .into();
+            let state = ClientCommandState {
+                config: config.clone(),
+                auth: AuthAPI {
                     url: config.auth_url.clone(),
-                };
-                let fulfillment = FulfillmentAPI {
+                },
+                fulfillment: FulfillmentAPI {
                     url: config.fulfillment_url.clone(),
-                };
-                let state = ClientCommandState {
-                    config,
-                    keystore,
-                    auth,
-                    fulfillment,
-                };
-                cmd.run(state).await
-            }
-            Subcommand::Server(cmd) => {
-                let config = config::read_files()?;
-                cmd.run(config.server).await
-            }
+                },
+                keystore: Keystore {
+                    path: config.keystore_path.clone(),
+                },
+            };
+            Ok::<_, anyhow::Error>(state)
+        };
+
+        let server_command_state = || async {
+            use anyhow::Context;
+            let config: ServerConfig =
+                read_config_file::<ServerConfig>(&Target::Server.config_path())
+                    .await
+                    .with_context(|| "read client config file")?
+                    .into();
+            let state = ServerCommandState {
+                config,
+            };
+            Ok::<_, anyhow::Error>(state)
+        };
+
+        match cli_config.subcommand {
+            Subcommand::Auth(cmd) => cmd.run(client_command_state().await?).await,
+            Subcommand::Fulfillment(cmd) => cmd.run(client_command_state().await?).await,
+            Subcommand::Run(cmd) => cmd.run(server_command_state().await?).await,
+            Subcommand::Config(cmd) => cmd.run(()).await,
         }
     })
 }

@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState, KeystoreFile};
+use crate::{Command, KeystoreFile, ClientCommandState};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -13,7 +13,7 @@ pub struct LoginCommand {
 }
 
 #[async_trait(?Send)]
-impl ClientCommand for LoginCommand {
+impl Command<ClientCommandState> for LoginCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         use auth::types::LoginRequest;
         use dialoguer::{Input, Password};

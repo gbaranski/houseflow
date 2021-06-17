@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 use auth::types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use token::Token;
@@ -75,7 +75,7 @@ impl StatusCommand {
 }
 
 #[async_trait(?Send)]
-impl ClientCommand for StatusCommand {
+impl Command<ClientCommandState> for StatusCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
 

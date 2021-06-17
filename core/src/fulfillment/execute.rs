@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 use fulfillment::types::ExecuteRequest;
 use lighthouse::proto::execute;
@@ -12,7 +12,7 @@ pub struct ExecuteCommand {
 }
 
 #[async_trait(?Send)]
-impl ClientCommand for ExecuteCommand {
+impl Command<ClientCommandState> for ExecuteCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
         let execute_frame = execute::Frame {

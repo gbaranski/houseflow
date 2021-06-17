@@ -1,7 +1,7 @@
 mod execute;
 mod sync;
 
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 
 use execute::ExecuteCommand;
@@ -25,7 +25,7 @@ pub enum FulfillmentSubcommand {
 }
 
 #[async_trait(?Send)]
-impl ClientCommand for FulfillmentCommand {
+impl Command<ClientCommandState> for FulfillmentCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         match &self.subcommand {
             FulfillmentSubcommand::Sync(cmd) => cmd.run(state).await,

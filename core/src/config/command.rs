@@ -1,4 +1,4 @@
-use crate::{SetupCommand, Target};
+use crate::{Command, Target};
 use anyhow::Context;
 use async_trait::async_trait;
 use clap::Clap;
@@ -16,10 +16,10 @@ pub enum ConfigSubcommand {
 }
 
 #[async_trait(?Send)]
-impl SetupCommand for ConfigCommand {
-    async fn run(&self) -> anyhow::Result<()> {
+impl Command<()> for ConfigCommand {
+    async fn run(&self, state: ()) -> anyhow::Result<()> {
         match &self.subcommand {
-            ConfigSubcommand::Generate(cmd) => cmd.run().await,
+            ConfigSubcommand::Generate(cmd) => cmd.run(state).await,
         }
     }
 }
@@ -33,8 +33,8 @@ pub struct ConfigGenerateCommand {
 }
 
 #[async_trait(?Send)]
-impl SetupCommand for ConfigGenerateCommand {
-    async fn run(&self) -> anyhow::Result<()> {
+impl Command<()> for ConfigGenerateCommand {
+    async fn run(&self, _state: ()) -> anyhow::Result<()> {
         let create_config = |target: Target| async move {
             let config = super::generate_config_string(&target);
             let path = target.config_path();

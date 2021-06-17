@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -7,7 +7,7 @@ use clap::Clap;
 pub struct SyncCommand {}
 
 #[async_trait(?Send)]
-impl ClientCommand for SyncCommand {
+impl Command<ClientCommandState> for SyncCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
         let response = state.fulfillment.sync(&access_token).await?.into_result()?;

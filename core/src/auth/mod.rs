@@ -1,4 +1,4 @@
-use crate::{ClientCommand, ClientCommandState};
+use crate::{Command, ClientCommandState};
 use async_trait::async_trait;
 
 use login::LoginCommand;
@@ -40,7 +40,7 @@ pub enum AuthSubcommand {
 }
 
 #[async_trait(?Send)]
-impl ClientCommand for AuthCommand {
+impl Command<ClientCommandState> for AuthCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         match &self.subcommand {
             AuthSubcommand::Login(cmd) => cmd.run(state).await,
