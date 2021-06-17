@@ -69,7 +69,7 @@ impl ClientCommandState {
             ));
         }
 
-        if keystore_file.access_token.has_expired() {
+        if !keystore_file.access_token.has_expired() {
             log::debug!("cached access token is not expired");
             Ok(keystore_file.access_token)
         } else {
