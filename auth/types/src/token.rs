@@ -1,6 +1,6 @@
-use types::ResultUntagged;
 use std::time::Duration;
 use token::Token;
+use types::ResultUntagged;
 
 use serde::{Deserialize, Serialize};
 

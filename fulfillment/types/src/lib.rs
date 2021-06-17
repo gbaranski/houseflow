@@ -1,5 +1,5 @@
-mod sync;
 mod execute;
+mod sync;
 
-pub use sync::*;
 pub use execute::*;
+pub use sync::*;

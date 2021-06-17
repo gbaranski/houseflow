@@ -39,7 +39,6 @@ pub struct FulfillmentServerConfig {
     pub port: u16,
 }
 
-
 const fn default_auth_port() -> u16 {
     6001
 }

@@ -10,7 +10,11 @@ pub struct RefreshCommand {}
 impl ClientCommand for RefreshCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let keystore_file = state.keystore.read().await?;
-        let response = state.auth.fetch_access_token(&keystore_file.refresh_token).await?.into_result()?;
+        let response = state
+            .auth
+            .fetch_access_token(&keystore_file.refresh_token)
+            .await?
+            .into_result()?;
         let new_keystore_file = KeystoreFile {
             refresh_token: keystore_file.refresh_token,
             access_token: response.access_token,

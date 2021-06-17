@@ -1,7 +1,7 @@
-use lighthouse_proto::{execute, execute_response};
 use crate::Error;
-use types::DeviceID;
 use async_trait::async_trait;
+use lighthouse_proto::{execute, execute_response};
+use types::DeviceID;
 
 #[async_trait]
 pub trait Lighthouse: Send + Sync {

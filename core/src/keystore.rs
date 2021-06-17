@@ -69,7 +69,8 @@ impl Keystore {
             .await
             .with_context(|| "open file")?;
 
-        let file: KeystoreFile = serde_json::from_reader(file.into_std().await).with_context(|| "deserializing keystore file")?;
+        let file: KeystoreFile = serde_json::from_reader(file.into_std().await)
+            .with_context(|| "deserializing keystore file")?;
 
         Ok(file)
     }

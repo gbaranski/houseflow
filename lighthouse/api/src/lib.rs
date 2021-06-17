@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use lighthouse_proto::{execute, execute_response};
 use lighthouse_types::DeviceError;
-use tokio::sync::Mutex;
 use thiserror::Error;
+use tokio::sync::Mutex;
 use types::DeviceID;
 use url::Url;
 

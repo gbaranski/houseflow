@@ -1,4 +1,4 @@
-use fulfillment_types::{SyncRequest, SyncResponse, ExecuteRequest, ExecuteResponse};
+use fulfillment_types::{ExecuteRequest, ExecuteResponse, SyncRequest, SyncResponse};
 use reqwest::Client;
 use token::Token;
 use url::Url;
@@ -34,7 +34,11 @@ impl Fulfillment {
         Ok(response)
     }
 
-    pub async fn execute(&self, access_token: &Token, request: &ExecuteRequest) -> Result<ExecuteResponse, Error> {
+    pub async fn execute(
+        &self,
+        access_token: &Token,
+        request: &ExecuteRequest,
+    ) -> Result<ExecuteResponse, Error> {
         let client = Client::new();
         let url = self.url.join("internal/execute").unwrap();
         let response = client

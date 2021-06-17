@@ -24,7 +24,11 @@ impl Decoder for ExecuteFrame {
         let command = Command::decode(buf)?;
         let params = serde_json::Value::decode(buf)?;
 
-        Ok(Self { id, command, params })
+        Ok(Self {
+            id,
+            command,
+            params,
+        })
     }
 }
 

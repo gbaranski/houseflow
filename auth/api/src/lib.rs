@@ -113,6 +113,4 @@ impl Auth {
 
         Ok(response)
     }
-
 }
-

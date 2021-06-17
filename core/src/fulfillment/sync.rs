@@ -13,10 +13,13 @@ impl ClientCommand for SyncCommand {
         let response = state.fulfillment.sync(&access_token).await?.into_result()?;
 
         println!("Synced {} devices", response.devices.len());
-        response
-            .devices
-            .iter()
-            .for_each(|device| println!("Device ID: {}, Name: {}", device.id.to_string(), device.name));
+        response.devices.iter().for_each(|device| {
+            println!(
+                "Device ID: {}, Name: {}",
+                device.id.to_string(),
+                device.name
+            )
+        });
 
         Ok(())
     }

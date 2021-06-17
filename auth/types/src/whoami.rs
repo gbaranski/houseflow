@@ -1,5 +1,5 @@
-use types::ResultTagged;
 use serde::{Deserialize, Serialize};
+use types::ResultTagged;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WhoamiRequest {}

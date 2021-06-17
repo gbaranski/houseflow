@@ -1,6 +1,6 @@
+use lighthouse_proto::{execute, execute_response};
 use serde::{Deserialize, Serialize};
 use types::{DeviceID, ResultTagged};
-use lighthouse_proto::{execute, execute_response};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ExecuteRequest {

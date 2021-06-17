@@ -8,12 +8,12 @@ mod keystore;
 mod run;
 
 pub use crate::auth::AuthCommand;
-pub use config::ConfigCommand;
 pub use crate::fulfillment::FulfillmentCommand;
+use ::auth::api::Auth as AuthAPI;
+use ::fulfillment::api::Fulfillment as FulfillmentAPI;
+pub use config::ConfigCommand;
 pub use keystore::{Keystore, KeystoreFile};
 pub use run::RunCommand;
-use ::fulfillment::api::Fulfillment as FulfillmentAPI;
-use ::auth::api::Auth as AuthAPI;
 
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, Config, ServerConfig};

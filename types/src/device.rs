@@ -54,7 +54,6 @@ pub struct DevicePermission {
     pub execute: bool,
 }
 
-
 use strum_macros::EnumString;
 
 /// Traits defines what functionality device supports

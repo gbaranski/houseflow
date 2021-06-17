@@ -53,7 +53,7 @@ async fn on_websocket(
         Ok(v) => v,
         Err(err) => {
             log::debug!("session init error: {}", err);
-            return Ok::<HttpResponse, actix_web::Error>(HttpResponse::BadRequest().body(err))
+            return Ok::<HttpResponse, actix_web::Error>(HttpResponse::BadRequest().body(err));
         } // TODO: Consider changing Ok to Err
     };
     log::debug!(

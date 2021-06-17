@@ -2,12 +2,12 @@ use crate::{ServerCommand, ServerConfig};
 use async_trait::async_trait;
 
 use self::auth::RunAuthCommand;
-use self::lighthouse::RunLighthouseCommand;
 use self::fulfillment::RunFulfillmentCommand;
+use self::lighthouse::RunLighthouseCommand;
 
 mod auth;
-mod lighthouse;
 mod fulfillment;
+mod lighthouse;
 
 use clap::Clap;
 

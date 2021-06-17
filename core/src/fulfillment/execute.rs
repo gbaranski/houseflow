@@ -1,8 +1,8 @@
 use crate::{ClientCommand, ClientCommandState};
+use async_trait::async_trait;
 use fulfillment::types::ExecuteRequest;
 use lighthouse::proto::execute;
 use types::DeviceID;
-use async_trait::async_trait;
 
 use clap::Clap;
 
@@ -24,7 +24,11 @@ impl ClientCommand for ExecuteCommand {
             device_id: self.device_id.clone(),
             frame: execute_frame,
         };
-        let response = state.fulfillment.execute(&access_token, &request).await?.into_result()?;
+        let response = state
+            .fulfillment
+            .execute(&access_token, &request)
+            .await?
+            .into_result()?;
         println!("Device responded with status: {}", response.frame.status);
 
         Ok(())

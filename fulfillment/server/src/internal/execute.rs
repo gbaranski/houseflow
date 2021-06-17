@@ -72,7 +72,10 @@ mod tests {
             Token::new_access_token(&app_data.access_key, &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
         database.add_device(&device).await.unwrap();
-        database.add_user_device(&device.id, &user.id, &EXECUTE_PERMISSION).await.unwrap();
+        database
+            .add_user_device(&device.id, &user.id, &EXECUTE_PERMISSION)
+            .await
+            .unwrap();
 
         let mut app = test::init_service(App::new().configure(|cfg| {
             crate::config(cfg, database, actix_lighthouse.clone(), app_data.clone())

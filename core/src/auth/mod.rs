@@ -3,15 +3,15 @@ use async_trait::async_trait;
 
 use login::LoginCommand;
 use logout::LogoutCommand;
+use refresh::RefreshCommand;
 use register::RegisterCommand;
 use status::StatusCommand;
-use refresh::RefreshCommand;
 
 mod login;
 mod logout;
+mod refresh;
 mod register;
 mod status;
-mod refresh;
 
 use clap::Clap;
 

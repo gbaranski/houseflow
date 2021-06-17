@@ -1,11 +1,11 @@
-mod sync;
 mod execute;
+mod sync;
 
 use crate::{ClientCommand, ClientCommandState};
 use async_trait::async_trait;
 
-use sync::SyncCommand;
 use execute::ExecuteCommand;
+use sync::SyncCommand;
 
 use clap::Clap;
 

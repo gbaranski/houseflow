@@ -1,5 +1,5 @@
-use types::ResultTagged;
 use serde::{Deserialize, Serialize};
+use types::ResultTagged;
 use types::UserID;
 use validator::Validate;
 

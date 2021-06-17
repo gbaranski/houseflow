@@ -6,7 +6,9 @@ pub fn get_theme() -> impl Theme {
     }
 }
 
-use crate::{AuthCommand, ConfigCommand, RunCommand, ServerConfig, ClientCommandState, FulfillmentCommand};
+use crate::{
+    AuthCommand, ClientCommandState, ConfigCommand, FulfillmentCommand, RunCommand, ServerConfig,
+};
 use async_trait::async_trait;
 use clap::Clap;
 
@@ -28,7 +30,7 @@ pub enum ClientCommand {
     Auth(AuthCommand),
 
     /// Manage the fulfillment service, sync devices, execute command, query state
-    Fulfillment(FulfillmentCommand)
+    Fulfillment(FulfillmentCommand),
 }
 
 #[derive(Clap)]

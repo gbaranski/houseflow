@@ -40,9 +40,9 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{http, test, App};
-    use types::{Device, UserID};
-    use std::sync::Arc;
     use lighthouse_api::prelude::Lighthouse;
+    use std::sync::Arc;
+    use types::{Device, UserID};
 
     async fn get_authorized_device(db: &dyn Database, user_id: &UserID) -> Device {
         let device = get_device();
@@ -89,9 +89,9 @@ mod tests {
         )
         .await;
 
-        let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, database, actix_lighthouse.clone(), app_data.clone())),
-        )
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(cfg, database, actix_lighthouse.clone(), app_data.clone())
+        }))
         .await;
 
         let request_body = SyncRequest {};

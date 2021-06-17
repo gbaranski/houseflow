@@ -11,7 +11,9 @@ impl ClientCommand for LogoutCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let keystore_file = state.keystore.read().await?;
 
-        state.auth.logout(&keystore_file.refresh_token)
+        state
+            .auth
+            .logout(&keystore_file.refresh_token)
             .await?
             .into_result()?;
 

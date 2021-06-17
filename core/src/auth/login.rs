@@ -1,6 +1,5 @@
-use crate::{ClientCommand, KeystoreFile, ClientCommandState};
+use crate::{ClientCommand, ClientCommandState, KeystoreFile};
 use async_trait::async_trait;
-
 
 use clap::Clap;
 
@@ -41,7 +40,11 @@ impl ClientCommand for LoginCommand {
             user_agent: UserAgent::Internal,
         };
 
-        let login_response = state.auth.login(login_request.clone()).await?.into_result()?;
+        let login_response = state
+            .auth
+            .login(login_request.clone())
+            .await?
+            .into_result()?;
         log::info!("✔ Logged in as {}", login_request.email);
         let keystore_file = KeystoreFile {
             refresh_token: login_response.refresh_token,

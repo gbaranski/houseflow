@@ -1,4 +1,4 @@
-use super::{Status, Error};
+use super::{Error, Status};
 use crate::{DecodeError, Decoder, Encoder, Frame, FrameID, Framed};
 use bytes::{Buf, BufMut};
 use lighthouse_macros::decoder;
