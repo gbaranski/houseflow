@@ -49,14 +49,14 @@ pub struct ClientCommandState {
 impl ClientCommandState {
     pub async fn access_token(&self) -> anyhow::Result<Token> {
         let keystore_file = self.keystore.read().await?;
-        if keystore_file.refresh_token.has_expired() == true {
+        if keystore_file.refresh_token.has_expired() {
             log::debug!("cached refresh token is expired");
             return Err(anyhow::Error::msg(
                 "refresh token expired, you need to log in again using `houseflow auth login`",
             ));
         }
 
-        if keystore_file.access_token.has_expired() == false {
+        if keystore_file.access_token.has_expired() {
             log::debug!("cached access token is not expired");
             Ok(keystore_file.access_token)
         } else {
