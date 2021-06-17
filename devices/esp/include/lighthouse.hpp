@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include <WebSocketsClient.h>
 
+const size_t BUFFER_SIZE = 512;
+
 class LighthouseClient {
 public:
   LighthouseClient();
@@ -11,8 +13,9 @@ public:
   void setup_websocket_client();
 
 private:
+  std::array<u8, BUFFER_SIZE> buf;
   void onEvent(WStype_t type, uint8_t *payload, size_t length);
-  void onBinary(uint8_t *payload, size_t length);
+  void onBinary(u8 *payload, size_t length);
   WebSocketsClient websocketClient;
 };
 
