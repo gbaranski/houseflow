@@ -10,7 +10,7 @@ use url::Url;
 
 #[derive(Clone)]
 pub struct Auth {
-    pub url: Url,
+    url: Url,
 }
 
 #[derive(Debug, Error)]
@@ -32,6 +32,12 @@ pub enum Error {
 }
 
 impl Auth {
+    pub fn new(host: String, port: u16) -> Self {
+        Self {
+            url: Url::parse(&format!("http://{}:{}", host, port)).unwrap(),
+        }
+    }
+
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {
         let client = Client::new();
         let url = self.url.join("register").unwrap();

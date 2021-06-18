@@ -1,10 +1,9 @@
 use bytes::{Buf, BytesMut};
+use crate::Config;
 use futures_util::{Sink, SinkExt, StreamExt};
 use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
-use types::{DeviceID, DevicePassword};
-use url::Url;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -21,27 +20,23 @@ const BUFFER_CAPACITY: usize = 1024;
 pub type EventSender = mpsc::Sender<Event>;
 pub type EventReceiver = mpsc::Receiver<Event>;
 
-pub struct Options {
-    pub url: Url,
-    pub id: DeviceID,
-    pub password: DevicePassword,
-}
-
 pub struct Session {
-    opts: Options,
+    config: Config,
 }
 
 impl Session {
-    pub fn new(opts: Options) -> Self {
-        Self { opts }
+    pub fn new(config: Config) -> Self {
+        Self { config }
     }
 
     pub async fn run(self) -> Result<(), anyhow::Error> {
+        let url = format!("ws://{}:{}/ws", self.config.lighthouse.host, self.config.lighthouse.port);
+        log::debug!("will use {} as url", url);
         let http_request = http::Request::builder()
-            .uri(self.opts.url.to_string())
+            .uri(url)
             .header(
                 http::header::AUTHORIZATION,
-                format!("Basic {}:{}", self.opts.id, self.opts.password),
+                format!("Basic {}:{}", self.config.device_id, self.config.device_password),
             )
             .body(())
             .unwrap();

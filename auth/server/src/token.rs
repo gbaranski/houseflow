@@ -1,4 +1,5 @@
-use crate::{AppData, TokenStore};
+use crate::TokenStore;
+use types::ServerSecrets;
 use actix_web::{
     post,
     web::{self, Data, Form, FormConfig, Json},
@@ -48,11 +49,11 @@ impl actix_web::ResponseError for RefreshTokenExchangeError {
 pub async fn exchange_refresh_token(
     request: Form<AccessTokenRequest>,
     token_store: Data<dyn TokenStore>,
-    app_data: Data<AppData>,
+    secrets: Data<ServerSecrets>,
 ) -> Result<Json<AccessTokenResponse>, RefreshTokenExchangeError> {
     let refresh_token = &request.refresh_token;
     refresh_token
-        .verify(&app_data.refresh_key, None)
+        .verify(&secrets.refresh_key, None)
         .map_err(|err| AccessTokenResponseError::InvalidGrant(Some(err.to_string())))?;
 
     let stored_refresh_token = token_store.get(&refresh_token.id()).await?.ok_or_else(|| {
@@ -74,7 +75,7 @@ pub async fn exchange_refresh_token(
         user_id: refresh_token.user_id().clone(),
         expires_at,
     };
-    let access_token_signature = access_token_payload.sign(&app_data.access_key);
+    let access_token_signature = access_token_payload.sign(&secrets.access_key);
     let access_token = Token::new(access_token_payload, access_token_signature);
     Ok(web::Json(AccessTokenResponse::Ok(
         AccessTokenResponseBody {
@@ -98,11 +99,12 @@ mod tests {
     async fn test_exchange_refresh_token() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
-        let refresh_token = Token::new_refresh_token(&app_data.refresh_key, &random(), &random());
+        let config = get_config();
+        let secrets = get_secrets();
+        let refresh_token = Token::new_refresh_token(&secrets.refresh_key, &random(), &random());
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(
-            App::new().configure(|cfg| crate::config(cfg, token_store, database, app_data.clone())),
+            App::new().configure(|cfg| crate::config(cfg, token_store, database, config.clone(), secrets.clone())),
         )
         .await;
         let request_body = AccessTokenRequest {
@@ -123,7 +125,7 @@ mod tests {
         let response_body: AccessTokenResponseBody = test::read_body_json(response).await;
         let access_token = &response_body.access_token;
         let verify_result = response_body.access_token.verify(
-            &app_data.access_key,
+            &secrets.access_key,
             Some(&request_body.refresh_token.user_agent()),
         );
         assert!(
@@ -139,10 +141,11 @@ mod tests {
     async fn test_exchange_refresh_token_not_existing_token() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
-        let refresh_token = Token::new_refresh_token(&app_data.refresh_key, &random(), &random());
+        let config = get_config();
+        let secrets = get_secrets();
+        let refresh_token = Token::new_refresh_token(&secrets.refresh_key, &random(), &random());
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
+            crate::config(cfg, token_store.clone(), database.clone(), config.clone(), secrets.clone())
         }))
         .await;
         let request_body = AccessTokenRequest {
@@ -166,17 +169,18 @@ mod tests {
     async fn test_exchange_refresh_token_expired_token() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
+        let secrets = get_secrets();
+        let config = get_config();
         let refresh_token_payload = TokenPayload::new(
             random(),
             random(),
             ExpirationDate::from_system_time(SystemTime::now().checked_sub(Duration::from_secs(5))),
         );
-        let refresh_token_signature = refresh_token_payload.sign(&app_data.refresh_key);
+        let refresh_token_signature = refresh_token_payload.sign(&secrets.refresh_key);
         let refresh_token = Token::new(refresh_token_payload, refresh_token_signature);
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
+            crate::config(cfg, token_store.clone(), database.clone(), config.clone(), secrets.clone())
         }))
         .await;
         let request_body = AccessTokenRequest {

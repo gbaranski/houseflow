@@ -21,7 +21,7 @@ impl Command<ClientCommandState> for RegisterCommand {
         use auth::types::RegisterRequest;
         use dialoguer::{Input, Password};
 
-        let theme = crate::cli::get_theme();
+        let theme = crate::cli::get_dialoguer_theme();
 
         let username = match self.username {
             Some(ref username) => username.clone(),

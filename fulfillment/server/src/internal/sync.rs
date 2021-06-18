@@ -1,4 +1,3 @@
-use crate::AppData;
 use actix_web::{
     get,
     web::{Data, Json},
@@ -7,7 +6,7 @@ use actix_web::{
 use db::Database;
 use fulfillment_types::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError};
 use token::Token;
-use types::{DevicePermission, UserAgent};
+use types::{DevicePermission, UserAgent, ServerSecrets};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
 
@@ -21,11 +20,11 @@ const SYNC_PERMISSION: DevicePermission = DevicePermission {
 pub async fn on_sync(
     _sync_request: Json<SyncRequest>,
     http_request: HttpRequest,
-    app_data: Data<AppData>,
+    secrets: Data<ServerSecrets>,
     db: Data<dyn Database>,
 ) -> Result<Json<SyncResponse>, SyncResponseError> {
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&app_data.access_key, Some(&USER_AGENT))?;
+    access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
 
     let devices = db
         .get_user_devices(access_token.user_id(), &SYNC_PERMISSION)
@@ -65,12 +64,13 @@ mod tests {
         use std::iter::repeat_with;
 
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let (lighthouse, _, _) = get_lighthouse();
         let actix_lighthouse = Data::from(lighthouse as Arc<dyn Lighthouse>);
         let user = get_user();
         let access_token =
-            Token::new_access_token(&app_data.access_key, &user.id, &UserAgent::Internal);
+            Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
 
         let mut authorized_devices: Vec<Device> = join_all(
@@ -90,7 +90,7 @@ mod tests {
         .await;
 
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, database, actix_lighthouse.clone(), app_data.clone())
+            crate::config(cfg, database, actix_lighthouse.clone(), config.clone(), secrets.clone())
         }))
         .await;
 

@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use types::{DeviceID, DevicePassword};
-use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeviceConfig {
@@ -10,12 +9,21 @@ pub struct DeviceConfig {
     /// Password of the device in plain-text
     pub device_password: DevicePassword,
 
-    /// URL of the Lighthouse service
-    /// Default: http://127.0.0.1:6002
-    #[serde(default = "default_lighthouse_url")]
-    pub lighthouse_url: Url,
+    /// Lighthouse configuration
+    pub lighthouse: DeviceLighthouseConfig,
 }
 
-fn default_lighthouse_url() -> Url {
-    Url::parse("http://127.0.0.1:6002").unwrap()
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DeviceLighthouseConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+impl Default for DeviceLighthouseConfig {
+    fn default() -> Self {
+        Self {
+            host: String::from("127.0.0.1"),
+            port: lighthouse::server::Config::default().port,
+        }
+    }
 }

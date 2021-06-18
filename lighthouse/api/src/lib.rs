@@ -4,7 +4,6 @@ use lighthouse_types::DeviceError;
 use thiserror::Error;
 use tokio::sync::Mutex;
 use types::DeviceID;
-use url::Url;
 
 pub mod prelude;
 
@@ -19,7 +18,8 @@ pub enum Error {
 
 #[derive(Clone)]
 pub struct Lighthouse {
-    pub url: Url,
+    pub host: String,
+    pub port: u16,
 }
 
 #[async_trait]
@@ -29,13 +29,12 @@ impl prelude::Lighthouse for Lighthouse {
         frame: &execute::Frame,
         device_id: &DeviceID,
     ) -> Result<execute_response::Frame, Error> {
-        let device_id_string = device_id.to_string();
-        let url = self
-            .url
-            .join("execute/")
-            .unwrap()
-            .join(&device_id_string)
-            .unwrap();
+        let url = format!(
+            "http://{}:{}/execute/{}",
+            self.host,
+            self.port,
+            device_id.to_string()
+        );
 
         let client = reqwest::Client::new();
         let response = client

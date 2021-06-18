@@ -1,4 +1,8 @@
-use crate::{Database, DatabaseInternalError, Error};
+pub mod config;
+
+pub use config::Config;
+use crate::Error;
+
 use async_trait::async_trait;
 use deadpool_postgres::Pool;
 use semver::Version;
@@ -9,7 +13,7 @@ use refinery::embed_migrations;
 embed_migrations!("migrations");
 
 #[derive(Debug, thiserror::Error)]
-pub enum PostgresError {
+pub enum InternalError {
     #[error("Error when sending query: `{0}`")]
     QueryError(#[from] tokio_postgres::Error),
 
@@ -26,38 +30,32 @@ pub enum PostgresError {
     MigrationError(#[from] refinery::Error),
 }
 
-impl DatabaseInternalError for PostgresError {}
+use crate::DatabaseInternalError;
+
+impl DatabaseInternalError for InternalError {}
 impl DatabaseInternalError for deadpool_postgres::PoolError {}
 impl DatabaseInternalError for tokio_postgres::Error {}
 impl DatabaseInternalError for refinery::Error {}
 
 #[derive(Clone)]
-pub struct PostgresDatabase {
+pub struct Database {
     pool: Pool<NoTls>,
 }
 
-pub struct PostgresConfig<'a> {
-    pub user: &'a str,
-    pub password: &'a str,
-    pub host: &'a str,
-    pub port: u16,
-    pub database_name: &'a str,
-}
-
-impl PostgresDatabase {
-    fn get_pool_config(opts: &PostgresConfig) -> deadpool_postgres::Config {
-        let mut cfg = deadpool_postgres::Config::new();
-        cfg.user = Some(opts.user.to_string());
-        cfg.password = Some(opts.password.to_string());
-        cfg.host = Some(opts.host.to_string());
-        cfg.port = Some(opts.port);
-        cfg.dbname = Some(opts.database_name.to_string());
-        cfg
+impl Database {
+    fn get_pool_config(cfg: &Config) -> deadpool_postgres::Config {
+        let mut dpcfg = deadpool_postgres::Config::new();
+        dpcfg.user = Some(cfg.user.to_string());
+        dpcfg.password = Some(cfg.password.to_string());
+        dpcfg.host = Some(cfg.host.to_string());
+        dpcfg.port = Some(cfg.port);
+        dpcfg.dbname = Some(cfg.database_name.to_string());
+        dpcfg
     }
 
     /// This function connect with database and runs migrations on it, after doing so it's fully
     /// ready for operations
-    pub async fn new(opts: &PostgresConfig<'_>) -> Result<Self, Error> {
+    pub async fn new(opts: &Config) -> Result<Self, Error> {
         use std::ops::DerefMut;
 
         let pool_config = Self::get_pool_config(&opts);
@@ -72,7 +70,7 @@ impl PostgresDatabase {
 }
 
 #[async_trait]
-impl Database for PostgresDatabase {
+impl crate::Database for Database {
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
         const QUERY: &str = "SELECT * FROM devices WHERE id = $1";
         let connection = self.pool.get().await?;
@@ -91,13 +89,13 @@ impl Database for PostgresDatabase {
             room: row.try_get("room")?,
             model: row.try_get("model")?,
             hw_version: Version::parse(row.try_get("hw_version")?).map_err(|err| {
-                PostgresError::InvalidColumn {
+                InternalError::InvalidColumn {
                     column: "hw_version",
                     error: Box::new(err),
                 }
             })?,
             sw_version: Version::parse(row.try_get("sw_version")?).map_err(|err| {
-                PostgresError::InvalidColumn {
+                InternalError::InvalidColumn {
                     column: "sw_version",
                     error: Box::new(err),
                 }
@@ -190,13 +188,13 @@ impl Database for PostgresDatabase {
                 room: row.try_get("room")?,
                 model: row.try_get("model")?,
                 hw_version: Version::parse(row.try_get("hw_version")?).map_err(|err| {
-                    PostgresError::InvalidColumn {
+                    InternalError::InvalidColumn {
                         column: "hw_version",
                         error: Box::new(err),
                     }
                 })?,
                 sw_version: Version::parse(row.try_get("sw_version")?).map_err(|err| {
-                    PostgresError::InvalidColumn {
+                    InternalError::InvalidColumn {
                         column: "sw_version",
                         error: Box::new(err),
                     }

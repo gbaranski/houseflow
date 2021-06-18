@@ -1,52 +1,21 @@
 use serde::{Deserialize, Serialize};
+use types::ServerSecrets;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ServerConfig {
-    /// Key used to sign refresh tokens. Must be secret and should be farily random.
-    pub refresh_key: String,
-
-    /// Key used to sign access tokens. Must be secret and should be farily random.
-    pub access_key: String,
+    /// Secret data
+    pub secrets: ServerSecrets,
 
     /// Configuration of the auth service
-    pub auth: AuthServerConfig,
-
-    /// Configuration of the lighthouse service
-    pub lighthouse: LighthouseServerConfig,
+    pub auth: auth::server::Config,
 
     /// Configuration of the fulfillment service
-    pub fulfillment: FulfillmentServerConfig,
+    pub fulfillment: fulfillment::server::Config,
+
+    /// Configuration of the lighthouse service
+    pub lighthouse: lighthouse::server::Config,
+
+    /// Configuration of the PostgreSQL Database
+    pub postgres: db::postgres::Config,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AuthServerConfig {
-    #[serde(default = "default_auth_port")]
-    pub port: u16,
-
-    /// Key used to sign access tokens. Must be secret and should be farily random.
-    pub password_salt: String,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct LighthouseServerConfig {
-    #[serde(default = "default_lighthouse_port")]
-    pub port: u16,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct FulfillmentServerConfig {
-    #[serde(default = "default_fulfillment_port")]
-    pub port: u16,
-}
-
-const fn default_auth_port() -> u16 {
-    6001
-}
-
-const fn default_lighthouse_port() -> u16 {
-    6002
-}
-
-const fn default_fulfillment_port() -> u16 {
-    6003
-}

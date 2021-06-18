@@ -1,10 +1,10 @@
-use crate::AppData;
 use actix_web::{
     post,
     web::{Data, Json},
 };
 use auth_types::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError};
 use db::Database;
+use types::ServerSecrets;
 
 use token::store::TokenStore;
 use token::Token;
@@ -20,7 +20,7 @@ fn verify_password(hash: &str, password: &str) -> Result<(), auth_types::LoginRe
 pub async fn login(
     request: Json<LoginRequest>,
     token_store: Data<dyn TokenStore>,
-    app_data: Data<AppData>,
+    secrets: Data<ServerSecrets>,
     db: Data<dyn Database>,
 ) -> Result<Json<LoginResponse>, LoginResponseError> {
     validator::Validate::validate(&request.0)?;
@@ -31,8 +31,8 @@ pub async fn login(
         .ok_or(LoginResponseError::UserNotFound)?;
     verify_password(&user.password_hash, &request.password)?;
     let refresh_token =
-        Token::new_refresh_token(&app_data.refresh_key, &user.id, &request.user_agent);
-    let access_token = Token::new_access_token(&app_data.access_key, &user.id, &request.user_agent);
+        Token::new_refresh_token(&secrets.refresh_key, &user.id, &request.user_agent);
+    let access_token = Token::new_access_token(&secrets.access_key, &user.id, &request.user_agent);
     token_store
         .add(&refresh_token)
         .await
@@ -58,7 +58,8 @@ mod tests {
     async fn test_login() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -68,7 +69,7 @@ mod tests {
         database.add_user(&user).await.unwrap();
         let mut app =
             test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, token_store.clone(), database, app_data.clone())
+                crate::config(cfg, token_store.clone(), database, config.clone(), secrets.clone())
             }))
             .await;
 
@@ -94,7 +95,7 @@ mod tests {
             LoginResponse::Err(err) => panic!("unexpected login error: {:?}", err),
         };
         let (at, rt) = (response.access_token, response.refresh_token);
-        let verify_result = at.verify(&app_data.access_key, Some(&request_body.user_agent));
+        let verify_result = at.verify(&secrets.access_key, Some(&request_body.user_agent));
         assert!(
             verify_result.is_ok(),
             "failed access token verification: `{}`",
@@ -116,7 +117,8 @@ mod tests {
     async fn test_login_invalid_password() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -126,7 +128,7 @@ mod tests {
         database.add_user(&user).await.unwrap();
         let mut app =
             test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, token_store.clone(), database, app_data.clone())
+                crate::config(cfg, token_store.clone(), database, config.clone(), secrets.clone())
             }))
             .await;
 
@@ -157,7 +159,8 @@ mod tests {
     async fn test_login_not_existing_user() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -166,7 +169,7 @@ mod tests {
         };
         let mut app =
             test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, token_store.clone(), database, app_data.clone())
+                crate::config(cfg, token_store.clone(), database, config.clone(), secrets.clone())
             }))
             .await;
 

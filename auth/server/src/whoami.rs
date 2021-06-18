@@ -1,4 +1,3 @@
-use crate::AppData;
 use actix_web::{
     get,
     web::{Data, HttpRequest, Json},
@@ -6,11 +5,11 @@ use actix_web::{
 use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use db::Database;
 use token::Token;
-use types::UserAgent;
+use types::{UserAgent, ServerSecrets};
 
 #[get("/whoami")]
 pub async fn whoami(
-    app_data: Data<AppData>,
+    app_data: Data<ServerSecrets>,
     db: Data<dyn Database>,
     req: HttpRequest,
 ) -> Result<Json<WhoamiResponse>, WhoamiResponseError> {
@@ -42,18 +41,19 @@ mod tests {
     #[actix_rt::test]
     async fn valid() {
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        let token = Token::new_access_token(&app_data.access_key, &user.id, &UserAgent::Internal);
+        let token = Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
         let mut app =
             test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, get_token_store(), database, app_data.clone())
+                crate::config(cfg, get_token_store(), database, config.clone(), secrets.clone())
             }))
             .await;
 
@@ -83,7 +83,8 @@ mod tests {
     #[actix_rt::test]
     async fn missing_header() {
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -93,7 +94,7 @@ mod tests {
         database.add_user(&user).await.unwrap();
         let mut app =
             test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, get_token_store(), database, app_data.clone())
+                crate::config(cfg, get_token_store(), database, config.clone(), secrets.clone())
             }))
             .await;
 
@@ -116,7 +117,8 @@ mod tests {
     #[actix_rt::test]
     async fn invalid_token_signature() {
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -127,7 +129,7 @@ mod tests {
         database.add_user(&user).await.unwrap();
         let mut app =
             test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, get_token_store(), database, app_data.clone())
+                crate::config(cfg, get_token_store(), database, config.clone(), secrets.clone())
             }))
             .await;
 

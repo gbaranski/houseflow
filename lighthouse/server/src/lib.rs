@@ -7,8 +7,10 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use tokio::sync::Mutex;
 use types::{DeviceID, DevicePassword};
+pub use config::Config;
 
 mod aliases;
+pub mod config;
 mod session;
 
 fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePassword), String> {
@@ -104,18 +106,16 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState
         .service(on_command);
 }
 
-pub async fn run(
-    address: impl std::net::ToSocketAddrs + std::fmt::Display + Clone,
-) -> std::io::Result<()> {
+pub async fn run(config: Config) -> std::io::Result<()> {
     let app_state = web::Data::new(AppState {
         sessions: Default::default(),
     });
 
     log::info!("Starting Lighthouse Broker");
-
+    let address = format!("{}:{}", config.host, config.port);
     let server = HttpServer::new(move || {
         App::new()
-            .configure(|cfg| config(cfg, app_state.clone()))
+            .configure(|cfg| crate::config(cfg, app_state.clone()))
             .wrap(actix_web::middleware::Logger::default())
     })
     .bind(address.clone())?;

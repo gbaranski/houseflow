@@ -23,8 +23,10 @@ actix-rt = "2.2.0"
 rand = "0.8.3"
 semver = "1.0.3"
 tokio = { version = "1.6.1", features = ["macros"] }
+serde = { version = "1.0.126", features = ["derive"] }
 
 [dev-dependencies]
 futures = "0.3.15"
+hex = "0.4.3"
 rand = "0.8.3"
 semver = "1.0.3"

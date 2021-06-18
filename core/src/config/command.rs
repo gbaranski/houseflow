@@ -51,7 +51,7 @@ impl Command<()> for ConfigGenerateCommand {
             use tokio::io::AsyncWriteExt;
 
             let mut file = File::create(&path).await?;
-            file.write(config.as_bytes()).await?;
+            file.write(config?.as_bytes()).await?;
             println!(
                 "✅ Generated {} config at {}",
                 target,

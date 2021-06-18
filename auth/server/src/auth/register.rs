@@ -1,4 +1,3 @@
-use crate::AppData;
 use actix_web::{
     post,
     web::{Data, Json},
@@ -6,19 +5,19 @@ use actix_web::{
 use auth_types::{RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError};
 use db::Database;
 use rand::random;
-use types::User;
+use types::{User, ServerSecrets};
 
 #[post("/register")]
 pub async fn register(
     request: Json<RegisterRequest>,
-    app_data: Data<AppData>,
+    secrets: Data<ServerSecrets>,
     db: Data<dyn Database>,
 ) -> Result<Json<RegisterResponse>, RegisterResponseError> {
     validator::Validate::validate(&request.0)?;
 
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
-        &app_data.password_salt,
+        secrets.password_salt.as_bytes(),
         &argon2::Config::default(),
     )
     .unwrap();
@@ -50,9 +49,10 @@ mod tests {
     async fn test_register() {
         let token_store = get_token_store();
         let database = get_database();
-        let app_data = get_app_data();
+        let config = get_config();
+        let secrets = get_secrets();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, token_store.clone(), database.clone(), app_data.clone())
+            crate::config(cfg, token_store.clone(), database.clone(), config.clone(), secrets.clone())
         }))
         .await;
 

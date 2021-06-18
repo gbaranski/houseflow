@@ -8,15 +8,14 @@ mod fulfillment;
 mod keystore;
 mod server;
 
-pub use crate::auth::AuthCommand;
-pub use crate::device::RunDeviceCommand;
-pub use crate::fulfillment::FulfillmentCommand;
-use ::auth::api::Auth as AuthAPI;
-use ::fulfillment::api::Fulfillment as FulfillmentAPI;
+pub use self::device::DeviceCommand;
+pub use crate::{auth::AuthCommand, device::RunDeviceCommand, fulfillment::FulfillmentCommand};
 pub use config::ConfigCommand;
 pub use keystore::{Keystore, KeystoreFile};
 pub use server::ServerCommand;
 
+use ::auth::api::Auth as AuthAPI;
+use ::fulfillment::api::Fulfillment as FulfillmentAPI;
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, DeviceConfig, ServerConfig};
 use strum_macros::{EnumIter, EnumString};
@@ -24,8 +23,13 @@ use token::Token;
 
 #[derive(Clone, Debug, EnumString, strum_macros::Display, EnumIter)]
 pub enum Target {
+    #[strum(serialize = "server")]
     Server,
+
+    #[strum(serialize = "client")]
     Client,
+
+    #[strum(serialize = "device")]
     Device,
 }
 
@@ -57,6 +61,11 @@ pub struct ClientCommandState {
 #[derive(Clone)]
 pub struct ServerCommandState {
     pub config: ServerConfig,
+}
+
+#[derive(Clone)]
+pub struct DeviceCommandState {
+    pub config: DeviceConfig,
 }
 
 impl ClientCommandState {
@@ -120,12 +129,8 @@ fn main() -> anyhow::Result<()> {
                     .into();
             let state = ClientCommandState {
                 config: config.clone(),
-                auth: AuthAPI {
-                    url: config.auth_url.clone(),
-                },
-                fulfillment: FulfillmentAPI {
-                    url: config.fulfillment_url.clone(),
-                },
+                auth: AuthAPI::new(config.auth.host, config.auth.port),
+                fulfillment: FulfillmentAPI::new(config.fulfillment.host, config.fulfillment.port),
                 keystore: Keystore {
                     path: config.keystore_path.clone(),
                 },
@@ -138,11 +143,21 @@ fn main() -> anyhow::Result<()> {
             let config: ServerConfig =
                 read_config_file::<ServerConfig>(&Target::Server.config_path())
                     .await
-                    .with_context(|| "read client config file")?
+                    .with_context(|| "read server config file")?
                     .into();
-            let state = ServerCommandState {
-                config,
-            };
+            let state = ServerCommandState { config };
+            Ok::<_, anyhow::Error>(state)
+        };
+
+        let device_command_state = || async {
+            use anyhow::Context;
+
+            let config: DeviceConfig =
+                read_config_file::<DeviceConfig>(&Target::Device.config_path())
+                    .await
+                    .with_context(|| "read device config file")?
+                    .into();
+            let state = DeviceCommandState { config };
             Ok::<_, anyhow::Error>(state)
         };
 
@@ -150,6 +165,7 @@ fn main() -> anyhow::Result<()> {
             Subcommand::Auth(cmd) => cmd.run(client_command_state().await?).await,
             Subcommand::Fulfillment(cmd) => cmd.run(client_command_state().await?).await,
             Subcommand::Server(cmd) => cmd.run(server_command_state().await?).await,
+            Subcommand::Device(cmd) => cmd.run(device_command_state().await?).await,
             Subcommand::Config(cmd) => cmd.run(()).await,
         }
     })

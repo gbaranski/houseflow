@@ -1,4 +1,4 @@
-use crate::{Database, DatabaseInternalError, Error};
+use crate::{DatabaseInternalError, Error};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -6,25 +6,25 @@ use tokio::sync::Mutex;
 use types::{Device, DeviceID, DevicePermission, User, UserID};
 
 #[derive(Debug, thiserror::Error)]
-pub enum MemoryDatabaseError {}
+pub enum InternalError {}
 
-impl DatabaseInternalError for MemoryDatabaseError {}
+impl DatabaseInternalError for InternalError {}
 
 #[derive(Clone, Default)]
-pub struct MemoryDatabase {
+pub struct Database {
     users: Arc<Mutex<HashMap<UserID, User>>>,
     user_devices: Arc<Mutex<HashMap<(UserID, DeviceID), DevicePermission>>>,
     devices: Arc<Mutex<HashMap<DeviceID, Device>>>,
 }
 
-impl MemoryDatabase {
+impl Database {
     pub fn new() -> Self {
         Default::default()
     }
 }
 
 #[async_trait]
-impl Database for MemoryDatabase {
+impl crate::Database for Database {
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
         Ok(self.devices.lock().await.get(device_id).cloned())
     }

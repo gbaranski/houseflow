@@ -15,8 +15,10 @@ pub enum Error {
 }
 
 impl Fulfillment {
-    pub fn new(url: Url) -> Self {
-        Self { url }
+    pub fn new(host: String, port: u16) -> Self {
+        Self {
+            url: Url::parse(&format!("http://{}:{}", host, port)).unwrap(),
+        }
     }
 
     pub async fn sync(&self, access_token: &Token) -> Result<SyncResponse, Error> {

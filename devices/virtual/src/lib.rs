@@ -1,22 +1,23 @@
-use session::{Options as SessionOptions, Session};
+use session::Session;
 use types::{DeviceID, DevicePassword};
-use url::Url;
 
 mod session;
+
+#[derive(Clone)]
+pub struct LighthouseConfig {
+    pub host: String,
+    pub port: u16,
+}
 
 #[derive(Clone)]
 pub struct Config {
     pub device_id: DeviceID,
     pub device_password: DevicePassword,
-    pub lighthouse_url: Url,
+    pub lighthouse: LighthouseConfig,
 }
 
 pub async fn run(cfg: Config) -> anyhow::Result<()> {
-    let session = Session::new(SessionOptions {
-        url: cfg.lighthouse_url,
-        id: cfg.device_id,
-        password: cfg.device_password,
-    });
+    let session = Session::new(cfg);
     session.run().await?;
 
     Ok(())

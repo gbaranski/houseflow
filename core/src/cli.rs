@@ -1,13 +1,13 @@
 use dialoguer::theme::{ColorfulTheme, Theme};
 
-pub fn get_theme() -> impl Theme {
+pub fn get_dialoguer_theme() -> impl Theme {
     ColorfulTheme {
         ..ColorfulTheme::default()
     }
 }
 
 use crate::{
-    AuthCommand, ConfigCommand, FulfillmentCommand, ServerCommand, 
+    AuthCommand, ConfigCommand, FulfillmentCommand, ServerCommand, DeviceCommand,
 };
 use clap::Clap;
 
@@ -19,6 +19,9 @@ pub enum Subcommand {
 
     /// Login, register, logout, and refresh your authentication
     Server(ServerCommand),
+
+    /// Run, manage device
+    Device(DeviceCommand),
 
     /// Manage the fulfillment service, sync devices, execute command, query state
     Fulfillment(FulfillmentCommand),

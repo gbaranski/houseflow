@@ -19,7 +19,7 @@ impl Command<ClientCommandState> for LoginCommand {
         use dialoguer::{Input, Password};
         use types::UserAgent;
 
-        let theme = crate::cli::get_theme();
+        let theme = crate::cli::get_dialoguer_theme();
         let email = match self.email {
             Some(ref email) => email.clone(),
             None => Input::with_theme(&theme)

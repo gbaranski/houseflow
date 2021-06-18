@@ -1,36 +1,61 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct ClientConfig {
     /// Path to keystore, used to store persistant sessions
     /// Default: $XDG_DATA_HOME/houseflow/keystore
-    #[serde(default = "default_keystore_path")]
     pub keystore_path: PathBuf,
 
-    /// URL of the Auth service
-    /// Default: http://127.0.0.1:6001
-    #[serde(default = "default_auth_url")]
-    pub auth_url: Url,
+    /// Auth service configuration
+    pub auth: ClientAuthConfig,
 
-    /// URL of the Fulfillment service
-    /// Default: http://127.0.0.1:6003/internal
-    #[serde(default = "default_fulfillment_url")]
-    pub fulfillment_url: Url,
+    /// Fulfillment service configuration
+    pub fulfillment: ClientFulfillmentConfig,
 }
 
-fn default_keystore_path() -> PathBuf {
-    xdg::BaseDirectories::with_prefix(clap::crate_name!())
-        .unwrap()
-        .get_data_home()
-        .join("keystore")
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ClientAuthConfig {
+    pub host: String,
+    pub port: u16,
 }
 
-fn default_auth_url() -> Url {
-    Url::parse("http://127.0.0.1:6001").unwrap()
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ClientFulfillmentConfig {
+    pub host: String,
+    pub port: u16,
 }
 
-fn default_fulfillment_url() -> Url {
-    Url::parse("http://127.0.0.1:6003").unwrap()
+impl Default for ClientAuthConfig {
+    fn default() -> Self {
+        Self {
+            host: String::from("127.0.0.1"),
+            port: auth::server::Config::default().port,
+        }
+    }
+}
+
+impl Default for ClientFulfillmentConfig {
+    fn default() -> Self {
+        Self {
+            host: String::from("127.0.0.1"),
+            port: fulfillment::server::Config::default().port,
+        }
+    }
+}
+
+impl Default for ClientConfig {
+    fn default() -> Self {
+        Self {
+            keystore_path: xdg::BaseDirectories::with_prefix(clap::crate_name!())
+                .unwrap()
+                .get_data_home()
+                .join("keystore"),
+            auth: ClientAuthConfig::default(),
+            fulfillment: ClientFulfillmentConfig::default(),
+        }
+    }
 }

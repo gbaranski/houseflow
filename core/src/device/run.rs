@@ -14,7 +14,10 @@ impl Command<DeviceCommandState> for RunDeviceCommand {
         device::run(device::Config {
             device_id: state.config.device_id,
             device_password: state.config.device_password,
-            lighthouse_url: state.config.lighthouse_url,
+            lighthouse: device::LighthouseConfig {
+                host: state.config.lighthouse.host,
+                port: state.config.lighthouse.port,
+            },
         }).await
     }
 }

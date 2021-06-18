@@ -1,4 +1,4 @@
-use houseflow_db::{Database, PostgresDatabase};
+use houseflow_db::{Database, postgres};
 use std::str::FromStr;
 use std::time::Instant;
 
@@ -24,14 +24,14 @@ async fn main() {
         email: USER_EMAIL.into(),
         password_hash,
     };
-    let database_options = houseflow_db::PostgresConfig {
+    let database_config = postgres::Config {
         user: DATABASE_USER.into(),
         password: DATABASE_PASSWORD.into(),
         host: DATABASE_HOST.into(),
         port: DATABASE_PORT,
         database_name: DATABASE_NAME.into(),
     };
-    let database = PostgresDatabase::new(&database_options)
+    let database = postgres::Database::new(&database_config)
         .await
         .expect("failed creating database");
     let start = Instant::now();
