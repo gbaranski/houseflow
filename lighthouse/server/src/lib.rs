@@ -96,11 +96,12 @@ async fn on_execute(
     Ok(HttpResponse::Ok().json(response))
 }
 
-pub(crate) struct AppState {
+#[derive(Default)]
+pub struct AppState {
     sessions: Mutex<HashMap<DeviceID, actix::Addr<Session>>>,
 }
 
-pub(crate) fn config(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState>) {
+pub fn configure(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState>) {
     cfg.app_data(app_state).service(on_websocket).service(
         web::scope("/")
             .guard(actix_web::guard::Host("127.0.0.1"))
@@ -118,7 +119,7 @@ pub async fn run(config: Config) -> std::io::Result<()> {
 
     let server = HttpServer::new(move || {
         App::new()
-            .configure(|cfg| crate::config(cfg, app_state.clone()))
+            .configure(|cfg| crate::configure(cfg, app_state.clone()))
             .wrap(actix_web::middleware::Logger::default())
     })
     .bind(address)?;

@@ -21,7 +21,7 @@ pub struct AppState<TS: TokenStore, DB: Database> {
     database: DB,
 }
 
-pub(crate) fn config(
+pub fn configure(
     cfg: &mut web::ServiceConfig,
     token_store: Data<dyn TokenStore>,
     database: Data<dyn Database>,
@@ -58,7 +58,7 @@ pub async fn run(
     let server = HttpServer::new(move || {
         App::new()
             .configure(|cfg| {
-                crate::config(
+                crate::configure(
                     cfg,
                     token_store.clone(),
                     database.clone(),

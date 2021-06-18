@@ -17,7 +17,7 @@ pub struct AgentData {
     user_agent: UserAgent,
 }
 
-pub(crate) fn config(
+pub fn configure(
     cfg: &mut web::ServiceConfig,
     database: Data<dyn Database>,
     lighthouse: Data<dyn Lighthouse>,
@@ -90,12 +90,11 @@ pub async fn run(
     let address = format!("{}:{}", config.host, config.port);
     log::info!("Starting Fulfillment server at {}", address);
 
-    let address = format!("{}:{}", config.host, config.port);
     let server = HttpServer::new(move || {
         App::new()
             .wrap(actix_web::middleware::Logger::default())
             .configure(|cfg| {
-                crate::config(
+                crate::configure(
                     cfg,
                     database.clone(),
                     lighthouse.clone(),
