@@ -125,14 +125,13 @@ fn main() -> anyhow::Result<()> {
             let config: ClientConfig =
                 read_config_file::<ClientConfig>(&Target::Client.config_path())
                     .await
-                    .with_context(|| "read client config file")?
-                    .into();
+                    .with_context(|| "read client config file")?;
             let state = ClientCommandState {
                 config: config.clone(),
                 auth: AuthAPI::new(config.auth.host, config.auth.port),
                 fulfillment: FulfillmentAPI::new(config.fulfillment.host, config.fulfillment.port),
                 keystore: Keystore {
-                    path: config.keystore_path.clone(),
+                    path: config.keystore_path,
                 },
             };
             Ok::<_, anyhow::Error>(state)
@@ -143,8 +142,7 @@ fn main() -> anyhow::Result<()> {
             let config: ServerConfig =
                 read_config_file::<ServerConfig>(&Target::Server.config_path())
                     .await
-                    .with_context(|| "read server config file")?
-                    .into();
+                    .with_context(|| "read server config file")?;
             let state = ServerCommandState { config };
             Ok::<_, anyhow::Error>(state)
         };
@@ -155,8 +153,7 @@ fn main() -> anyhow::Result<()> {
             let config: DeviceConfig =
                 read_config_file::<DeviceConfig>(&Target::Device.config_path())
                     .await
-                    .with_context(|| "read device config file")?
-                    .into();
+                    .with_context(|| "read device config file")?;
             let state = DeviceCommandState { config };
             Ok::<_, anyhow::Error>(state)
         };
