@@ -101,9 +101,11 @@ pub(crate) struct AppState {
 }
 
 pub(crate) fn config(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState>) {
-    cfg.app_data(app_state)
-        .service(on_websocket)
-        .service(on_command);
+    cfg.app_data(app_state).service(on_websocket).service(
+        web::scope("/")
+            .guard(actix_web::guard::Host("127.0.0.1"))
+            .service(on_command),
+    );
 }
 
 pub async fn run(config: Config) -> std::io::Result<()> {
