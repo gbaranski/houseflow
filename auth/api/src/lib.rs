@@ -33,7 +33,7 @@ pub enum Error {
 
 impl Auth {
     pub fn new(auth_url: Url) -> Self {
-        Self { url: auth_url, }
+        Self { url: auth_url }
     }
 
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {

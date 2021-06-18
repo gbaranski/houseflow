@@ -16,7 +16,7 @@ pub enum Service {
 #[derive(Clap)]
 pub enum ServerSubcommand {
     /// Run specific service
-    Run (RunServerCommand),
+    Run(RunServerCommand),
 }
 
 #[derive(Clap)]
@@ -29,7 +29,7 @@ pub struct ServerCommand {
 impl Command<ServerCommandState> for ServerCommand {
     async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
         match &self.subcommand {
-            ServerSubcommand::Run(cmd) => cmd.run(state).await
+            ServerSubcommand::Run(cmd) => cmd.run(state).await,
         }
     }
 }

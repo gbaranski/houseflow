@@ -1,6 +1,6 @@
 use session::Session;
-use url::Url;
 use types::{DeviceID, DevicePassword};
+use url::Url;
 
 mod session;
 

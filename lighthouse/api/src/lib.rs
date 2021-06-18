@@ -35,7 +35,12 @@ impl prelude::Lighthouse for Lighthouse {
         frame: &execute::Frame,
         device_id: &DeviceID,
     ) -> Result<execute_response::Frame, Error> {
-        let url = self.url.join("execute").unwrap().join(&device_id.to_string()).unwrap();
+        let url = self
+            .url
+            .join("execute")
+            .unwrap()
+            .join(&device_id.to_string())
+            .unwrap();
 
         let client = reqwest::Client::new();
         let response = client

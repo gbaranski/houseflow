@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use url::Url;
 use types::{DeviceID, DevicePassword};
+use url::Url;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeviceConfig {
@@ -14,4 +14,3 @@ pub struct DeviceConfig {
     #[serde(default = "super::default_base_url")]
     pub base_url: Url,
 }
-

@@ -26,7 +26,7 @@ pub struct Session {
 
 impl Session {
     pub fn new(config: Config) -> Self {
-        Self { config  }
+        Self { config }
     }
 
     pub async fn run(self) -> Result<(), anyhow::Error> {

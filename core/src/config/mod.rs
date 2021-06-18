@@ -87,7 +87,6 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 refresh_key,
                 access_key,
                 password_salt,
-
                 default_host(),
                 default_port(),
                 // Postgres
