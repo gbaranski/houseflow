@@ -9,11 +9,9 @@ edition = "2018"
 [dependencies]
 lighthouse-macros = { path = "../macros", package = "houseflow-lighthouse-macros" }
 
-tokio = { version = "1.5", default_features = false }
 bytes = "1.0"
 strum = "0.20"
 strum_macros = "0.20"
-hex = "0.4"
 rand = "0.8"
 serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"

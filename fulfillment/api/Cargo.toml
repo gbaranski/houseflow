@@ -7,7 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-auth-api           = { path = "../../auth/api", package = "houseflow-auth-api" }
 types              = { path = "../../types"   , package = "houseflow-types" }
 fulfillment-types  = { path = "../types"      , package = "houseflow-fulfillment-types" }
 token              = { path = "../../token"   , package = "houseflow-token" }
