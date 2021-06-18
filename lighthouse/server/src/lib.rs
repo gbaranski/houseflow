@@ -71,7 +71,7 @@ async fn on_websocket(
 }
 
 #[post("/execute/{device_id}")]
-async fn on_command(
+async fn on_execute(
     path: web::Path<String>,
     frame: web::Json<execute::Frame>,
     app_state: web::Data<AppState>,
@@ -104,7 +104,7 @@ pub(crate) fn config(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState
     cfg.app_data(app_state).service(on_websocket).service(
         web::scope("/")
             .guard(actix_web::guard::Host("127.0.0.1"))
-            .service(on_command),
+            .service(on_execute),
     );
 }
 
