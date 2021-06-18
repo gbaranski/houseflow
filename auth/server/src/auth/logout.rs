@@ -3,10 +3,10 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use types::ServerSecrets;
 use auth_types::{LogoutResponse, LogoutResponseBody, LogoutResponseError};
 use token::store::TokenStore;
 use token::Token;
+use types::ServerSecrets;
 
 #[post("/logout")]
 pub async fn logout(

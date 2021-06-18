@@ -6,7 +6,7 @@ use actix_web::{
 use db::Database;
 use fulfillment_types::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError};
 use token::Token;
-use types::{DevicePermission, UserAgent, ServerSecrets};
+use types::{DevicePermission, ServerSecrets, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
 
@@ -90,7 +90,13 @@ mod tests {
         .await;
 
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, database, actix_lighthouse.clone(), config.clone(), secrets.clone())
+            crate::config(
+                cfg,
+                database,
+                actix_lighthouse.clone(),
+                config.clone(),
+                secrets.clone(),
+            )
         }))
         .await;
 

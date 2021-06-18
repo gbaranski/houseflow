@@ -1,7 +1,7 @@
 pub mod config;
 
-pub use config::Config;
 use crate::Error;
+pub use config::Config;
 
 use async_trait::async_trait;
 use deadpool_postgres::Pool;

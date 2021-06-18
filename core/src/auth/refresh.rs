@@ -1,4 +1,4 @@
-use crate::{Command, ClientCommandState, KeystoreFile};
+use crate::{ClientCommandState, Command, KeystoreFile};
 use async_trait::async_trait;
 
 use clap::Clap;

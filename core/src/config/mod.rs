@@ -92,19 +92,15 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 refresh_key,
                 access_key,
                 password_salt,
-
                 // Auth
                 auth_defaults.host,
                 auth_defaults.port,
-
                 // Fulfillment
                 fulfillment_defaults.host,
                 fulfillment_defaults.port,
-
                 // Lighthouse
                 lighthouse_defaults.host,
                 lighthouse_defaults.port,
-
                 // Postgres
                 postgres_defaults.host,
                 postgres_defaults.port,

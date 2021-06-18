@@ -67,11 +67,16 @@ mod tests {
             password_hash: PASSWORD_HASH.into(),
         };
         database.add_user(&user).await.unwrap();
-        let mut app =
-            test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, token_store.clone(), database, config.clone(), secrets.clone())
-            }))
-            .await;
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(
+                cfg,
+                token_store.clone(),
+                database,
+                config.clone(),
+                secrets.clone(),
+            )
+        }))
+        .await;
 
         let request_body = LoginRequest {
             email: user.email,
@@ -126,11 +131,16 @@ mod tests {
             password_hash: PASSWORD_HASH.into(),
         };
         database.add_user(&user).await.unwrap();
-        let mut app =
-            test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, token_store.clone(), database, config.clone(), secrets.clone())
-            }))
-            .await;
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(
+                cfg,
+                token_store.clone(),
+                database,
+                config.clone(),
+                secrets.clone(),
+            )
+        }))
+        .await;
 
         let request_body = LoginRequest {
             email: user.email,
@@ -167,11 +177,16 @@ mod tests {
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        let mut app =
-            test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, token_store.clone(), database, config.clone(), secrets.clone())
-            }))
-            .await;
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(
+                cfg,
+                token_store.clone(),
+                database,
+                config.clone(),
+                secrets.clone(),
+            )
+        }))
+        .await;
 
         let request_body = LoginRequest {
             email: user.email,

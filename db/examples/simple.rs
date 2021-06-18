@@ -1,4 +1,4 @@
-use houseflow_db::{Database, postgres};
+use houseflow_db::{postgres, Database};
 use std::str::FromStr;
 use std::time::Instant;
 

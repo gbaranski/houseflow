@@ -1,4 +1,4 @@
-use crate::{Command, ClientCommandState};
+use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 use auth::types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use token::Token;

@@ -1,5 +1,6 @@
 use actix_web::{get, http, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web_actors::ws;
+pub use config::Config;
 use itertools::Itertools;
 use lighthouse_proto::{execute, execute_response};
 use session::Session;
@@ -7,7 +8,6 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use tokio::sync::Mutex;
 use types::{DeviceID, DevicePassword};
-pub use config::Config;
 
 mod aliases;
 pub mod config;

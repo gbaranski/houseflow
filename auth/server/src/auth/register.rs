@@ -5,7 +5,7 @@ use actix_web::{
 use auth_types::{RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError};
 use db::Database;
 use rand::random;
-use types::{User, ServerSecrets};
+use types::{ServerSecrets, User};
 
 #[post("/register")]
 pub async fn register(
@@ -52,7 +52,13 @@ mod tests {
         let config = get_config();
         let secrets = get_secrets();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, token_store.clone(), database.clone(), config.clone(), secrets.clone())
+            crate::config(
+                cfg,
+                token_store.clone(),
+                database.clone(),
+                config.clone(),
+                secrets.clone(),
+            )
         }))
         .await;
 

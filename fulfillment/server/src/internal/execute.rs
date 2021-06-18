@@ -9,7 +9,7 @@ use fulfillment_types::{
 };
 use lighthouse_api::prelude::Lighthouse;
 use token::Token;
-use types::{DevicePermission, UserAgent, ServerSecrets};
+use types::{DevicePermission, ServerSecrets, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
 
@@ -78,7 +78,13 @@ mod tests {
             .unwrap();
 
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, database, actix_lighthouse.clone(), config.clone(), secrets.clone())
+            crate::config(
+                cfg,
+                database,
+                actix_lighthouse.clone(),
+                config.clone(),
+                secrets.clone(),
+            )
         }))
         .await;
 

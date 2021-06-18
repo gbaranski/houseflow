@@ -18,4 +18,3 @@ pub struct ServerConfig {
     /// Configuration of the PostgreSQL Database
     pub postgres: db::postgres::Config,
 }
-

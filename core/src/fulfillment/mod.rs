@@ -1,7 +1,7 @@
 mod execute;
 mod sync;
 
-use crate::{Command, ClientCommandState};
+use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 
 use execute::ExecuteCommand;

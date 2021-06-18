@@ -6,11 +6,8 @@ pub fn get_dialoguer_theme() -> impl Theme {
     }
 }
 
-use crate::{
-    AuthCommand, ConfigCommand, FulfillmentCommand, ServerCommand, DeviceCommand,
-};
+use crate::{AuthCommand, ConfigCommand, DeviceCommand, FulfillmentCommand, ServerCommand};
 use clap::Clap;
-
 
 #[derive(Clap)]
 pub enum Subcommand {

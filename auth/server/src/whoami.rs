@@ -5,7 +5,7 @@ use actix_web::{
 use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use db::Database;
 use token::Token;
-use types::{UserAgent, ServerSecrets};
+use types::{ServerSecrets, UserAgent};
 
 #[get("/whoami")]
 pub async fn whoami(
@@ -51,11 +51,16 @@ mod tests {
         };
         let token = Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
-        let mut app =
-            test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, get_token_store(), database, config.clone(), secrets.clone())
-            }))
-            .await;
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(
+                cfg,
+                get_token_store(),
+                database,
+                config.clone(),
+                secrets.clone(),
+            )
+        }))
+        .await;
 
         let request = test::TestRequest::get()
             .uri("/whoami")
@@ -92,11 +97,16 @@ mod tests {
             password_hash: PASSWORD_HASH.into(),
         };
         database.add_user(&user).await.unwrap();
-        let mut app =
-            test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, get_token_store(), database, config.clone(), secrets.clone())
-            }))
-            .await;
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(
+                cfg,
+                get_token_store(),
+                database,
+                config.clone(),
+                secrets.clone(),
+            )
+        }))
+        .await;
 
         let request = test::TestRequest::get().uri("/whoami").to_request();
         let response = test::call_service(&mut app, request).await;
@@ -127,11 +137,16 @@ mod tests {
         };
         let token = Token::new_access_token(&"dsahsdadsh", &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
-        let mut app =
-            test::init_service(App::new().configure(|cfg| {
-                crate::config(cfg, get_token_store(), database, config.clone(), secrets.clone())
-            }))
-            .await;
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::config(
+                cfg,
+                get_token_store(),
+                database,
+                config.clone(),
+                secrets.clone(),
+            )
+        }))
+        .await;
 
         let request = test::TestRequest::get()
             .uri("/whoami")

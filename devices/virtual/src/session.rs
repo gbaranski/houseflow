@@ -1,5 +1,5 @@
-use bytes::{Buf, BytesMut};
 use crate::Config;
+use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
 use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
@@ -30,13 +30,19 @@ impl Session {
     }
 
     pub async fn run(self) -> Result<(), anyhow::Error> {
-        let url = format!("ws://{}:{}/ws", self.config.lighthouse.host, self.config.lighthouse.port);
+        let url = format!(
+            "ws://{}:{}/ws",
+            self.config.lighthouse.host, self.config.lighthouse.port
+        );
         log::debug!("will use {} as url", url);
         let http_request = http::Request::builder()
             .uri(url)
             .header(
                 http::header::AUTHORIZATION,
-                format!("Basic {}:{}", self.config.device_id, self.config.device_password),
+                format!(
+                    "Basic {}:{}",
+                    self.config.device_id, self.config.device_password
+                ),
             )
             .body(())
             .unwrap();
