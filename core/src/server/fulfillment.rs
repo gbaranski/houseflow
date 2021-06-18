@@ -11,7 +11,7 @@ pub struct RunFulfillmentCommand {}
 impl Command<ServerCommandState> for RunFulfillmentCommand {
     async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
         let lighthouse = lighthouse::api::Lighthouse {
-            host: state.config.lighthouse.host,
+            host: String::from("127.0.0.1"),
             port: state.config.lighthouse.port,
         };
         let database = db::postgres::Database::new(&state.config.postgres)
