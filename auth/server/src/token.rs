@@ -104,7 +104,7 @@ mod tests {
         let refresh_token = Token::new_refresh_token(&secrets.refresh_key, &random(), &random());
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(cfg, token_store, database, config.clone(), secrets.clone())
+            crate::configure(cfg, token_store, database, config.clone(), secrets.clone())
         }))
         .await;
         let request_body = AccessTokenRequest {
@@ -145,7 +145,7 @@ mod tests {
         let secrets = get_secrets();
         let refresh_token = Token::new_refresh_token(&secrets.refresh_key, &random(), &random());
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 token_store.clone(),
                 database.clone(),
@@ -186,7 +186,7 @@ mod tests {
         let refresh_token = Token::new(refresh_token_payload, refresh_token_signature);
         token_store.add(&refresh_token).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 token_store.clone(),
                 database.clone(),

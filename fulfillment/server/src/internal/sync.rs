@@ -90,7 +90,7 @@ mod tests {
         .await;
 
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 database,
                 actix_lighthouse.clone(),

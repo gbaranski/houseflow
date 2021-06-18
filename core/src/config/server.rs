@@ -6,6 +6,12 @@ pub struct ServerConfig {
     /// Secret data
     pub secrets: ServerSecrets,
 
+    #[serde(default = "default_host")]
+    pub host: String,
+
+    #[serde(default = "default_port")]
+    pub port: u16,
+
     /// Configuration of the auth service
     pub auth: auth::server::Config,
 
@@ -17,4 +23,12 @@ pub struct ServerConfig {
 
     /// Configuration of the PostgreSQL Database
     pub postgres: db::postgres::Config,
+}
+
+pub fn default_host() -> String {
+    String::from("127.0.0.1")
+}
+
+pub fn default_port() -> u16 {
+    6001
 }

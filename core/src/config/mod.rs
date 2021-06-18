@@ -51,9 +51,6 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 rand.next().unwrap(),
             );
 
-            let auth_defaults = auth::server::Config::default();
-            let fulfillment_defaults = fulfillment::server::Config::default();
-            let lighthouse_defaults = lighthouse::server::Config::default();
             let postgres_defaults = db::postgres::Config::default();
             format!(
                 indoc! {r#"# Houseflow server configuration
@@ -64,20 +61,18 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                     access_key = "{}"
                     password_salt = "{}"
 
-                    # Configuration of the Auth service
-                    [auth]
+                    # Change to "0.0.0.0" to allow clients from outside network to connect
                     host = "{}"
                     port = {}
+
+                    # Configuration of the Auth service
+                    [auth]
 
                     # Configuration of the Fulfillment service
                     [fulfillment]
-                    host = "{}"
-                    port = {}
 
                     # Configuration of the Lighthouse service
                     [lighthouse]
-                    host = "{}"
-                    port = {}
 
                     # Configuration of the PostgreSQL
                     [postgres]
@@ -92,15 +87,9 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 refresh_key,
                 access_key,
                 password_salt,
-                // Auth
-                auth_defaults.host,
-                auth_defaults.port,
-                // Fulfillment
-                fulfillment_defaults.host,
-                fulfillment_defaults.port,
-                // Lighthouse
-                lighthouse_defaults.host,
-                lighthouse_defaults.port,
+
+                default_host(),
+                default_port(),
                 // Postgres
                 postgres_defaults.host,
                 postgres_defaults.port,
@@ -115,21 +104,10 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 indoc! {r#"# Houseflow client configuration
                 keystore_path = "{}"
 
-                [auth]
-                host = "{}"
-                port = {}
-
-                [fulfillment]
-                host = "{}"
-                port = {}
-
-
+                base_url = "{}"
             "#},
                 defaults.keystore_path.to_str().unwrap(),
-                defaults.auth.host,
-                defaults.auth.port,
-                defaults.fulfillment.host,
-                defaults.fulfillment.port
+                defaults.base_url,
             )
         }
         Target::Device => {
@@ -140,7 +118,6 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
             let mut device_password: [u8; 16] = [0; 16];
             rand::thread_rng().fill(&mut device_password);
             let device_password = hex::encode(device_password);
-            let lighthouse_defaults = DeviceLighthouseConfig::default();
 
             format!(
                 indoc! {r#"# Houseflow device configuration
@@ -148,17 +125,22 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 device_id = "{}"
                 device_password = "{}"
 
-                # Configuration of the Lighthouse service
-                [lighthouse]
-                host = "{}" 
-                port = {}
+                base_url = "{}"
                 "#
                 },
-                device_id, device_password, lighthouse_defaults.host, lighthouse_defaults.port,
+                device_id,
+                device_password,
+                default_base_url(),
             )
         }
     };
     Ok(config)
+}
+
+use url::Url;
+
+pub fn default_base_url() -> Url {
+    Url::parse(&format!("http://{}:{}", default_host(), default_port())).unwrap()
 }
 
 #[cfg(test)]

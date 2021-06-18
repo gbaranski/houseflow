@@ -52,7 +52,7 @@ mod tests {
         let token = Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 get_token_store(),
                 database,
@@ -98,7 +98,7 @@ mod tests {
         };
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 get_token_store(),
                 database,
@@ -138,7 +138,7 @@ mod tests {
         let token = Token::new_access_token(&"dsahsdadsh", &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 get_token_store(),
                 database,

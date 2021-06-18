@@ -15,9 +15,9 @@ pub enum Error {
 }
 
 impl Fulfillment {
-    pub fn new(host: String, port: u16) -> Self {
+    pub fn new(fulfillment_url: Url) -> Self {
         Self {
-            url: Url::parse(&format!("http://{}:{}", host, port)).unwrap(),
+            url: fulfillment_url,
         }
     }
 

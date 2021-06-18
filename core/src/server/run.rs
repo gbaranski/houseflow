@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use db::Database;
 use std::sync::Arc;
 use token::store::TokenStore;
+use url::Url;
 
 use clap::Clap;
 
@@ -17,6 +18,8 @@ pub struct RunServerCommand {}
 #[async_trait(?Send)]
 impl Command<ServerCommandState> for RunServerCommand {
     async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
+        let address = format!("{}:{}", state.config.host, state.config.port);
+        let base_url = Url::parse(&format!("http://{}", address)).unwrap();
         let token_store = || async {
             token::store::RedisTokenStore::new()
                 .await
@@ -29,10 +32,8 @@ impl Command<ServerCommandState> for RunServerCommand {
                 .with_context(|| "connect to postgres failed, is redis on?")
         };
 
-        let lighthouse_api = || lighthouse::api::Lighthouse {
-            host: String::from("127.0.0.1"),
-            port: state.config.lighthouse.port,
-        };
+        let lighthouse_api =
+            || lighthouse::api::Lighthouse::new(base_url.join("lighthouse").unwrap());
 
         let database = Data::from(Arc::from(database().await?) as Arc<dyn Database>);
         let token_store = Data::from(Arc::from(token_store().await?) as Arc<dyn TokenStore>);
@@ -66,9 +67,8 @@ impl Command<ServerCommandState> for RunServerCommand {
                     )
                 }))
         })
-        .bind(format!("0.0.0.0:6000"))?;
+        .bind(address)?;
         server.run().await?;
-
-        todo!()
+        Ok(())
     }
 }

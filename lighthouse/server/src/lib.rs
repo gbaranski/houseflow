@@ -1,4 +1,4 @@
-use actix_web::{get, http, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{get, http, post, web, HttpRequest, HttpResponse, Responder};
 use actix_web_actors::ws;
 pub use config::Config;
 use itertools::Itertools;
@@ -107,24 +107,4 @@ pub fn configure(cfg: &mut web::ServiceConfig, app_state: web::Data<AppState>) {
             .guard(actix_web::guard::Host("127.0.0.1"))
             .service(on_execute),
     );
-}
-
-pub async fn run(config: Config) -> std::io::Result<()> {
-    let app_state = web::Data::new(AppState {
-        sessions: Default::default(),
-    });
-
-    let address = format!("{}:{}", config.host, config.port);
-    log::info!("Starting Lighthouse server at {}", address);
-
-    let server = HttpServer::new(move || {
-        App::new()
-            .configure(|cfg| crate::configure(cfg, app_state.clone()))
-            .wrap(actix_web::middleware::Logger::default())
-    })
-    .bind(address)?;
-
-    server.run().await?;
-
-    Ok(())
 }

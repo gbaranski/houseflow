@@ -128,8 +128,8 @@ fn main() -> anyhow::Result<()> {
                     .with_context(|| "read client config file")?;
             let state = ClientCommandState {
                 config: config.clone(),
-                auth: AuthAPI::new(config.auth.host, config.auth.port),
-                fulfillment: FulfillmentAPI::new(config.fulfillment.host, config.fulfillment.port),
+                auth: AuthAPI::new(config.base_url.join("auth").unwrap()),
+                fulfillment: FulfillmentAPI::new(config.base_url.join("fulfillment").unwrap()),
                 keystore: Keystore {
                     path: config.keystore_path,
                 },

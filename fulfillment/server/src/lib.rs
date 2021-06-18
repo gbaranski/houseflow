@@ -1,11 +1,7 @@
-use actix_web::{
-    web::{self, Data},
-    App, HttpServer,
-};
+use actix_web::web::{self, Data};
 pub use config::Config;
 use db::Database;
 use lighthouse_api::prelude::Lighthouse;
-use std::sync::Arc;
 use types::{ServerSecrets, UserAgent};
 
 pub mod config;
@@ -76,38 +72,6 @@ async fn just_for_testing(db: Data<dyn Database>) -> impl actix_web::Responder {
     .unwrap();
 
     HttpResponse::Ok()
-}
-
-pub async fn run(
-    database: impl Database + 'static,
-    lighthouse: impl Lighthouse + 'static,
-    config: Config,
-    secrets: ServerSecrets,
-) -> std::io::Result<()> {
-    let database = Data::from(Arc::new(database) as Arc<dyn Database>);
-    let lighthouse = Data::from(Arc::new(lighthouse) as Arc<dyn Lighthouse>);
-
-    let address = format!("{}:{}", config.host, config.port);
-    log::info!("Starting Fulfillment server at {}", address);
-
-    let server = HttpServer::new(move || {
-        App::new()
-            .wrap(actix_web::middleware::Logger::default())
-            .configure(|cfg| {
-                crate::configure(
-                    cfg,
-                    database.clone(),
-                    lighthouse.clone(),
-                    config.clone(),
-                    secrets.clone(),
-                )
-            })
-    })
-    .bind(address)?;
-
-    server.run().await?;
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -52,7 +52,7 @@ mod tests {
         let config = get_config();
         let secrets = get_secrets();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 token_store.clone(),
                 database.clone(),

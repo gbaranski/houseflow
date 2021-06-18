@@ -1,9 +1,5 @@
-use actix_web::{
-    web::{self, Data},
-    App, HttpServer,
-};
+use actix_web::web::{self, Data};
 use db::Database;
-use std::sync::Arc;
 use types::ServerSecrets;
 
 use crate::token::{exchange_refresh_token, exchange_refresh_token_form_config};
@@ -41,38 +37,6 @@ pub fn configure(
                 .app_data(exchange_refresh_token_form_config)
                 .service(exchange_refresh_token),
         );
-}
-
-pub async fn run(
-    token_store: impl TokenStore + 'static,
-    database: impl Database + 'static,
-    config: Config,
-    secrets: ServerSecrets,
-) -> std::io::Result<()> {
-    let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
-    let database = Data::from(Arc::new(database) as Arc<dyn Database>);
-
-    let address = format!("{}:{}", config.host, config.port);
-    log::info!("Starting Auth server at {}", address);
-
-    let server = HttpServer::new(move || {
-        App::new()
-            .configure(|cfg| {
-                crate::configure(
-                    cfg,
-                    token_store.clone(),
-                    database.clone(),
-                    config.clone(),
-                    secrets.clone(),
-                )
-            })
-            .wrap(actix_web::middleware::Logger::default())
-    })
-    .bind(address)?;
-
-    server.run().await?;
-
-    Ok(())
 }
 
 #[cfg(test)]

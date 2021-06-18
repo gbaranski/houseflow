@@ -68,7 +68,7 @@ mod tests {
         };
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 token_store.clone(),
                 database,
@@ -132,7 +132,7 @@ mod tests {
         };
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 token_store.clone(),
                 database,
@@ -178,7 +178,7 @@ mod tests {
             password_hash: PASSWORD_HASH.into(),
         };
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::config(
+            crate::configure(
                 cfg,
                 token_store.clone(),
                 database,

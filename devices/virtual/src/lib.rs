@@ -1,19 +1,14 @@
 use session::Session;
+use url::Url;
 use types::{DeviceID, DevicePassword};
 
 mod session;
 
 #[derive(Clone)]
-pub struct LighthouseConfig {
-    pub host: String,
-    pub port: u16,
-}
-
-#[derive(Clone)]
 pub struct Config {
     pub device_id: DeviceID,
     pub device_password: DevicePassword,
-    pub lighthouse: LighthouseConfig,
+    pub lighthouse_url: Url,
 }
 
 pub async fn run(cfg: Config) -> anyhow::Result<()> {

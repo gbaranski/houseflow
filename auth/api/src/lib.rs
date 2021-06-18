@@ -32,10 +32,8 @@ pub enum Error {
 }
 
 impl Auth {
-    pub fn new(host: String, port: u16) -> Self {
-        Self {
-            url: Url::parse(&format!("http://{}:{}", host, port)).unwrap(),
-        }
+    pub fn new(auth_url: Url) -> Self {
+        Self { url: auth_url, }
     }
 
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {

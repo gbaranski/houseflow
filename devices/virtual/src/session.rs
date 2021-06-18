@@ -26,17 +26,15 @@ pub struct Session {
 
 impl Session {
     pub fn new(config: Config) -> Self {
-        Self { config }
+        Self { config  }
     }
 
     pub async fn run(self) -> Result<(), anyhow::Error> {
-        let url = format!(
-            "ws://{}:{}/ws",
-            self.config.lighthouse.host, self.config.lighthouse.port
-        );
-        log::debug!("will use {} as url", url);
+        let url = self.config.lighthouse_url.join("ws").unwrap();
+
+        log::debug!("will use {} as websocket endpoint", url);
         let http_request = http::Request::builder()
-            .uri(url)
+            .uri(url.to_string())
             .header(
                 http::header::AUTHORIZATION,
                 format!(
