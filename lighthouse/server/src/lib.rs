@@ -113,16 +113,15 @@ pub async fn run(config: Config) -> std::io::Result<()> {
         sessions: Default::default(),
     });
 
-    log::info!("Starting Lighthouse Broker");
     let address = format!("{}:{}", config.host, config.port);
+    log::info!("Starting Lighthouse server at {}", address);
+
     let server = HttpServer::new(move || {
         App::new()
             .configure(|cfg| crate::config(cfg, app_state.clone()))
             .wrap(actix_web::middleware::Logger::default())
     })
-    .bind(address.clone())?;
-
-    log::info!("Starting HTTP Server at `{}`", address);
+    .bind(address)?;
 
     server.run().await?;
 

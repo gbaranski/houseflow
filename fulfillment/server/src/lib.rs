@@ -87,7 +87,8 @@ pub async fn run(
     let database = Data::from(Arc::new(database) as Arc<dyn Database>);
     let lighthouse = Data::from(Arc::new(lighthouse) as Arc<dyn Lighthouse>);
 
-    log::info!("Starting `Auth` service");
+    let address = format!("{}:{}", config.host, config.port);
+    log::info!("Starting Fulfillment server at {}", address);
 
     let address = format!("{}:{}", config.host, config.port);
     let server = HttpServer::new(move || {
@@ -103,9 +104,7 @@ pub async fn run(
                 )
             })
     })
-    .bind(address.clone())?;
-
-    log::info!("Starting HTTP Server at `{}`", address);
+    .bind(address)?;
 
     server.run().await?;
 

@@ -52,9 +52,9 @@ pub async fn run(
     let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
     let database = Data::from(Arc::new(database) as Arc<dyn Database>);
 
-    log::info!("Starting `Auth` service");
-
     let address = format!("{}:{}", config.host, config.port);
+    log::info!("Starting Auth server at {}", address);
+
     let server = HttpServer::new(move || {
         App::new()
             .configure(|cfg| {
@@ -68,9 +68,7 @@ pub async fn run(
             })
             .wrap(actix_web::middleware::Logger::default())
     })
-    .bind(address.clone())?;
-
-    log::info!("Starting HTTP Server at `{}`", address);
+    .bind(address)?;
 
     server.run().await?;
 
