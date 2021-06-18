@@ -2,6 +2,7 @@ mod client;
 mod command;
 mod device;
 mod server;
+mod defaults;
 
 pub use self::device::*;
 pub use client::*;
@@ -87,8 +88,8 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 refresh_key,
                 access_key,
                 password_salt,
-                default_host(),
-                default_port(),
+                defaults::host(),
+                defaults::port(),
                 // Postgres
                 postgres_defaults.host,
                 postgres_defaults.port,
@@ -129,17 +130,11 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 },
                 device_id,
                 device_password,
-                default_base_url(),
+                defaults::base_url(),
             )
         }
     };
     Ok(config)
-}
-
-use url::Url;
-
-pub fn default_base_url() -> Url {
-    Url::parse(&format!("http://{}:{}", default_host(), default_port())).unwrap()
 }
 
 #[cfg(test)]

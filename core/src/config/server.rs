@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::config::defaults;
 use types::ServerSecrets;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -6,10 +7,10 @@ pub struct ServerConfig {
     /// Secret data
     pub secrets: ServerSecrets,
 
-    #[serde(default = "default_host")]
+    #[serde(default = "defaults::host")]
     pub host: String,
 
-    #[serde(default = "default_port")]
+    #[serde(default = "defaults::port")]
     pub port: u16,
 
     /// Configuration of the auth service
@@ -25,10 +26,3 @@ pub struct ServerConfig {
     pub postgres: db::postgres::Config,
 }
 
-pub fn default_host() -> String {
-    String::from("127.0.0.1")
-}
-
-pub fn default_port() -> u16 {
-    6001
-}

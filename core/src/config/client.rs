@@ -20,7 +20,7 @@ impl Default for ClientConfig {
                 .unwrap()
                 .get_data_home()
                 .join("keystore"),
-            base_url: super::default_base_url(),
+            base_url: crate::config::defaults::base_url(),
         }
     }
 }

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use types::{DeviceID, DevicePassword};
 use url::Url;
+use crate::config::defaults;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeviceConfig {
@@ -11,6 +12,6 @@ pub struct DeviceConfig {
     pub device_password: DevicePassword,
 
     /// URL of the server
-    #[serde(default = "super::default_base_url")]
+    #[serde(default = "defaults::base_url")]
     pub base_url: Url,
 }
