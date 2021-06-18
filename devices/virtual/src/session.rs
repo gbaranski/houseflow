@@ -30,6 +30,7 @@ impl Session {
     }
 
     pub async fn run(self) -> Result<(), anyhow::Error> {
+        println!("preurl: {}", self.config.lighthouse_url.clone());
         let url = self.config.lighthouse_url.join("ws").unwrap();
 
         log::debug!("will use {} as websocket endpoint", url);

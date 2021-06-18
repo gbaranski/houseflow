@@ -33,7 +33,7 @@ impl Command<ServerCommandState> for RunServerCommand {
         };
 
         let lighthouse_api =
-            || lighthouse::api::Lighthouse::new(base_url.join("lighthouse").unwrap());
+            || lighthouse::api::Lighthouse::new(base_url.join("lighthouse/").unwrap());
 
         let database = Data::from(Arc::from(database().await?) as Arc<dyn Database>);
         let token_store = Data::from(Arc::from(token_store().await?) as Arc<dyn TokenStore>);

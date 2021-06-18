@@ -12,6 +12,6 @@ pub struct DeviceConfig {
     pub device_password: DevicePassword,
 
     /// URL of the server
-    #[serde(default = "defaults::base_url")]
+    #[serde(default = "defaults::base_url_websockets")]
     pub base_url: Url,
 }

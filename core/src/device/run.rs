@@ -17,7 +17,7 @@ impl Command<DeviceCommandState> for RunDeviceCommand {
         device::run(device::Config {
             device_id: state.config.device_id,
             device_password: state.config.device_password,
-            lighthouse_url: state.config.base_url.join("lighthouse").unwrap(),
+            lighthouse_url: state.config.base_url.join("lighthouse/").unwrap(),
         })
         .await
     }
