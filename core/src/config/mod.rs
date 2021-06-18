@@ -1,8 +1,8 @@
 mod client;
 mod command;
+mod defaults;
 mod device;
 mod server;
-mod defaults;
 
 pub use self::device::*;
 pub use client::*;

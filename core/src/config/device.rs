@@ -1,7 +1,7 @@
+use crate::config::defaults;
 use serde::{Deserialize, Serialize};
 use types::{DeviceID, DevicePassword};
 use url::Url;
-use crate::config::defaults;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DeviceConfig {

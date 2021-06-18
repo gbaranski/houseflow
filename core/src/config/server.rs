@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::config::defaults;
+use serde::{Deserialize, Serialize};
 use types::ServerSecrets;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -25,4 +25,3 @@ pub struct ServerConfig {
     /// Configuration of the PostgreSQL Database
     pub postgres: db::postgres::Config,
 }
-
