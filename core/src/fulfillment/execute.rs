@@ -10,6 +10,9 @@ use clap::Clap;
 pub struct ExecuteCommand {
     pub device_id: DeviceID,
     pub command: execute::Command,
+
+    #[clap(default_value)]
+    pub params: serde_json::Value,
 }
 
 #[async_trait(?Send)]
@@ -19,7 +22,7 @@ impl Command<ClientCommandState> for ExecuteCommand {
         let execute_frame = execute::Frame {
             id: rand::random(),
             command: self.command.clone(),
-            params: Default::default(),
+            params: self.params.clone(),
         };
         let request = ExecuteRequest {
             device_id: self.device_id.clone(),
