@@ -1,14 +1,13 @@
 use crate::common::Credential;
 use std::convert::TryFrom;
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum::{IntoEnumIterator, EnumIter};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 pub type UserID = Credential<16>;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, EnumIter, strum_macros::Display)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, EnumIter, strum::Display)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(feature = "serde", serde(rename = "snake_case"))]
 #[repr(u8)]

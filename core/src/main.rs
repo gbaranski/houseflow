@@ -18,10 +18,10 @@ use ::auth::api::Auth as AuthAPI;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, DeviceConfig, ServerConfig};
-use strum_macros::{EnumIter, EnumString};
+use strum::{EnumIter, EnumString};
 use token::Token;
 
-#[derive(Clone, Debug, EnumString, strum_macros::Display, EnumIter)]
+#[derive(Clone, Debug, EnumString, strum::Display, EnumIter)]
 pub enum Target {
     #[strum(serialize = "server")]
     Server,

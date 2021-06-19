@@ -4,10 +4,9 @@ use lighthouse_macros::decoder;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::mem::size_of;
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum::{IntoEnumIterator, EnumIter};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum_macros::Display)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display)]
 #[repr(u8)]
 pub enum ExecuteResponseStatus {
     /// Confirm that the command succeeded.

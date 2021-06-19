@@ -974,7 +974,6 @@ dependencies = [
  "serde",
  "serde_json",
  "strum 0.21.0",
- "strum_macros 0.21.1",
  "tokio",
  "toml",
  "url",
@@ -1178,7 +1177,6 @@ dependencies = [
  "serde",
  "serde_json",
  "strum 0.20.0",
- "strum_macros 0.20.1",
  "thiserror",
 ]
 
@@ -1241,7 +1239,6 @@ dependencies = [
  "semver 1.0.3",
  "serde",
  "strum 0.20.0",
- "strum_macros 0.20.1",
  "thiserror",
 ]
 
@@ -2298,12 +2295,18 @@ name = "strum"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7318c509b5ba57f18533982607f24070a55d353e90d4cae30c467cdb2ad5ac5c"
+dependencies = [
+ "strum_macros 0.20.1",
+]
 
 [[package]]
 name = "strum"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aaf86bbcfd1fa9670b7a129f64fc0c9fcbbfe4f1bc4210e9e98fe71ffc12cde2"
+dependencies = [
+ "strum_macros 0.21.1",
+]
 
 [[package]]
 name = "strum_macros"

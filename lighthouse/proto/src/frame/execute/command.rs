@@ -6,10 +6,9 @@ use std::{
     convert::{TryFrom, TryInto},
     mem::size_of,
 };
-use strum::IntoEnumIterator;
-use strum_macros::{EnumIter, EnumString};
+use strum::{EnumIter, EnumString, IntoEnumIterator};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum_macros::Display, EnumString)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display, EnumString)]
 #[repr(u16)]
 #[strum(serialize_all = "snake_case")]
 pub enum ExecuteCommand {

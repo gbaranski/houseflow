@@ -1,6 +1,5 @@
 use std::convert::TryFrom;
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum::{IntoEnumIterator, EnumIter};
 
 #[derive(Debug, Clone, Copy, EnumIter)]
 #[repr(u8)]

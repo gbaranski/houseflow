@@ -54,15 +54,15 @@ pub struct DevicePermission {
     pub execute: bool,
 }
 
-use strum_macros::EnumString;
+use strum::EnumString;
 
 /// Traits defines what functionality device supports
-#[derive(Debug, Clone, Hash, Eq, PartialEq, strum_macros::Display, EnumString)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DeviceTrait {}
 
 /// Type of the device
-#[derive(Debug, Clone, PartialEq, Eq, strum_macros::Display, EnumString)]
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum DeviceType {
