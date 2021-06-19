@@ -9,6 +9,7 @@ use clap::Clap;
 #[derive(Clap)]
 pub struct ExecuteCommand {
     pub device_id: DeviceID,
+    pub command: execute::Command,
 }
 
 #[async_trait(?Send)]
@@ -17,7 +18,7 @@ impl Command<ClientCommandState> for ExecuteCommand {
         let access_token = state.access_token().await?;
         let execute_frame = execute::Frame {
             id: rand::random(),
-            command: execute::Command::OnOff,
+            command: self.command.clone(),
             params: Default::default(),
         };
         let request = ExecuteRequest {

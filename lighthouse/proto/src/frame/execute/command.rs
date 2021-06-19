@@ -7,10 +7,11 @@ use std::{
     mem::size_of,
 };
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum_macros::{EnumIter, EnumString};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum_macros::Display, EnumString)]
 #[repr(u16)]
+#[strum(serialize_all = "snake_case")]
 pub enum ExecuteCommand {
     NoOperation = 0x0000,
     OnOff = 0x0001,
