@@ -1,32 +1,18 @@
 use crate::{DecodeError, Decoder, Encoder, Framed};
 use bytes::{Buf, BufMut};
 use lighthouse_macros::decoder;
-use serde::{Deserialize, Serialize};
-use std::{
-    convert::{TryFrom, TryInto},
-    mem::size_of,
-};
-use strum::{EnumIter, EnumString, IntoEnumIterator};
+use std::{convert::TryInto, mem::size_of};
+use types::DeviceCommand;
 
-#[derive(
-    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display, EnumString,
-)]
-#[repr(u16)]
-#[strum(serialize_all = "snake_case")]
-pub enum ExecuteCommand {
-    NoOperation = 0x0000,
-    OnOff = 0x0001,
-}
+impl<'de> Framed<'de> for DeviceCommand {}
 
-impl<'de> Framed<'de> for ExecuteCommand {}
-
-impl Encoder for ExecuteCommand {
+impl Encoder for DeviceCommand {
     fn encode(&self, buf: &mut impl BufMut) {
         buf.put_u16(self.clone() as u16);
     }
 }
 
-impl Decoder for ExecuteCommand {
+impl Decoder for DeviceCommand {
     const MIN_SIZE: usize = size_of::<u16>();
 
     #[decoder]
@@ -36,21 +22,5 @@ impl Decoder for ExecuteCommand {
             .map_err(|_| DecodeError::InvalidField {
                 field: std::any::type_name::<Self>(),
             })
-    }
-}
-
-impl TryFrom<u16> for ExecuteCommand {
-    type Error = ();
-
-    fn try_from(v: u16) -> Result<Self, Self::Error> {
-        Self::iter().find(|e| e.clone() as u16 == v).ok_or(())
-    }
-}
-
-impl rand::distributions::Distribution<ExecuteCommand> for rand::distributions::Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> ExecuteCommand {
-        ExecuteCommand::iter()
-            .nth(rng.gen_range(0..ExecuteCommand::iter().len()))
-            .unwrap()
     }
 }

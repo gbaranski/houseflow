@@ -4,6 +4,7 @@ use futures_util::{Sink, SinkExt, StreamExt};
 use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
+use types::{DeviceError, DeviceStatus};
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -72,8 +73,8 @@ impl Session {
                         Frame::Execute(frame) => {
                             let response_frame = execute_response::Frame {
                                 id: frame.id,
-                                status: execute_response::Status::Success,
-                                error: execute_response::Error::None,
+                                status: DeviceStatus::Success,
+                                error: DeviceError::None,
                                 state: frame.params,
                             };
                             let response_frame = Frame::ExecuteResponse(response_frame);

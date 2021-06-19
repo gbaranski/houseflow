@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lighthouse-macros = { path = "../macros", package = "houseflow-lighthouse-macros" }
+types             = { path = "../../types", package = "houseflow-types" }
+lighthouse-macros = { path = "../macros"  , package = "houseflow-lighthouse-macros" }
 
 bytes = "1.0"
 strum = { version = "0.20", features = [ "derive" ] }

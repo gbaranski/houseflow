@@ -2,14 +2,14 @@ use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 use fulfillment::types::ExecuteRequest;
 use lighthouse::proto::execute;
-use types::DeviceID;
+use types::{DeviceCommand, DeviceID};
 
 use clap::Clap;
 
 #[derive(Clap)]
 pub struct ExecuteCommand {
     pub device_id: DeviceID,
-    pub command: execute::Command,
+    pub command: DeviceCommand,
 
     #[clap(default_value)]
     pub params: serde_json::Value,

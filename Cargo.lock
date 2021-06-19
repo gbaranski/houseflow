@@ -1173,6 +1173,7 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "houseflow-lighthouse-macros",
+ "houseflow-types",
  "rand",
  "serde",
  "serde_json",
