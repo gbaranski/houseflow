@@ -6,13 +6,12 @@ use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum Event {
+    #[allow(dead_code)]
     Ping,
+
     Pong,
     LighthouseFrame(Frame),
-    // Execute(frame::execute::Frame),
-    // ExecuteResponse(frame::execute_response::Frame),
 }
 
 const BUFFER_CAPACITY: usize = 1024;
@@ -137,6 +136,6 @@ impl Session {
                 }
             }
         }
-        unimplemented!();
+        Ok(())
     }
 }
