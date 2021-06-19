@@ -8,7 +8,9 @@ use std::{
 };
 use strum::{EnumIter, EnumString, IntoEnumIterator};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display, EnumString)]
+#[derive(
+    Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display, EnumString,
+)]
 #[repr(u16)]
 #[strum(serialize_all = "snake_case")]
 pub enum ExecuteCommand {

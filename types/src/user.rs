@@ -1,6 +1,6 @@
 use crate::common::Credential;
 use std::convert::TryFrom;
-use strum::{IntoEnumIterator, EnumIter};
+use strum::{EnumIter, IntoEnumIterator};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

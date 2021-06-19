@@ -4,7 +4,7 @@ use lighthouse_macros::decoder;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::mem::size_of;
-use strum::{IntoEnumIterator, EnumIter};
+use strum::{EnumIter, IntoEnumIterator};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
 #[repr(u16)]
