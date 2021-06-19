@@ -60,15 +60,38 @@ use strum::EnumString;
 /// Traits defines what functionality device supports
 #[derive(Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum DeviceTrait {}
+#[repr(u16)]
+pub enum DeviceTrait {
+    OnOff,
+    OpenClose,
+}
+
+impl DeviceTrait {
+    pub fn commands(&self) -> Vec<DeviceCommand> {
+        match *self {
+            Self::OnOff => vec![DeviceCommand::NoOperation, DeviceCommand::OnOff],
+            Self::OpenClose => vec![DeviceCommand::NoOperation, DeviceCommand::OpenClose],
+        }
+    }
+}
 
 /// Type of the device
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[repr(u16)]
 pub enum DeviceType {
     Gate,
     Garage,
+}
+
+impl DeviceType {
+    pub fn required_traits(&self) -> Vec<DeviceTrait> {
+        match *self {
+            Self::Gate => vec![DeviceTrait::OpenClose],
+            Self::Garage => vec![DeviceTrait::OpenClose],
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString)]
@@ -79,6 +102,7 @@ pub enum DeviceType {
 pub enum DeviceCommand {
     NoOperation = 0x0000,
     OnOff = 0x0001,
+    OpenClose = 0x0002,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
