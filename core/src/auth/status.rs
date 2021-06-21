@@ -22,12 +22,28 @@ impl StatusCommand {
         let (access_token, refresh_token) = (tokens.access, tokens.refresh);
 
         let get_token_expiration = |token: &Token| match token.expires_at().as_ref() {
-            Some(expiration_date) => humantime::Duration::from(std::time::Duration::from_secs(
-                expiration_date
-                    .duration_since(std::time::SystemTime::now())
-                    .unwrap()
-                    .as_secs(),
-            ))
+            Some(expires_at) => {
+                use std::time::{SystemTime, Duration};
+                use std::cmp::Ordering;
+                let round_duration = |duration: Duration| Duration::from_secs(duration.as_secs());
+
+                match expires_at.cmp(&SystemTime::now()) {
+                    Ordering::Equal => "just expired".to_string(),
+                    Ordering::Greater => {
+                        let difference = expires_at.duration_since(SystemTime::now()).unwrap();
+                        let difference = round_duration(difference);
+                        let difference = humantime::Duration::from(difference);
+                        format!("expire in: {}", difference)
+                    }
+                    Ordering::Less => {
+                        let difference = expires_at.elapsed().unwrap();
+                        let difference = round_duration(difference);
+                        let difference = humantime::Duration::from(difference);
+                        format!("expired for: {}", difference)
+                    }
+                    
+                }
+            }
             .to_string(),
             None => "never".to_string(),
         };
@@ -53,11 +69,11 @@ impl StatusCommand {
             state.config.tokens_path.to_str().unwrap_or("INVALID_PATH")
         );
         println!(
-            "  Access token(valid for: {}): {}",
+            "  Access token({}): {}",
             access_token_expiration, access_token
         );
         println!(
-            "  Refresh token(valid for: {}): {}",
+            "  Refresh token({}): {}",
             refresh_token_expiration, refresh_token
         );
 
