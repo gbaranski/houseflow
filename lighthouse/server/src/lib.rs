@@ -1,8 +1,13 @@
-use actix_web::{get, http, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{
+    get, http, post,
+    web::{self, Json},
+    HttpRequest, HttpResponse, Responder,
+};
 use actix_web_actors::ws;
 pub use config::Config;
 use itertools::Itertools;
 use lighthouse_proto::{execute, execute_response};
+use lighthouse_types::{DeviceError, ExecuteRequest, ExecuteResponse};
 use session::Session;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -70,30 +75,27 @@ async fn on_websocket(
     Ok(response)
 }
 
-#[post("/execute/{device_id}")]
+#[post("/execute")]
 async fn on_execute(
-    path: web::Path<String>,
-    frame: web::Json<execute::Frame>,
+    request: Json<ExecuteRequest>,
     app_state: web::Data<AppState>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let device_id = path.into_inner();
-    let device_id = DeviceID::from_str(&device_id)
-        .map_err(|err| HttpResponse::BadRequest().body(format!("Invalid DeviceID: {}", err)))?;
-
+) -> Result<Json<ExecuteResponse>, DeviceError> {
     let response: execute_response::Frame = app_state
         .sessions
         .lock()
         .await
-        .get(&device_id)
-        .ok_or_else(|| HttpResponse::NotFound().body("Device not found"))?
-        .send(aliases::ActorExecuteFrame::from(frame.into_inner()))
+        .get(&request.device_id)
+        .ok_or(DeviceError::NotConnected)?
+        .send(aliases::ActorExecuteFrame::from(request.frame.clone()))
         .await
         .unwrap()
         .unwrap()
         .into();
 
+    let response = ExecuteResponse::Ok(response);
+
     log::debug!("Response: {:?}", response);
-    Ok(HttpResponse::Ok().json(response))
+    Ok(Json(response))
 }
 
 #[derive(Default)]
