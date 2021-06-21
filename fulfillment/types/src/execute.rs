@@ -31,6 +31,9 @@ pub enum ExecuteResponseError {
 
     #[error("no device permission")]
     NoDevicePermission,
+
+    #[error("error with device communication: {0}")]
+    DeviceError(#[from] lighthouse_types::DeviceError),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -55,6 +58,7 @@ impl actix_web::ResponseError for ExecuteResponseError {
             Self::DecodeTokenHeaderError(_) => StatusCode::BAD_REQUEST,
             Self::TokenVerifyError(_) => StatusCode::UNAUTHORIZED,
             Self::NoDevicePermission => StatusCode::FORBIDDEN,
+            Self::DeviceError(_) => StatusCode::SERVICE_UNAVAILABLE,
         }
     }
 

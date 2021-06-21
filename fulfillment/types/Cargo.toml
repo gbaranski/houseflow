@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 lighthouse-proto = { path = "../../lighthouse/proto", package = "houseflow-lighthouse-proto" }
+lighthouse-types = { path = "../../lighthouse/types", package = "houseflow-lighthouse-types" }
 types = { path = "../../types", package = "houseflow-types" }
 token = { path = "../../token", package = "houseflow-token" }
 db    = { path = "../../db"   , package = "houseflow-db", optional = true }

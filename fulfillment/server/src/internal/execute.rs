@@ -40,10 +40,18 @@ pub async fn on_execute(
         return Err(ExecuteResponseError::NoDevicePermission);
     }
 
-    let response_frame = lighthouse
+    let response_frame = match lighthouse
         .execute(&execute_request.frame, &execute_request.device_id)
         .await
-        .map_err(|err| ExecuteResponseError::InternalError(err.to_string()))?;
+    {
+        Ok(frame) => frame,
+        Err(err) => match err {
+            lighthouse_api::Error::DeviceError(err) => Err(err)?,
+            lighthouse_api::Error::ReqwestError(err) => {
+                Err(ExecuteResponseError::InternalError(err.to_string()))?
+            }
+        },
+    };
 
     Ok(Json(ExecuteResponse::Ok(ExecuteResponseBody {
         frame: response_frame,

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use lighthouse_proto::{execute, execute_response};
-use lighthouse_types::DeviceError;
+use lighthouse_types::{DeviceError, ExecuteRequest, ExecuteResponse};
 use thiserror::Error;
 use tokio::sync::Mutex;
 use types::DeviceID;
@@ -35,20 +35,23 @@ impl prelude::Lighthouse for Lighthouse {
         frame: &execute::Frame,
         device_id: &DeviceID,
     ) -> Result<execute_response::Frame, Error> {
-        let url = self
-            .url
-            .join(&format!("execute/{}", device_id.to_string()))
-            .unwrap();
+        let request = ExecuteRequest {
+            device_id: device_id.clone(),
+            frame: frame.clone(),
+        };
+        let url = self.url.join("execute").unwrap();
 
         let client = reqwest::Client::new();
         let response = client
             .post(url)
-            .json(&frame)
+            .json(&request)
             .send()
             .await?
-            .json::<execute_response::Frame>()
-            .await?;
-        Ok(response)
+            .json::<ExecuteResponse>()
+            .await?
+            .into_result()?;
+
+        Ok(response.frame)
     }
 }
 

@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 lighthouse-proto = { path = "../proto"   , package = "houseflow-lighthouse-proto" }
 lighthouse-types = { path = "../types"   , package = "houseflow-lighthouse-types", features = ["actix"]}
+db               = { path = "../../db"   	   , package = "houseflow-db" }
 types  		 = { path = "../../types", package = "houseflow-types" }
 
 # Update versions when this resolves https://github.com/actix/actix-web/issues/2195
@@ -26,3 +27,4 @@ itertools        = "0.10"
 bytes            = "1.0"
 serde            = "1.0"
 serde_json       = "1.0"
+rust-argon2 = "0.8.3"
