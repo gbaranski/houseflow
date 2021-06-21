@@ -11,7 +11,7 @@ token      = { path = "../../token", package = "houseflow-token" }
 types      = { path = "../../types", package = "houseflow-types" }
 db         = { path = "../../db"   , package = "houseflow-db", optional = true }
 
-actix-web  = { version = "=4.0.0-beta.5", optional = true, default-features = false }
+actix-web  = { version = "4.0.0-beta.7", optional = true, default-features = false }
 serde      = { version = "1.0", features = [ "derive" ] }
 serde_json = { version = "1.0.64", optional = true }
 thiserror  = "1.0.25"

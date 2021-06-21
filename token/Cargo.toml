@@ -13,7 +13,7 @@ serde        = { version = "1.0"    , features = [ "derive" ]    , optional = tr
 tokio        = { version = "1.6.1"  , features = [ "sync" ]      , optional = true }
 async-trait  = { version = "0.1.50" , optional = true }
 redis-client = { version = "0.20.1" , features = [ "tokio-comp" ], optional = true, package = "redis" }
-actix-web    = { version = "=4.0.0-beta.5", optional = true }
+actix-web    = { version = "4.0.0-beta.7", optional = true }
 hmac         = "0.11"
 sha2         = "0.9"
 base64       = "0.13"

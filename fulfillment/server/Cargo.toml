@@ -15,14 +15,14 @@ lighthouse-proto  = { path = "../../lighthouse/proto", package = "houseflow-ligh
 token             = { path = "../../token"         , package = "houseflow-token", features = [ "actix" ] }
 
 
-actix-web         =   "=4.0.0-beta.5" 
-log               =   "0.4"
-thiserror         =   "1.0"
-actix-rt = "2.2.0"
-rand = "0.8.3"
-semver = "1.0.3"
-tokio = { version = "1.6.1", features = ["macros"] }
-serde = { version = "1.0.126", features = ["derive"] }
+tokio 	          = { version = "1.6.1"  , features = ["macros"] }
+serde 		  = { version = "1.0.126", features = ["derive"] }
+actix-web         = "4.0.0-beta.7" 
+log               = "0.4"
+thiserror         = "1.0"
+actix-rt 	  = "2.2.0"
+rand 	  	  = "0.8.3"
+semver 		  = "1.0.3"
 
 [dev-dependencies]
 futures = "0.3.15"

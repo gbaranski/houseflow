@@ -8,14 +8,14 @@ edition = "2018"
 
 [dependencies]
 lighthouse-proto = { path = "../proto"   , package = "houseflow-lighthouse-proto" }
-lighthouse-types = { path = "../types"   , package = "houseflow-lighthouse-types"}
+lighthouse-types = { path = "../types"   , package = "houseflow-lighthouse-types", features = ["actix"]}
 types  		 = { path = "../../types", package = "houseflow-types" }
 
 # Update versions when this resolves https://github.com/actix/actix-web/issues/2195
 actix 	 	 = "0.11.1"
-actix-web 	 = "=4.0.0-beta.5" 
-actix-web-actors = "=4.0.0-beta.4"
-actix-service 	 = "=2.0.0-beta.5"
+actix-web 	 = "4.0.0-beta.7" 
+actix-web-actors = "4.0.0-beta.5"
+actix-service 	 = "2.0.0-beta.5"
 tokio            = { version = "1.5", features = ["sync" ] }
 
 thiserror        = "1.0"
