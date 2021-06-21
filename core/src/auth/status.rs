@@ -19,8 +19,7 @@ impl StatusCommand {
         whoami_response: WhoamiResponseBody,
     ) -> anyhow::Result<()> {
         let tokens = state.tokens.get().await?;
-        let (access_token, refresh_token) =
-            (tokens.access, tokens.refresh);
+        let (access_token, refresh_token) = (tokens.access, tokens.refresh);
 
         let get_token_expiration = |token: &Token| match token.expires_at().as_ref() {
             Some(expiration_date) => humantime::Duration::from(std::time::Duration::from_secs(
@@ -51,11 +50,7 @@ impl StatusCommand {
         println!("  Email: {}", whoami_response.email);
         println!(
             "  Keystore: {}",
-            state
-                .config
-                .tokens_path
-                .to_str()
-                .unwrap_or("INVALID_PATH")
+            state.config.tokens_path.to_str().unwrap_or("INVALID_PATH")
         );
         println!(
             "  Access token(valid for: {}): {}",

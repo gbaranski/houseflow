@@ -56,8 +56,8 @@ mod tests {
     use crate::test_utils::*;
     use actix_web::{http, test, App};
     use lighthouse_proto::{execute, execute_response};
-    use types::{DeviceCommand, DeviceStatus, DeviceError};
     use std::sync::Arc;
+    use types::{DeviceCommand, DeviceError, DeviceStatus};
 
     #[actix_rt::test]
     async fn execute() {

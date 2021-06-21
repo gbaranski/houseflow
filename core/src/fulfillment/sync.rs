@@ -21,7 +21,11 @@ impl Command<ClientCommandState> for SyncCommand {
                 device.name
             )
         });
-        state.devices.save(&response.devices).await.with_context(|| "save devices")?;
+        state
+            .devices
+            .save(&response.devices)
+            .await
+            .with_context(|| "save devices")?;
         log::debug!("saved devices to {:?}", state.config.devices_path);
 
         Ok(())
