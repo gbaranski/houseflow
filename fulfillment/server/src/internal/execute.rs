@@ -56,6 +56,7 @@ mod tests {
     use crate::test_utils::*;
     use actix_web::{http, test, App};
     use lighthouse_proto::{execute, execute_response};
+    use types::{DeviceCommand, DeviceStatus, DeviceError};
     use std::sync::Arc;
 
     #[actix_rt::test]
@@ -90,14 +91,14 @@ mod tests {
 
         let request_frame = execute::Frame {
             id: rand::random(),
-            command: execute::Command::OnOff,
+            command: DeviceCommand::OnOff,
             params: Default::default(),
         };
 
         let response_frame = execute_response::Frame {
             id: request_frame.id.clone(),
-            status: execute_response::Status::Success,
-            error: execute_response::Error::None,
+            status: DeviceStatus::Success,
+            error: DeviceError::None,
             state: Default::default(),
         };
 
