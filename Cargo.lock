@@ -974,6 +974,7 @@ dependencies = [
  "serde",
  "serde_json",
  "strum 0.21.0",
+ "szafka",
  "tokio",
  "toml",
  "url",
@@ -2348,6 +2349,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "szafka"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f61e563cd44aba52073a93de8f7ba31bea04d1a93767381e4b0bc7873d5ae0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

@@ -106,7 +106,7 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
 
                 base_url = "{}"
             "#},
-                defaults.keystore_path.to_str().unwrap(),
+                defaults.tokens_path.to_str().unwrap(),
                 defaults.base_url,
             )
         }

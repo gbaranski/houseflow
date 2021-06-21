@@ -9,15 +9,15 @@ pub struct LogoutCommand {}
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for LogoutCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        let keystore_file = state.keystore.read().await?;
+        let tokens = state.tokens.get().await?;
 
         state
             .auth
-            .logout(&keystore_file.refresh_token)
+            .logout(&tokens.refresh)
             .await?
             .into_result()?;
 
-        state.keystore.remove().await?;
+        state.tokens.flush().await?;
         log::info!("✔ Succesfully logged out");
 
         Ok(())

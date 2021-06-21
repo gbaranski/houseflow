@@ -1,4 +1,4 @@
-use crate::{ClientCommandState, Command, KeystoreFile};
+use crate::{ClientCommandState, Command, Tokens};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -46,12 +46,12 @@ impl Command<ClientCommandState> for LoginCommand {
             .await?
             .into_result()?;
         log::info!("✔ Logged in as {}", login_request.email);
-        let keystore_file = KeystoreFile {
-            refresh_token: login_response.refresh_token,
-            access_token: login_response.access_token,
+        let tokens = Tokens {
+            refresh: login_response.refresh_token,
+            access: login_response.access_token,
         };
-        state.keystore.save(&keystore_file).await?;
-        log::debug!("Saved refresh token at {:?}", state.keystore.path);
+        state.tokens.save(&tokens).await?;
+        log::debug!("Saved refresh token at {:?}", state.config.tokens_path);
 
         Ok(())
     }

@@ -1,4 +1,4 @@
-use crate::{ClientCommandState, Command, KeystoreFile};
+use crate::{ClientCommandState, Command, Tokens};
 use async_trait::async_trait;
 
 use clap::Clap;
@@ -9,17 +9,17 @@ pub struct RefreshCommand {}
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for RefreshCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        let keystore_file = state.keystore.read().await?;
+        let tokens = state.tokens.get().await?;
         let response = state
             .auth
-            .fetch_access_token(&keystore_file.refresh_token)
+            .fetch_access_token(&tokens.refresh)
             .await?
             .into_result()?;
-        let new_keystore_file = KeystoreFile {
-            refresh_token: keystore_file.refresh_token,
-            access_token: response.access_token,
+        let tokens = Tokens {
+            refresh: tokens.refresh,
+            access: response.access_token,
         };
-        state.keystore.save(&new_keystore_file).await?;
+        state.tokens.save(&tokens).await?;
         log::info!("✔ Succesfully refreshed token and saved to keystore");
 
         Ok(())

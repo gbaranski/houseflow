@@ -5,9 +5,9 @@ use url::Url;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ClientConfig {
-    /// Path to keystore, used to store persistant sessions
+    /// Path to tokens, used to store persistent sessions
     /// Default: $XDG_DATA_HOME/houseflow/keystore
-    pub keystore_path: PathBuf,
+    pub tokens_path: PathBuf,
 
     /// Base URL of the server
     pub base_url: Url,
@@ -16,10 +16,10 @@ pub struct ClientConfig {
 impl Default for ClientConfig {
     fn default() -> Self {
         Self {
-            keystore_path: xdg::BaseDirectories::with_prefix(clap::crate_name!())
+            tokens_path: xdg::BaseDirectories::with_prefix(clap::crate_name!())
                 .unwrap()
                 .get_data_home()
-                .join("keystore"),
+                .join("tokens"),
             base_url: crate::config::defaults::base_url(),
         }
     }

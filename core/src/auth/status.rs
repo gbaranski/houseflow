@@ -18,9 +18,9 @@ impl StatusCommand {
         state: &ClientCommandState,
         whoami_response: WhoamiResponseBody,
     ) -> anyhow::Result<()> {
-        let keystore_file = state.keystore.read().await?;
+        let tokens = state.tokens.get().await?;
         let (access_token, refresh_token) =
-            (keystore_file.access_token, keystore_file.refresh_token);
+            (tokens.access, tokens.refresh);
 
         let get_token_expiration = |token: &Token| match token.expires_at().as_ref() {
             Some(expiration_date) => humantime::Duration::from(std::time::Duration::from_secs(
@@ -53,7 +53,7 @@ impl StatusCommand {
             "  Keystore: {}",
             state
                 .config
-                .keystore_path
+                .tokens_path
                 .to_str()
                 .unwrap_or("INVALID_PATH")
         );

@@ -5,17 +5,17 @@ mod cli;
 mod config;
 mod device;
 mod fulfillment;
-mod keystore;
 mod server;
 
 pub use self::device::DeviceCommand;
 pub use crate::{auth::AuthCommand, device::RunDeviceCommand, fulfillment::FulfillmentCommand};
 pub use config::ConfigCommand;
-pub use keystore::{Keystore, KeystoreFile};
 pub use server::ServerCommand;
 
 use ::auth::api::Auth as AuthAPI;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
+use serde::{Serialize, Deserialize};
+use szafka::Szafka;
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, DeviceConfig, ServerConfig};
 use strum::{EnumIter, EnumString};
@@ -50,10 +50,16 @@ pub trait CommandState {}
 
 impl<T> CommandState for T {}
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Tokens {
+    access: Token,
+    refresh: Token,
+}
+
 #[derive(Clone)]
 pub struct ClientCommandState {
     pub config: ClientConfig,
-    pub keystore: Keystore,
+    pub tokens: Szafka<Tokens>,
     pub auth: AuthAPI,
     pub fulfillment: FulfillmentAPI,
 }
@@ -70,30 +76,30 @@ pub struct DeviceCommandState {
 
 impl ClientCommandState {
     pub async fn access_token(&self) -> anyhow::Result<Token> {
-        let keystore_file = self.keystore.read().await?;
-        if keystore_file.refresh_token.has_expired() {
+        let tokens = self.tokens.get().await?;
+        if tokens.refresh.has_expired() {
             log::debug!("cached refresh token is expired");
             return Err(anyhow::Error::msg(
                 "refresh token expired, you need to log in again using `houseflow auth login`",
             ));
         }
 
-        if !keystore_file.access_token.has_expired() {
+        if !tokens.access.has_expired() {
             log::debug!("cached access token is not expired");
-            Ok(keystore_file.access_token)
+            Ok(tokens.access)
         } else {
             log::debug!("cached access token is expired, fetching new one");
             let fetched_access_token = self
                 .auth
-                .fetch_access_token(&keystore_file.refresh_token)
+                .fetch_access_token(&tokens.refresh)
                 .await?
                 .into_result()?
                 .access_token;
-            let keystore_file = KeystoreFile {
-                refresh_token: keystore_file.refresh_token,
-                access_token: fetched_access_token.clone(),
+            let tokens = Tokens {
+                refresh: tokens.refresh,
+                access: tokens.access,
             };
-            self.keystore.save(&keystore_file).await?;
+            self.tokens.save(&tokens).await?;
 
             Ok(fetched_access_token)
         }
@@ -130,9 +136,7 @@ fn main() -> anyhow::Result<()> {
                 config: config.clone(),
                 auth: AuthAPI::new(config.base_url.join("auth/").unwrap()),
                 fulfillment: FulfillmentAPI::new(config.base_url.join("fulfillment/").unwrap()),
-                keystore: Keystore {
-                    path: config.keystore_path,
-                },
+                tokens: Szafka::new(config.tokens_path),
             };
             Ok::<_, anyhow::Error>(state)
         };
