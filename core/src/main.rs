@@ -14,12 +14,14 @@ pub use server::ServerCommand;
 
 use ::auth::api::Auth as AuthAPI;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
-use serde::{Serialize, Deserialize};
-use szafka::Szafka;
+use anyhow::Context;
 use cli::{CliConfig, Subcommand};
 use config::{ClientConfig, DeviceConfig, ServerConfig};
+use serde::{Deserialize, Serialize};
 use strum::{EnumIter, EnumString};
+use szafka::Szafka;
 use token::Token;
+use types::Device;
 
 #[derive(Clone, Debug, EnumString, strum::Display, EnumIter)]
 pub enum Target {
@@ -60,6 +62,7 @@ pub struct Tokens {
 pub struct ClientCommandState {
     pub config: ClientConfig,
     pub tokens: Szafka<Tokens>,
+    pub devices: Szafka<Vec<Device>>,
     pub auth: AuthAPI,
     pub fulfillment: FulfillmentAPI,
 }
@@ -76,7 +79,7 @@ pub struct DeviceCommandState {
 
 impl ClientCommandState {
     pub async fn access_token(&self) -> anyhow::Result<Token> {
-        let tokens = self.tokens.get().await?;
+        let tokens = self.tokens.get().await.with_context(|| "get tokens")?;
         if tokens.refresh.has_expired() {
             log::debug!("cached refresh token is expired");
             return Err(anyhow::Error::msg(
@@ -127,7 +130,6 @@ fn main() -> anyhow::Result<()> {
         use config::read_config_file;
 
         let client_command_state = || async {
-            use anyhow::Context;
             let config: ClientConfig =
                 read_config_file::<ClientConfig>(&Target::Client.config_path())
                     .await
@@ -137,12 +139,12 @@ fn main() -> anyhow::Result<()> {
                 auth: AuthAPI::new(config.base_url.join("auth/").unwrap()),
                 fulfillment: FulfillmentAPI::new(config.base_url.join("fulfillment/").unwrap()),
                 tokens: Szafka::new(config.tokens_path),
+                devices: Szafka::new(config.devices_path),
             };
             Ok::<_, anyhow::Error>(state)
         };
 
         let server_command_state = || async {
-            use anyhow::Context;
             let config: ServerConfig =
                 read_config_file::<ServerConfig>(&Target::Server.config_path())
                     .await
@@ -152,8 +154,6 @@ fn main() -> anyhow::Result<()> {
         };
 
         let device_command_state = || async {
-            use anyhow::Context;
-
             let config: DeviceConfig =
                 read_config_file::<DeviceConfig>(&Target::Device.config_path())
                     .await
