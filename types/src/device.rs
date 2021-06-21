@@ -62,6 +62,7 @@ use strum::EnumString;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[strum(serialize_all = "snake_case")]
 #[repr(u16)]
+#[non_exhaustive]
 pub enum DeviceTrait {
     OnOff,
     OpenClose,
@@ -82,6 +83,7 @@ impl DeviceTrait {
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[strum(serialize_all = "snake_case")]
 #[repr(u16)]
+#[non_exhaustive]
 pub enum DeviceType {
     Gate,
     Garage,
@@ -101,6 +103,7 @@ impl DeviceType {
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[strum(serialize_all = "snake_case")]
 #[repr(u16)]
+#[non_exhaustive]
 pub enum DeviceCommand {
     NoOperation = 0x0000,
     OnOff = 0x0001,
@@ -109,6 +112,7 @@ pub enum DeviceCommand {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
 #[repr(u16)]
+#[non_exhaustive]
 pub enum DeviceError {
     /// No error occurred
     None = 0x0000,
