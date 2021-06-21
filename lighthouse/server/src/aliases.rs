@@ -19,24 +19,24 @@ impl From<ActorExecuteFrame> for execute::Frame {
 }
 
 #[derive(MessageResponse)]
-pub struct ActorCommandResponseFrame {
+pub struct ActorExecuteResponseFrame {
     inner: execute_response::Frame,
 }
 
-impl From<execute_response::Frame> for ActorCommandResponseFrame {
+impl From<execute_response::Frame> for ActorExecuteResponseFrame {
     fn from(v: execute_response::Frame) -> Self {
         Self { inner: v }
     }
 }
 
-impl From<ActorCommandResponseFrame> for execute_response::Frame {
-    fn from(val: ActorCommandResponseFrame) -> Self {
+impl From<ActorExecuteResponseFrame> for execute_response::Frame {
+    fn from(val: ActorExecuteResponseFrame) -> Self {
         val.inner
     }
 }
 
 impl Message for ActorExecuteFrame {
-    type Result = Result<ActorCommandResponseFrame, DeviceError>;
+    type Result = Result<ActorExecuteResponseFrame, DeviceError>;
 }
 
 pub struct ActorStateCheckFrame {

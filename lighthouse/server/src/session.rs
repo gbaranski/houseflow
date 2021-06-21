@@ -1,5 +1,5 @@
 use crate::aliases::{
-    ActorCommandResponseFrame, ActorExecuteFrame, ActorStateCheckFrame, ActorStateFrame,
+    ActorExecuteResponseFrame, ActorExecuteFrame, ActorStateCheckFrame, ActorStateFrame,
 };
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
@@ -88,7 +88,7 @@ impl Handler<ActorStateCheckFrame> for Session {
 
 impl Handler<ActorExecuteFrame> for Session {
     type Result =
-        actix::ResponseActFuture<Self, std::result::Result<ActorCommandResponseFrame, DeviceError>>;
+        actix::ResponseActFuture<Self, std::result::Result<ActorExecuteResponseFrame, DeviceError>>;
 
     fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
@@ -108,7 +108,7 @@ impl Handler<ActorExecuteFrame> for Session {
                 .map_err(|_| DeviceError::Timeout)?
                 .expect("Sender is dropped when receiving response");
 
-            Ok::<ActorCommandResponseFrame, DeviceError>(resp.into())
+            Ok::<ActorExecuteResponseFrame, DeviceError>(resp.into())
         }
         .into_actor(self)
         .map(move |res, session: &mut Self, _| {
