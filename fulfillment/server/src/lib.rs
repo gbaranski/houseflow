@@ -41,7 +41,7 @@ async fn just_for_testing(db: Data<dyn Database>) -> impl actix_web::Responder {
     use actix_web::HttpResponse;
     use semver::Version;
     use std::str::FromStr;
-    use types::{Device, DevicePermission, DeviceType, UserID};
+    use types::{Device, DevicePermission, DeviceTrait, DeviceType, UserID};
 
     let user_id = UserID::from_str("eeb3f58b28b8bd1815c3cc1bd0028fee").unwrap();
 
@@ -49,7 +49,7 @@ async fn just_for_testing(db: Data<dyn Database>) -> impl actix_web::Responder {
         id: rand::random(),
         password_hash: "$argon2i$v=19$m=4096,t=3,p=1$NjNjMTdhODU2YTJkNTdiZDViYjJkNTBhY2IxNmI4MzE$chXOPqhv21hnnp/C2Pv/UKm1tjSAXkBY3vkQzBNU9w8".to_string(),
         device_type: DeviceType::Gate,
-        traits: vec![],
+        traits: vec![DeviceTrait::OpenClose],
         name: "Gate".to_string(),
         will_push_state: true,
         room: None,
