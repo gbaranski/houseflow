@@ -19,6 +19,29 @@ pub struct ExecuteCommand {
 impl Command<ClientCommandState> for ExecuteCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
+        let devices = state.devices.get().await?;
+        let device = devices
+            .iter()
+            .find(|device| device.id == self.device_id)
+            .ok_or_else(|| anyhow::Error::msg("device not found"))?;
+        let supported_commands = device
+            .traits
+            .iter()
+            .flat_map(|device_trait| device_trait.commands());
+        let is_supported = supported_commands
+            .clone()
+            .any(|command| command == self.command);
+
+        if !is_supported {
+            return Err(anyhow::Error::msg(format!(
+                "command is not supported by the device\nsupported commands: {}",
+                supported_commands
+                    .map(|command| command.to_string())
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            )));
+        }
+
         let execute_frame = execute::Frame {
             id: rand::random(),
             command: self.command.clone(),
