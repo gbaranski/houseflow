@@ -39,7 +39,7 @@ impl DatabaseInternalError for refinery::Error {}
 
 #[derive(Clone)]
 pub struct Database {
-    pool: Pool<NoTls>,
+    pool: Pool,
 }
 
 impl Database {
