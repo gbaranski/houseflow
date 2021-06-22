@@ -54,7 +54,12 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
 
             let postgres_defaults = db::postgres::Config::default();
             format!(
-                indoc! {r#"# Houseflow server configuration
+                indoc! {r#"
+                    # Houseflow server configuration
+
+                    # Change to "0.0.0.0" to allow clients from outside network to connect
+                    # host = "{}"
+                    # port = {}
 
                     # Randomly generated secrets, keep them safe, don't share with anyone
                     [secrets]
@@ -62,26 +67,22 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                     access_key = "{}"
                     password_salt = "{}"
 
-                    # Change to "0.0.0.0" to allow clients from outside network to connect
-                    host = "{}"
-                    port = {}
-
                     # Configuration of the Auth service
-                    [auth]
+                    # [auth]
 
                     # Configuration of the Fulfillment service
-                    [fulfillment]
+                    # [fulfillment]
 
                     # Configuration of the Lighthouse service
-                    [lighthouse]
+                    # [lighthouse]
 
                     # Configuration of the PostgreSQL
-                    [postgres]
-                    host = "{}"
-                    port = {}
-                    database_name = "{}"
-                    user = "{}"
-                    password = "{}"
+                    # [postgres]
+                    # host = "{}"
+                    # port = {}
+                    # database_name = "{}"
+                    # user = "{}"
+                    # password = "{}"
 
                 "#},
                 // Secret
@@ -101,10 +102,11 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
         Target::Client => {
             let defaults = ClientConfig::default();
             format!(
-                indoc! {r#"# Houseflow client configuration
-                keystore_path = "{}"
+                indoc! {r#"
+                # Houseflow client configuration
 
-                base_url = "{}"
+                # keystore_path = "{}"
+                # base_url = "{}"
             "#},
                 defaults.tokens_path.to_str().unwrap(),
                 defaults.base_url,
@@ -120,12 +122,14 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
             let device_password = hex::encode(device_password);
 
             format!(
-                indoc! {r#"# Houseflow device configuration
+                indoc! {r#"
+                # Houseflow device configuration
+
                 #  Randomly generated credentials
                 device_id = "{}"
                 device_password = "{}"
 
-                base_url = "{}"
+                # base_url = "{}"
                 "#
                 },
                 device_id,
