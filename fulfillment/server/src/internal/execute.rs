@@ -46,9 +46,9 @@ pub async fn on_execute(
     {
         Ok(frame) => frame,
         Err(err) => match err {
-            lighthouse_api::Error::DeviceError(err) => Err(err)?,
+            lighthouse_api::Error::DeviceError(err) => return Err(err.into()),
             lighthouse_api::Error::ReqwestError(err) => {
-                Err(ExecuteResponseError::InternalError(err.to_string()))?
+                return Err(ExecuteResponseError::InternalError(err.to_string()))
             }
         },
     };
