@@ -1,10 +1,9 @@
-use crate::Config;
+use crate::{devices, Config};
 use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
 use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
-use types::{DeviceError, DeviceStatus};
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -29,7 +28,10 @@ impl Session {
         Self { config }
     }
 
-    pub async fn run(self) -> Result<(), anyhow::Error> {
+    pub async fn run<D: devices::Device<EP>, EP: devices::ExecuteParams>(
+        self,
+        device: D,
+    ) -> Result<(), anyhow::Error> {
         let url = self.config.lighthouse_url.join("ws").unwrap();
 
         log::debug!("will use {} as websocket endpoint", url);
@@ -50,12 +52,17 @@ impl Session {
         let (stream_sender, stream_receiver) = stream.split();
 
         tokio::select! {
-            v = self.stream_read(stream_receiver, event_sender) => { v }
+            v = self.stream_read(stream_receiver, event_sender, device) => { v }
             v = self.stream_write(stream_sender, event_receiver) => { v }
         }
     }
 
-    async fn stream_read<S>(&self, mut stream: S, events: EventSender) -> Result<(), anyhow::Error>
+    async fn stream_read<S, D: devices::Device<EP>, EP: devices::ExecuteParams>(
+        &self,
+        mut stream: S,
+        events: EventSender,
+        mut device: D,
+    ) -> anyhow::Result<()>
     where
         S: futures_util::Stream<Item = Result<WebsocketMessage, tungstenite::Error>> + Unpin,
     {
@@ -71,11 +78,13 @@ impl Session {
                     log::info!("Received frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
+                            let params: EP = serde_json::from_value(frame.params)?;
+                            let (status, error) = device.on_execute(frame.command, params).await?;
                             let response_frame = execute_response::Frame {
                                 id: frame.id,
-                                status: DeviceStatus::Success,
-                                error: DeviceError::None,
-                                state: frame.params,
+                                status,
+                                error,
+                                state: device.state(),
                             };
                             let response_frame = Frame::ExecuteResponse(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);

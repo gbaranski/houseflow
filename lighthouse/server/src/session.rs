@@ -1,5 +1,5 @@
 use crate::aliases::{
-    ActorExecuteResponseFrame, ActorExecuteFrame, ActorStateCheckFrame, ActorStateFrame,
+    ActorExecuteFrame, ActorExecuteResponseFrame, ActorStateCheckFrame, ActorStateFrame,
 };
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;

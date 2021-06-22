@@ -23,8 +23,8 @@ impl StatusCommand {
 
         let get_token_expiration = |token: &Token| match token.expires_at().as_ref() {
             Some(expires_at) => {
-                use std::time::{SystemTime, Duration};
                 use std::cmp::Ordering;
+                use std::time::{Duration, SystemTime};
                 let round_duration = |duration: Duration| Duration::from_secs(duration.as_secs());
 
                 match expires_at.cmp(&SystemTime::now()) {
@@ -41,7 +41,6 @@ impl StatusCommand {
                         let difference = humantime::Duration::from(difference);
                         format!("expired for: {}", difference)
                     }
-                    
                 }
             }
             .to_string(),

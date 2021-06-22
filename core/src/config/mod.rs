@@ -130,7 +130,7 @@ fn generate_config_string(target: &Target) -> anyhow::Result<String> {
                 },
                 device_id,
                 device_password,
-                defaults::base_url(),
+                defaults::base_url_websockets(),
             )
         }
     };

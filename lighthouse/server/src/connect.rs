@@ -1,9 +1,5 @@
 use crate::{AppState, Session};
-use actix_web::{
-    get, http,
-    web,
-    HttpRequest, HttpResponse,
-};
+use actix_web::{get, http, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use db::Database;
 use itertools::Itertools;
@@ -58,7 +54,7 @@ pub async fn on_websocket(
         .await
         .map_err(|err| ConnectResponseError::InternalError(err.to_string()))?
         .ok_or(ConnectResponseError::InvalidCredentials)?;
-    
+
     if !argon2::verify_encoded(&device.password_hash, device_password.as_bytes()).unwrap() {
         return Err(ConnectResponseError::InvalidCredentials);
     }

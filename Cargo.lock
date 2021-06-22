@@ -707,6 +707,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "enum_dispatch"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd53b3fde38a39a06b2e66dc282f3e86191e53bd04cc499929c15742beae3df8"
+dependencies = [
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -962,6 +974,7 @@ dependencies = [
  "async-trait",
  "clap",
  "dialoguer",
+ "enum_dispatch",
  "env_logger",
  "futures",
  "hex",
@@ -1068,12 +1081,16 @@ name = "houseflow-device"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bytes",
  "futures-util",
  "houseflow-lighthouse-proto",
  "houseflow-types",
  "http",
  "log",
+ "serde",
+ "serde_json",
+ "strum 0.21.0",
  "tokio",
  "tokio-tungstenite",
  "tungstenite",

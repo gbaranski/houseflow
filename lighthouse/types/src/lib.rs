@@ -81,4 +81,3 @@ impl actix_web::ResponseError for ConnectResponseError {
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
 }
-

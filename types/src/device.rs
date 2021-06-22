@@ -87,6 +87,7 @@ impl DeviceTrait {
 pub enum DeviceType {
     Gate,
     Garage,
+    Light,
 }
 
 impl DeviceType {
@@ -94,6 +95,7 @@ impl DeviceType {
         match *self {
             Self::Gate => vec![DeviceTrait::OpenClose],
             Self::Garage => vec![DeviceTrait::OpenClose],
+            Self::Light => vec![DeviceTrait::OnOff],
         }
     }
 }
@@ -110,7 +112,8 @@ pub enum DeviceCommand {
     OpenClose = 0x0002,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
+#[strum(serialize_all = "snake_case")]
 #[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceError {
@@ -119,6 +122,9 @@ pub enum DeviceError {
 
     /// Actually, <device(s)> <doesn't/don't> support that functionality.
     FunctionNotSupported = 0x0001,
+
+    /// Device does not support sent parameters
+    InvalidParameters = 0x0002,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display)]

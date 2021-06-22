@@ -55,7 +55,11 @@ impl Command<ServerCommandState> for RunServerCommand {
                     )
                 }))
                 .service(web::scope("/lighthouse").configure(|cfg| {
-                    lighthouse::server::configure(cfg, lighthouse_app_data.clone(), database.clone())
+                    lighthouse::server::configure(
+                        cfg,
+                        lighthouse_app_data.clone(),
+                        database.clone(),
+                    )
                 }))
                 .service(web::scope("/fulfillment").configure(|cfg| {
                     fulfillment::server::configure(

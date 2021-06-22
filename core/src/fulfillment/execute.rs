@@ -2,7 +2,7 @@ use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 use fulfillment::types::ExecuteRequest;
 use lighthouse::proto::execute;
-use types::{DeviceCommand, DeviceID};
+use types::{DeviceCommand, DeviceID, DeviceStatus};
 
 use clap::Clap;
 
@@ -23,7 +23,11 @@ impl Command<ClientCommandState> for ExecuteCommand {
         let device = devices
             .iter()
             .find(|device| device.id == self.device_id)
-            .ok_or_else(|| anyhow::Error::msg("device not found"))?;
+            .ok_or_else(|| {
+                anyhow::Error::msg(
+                    "device not found, try `houseflow fulfillment sync` to fetch new devices",
+                )
+            })?;
         let supported_commands = device
             .traits
             .iter()
@@ -56,7 +60,13 @@ impl Command<ClientCommandState> for ExecuteCommand {
             .execute(&access_token, &request)
             .await?
             .into_result()?;
-        println!("Device responded with status: {}", response.frame.status);
+        match response.frame.status {
+            DeviceStatus::Success => println!("✔ Device responded with success!"),
+            DeviceStatus::Error => println!(
+                "❌ Device responded with error! Error: {}",
+                response.frame.error
+            ),
+        }
 
         Ok(())
     }
