@@ -29,7 +29,7 @@ impl Command<ServerCommandState> for RunServerCommand {
         let database = || async {
             db::postgres::Database::new(&state.config.postgres)
                 .await
-                .with_context(|| "connect to postgres failed, is redis on?")
+                .with_context(|| "connect to postgres failed, is postgres on?")
         };
 
         let lighthouse_api =
