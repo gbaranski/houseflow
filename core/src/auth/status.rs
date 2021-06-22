@@ -43,7 +43,6 @@ impl StatusCommand {
                     }
                 }
             }
-            .to_string(),
             None => "never".to_string(),
         };
 
