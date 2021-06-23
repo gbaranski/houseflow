@@ -1,0 +1,19 @@
+# Houseflow server configuration
+
+# Change to "0.0.0.0" to allow clients from outside network to connect
+# host = "{}"
+# port = {}
+
+# Randomly generated secrets, keep them safe, don't share with anyone
+[secrets]
+refresh_key = "{}"
+access_key = "{}"
+password_salt = "{}"
+
+# Configuration of the PostgreSQL
+# [postgres]
+# host = "{}"
+# port = {}
+# database_name = "{}"
+# user = "{}"
+# password = "{}"
