@@ -4,7 +4,7 @@ use std::time::Instant;
 
 const DATABASE_USER: &str = "postgres";
 const DATABASE_PASSWORD: &str = "haslo123";
-const DATABASE_HOST: &str = "localhost";
+const DATABASE_IP: std::net::Ipv4Addr = std::net::Ipv4Addr::LOCALHOST;
 const DATABASE_PORT: u16 = 5432;
 const DATABASE_NAME: &str = "houseflow";
 
@@ -24,11 +24,10 @@ async fn main() {
         email: USER_EMAIL.into(),
         password_hash,
     };
-    let database_config = postgres::Config {
+    let database_config = config::postgres::Config {
         user: DATABASE_USER.into(),
         password: DATABASE_PASSWORD.into(),
-        host: DATABASE_HOST.into(),
-        port: DATABASE_PORT,
+        address: std::net::SocketAddrV4::new(DATABASE_IP, DATABASE_PORT).into(),
         database_name: DATABASE_NAME.into(),
     };
     let database = postgres::Database::new(&database_config)
