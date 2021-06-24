@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 types             = { path = "../types", features = [ "postgres-types" ], package = "houseflow-types" }
+config            = { path = "../config", features = [ "postgres" ]       , package = "houseflow-config" }
 refinery          = { version = "0.5.0", features = [ "tokio-postgres" ] }
 serde             = { version = "1.0.126", features = ["derive"] }
 tokio             = { version = "1.6", features = [ "macros" ] }

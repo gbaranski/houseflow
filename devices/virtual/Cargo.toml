@@ -8,6 +8,8 @@ edition = "2018"
 
 [dependencies]
 types             = { path = "../../types", package = "houseflow-types" }
+config            = { path = "../../config", features = [ "device" ], package = "houseflow-config" }
+
 lighthouse-proto  = { path = "../../lighthouse/proto", package = "houseflow-lighthouse-proto" }
 
 tokio             = { version = "1.5", features = [ "rt-multi-thread", "macros", "fs", "sync" ] }

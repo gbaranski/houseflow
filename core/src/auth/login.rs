@@ -51,7 +51,7 @@ impl Command<ClientCommandState> for LoginCommand {
             access: login_response.access_token,
         };
         state.tokens.save(&tokens).await?;
-        log::debug!("Saved refresh token at {:?}", state.config.tokens_path);
+        log::debug!("Saved refresh token at {:#?}", state.tokens.path);
 
         Ok(())
     }

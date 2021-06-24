@@ -13,6 +13,7 @@ fulfillment-types = { path = "../types"   	   , package = "houseflow-fulfillment
 lighthouse-api    = { path = "../../lighthouse/api", package = "houseflow-lighthouse-api" }
 lighthouse-proto  = { path = "../../lighthouse/proto", package = "houseflow-lighthouse-proto" }
 token             = { path = "../../token"         , package = "houseflow-token", features = [ "actix" ] }
+config       	  = { path = "../../config"        , package = "houseflow-config", features = [ "server" ] }
 
 
 tokio 	          = { version = "1.6.1"  , features = ["macros"] }

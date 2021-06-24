@@ -1,13 +1,51 @@
-mod defaults;
+pub mod defaults;
 
-#[cfg(feature = "server")]
+#[cfg(any(test, feature = "server"))]
 pub mod server;
 
-#[cfg(feature = "device")]
+#[cfg(any(test, feature = "device"))]
 pub mod device;
 
-#[cfg(feature = "client")]
+#[cfg(any(test, feature = "client"))]
 pub mod client;
+
+#[cfg(feature = "postgres")]
+pub mod postgres;
+
+#[cfg(feature = "redis")]
+pub mod redis;
+
+pub struct Config {
+    #[cfg(feature = "server")]
+    pub server: server::Config,
+
+    #[cfg(feature = "client")]
+    pub client: client::Config,
+
+    #[cfg(feature = "device")]
+    pub device: device::Config,
+}
+
+#[cfg(feature = "fs")]
+pub async fn read_file<T: serde::de::DeserializeOwned>(
+    path: std::path::PathBuf,
+) -> Result<T, std::io::Error> {
+    if !path.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!(
+                "config file not found at {}",
+                path.to_str().unwrap_or("INVALID_PATH")
+            ),
+        ));
+    }
+
+    let content = tokio::fs::read_to_string(path).await?;
+    let content = content.as_str();
+    let config: T = toml::from_str(content)?;
+
+    Ok(config)
+}
 
 pub(crate) mod resolve_socket_address {
     use serde::{
@@ -43,7 +81,7 @@ pub(crate) mod resolve_socket_address {
                 .map_err(|err| de::Error::custom(err.to_string()))?
                 .next()
             {
-                Some(addr) => Ok(Self::Value::from(addr)),
+                Some(addr) => Ok(addr),
                 None => Err(de::Error::custom(
                     "didn't found any SocketAddr for given address",
                 )),

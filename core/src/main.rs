@@ -7,16 +7,15 @@ mod device;
 mod fulfillment;
 mod server;
 
+pub use self::config::ConfigCommand;
 pub use self::device::DeviceCommand;
 pub use crate::{auth::AuthCommand, device::RunDeviceCommand, fulfillment::FulfillmentCommand};
-pub use config::ConfigCommand;
 pub use server::ServerCommand;
 
 use ::auth::api::Auth as AuthAPI;
 use ::fulfillment::api::Fulfillment as FulfillmentAPI;
 use anyhow::Context;
 use cli::{CliConfig, Subcommand};
-use config::{ClientConfig, DeviceConfig, ServerConfig};
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, EnumString};
 use szafka::Szafka;
@@ -60,7 +59,7 @@ pub struct Tokens {
 
 #[derive(Clone)]
 pub struct ClientCommandState {
-    pub config: ClientConfig,
+    pub config: ::config::client::Config,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Device>>,
     pub auth: AuthAPI,
@@ -69,12 +68,12 @@ pub struct ClientCommandState {
 
 #[derive(Clone)]
 pub struct ServerCommandState {
-    pub config: ServerConfig,
+    pub config: ::config::server::Config,
 }
 
 #[derive(Clone)]
 pub struct DeviceCommandState {
-    pub config: DeviceConfig,
+    pub config: ::config::device::Config,
 }
 
 impl ClientCommandState {
@@ -127,37 +126,42 @@ fn main() -> anyhow::Result<()> {
             .unwrap()
     })
     .block_on(async {
-        use config::read_config_file;
-
         let client_command_state = || async {
-            let config: ClientConfig =
-                read_config_file::<ClientConfig>(&Target::Client.config_path())
-                    .await
-                    .with_context(|| "read client config file")?;
+            use ::config::client::Config;
+
+            let config = Config::get(Config::default_path())
+                .await
+                .with_context(|| "read client config file")?;
+
+            log::trace!("config loaded: {:#?}", config);
             let state = ClientCommandState {
                 config: config.clone(),
-                auth: AuthAPI::new(config.base_url.join("auth/").unwrap()),
-                fulfillment: FulfillmentAPI::new(config.base_url.join("fulfillment/").unwrap()),
-                tokens: Szafka::new(config.tokens_path),
-                devices: Szafka::new(config.devices_path),
+                auth: AuthAPI::new(config.server_address),
+                fulfillment: FulfillmentAPI::new(config.server_address),
+                tokens: Szafka::new(::config::defaults::data_home().join("tokens")),
+                devices: Szafka::new(::config::defaults::data_home().join("devices")),
             };
             Ok::<_, anyhow::Error>(state)
         };
 
         let server_command_state = || async {
-            let config: ServerConfig =
-                read_config_file::<ServerConfig>(&Target::Server.config_path())
-                    .await
-                    .with_context(|| "read server config file")?;
+            use ::config::server::Config;
+            let config = Config::get(Config::default_path())
+                .await
+                .with_context(|| "read server config file")?;
+
+            log::trace!("config loaded: {:#?}", config);
             let state = ServerCommandState { config };
             Ok::<_, anyhow::Error>(state)
         };
 
         let device_command_state = || async {
-            let config: DeviceConfig =
-                read_config_file::<DeviceConfig>(&Target::Device.config_path())
-                    .await
-                    .with_context(|| "read device config file")?;
+            use ::config::device::Config;
+            let config = Config::get(Config::default_path())
+                .await
+                .with_context(|| "read server config file")?;
+
+            log::trace!("config loaded: {:#?}", config);
             let state = DeviceCommandState { config };
             Ok::<_, anyhow::Error>(state)
         };

@@ -23,15 +23,7 @@ impl Command<DeviceCommandState> for RunDeviceCommand {
             state: DeviceCommandState,
             device: D,
         ) -> anyhow::Result<()> {
-            device::run(
-                device::Config {
-                    device_id: state.config.device_id,
-                    device_password: state.config.device_password,
-                    lighthouse_url: state.config.base_url.join("lighthouse/").unwrap(),
-                },
-                device,
-            )
-            .await
+            device::run(state.config, device).await
         }
 
         match self.device_type {

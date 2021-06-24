@@ -4,27 +4,6 @@ use async_trait::async_trait;
 use clap::Clap;
 
 #[derive(Clap)]
-pub struct ConfigCommand {
-    #[clap(subcommand)]
-    pub subcommand: ConfigSubcommand,
-}
-
-#[derive(Clap)]
-pub enum ConfigSubcommand {
-    /// Generates a new configuration for specified targets, if none specified then it will generate for all targets.
-    Generate(ConfigGenerateCommand),
-}
-
-#[async_trait(?Send)]
-impl Command<()> for ConfigCommand {
-    async fn run(&self, state: ()) -> anyhow::Result<()> {
-        match &self.subcommand {
-            ConfigSubcommand::Generate(cmd) => cmd.run(state).await,
-        }
-    }
-}
-
-#[derive(Clap)]
 pub struct ConfigGenerateCommand {
     target: Option<Target>,
 
@@ -36,7 +15,11 @@ pub struct ConfigGenerateCommand {
 impl Command<()> for ConfigGenerateCommand {
     async fn run(&self, _state: ()) -> anyhow::Result<()> {
         let create_config = |target: Target| async move {
-            let config = super::generate_config_string(&target);
+            let config = match target {
+                Target::Server => config::server::Config::default_toml(),
+                Target::Client => config::client::Config::default_toml(),
+                Target::Device => config::device::Config::default_toml(),
+            };
             let path = target.config_path();
             if path.exists() && !self.force {
                 println!(
@@ -51,7 +34,7 @@ impl Command<()> for ConfigGenerateCommand {
             use tokio::io::AsyncWriteExt;
 
             let mut file = File::create(&path).await?;
-            file.write(config?.as_bytes()).await?;
+            file.write(config.as_bytes()).await?;
             println!(
                 "✅ Generated {} config at {}",
                 target,

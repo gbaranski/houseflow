@@ -15,9 +15,9 @@ pub enum Error {
 }
 
 impl Fulfillment {
-    pub fn new(fulfillment_url: Url) -> Self {
+    pub fn new(server_address: std::net::SocketAddr) -> Self {
         Self {
-            url: fulfillment_url,
+            url: Url::parse(&format!("http://{}/fulfillment", server_address)).unwrap(),
         }
     }
 

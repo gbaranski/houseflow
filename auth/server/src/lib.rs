@@ -1,13 +1,11 @@
 use actix_web::web::{self, Data};
+use config::server::Secrets;
 use db::Database;
-use types::ServerSecrets;
 
 use crate::token::{exchange_refresh_token, exchange_refresh_token_form_config};
 use ::token::store::TokenStore;
-pub use config::Config;
 
 mod auth;
-pub mod config;
 mod token;
 mod whoami;
 
@@ -21,11 +19,9 @@ pub fn configure(
     cfg: &mut web::ServiceConfig,
     token_store: Data<dyn TokenStore>,
     database: Data<dyn Database>,
-    config: Config,
-    secrets: ServerSecrets,
+    secrets: Secrets,
 ) {
     cfg.data(secrets)
-        .data(config)
         .app_data(token_store)
         .app_data(database)
         .service(auth::login::login)
@@ -45,29 +41,11 @@ mod test_utils {
     use token::store::MemoryTokenStore;
 
     use actix_web::web::Data;
-    use rand::RngCore;
     use std::sync::Arc;
 
     pub const PASSWORD: &str = "SomePassword";
     pub const PASSWORD_INVALID: &str = "SomeOtherPassword";
     pub const PASSWORD_HASH: &str = "$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU";
-
-    pub fn get_config() -> crate::Config {
-        crate::Config::default()
-    }
-
-    pub fn get_secrets() -> types::ServerSecrets {
-        let gen_secret = || {
-            let mut bytes = [0; 32];
-            rand::thread_rng().fill_bytes(&mut bytes);
-            hex::encode(bytes)
-        };
-        types::ServerSecrets {
-            refresh_key: gen_secret(),
-            access_key: gen_secret(),
-            password_salt: gen_secret(),
-        }
-    }
 
     pub fn get_token_store() -> Data<dyn TokenStore> {
         Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)

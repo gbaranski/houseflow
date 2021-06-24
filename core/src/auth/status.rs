@@ -62,10 +62,7 @@ impl StatusCommand {
         println!("✔ Logged in");
         println!("  Username: {}", whoami_response.username);
         println!("  Email: {}", whoami_response.email);
-        println!(
-            "  Keystore: {}",
-            state.config.tokens_path.to_str().unwrap_or("INVALID_PATH")
-        );
+        println!("  Keystore: {:#?}", state.tokens.path);
         println!(
             "  Access token({}): {}",
             access_token_expiration, access_token

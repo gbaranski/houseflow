@@ -3,13 +3,14 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
+use config::server::Secrets;
 use db::Database;
 use fulfillment_types::{
     ExecuteRequest, ExecuteResponse, ExecuteResponseBody, ExecuteResponseError,
 };
 use lighthouse_api::prelude::Lighthouse;
 use token::Token;
-use types::{DevicePermission, ServerSecrets, UserAgent};
+use types::{DevicePermission, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
 
@@ -23,7 +24,7 @@ const EXECUTE_PERMISSION: DevicePermission = DevicePermission {
 pub async fn on_execute(
     execute_request: Json<ExecuteRequest>,
     http_request: HttpRequest,
-    secrets: Data<ServerSecrets>,
+    secrets: Data<Secrets>,
     db: Data<dyn Database>,
     lighthouse: Data<dyn Lighthouse>,
 ) -> Result<Json<ExecuteResponse>, ExecuteResponseError> {
@@ -70,8 +71,7 @@ mod tests {
     #[actix_rt::test]
     async fn execute() {
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = rand::random();
         let (lighthouse, mut request_receiver, response_sender) = get_lighthouse();
         let lighthouse = lighthouse;
         let actix_lighthouse = Data::from(lighthouse.clone() as Arc<dyn Lighthouse>);
@@ -87,13 +87,7 @@ mod tests {
             .unwrap();
 
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                database,
-                actix_lighthouse.clone(),
-                config.clone(),
-                secrets.clone(),
-            )
+            crate::configure(cfg, database, actix_lighthouse.clone(), secrets.clone())
         }))
         .await;
 

@@ -23,8 +23,10 @@ pub struct Lighthouse {
 }
 
 impl Lighthouse {
-    pub fn new(url: Url) -> Self {
-        Self { url }
+    pub fn new(server_address: std::net::SocketAddr) -> Self {
+        Self {
+            url: Url::parse(&format!("http://{}/lighthouse", server_address)).unwrap(),
+        }
     }
 }
 

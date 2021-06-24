@@ -3,13 +3,14 @@ use actix_web::{
     web::{Data, HttpRequest, Json},
 };
 use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
+use config::server::Secrets;
 use db::Database;
 use token::Token;
-use types::{ServerSecrets, UserAgent};
+use types::UserAgent;
 
 #[get("/whoami")]
 pub async fn whoami(
-    app_data: Data<ServerSecrets>,
+    app_data: Data<Secrets>,
     db: Data<dyn Database>,
     req: HttpRequest,
 ) -> Result<Json<WhoamiResponse>, WhoamiResponseError> {
@@ -41,8 +42,7 @@ mod tests {
     #[actix_rt::test]
     async fn valid() {
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -51,16 +51,11 @@ mod tests {
         };
         let token = Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                get_token_store(),
-                database,
-                config.clone(),
-                secrets.clone(),
-            )
-        }))
-        .await;
+        let mut app =
+            test::init_service(App::new().configure(|cfg| {
+                crate::configure(cfg, get_token_store(), database, secrets.clone())
+            }))
+            .await;
 
         let request = test::TestRequest::get()
             .uri("/whoami")
@@ -88,8 +83,7 @@ mod tests {
     #[actix_rt::test]
     async fn missing_header() {
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -97,16 +91,11 @@ mod tests {
             password_hash: PASSWORD_HASH.into(),
         };
         database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                get_token_store(),
-                database,
-                config.clone(),
-                secrets.clone(),
-            )
-        }))
-        .await;
+        let mut app =
+            test::init_service(App::new().configure(|cfg| {
+                crate::configure(cfg, get_token_store(), database, secrets.clone())
+            }))
+            .await;
 
         let request = test::TestRequest::get().uri("/whoami").to_request();
         let response = test::call_service(&mut app, request).await;
@@ -127,8 +116,7 @@ mod tests {
     #[actix_rt::test]
     async fn invalid_token_signature() {
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -137,16 +125,11 @@ mod tests {
         };
         let token = Token::new_access_token(&"dsahsdadsh", &user.id, &UserAgent::Internal);
         database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                get_token_store(),
-                database,
-                config.clone(),
-                secrets.clone(),
-            )
-        }))
-        .await;
+        let mut app =
+            test::init_service(App::new().configure(|cfg| {
+                crate::configure(cfg, get_token_store(), database, secrets.clone())
+            }))
+            .await;
 
         let request = test::TestRequest::get()
             .uri("/whoami")

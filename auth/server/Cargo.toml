@@ -11,6 +11,7 @@ auth-types   = { path = "../types"   , package = "houseflow-auth-types", feature
 types        = { path = "../../types", package = "houseflow-types" }
 token        = { path = "../../token", package = "houseflow-token", features = [ "store", "actix" ] }
 db           = { path = "../../db"   , package = "houseflow-db" }
+config       = { path = "../../config", package = "houseflow-config", features = [ "server" ] }
 
 tokio        = { version = "1.6.0" }
 log          = "0.4.14"

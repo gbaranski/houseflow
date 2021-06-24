@@ -32,8 +32,10 @@ pub enum Error {
 }
 
 impl Auth {
-    pub fn new(auth_url: Url) -> Self {
-        Self { url: auth_url }
+    pub fn new(server_address: std::net::SocketAddr) -> Self {
+        Self {
+            url: Url::parse(&format!("http://{}/fulfillment", server_address)).unwrap(),
+        }
     }
 
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {

@@ -1,9 +1,11 @@
-use crate::{devices, Config};
+use crate::devices;
 use bytes::{Buf, BytesMut};
+use config::device::Config;
 use futures_util::{Sink, SinkExt, StreamExt};
 use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
+use url::Url;
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -32,7 +34,7 @@ impl Session {
         self,
         device: D,
     ) -> Result<(), anyhow::Error> {
-        let url = self.config.lighthouse_url.join("ws").unwrap();
+        let url = Url::parse(&format!("ws://{}/ws", self.config.server_address)).unwrap();
 
         log::debug!("will use {} as websocket endpoint", url);
         let http_request = http::Request::builder()

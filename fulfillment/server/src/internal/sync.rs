@@ -3,10 +3,11 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
+use config::server::Secrets;
 use db::Database;
 use fulfillment_types::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError};
 use token::Token;
-use types::{DevicePermission, ServerSecrets, UserAgent};
+use types::{DevicePermission, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
 
@@ -20,7 +21,7 @@ const SYNC_PERMISSION: DevicePermission = DevicePermission {
 pub async fn on_sync(
     _sync_request: Json<SyncRequest>,
     http_request: HttpRequest,
-    secrets: Data<ServerSecrets>,
+    secrets: Data<Secrets>,
     db: Data<dyn Database>,
 ) -> Result<Json<SyncResponse>, SyncResponseError> {
     let access_token = Token::from_request(&http_request)?;
@@ -64,8 +65,7 @@ mod tests {
         use std::iter::repeat_with;
 
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = rand::random();
         let (lighthouse, _, _) = get_lighthouse();
         let actix_lighthouse = Data::from(lighthouse as Arc<dyn Lighthouse>);
         let user = get_user();
@@ -90,13 +90,7 @@ mod tests {
         .await;
 
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                database,
-                actix_lighthouse.clone(),
-                config.clone(),
-                secrets.clone(),
-            )
+            crate::configure(cfg, database, actix_lighthouse.clone(), secrets.clone())
         }))
         .await;
 

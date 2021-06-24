@@ -3,14 +3,15 @@ use actix_web::{
     web::{Data, Json},
 };
 use auth_types::{RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError};
+use config::server::Secrets;
 use db::Database;
 use rand::random;
-use types::{ServerSecrets, User};
+use types::User;
 
 #[post("/register")]
 pub async fn register(
     request: Json<RegisterRequest>,
-    secrets: Data<ServerSecrets>,
+    secrets: Data<Secrets>,
     db: Data<dyn Database>,
 ) -> Result<Json<RegisterResponse>, RegisterResponseError> {
     validator::Validate::validate(&request.0)?;
@@ -49,16 +50,9 @@ mod tests {
     async fn test_register() {
         let token_store = get_token_store();
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database.clone(),
-                config.clone(),
-                secrets.clone(),
-            )
+            crate::configure(cfg, token_store.clone(), database.clone(), secrets.clone())
         }))
         .await;
 

@@ -1,9 +1,7 @@
-pub mod config;
-
 use crate::Error;
-pub use config::Config;
 
 use async_trait::async_trait;
+use config::postgres::Config;
 use deadpool_postgres::Pool;
 use semver::Version;
 use tokio_postgres::NoTls;
@@ -47,8 +45,8 @@ impl Database {
         let mut dpcfg = deadpool_postgres::Config::new();
         dpcfg.user = Some(cfg.user.to_string());
         dpcfg.password = Some(cfg.password.to_string());
-        dpcfg.host = Some(cfg.host.to_string());
-        dpcfg.port = Some(cfg.port);
+        dpcfg.host = Some(cfg.address.ip().to_string());
+        dpcfg.port = Some(cfg.address.port());
         dpcfg.dbname = Some(cfg.database_name.to_string());
         dpcfg
     }

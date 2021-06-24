@@ -16,6 +16,8 @@ members = [
   "auth/api",
   "auth/core",
 
+  "config",
+
   "devices/virtual",
 
   "token",

@@ -1,11 +1,9 @@
 mod common;
 mod device;
-mod server;
 mod user;
 
 pub use common::*;
 pub use device::*;
-pub use server::*;
 pub use user::*;
 
 use serde::{Deserialize, Serialize};

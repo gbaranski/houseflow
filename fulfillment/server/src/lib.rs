@@ -1,10 +1,9 @@
 use actix_web::web::{self, Data};
-pub use config::Config;
+use config::server::Secrets;
 use db::Database;
 use lighthouse_api::prelude::Lighthouse;
-use types::{ServerSecrets, UserAgent};
+use types::UserAgent;
 
-pub mod config;
 mod gactions;
 mod internal;
 
@@ -17,11 +16,9 @@ pub fn configure(
     cfg: &mut web::ServiceConfig,
     database: Data<dyn Database>,
     lighthouse: Data<dyn Lighthouse>,
-    config: Config,
-    secrets: ServerSecrets,
+    secrets: Secrets,
 ) {
-    cfg.data(config)
-        .data(secrets)
+    cfg.data(secrets)
         .app_data(database)
         .app_data(lighthouse)
         .service(just_for_testing)
@@ -83,28 +80,10 @@ mod test_utils {
     use types::{Device, DeviceType, User, UserID};
 
     use actix_web::web::Data;
-    use rand::RngCore;
     use std::sync::Arc;
     use tokio::sync::mpsc;
 
     pub const PASSWORD_HASH: &str = "$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU";
-
-    pub fn get_config() -> crate::Config {
-        crate::Config::default()
-    }
-
-    pub fn get_secrets() -> types::ServerSecrets {
-        let gen_secret = || {
-            let mut bytes = [0; 32];
-            rand::thread_rng().fill_bytes(&mut bytes);
-            hex::encode(bytes)
-        };
-        types::ServerSecrets {
-            refresh_key: gen_secret(),
-            access_key: gen_secret(),
-            password_salt: gen_secret(),
-        }
-    }
 
     pub fn get_database() -> Data<dyn db::Database> {
         Data::from(Arc::new(Database::new()) as Arc<dyn db::Database>)

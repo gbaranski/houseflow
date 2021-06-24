@@ -8,7 +8,6 @@ use async_trait::async_trait;
 use db::Database;
 use std::sync::Arc;
 use token::store::TokenStore;
-use url::Url;
 
 use clap::Clap;
 
@@ -18,8 +17,6 @@ pub struct RunServerCommand {}
 #[async_trait(?Send)]
 impl Command<ServerCommandState> for RunServerCommand {
     async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
-        let address = format!("{}:{}", state.config.host, state.config.port);
-        let base_url = Url::parse(&format!("http://{}", address)).unwrap();
         let token_store = || async {
             token::store::RedisTokenStore::new()
                 .await
@@ -32,8 +29,7 @@ impl Command<ServerCommandState> for RunServerCommand {
                 .with_context(|| "connect to postgres failed, is postgres on?")
         };
 
-        let lighthouse_api =
-            || lighthouse::api::Lighthouse::new(base_url.join("lighthouse/").unwrap());
+        let lighthouse_api = || lighthouse::api::Lighthouse::new(state.config.address);
 
         let database = Data::from(Arc::from(database().await?) as Arc<dyn Database>);
         let token_store = Data::from(Arc::from(token_store().await?) as Arc<dyn TokenStore>);
@@ -42,6 +38,7 @@ impl Command<ServerCommandState> for RunServerCommand {
         );
         let lighthouse_app_data = Data::from(Arc::from(lighthouse::server::AppState::default()));
 
+        let address = state.config.address;
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(actix_web::middleware::Logger::default())
@@ -50,7 +47,6 @@ impl Command<ServerCommandState> for RunServerCommand {
                         cfg,
                         token_store.clone(),
                         database.clone(),
-                        state.config.auth.clone(),
                         state.config.secrets.clone(),
                     )
                 }))
@@ -66,7 +62,6 @@ impl Command<ServerCommandState> for RunServerCommand {
                         cfg,
                         database.clone(),
                         lighthouse_api.clone(),
-                        state.config.fulfillment.clone(),
                         state.config.secrets.clone(),
                     )
                 }))

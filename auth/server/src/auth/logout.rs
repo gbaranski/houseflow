@@ -4,14 +4,14 @@ use actix_web::{
     HttpRequest,
 };
 use auth_types::{LogoutResponse, LogoutResponseBody, LogoutResponseError};
+use config::server::Secrets;
 use token::store::TokenStore;
 use token::Token;
-use types::ServerSecrets;
 
 #[post("/logout")]
 pub async fn logout(
     token_store: Data<dyn TokenStore>,
-    secrets: Data<ServerSecrets>,
+    secrets: Data<Secrets>,
     req: HttpRequest,
 ) -> Result<Json<LogoutResponse>, LogoutResponseError> {
     let refresh_token = Token::from_request(&req)?;

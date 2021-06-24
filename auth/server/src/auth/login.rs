@@ -3,8 +3,8 @@ use actix_web::{
     web::{Data, Json},
 };
 use auth_types::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError};
+use config::server::Secrets;
 use db::Database;
-use types::ServerSecrets;
 
 use token::store::TokenStore;
 use token::Token;
@@ -20,7 +20,7 @@ fn verify_password(hash: &str, password: &str) -> Result<(), auth_types::LoginRe
 pub async fn login(
     request: Json<LoginRequest>,
     token_store: Data<dyn TokenStore>,
-    secrets: Data<ServerSecrets>,
+    secrets: Data<Secrets>,
     db: Data<dyn Database>,
 ) -> Result<Json<LoginResponse>, LoginResponseError> {
     validator::Validate::validate(&request.0)?;
@@ -58,8 +58,7 @@ mod tests {
     async fn test_login() {
         let token_store = get_token_store();
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -68,13 +67,7 @@ mod tests {
         };
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database,
-                config.clone(),
-                secrets.clone(),
-            )
+            crate::configure(cfg, token_store.clone(), database, secrets.clone())
         }))
         .await;
 
@@ -122,8 +115,7 @@ mod tests {
     async fn test_login_invalid_password() {
         let token_store = get_token_store();
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -132,13 +124,7 @@ mod tests {
         };
         database.add_user(&user).await.unwrap();
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database,
-                config.clone(),
-                secrets.clone(),
-            )
+            crate::configure(cfg, token_store.clone(), database, secrets.clone())
         }))
         .await;
 
@@ -169,8 +155,7 @@ mod tests {
     async fn test_login_not_existing_user() {
         let token_store = get_token_store();
         let database = get_database();
-        let config = get_config();
-        let secrets = get_secrets();
+        let secrets: Secrets = random();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
@@ -178,13 +163,7 @@ mod tests {
             password_hash: PASSWORD_HASH.into(),
         };
         let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database,
-                config.clone(),
-                secrets.clone(),
-            )
+            crate::configure(cfg, token_store.clone(), database, secrets.clone())
         }))
         .await;
 

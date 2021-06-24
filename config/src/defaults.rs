@@ -11,3 +11,15 @@ pub fn server_address() -> std::net::SocketAddr {
 pub const fn server_port() -> u16 {
     6001
 }
+
+pub fn base_directories() -> xdg::BaseDirectories {
+    xdg::BaseDirectories::with_prefix("houseflow").unwrap()
+}
+
+pub fn config_home() -> std::path::PathBuf {
+    base_directories().get_config_home()
+}
+
+pub fn data_home() -> std::path::PathBuf {
+    base_directories().get_data_home()
+}
