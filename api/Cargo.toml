@@ -1,0 +1,23 @@
+[package]
+name = "houseflow-api"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+token      = { path = "../token", package = "houseflow-token" }
+
+tokio      = { version = "1.6.0", features = ["sync"] }
+reqwest    = { version = "0.11", features = [ "json" ] }
+serde      = "1.0"
+serde_json = "1.0"
+thiserror  = "1.0"
+url        = "2.2"
+
+auth-types = { path = "../auth/types", package = "houseflow-auth-types", optional = true }
+fulfillment-types = { path = "../fulfillment/types", package = "houseflow-fulfillment-types", optional = true }
+
+[features]
+auth = ["auth-types"]
+fulfillment = ["fulfillment-types"]

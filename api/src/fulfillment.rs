@@ -1,29 +1,15 @@
+use super::{Error, HouseflowAPI};
 use fulfillment_types::{ExecuteRequest, ExecuteResponse, SyncRequest, SyncResponse};
 use reqwest::Client;
 use token::Token;
-use url::Url;
-
-#[derive(Clone)]
-pub struct Fulfillment {
-    pub url: Url,
-}
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("Sending request failed: `{0}`")]
-    ReqwestError(#[from] reqwest::Error),
-}
+pub enum FulfillmentError {}
 
-impl Fulfillment {
-    pub fn new(server_address: std::net::SocketAddr) -> Self {
-        Self {
-            url: Url::parse(&format!("http://{}/fulfillment/internal/", server_address)).unwrap(),
-        }
-    }
-
+impl HouseflowAPI {
     pub async fn sync(&self, access_token: &Token) -> Result<SyncResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("sync").unwrap();
+        let url = self.fulfillment_url.join("sync").unwrap();
         let response = client
             .get(url)
             .json(&SyncRequest {})
@@ -42,7 +28,7 @@ impl Fulfillment {
         request: &ExecuteRequest,
     ) -> Result<ExecuteResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("execute").unwrap();
+        let url = self.fulfillment_url.join("execute").unwrap();
         let response = client
             .post(url)
             .json(request)

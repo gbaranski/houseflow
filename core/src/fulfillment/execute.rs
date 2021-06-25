@@ -1,6 +1,6 @@
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
-use fulfillment::types::ExecuteRequest;
+use fulfillment_types::ExecuteRequest;
 use lighthouse::proto::execute;
 use types::{DeviceCommand, DeviceID, DeviceStatus};
 
@@ -56,7 +56,7 @@ impl Command<ClientCommandState> for ExecuteCommand {
             frame: execute_frame,
         };
         let response = state
-            .fulfillment
+            .houseflow_api
             .execute(&access_token, &request)
             .await?
             .into_result()?;

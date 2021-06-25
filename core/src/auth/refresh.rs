@@ -11,7 +11,7 @@ impl Command<ClientCommandState> for RefreshCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let tokens = state.tokens.get().await?;
         let response = state
-            .auth
+            .houseflow_api
             .fetch_access_token(&tokens.refresh)
             .await?
             .into_result()?;
