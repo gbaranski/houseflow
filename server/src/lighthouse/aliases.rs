@@ -1,6 +1,6 @@
 use actix::{Message, MessageResponse};
-use lighthouse_proto::{execute, execute_response, state, state_check};
-use lighthouse_types::DeviceCommunicationError;
+use houseflow_lighthouse_proto::{execute, execute_response, state, state_check};
+use houseflow_lighthouse_types::DeviceCommunicationError;
 
 pub struct ActorExecuteFrame {
     inner: execute::Frame,

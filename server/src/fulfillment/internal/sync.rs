@@ -3,11 +3,11 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use config::server::Secrets;
-use db::Database;
-use fulfillment_types::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError};
-use token::Token;
-use types::{DevicePermission, UserAgent};
+use houseflow_config::server::Secrets;
+use houseflow_db::Database;
+use houseflow_fulfillment_types::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError};
+use houseflow_token::Token;
+use houseflow_types::{DevicePermission, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
 

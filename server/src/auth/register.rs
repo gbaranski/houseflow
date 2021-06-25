@@ -2,11 +2,13 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use auth_types::{RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError};
-use config::server::Secrets;
-use db::Database;
+use houseflow_auth_types::{
+    RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError,
+};
+use houseflow_config::server::Secrets;
+use houseflow_db::Database;
+use houseflow_types::User;
 use rand::random;
-use types::User;
 
 #[post("/register")]
 pub async fn on_register(
@@ -30,7 +32,7 @@ pub async fn on_register(
         password_hash,
     };
     db.add_user(&new_user).await.map_err(|err| match err {
-        db::Error::AlreadyExists => RegisterResponseError::UserAlreadyExists,
+        houseflow_db::Error::AlreadyExists => RegisterResponseError::UserAlreadyExists,
         _ => err.into(),
     })?;
 

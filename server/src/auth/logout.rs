@@ -3,10 +3,9 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use auth_types::{LogoutResponse, LogoutResponseBody, LogoutResponseError};
-use config::server::Secrets;
-use token::store::TokenStore;
-use token::Token;
+use houseflow_auth_types::{LogoutResponse, LogoutResponseBody, LogoutResponseError};
+use houseflow_config::server::Secrets;
+use houseflow_token::{store::TokenStore, Token};
 
 #[post("/logout")]
 pub async fn on_logout(

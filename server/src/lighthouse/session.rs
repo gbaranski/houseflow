@@ -1,16 +1,16 @@
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
-use lighthouse_proto::{
+use houseflow_lighthouse_proto::{
     execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID,
 };
-use lighthouse_types::DeviceCommunicationError;
+use houseflow_lighthouse_types::DeviceCommunicationError;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::sync::{broadcast, oneshot};
-use types::DeviceID;
+use houseflow_types::DeviceID;
 
 use super::aliases::*;
 

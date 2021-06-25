@@ -1151,6 +1151,7 @@ name = "houseflow-server"
 version = "0.1.0"
 dependencies = [
  "actix",
+ "actix-rt",
  "actix-service",
  "actix-web",
  "actix-web-actors",

@@ -3,15 +3,15 @@ mod fulfillment;
 mod lighthouse;
 
 use actix_web::web;
-use config::server::Secrets;
-use db::Database;
+use houseflow_config::server::Secrets;
+use houseflow_db::Database;
 
-use {lighthouse::Session, std::collections::HashMap, tokio::sync::Mutex, types::DeviceID};
+use {lighthouse::Session, std::collections::HashMap, tokio::sync::Mutex, houseflow_types::DeviceID};
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
 pub fn configure(
     cfg: &mut web::ServiceConfig,
-    token_store: web::Data<dyn token::store::TokenStore>,
+    token_store: web::Data<dyn houseflow_token::store::TokenStore>,
     database: web::Data<dyn Database>,
     secrets: web::Data<Secrets>,
     sessions: web::Data<Sessions>,
@@ -48,7 +48,7 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
     use actix_web::HttpResponse;
     use semver::Version;
     use std::str::FromStr;
-    use types::{Device, DevicePermission, DeviceTrait, DeviceType, UserID};
+    use houseflow_types::{Device, DevicePermission, DeviceTrait, DeviceType, UserID};
 
     let user_id = UserID::from_str("eeb3f58b28b8bd1815c3cc1bd0028fee").unwrap();
 
@@ -79,4 +79,53 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
     .unwrap();
 
     HttpResponse::Ok()
+}
+
+#[cfg(test)]
+mod test_utils {
+    use houseflow_db::memory::Database;
+    use houseflow_token::store::{TokenStore, MemoryTokenStore};
+    use houseflow_types::{Device, DeviceType, User, UserID};
+
+    use actix_web::web::Data;
+    use std::sync::Arc;
+
+    pub const PASSWORD: &str = "SomePassword";
+    pub const PASSWORD_INVALID: &str = "SomeOtherPassword";
+    pub const PASSWORD_HASH: &str = "$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU";
+
+    pub fn get_database() -> Data<dyn houseflow_db::Database> {
+        Data::from(Arc::new(Database::new()) as Arc<dyn houseflow_db::Database>)
+    }
+
+    pub fn get_token_store() -> Data<dyn TokenStore> {
+        Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)
+    }
+
+    pub fn get_user() -> User {
+        let id: UserID = rand::random();
+        User {
+            id: id.clone(),
+            username: format!("john-{}", id.clone()),
+            email: format!("john-{}@example.com", id.clone()),
+            password_hash: PASSWORD_HASH.into(),
+        }
+    }
+
+    pub fn get_device() -> Device {
+        use semver::Version;
+        Device {
+            id: rand::random(),
+            password_hash: PASSWORD_HASH.into(),
+            device_type: DeviceType::Gate,
+            traits: vec![],
+            name: String::from("SuperTestingGate"),
+            will_push_state: true,
+            room: Some(String::from("SuperTestingRoom")),
+            model: String::from("gate-1200"),
+            hw_version: Version::new(1, 0, 0),
+            sw_version: Version::new(1, 0, 1),
+            attributes: std::collections::HashMap::new(),
+        }
+    }
 }
