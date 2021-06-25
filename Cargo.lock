@@ -1156,6 +1156,7 @@ dependencies = [
  "actix-web",
  "actix-web-actors",
  "bytes",
+ "futures",
  "houseflow-auth-types",
  "houseflow-config",
  "houseflow-db",
