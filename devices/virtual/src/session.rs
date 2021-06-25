@@ -34,7 +34,11 @@ impl Session {
         self,
         device: D,
     ) -> Result<(), anyhow::Error> {
-        let url = Url::parse(&format!("ws://{}/lighthouse/ws", self.config.server_address)).unwrap();
+        let url = Url::parse(&format!(
+            "ws://{}/lighthouse/ws",
+            self.config.server_address
+        ))
+        .unwrap();
 
         log::debug!("will use {} as websocket endpoint", url);
         let http_request = http::Request::builder()

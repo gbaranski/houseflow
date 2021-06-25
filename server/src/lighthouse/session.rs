@@ -60,7 +60,10 @@ impl Actor for Session {
 }
 
 impl Handler<ActorStateCheckFrame> for Session {
-    type Result = actix::ResponseActFuture<Self, std::result::Result<ActorStateFrame, DeviceCommunicationError>>;
+    type Result = actix::ResponseActFuture<
+        Self,
+        std::result::Result<ActorStateFrame, DeviceCommunicationError>,
+    >;
 
     fn handle(&mut self, frame: ActorStateCheckFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
@@ -86,8 +89,10 @@ impl Handler<ActorStateCheckFrame> for Session {
 }
 
 impl Handler<ActorExecuteFrame> for Session {
-    type Result =
-        actix::ResponseActFuture<Self, std::result::Result<ActorExecuteResponseFrame, DeviceCommunicationError>>;
+    type Result = actix::ResponseActFuture<
+        Self,
+        std::result::Result<ActorExecuteResponseFrame, DeviceCommunicationError>,
+    >;
 
     fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;

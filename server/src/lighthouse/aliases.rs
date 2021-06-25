@@ -69,4 +69,3 @@ impl From<state::Frame> for ActorStateFrame {
 impl Message for ActorStateCheckFrame {
     type Result = Result<ActorStateFrame, DeviceCommunicationError>;
 }
-

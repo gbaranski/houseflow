@@ -1,13 +1,10 @@
 use crate::{Command, ServerCommandState};
-use actix_web::{
-    web::Data,
-    App, HttpServer,
-};
+use actix_web::{web::Data, App, HttpServer};
 use anyhow::Context;
 use async_trait::async_trait;
 use db::Database;
 use std::sync::Arc;
-use token::{store::TokenStore};
+use token::store::TokenStore;
 
 use clap::Clap;
 
@@ -34,7 +31,13 @@ impl Command<ServerCommandState> for RunServerCommand {
             App::new()
                 .wrap(actix_web::middleware::Logger::default())
                 .configure(|cfg| {
-                    houseflow_server::configure(cfg, token_store.clone(), database.clone(), secrets.clone(), sessions.clone())
+                    houseflow_server::configure(
+                        cfg,
+                        token_store.clone(),
+                        database.clone(),
+                        secrets.clone(),
+                        sessions.clone(),
+                    )
                 })
         })
         .bind(address)?;

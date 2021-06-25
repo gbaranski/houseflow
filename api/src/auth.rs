@@ -1,4 +1,4 @@
-use super::{HouseflowAPI, Error};
+use super::{Error, HouseflowAPI};
 use auth_types::{
     AccessTokenRequest, AccessTokenResponse, AccessTokenResponseError, GrantType, LoginRequest,
     LoginResponse, LoginResponseError, LogoutResponse, RegisterRequest, RegisterResponse,

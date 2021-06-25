@@ -1,4 +1,3 @@
-use token::store::TokenStore;
 use actix_web::{
     post,
     web::{self, Data, Form, FormConfig, Json},
@@ -8,6 +7,7 @@ use auth_types::{
     TokenType,
 };
 use config::server::Secrets;
+use token::store::TokenStore;
 use token::{ExpirationDate, Payload as TokenPayload, Token};
 
 pub fn on_exchange_refresh_token_form_config() -> FormConfig {

@@ -40,7 +40,8 @@ impl HouseflowAPI {
             auth_url: Url::parse(&format!("http://{}/auth/", server_address)).unwrap(),
 
             #[cfg(feature = "fulfillment")]
-            fulfillment_url: Url::parse(&format!("http://{}/fulfillment/", server_address)).unwrap(),
+            fulfillment_url: Url::parse(&format!("http://{}/fulfillment/", server_address))
+                .unwrap(),
         }
     }
 }
