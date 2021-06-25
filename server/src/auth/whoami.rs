@@ -2,11 +2,11 @@ use actix_web::{
     get,
     web::{Data, HttpRequest, Json},
 };
-use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
-use config::server::Secrets;
-use db::Database;
-use token::Token;
-use types::UserAgent;
+use houseflow_auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
+use houseflow_config::server::Secrets;
+use houseflow_db::Database;
+use houseflow_token::Token;
+use houseflow_types::UserAgent;
 
 #[get("/whoami")]
 pub async fn on_whoami(

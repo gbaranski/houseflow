@@ -2,13 +2,13 @@ use actix_web::{
     post,
     web::{self, Data, Form, FormConfig, Json},
 };
-use auth_types::{
+use houseflow_auth_types::{
     AccessTokenRequest, AccessTokenResponse, AccessTokenResponseBody, AccessTokenResponseError,
     TokenType,
 };
-use config::server::Secrets;
-use token::store::TokenStore;
-use token::{ExpirationDate, Payload as TokenPayload, Token};
+use houseflow_config::server::Secrets;
+use houseflow_token::store::TokenStore;
+use houseflow_token::{ExpirationDate, Payload as TokenPayload, Token};
 
 pub fn on_exchange_refresh_token_form_config() -> FormConfig {
     FormConfig::default().error_handler(|err, _| {
@@ -24,7 +24,7 @@ pub enum RefreshTokenExchangeError {
     InvalidRequest(#[from] AccessTokenResponseError),
 
     #[error("error with token_store: `{0}`")]
-    TokenStoreError(#[from] token::store::Error),
+    TokenStoreError(#[from] houseflow_token::store::Error),
 }
 
 impl actix_web::ResponseError for RefreshTokenExchangeError {
