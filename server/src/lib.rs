@@ -25,6 +25,7 @@ pub fn configure(
                 .service(auth::on_login)
                 .service(auth::on_logout)
                 .service(auth::on_register)
+                .service(auth::on_whoami)
                 .service(
                     web::scope("/")
                         .app_data(auth::on_exchange_refresh_token_form_config())
