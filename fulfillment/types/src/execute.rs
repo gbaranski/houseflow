@@ -32,8 +32,11 @@ pub enum ExecuteResponseError {
     #[error("no device permission")]
     NoDevicePermission,
 
+    #[error("Device is not connected")]
+    DeviceNotConnected,
+
     #[error("error with device communication: {0}")]
-    DeviceError(#[from] lighthouse_types::DeviceError),
+    DeviceCommunicationError(#[from] lighthouse_types::DeviceCommunicationError),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -52,13 +55,17 @@ impl From<db::Error> for ExecuteResponseError {
 impl actix_web::ResponseError for ExecuteResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
+        use lighthouse_types::DeviceCommunicationError;
 
         match self {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::DecodeTokenHeaderError(_) => StatusCode::BAD_REQUEST,
             Self::TokenVerifyError(_) => StatusCode::UNAUTHORIZED,
             Self::NoDevicePermission => StatusCode::FORBIDDEN,
-            Self::DeviceError(_) => StatusCode::SERVICE_UNAVAILABLE,
+            Self::DeviceNotConnected => StatusCode::NOT_FOUND,
+            Self::DeviceCommunicationError(err) => match err {
+                DeviceCommunicationError::Timeout => StatusCode::GATEWAY_TIMEOUT,
+            },
         }
     }
 

@@ -7,7 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lighthouse-server = { path = "../server/" , package = "houseflow-lighthouse-server" }
-lighthouse-api    = { path = "../api/" , package = "houseflow-lighthouse-api" }
 lighthouse-proto  = { path = "../proto/" , package = "houseflow-lighthouse-proto" }
 lighthouse-types  = { path = "../types/" , package = "houseflow-lighthouse-types" }

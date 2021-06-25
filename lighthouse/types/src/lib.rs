@@ -8,7 +8,7 @@ pub struct ExecuteRequest {
     pub frame: execute::Frame,
 }
 
-pub type ExecuteResponse = ResultTagged<ExecuteResponseBody, DeviceError>;
+pub type ExecuteResponse = ResultTagged<ExecuteResponseBody, DeviceCommunicationError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ExecuteResponseBody {
@@ -16,12 +16,11 @@ pub struct ExecuteResponseBody {
 }
 
 #[cfg(feature = "actix")]
-impl actix_web::ResponseError for DeviceError {
+impl actix_web::ResponseError for DeviceCommunicationError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
 
         match self {
-            Self::NotConnected => StatusCode::NOT_FOUND,
             Self::Timeout => StatusCode::GATEWAY_TIMEOUT,
         }
     }
@@ -39,10 +38,7 @@ impl actix_web::ResponseError for DeviceError {
     content = "error_description",
     rename_all = "snake_case"
 )]
-pub enum DeviceError {
-    #[error("Device is not connected")]
-    NotConnected,
-
+pub enum DeviceCommunicationError {
     #[error("Timeout when sending request to device")]
     Timeout,
 }

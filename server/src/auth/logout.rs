@@ -9,7 +9,7 @@ use token::store::TokenStore;
 use token::Token;
 
 #[post("/logout")]
-pub async fn logout(
+pub async fn on_logout(
     token_store: Data<dyn TokenStore>,
     secrets: Data<Secrets>,
     req: HttpRequest,
