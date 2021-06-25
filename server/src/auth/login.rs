@@ -8,7 +8,10 @@ use houseflow_db::Database;
 
 use houseflow_token::{store::TokenStore, Token};
 
-fn verify_password(hash: &str, password: &str) -> Result<(), houseflow_auth_types::LoginResponseError> {
+fn verify_password(
+    hash: &str,
+    password: &str,
+) -> Result<(), houseflow_auth_types::LoginResponseError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
         true => Ok(()),
         false => Err(houseflow_auth_types::LoginResponseError::InvalidPassword),

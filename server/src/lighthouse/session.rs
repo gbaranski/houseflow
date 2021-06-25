@@ -5,12 +5,12 @@ use houseflow_lighthouse_proto::{
     execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID,
 };
 use houseflow_lighthouse_types::DeviceCommunicationError;
+use houseflow_types::DeviceID;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::sync::{broadcast, oneshot};
-use houseflow_types::DeviceID;
 
 use super::aliases::*;
 
