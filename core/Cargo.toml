@@ -12,7 +12,8 @@ houseflow-server = { path = "../server" }
 types              = { path = "../types/"             , package = "houseflow-types" }
 token              = { path = "../token/"             , package = "houseflow-token", features = [ "store" ] }
 db                 = { path = "../db/"                , package = "houseflow-db" }
-lighthouse         = { path = "../lighthouse/core"    , package = "houseflow-lighthouse" }
+lighthouse-types   = { path = "../lighthouse/types"    , package = "houseflow-lighthouse-types" }
+lighthouse-proto   = { path = "../lighthouse/proto"    , package = "houseflow-lighthouse-proto" }
 auth-types         = { path = "../auth/types/"         , package = "houseflow-auth-types"     }
 fulfillment-types  = { path = "../fulfillment/types"   , package = "houseflow-fulfillment-types" }
 device             = { path = "../devices/virtual"    , package = "houseflow-device" }

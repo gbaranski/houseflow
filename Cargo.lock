@@ -996,7 +996,8 @@ dependencies = [
  "houseflow-db",
  "houseflow-device",
  "houseflow-fulfillment-types",
- "houseflow-lighthouse",
+ "houseflow-lighthouse-proto",
+ "houseflow-lighthouse-types",
  "houseflow-server",
  "houseflow-token",
  "houseflow-types",
@@ -1109,14 +1110,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
-]
-
-[[package]]
-name = "houseflow-lighthouse"
-version = "0.1.0"
-dependencies = [
- "houseflow-lighthouse-proto",
- "houseflow-lighthouse-types",
 ]
 
 [[package]]
