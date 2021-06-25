@@ -6,7 +6,9 @@ use actix_web::web;
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
 
-use {lighthouse::Session, std::collections::HashMap, tokio::sync::Mutex, houseflow_types::DeviceID};
+use {
+    houseflow_types::DeviceID, lighthouse::Session, std::collections::HashMap, tokio::sync::Mutex,
+};
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
 pub fn configure(
@@ -47,9 +49,9 @@ pub fn configure(
 #[actix_web::get("/just-for-testing")]
 async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Responder {
     use actix_web::HttpResponse;
+    use houseflow_types::{Device, DevicePermission, DeviceTrait, DeviceType, UserID};
     use semver::Version;
     use std::str::FromStr;
-    use houseflow_types::{Device, DevicePermission, DeviceTrait, DeviceType, UserID};
 
     let user_id = UserID::from_str("eeb3f58b28b8bd1815c3cc1bd0028fee").unwrap();
 
@@ -85,7 +87,7 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
 #[cfg(test)]
 mod test_utils {
     use houseflow_db::memory::Database;
-    use houseflow_token::store::{TokenStore, MemoryTokenStore};
+    use houseflow_token::store::{MemoryTokenStore, TokenStore};
     use houseflow_types::{Device, DeviceType, User, UserID};
 
     use actix_web::web::Data;

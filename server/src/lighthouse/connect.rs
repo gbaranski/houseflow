@@ -3,10 +3,10 @@ use crate::Sessions;
 use actix_web::{get, http, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use houseflow_db::Database;
-use itertools::Itertools;
 use houseflow_lighthouse_types::ConnectResponseError;
-use std::str::FromStr;
 use houseflow_types::{DeviceID, DevicePassword};
+use itertools::Itertools;
+use std::str::FromStr;
 
 fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePassword), String> {
     let header = req
