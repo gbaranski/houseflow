@@ -1,6 +1,6 @@
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
-use auth::types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
+use auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use token::Token;
 
 use clap::Clap;
@@ -85,7 +85,7 @@ impl Command<ClientCommandState> for StatusCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
 
-        match state.auth.whoami(&access_token).await? {
+        match state.houseflow_api.whoami(&access_token).await? {
             WhoamiResponse::Ok(response) => self.logged_in(&state, response).await?,
             WhoamiResponse::Err(err) => self.error(err),
         };

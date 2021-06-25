@@ -18,7 +18,7 @@ pub struct RegisterCommand {
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for RegisterCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        use auth::types::RegisterRequest;
+        use auth_types::RegisterRequest;
         use dialoguer::{Input, Password};
 
         let theme = crate::cli::get_dialoguer_theme();
@@ -49,7 +49,7 @@ impl Command<ClientCommandState> for RegisterCommand {
             password,
         };
 
-        state.auth.register(register_request).await?.into_result()?;
+        state.houseflow_api.register(register_request).await?.into_result()?;
         log::info!("✔ Created new account");
 
         Ok(())

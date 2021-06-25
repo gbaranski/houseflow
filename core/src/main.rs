@@ -12,8 +12,6 @@ pub use self::device::DeviceCommand;
 pub use crate::{auth::AuthCommand, device::RunDeviceCommand, fulfillment::FulfillmentCommand};
 pub use server::ServerCommand;
 
-use ::auth::api::Auth as AuthAPI;
-use ::fulfillment::api::Fulfillment as FulfillmentAPI;
 use anyhow::Context;
 use cli::{CliConfig, Subcommand};
 use serde::{Deserialize, Serialize};
@@ -60,10 +58,9 @@ pub struct Tokens {
 #[derive(Clone)]
 pub struct ClientCommandState {
     pub config: ::config::client::Config,
+    pub houseflow_api: api::HouseflowAPI,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Device>>,
-    pub auth: AuthAPI,
-    pub fulfillment: FulfillmentAPI,
 }
 
 #[derive(Clone)]
@@ -92,7 +89,7 @@ impl ClientCommandState {
         } else {
             log::debug!("cached access token is expired, fetching new one");
             let fetched_access_token = self
-                .auth
+                .houseflow_api
                 .fetch_access_token(&tokens.refresh)
                 .await?
                 .into_result()?
@@ -136,8 +133,7 @@ fn main() -> anyhow::Result<()> {
             log::trace!("config loaded: {:#?}", config);
             let state = ClientCommandState {
                 config: config.clone(),
-                auth: AuthAPI::new(config.server_address),
-                fulfillment: FulfillmentAPI::new(config.server_address),
+                houseflow_api: api::HouseflowAPI::new(config.server_address),
                 tokens: Szafka::new(::config::defaults::data_home().join("tokens")),
                 devices: Szafka::new(::config::defaults::data_home().join("devices")),
             };

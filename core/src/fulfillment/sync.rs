@@ -11,7 +11,7 @@ pub struct SyncCommand {}
 impl Command<ClientCommandState> for SyncCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
-        let response = state.fulfillment.sync(&access_token).await?.into_result()?;
+        let response = state.houseflow_api.sync(&access_token).await?.into_result()?;
 
         println!("Synced {} devices", response.devices.len());
         response.devices.iter().for_each(|device| {

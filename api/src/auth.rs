@@ -1,23 +1,14 @@
+use super::{HouseflowAPI, Error};
 use auth_types::{
     AccessTokenRequest, AccessTokenResponse, AccessTokenResponseError, GrantType, LoginRequest,
     LoginResponse, LoginResponseError, LogoutResponse, RegisterRequest, RegisterResponse,
     RegisterResponseError, WhoamiResponse,
 };
 use reqwest::Client;
-use thiserror::Error;
 use token::Token;
-use url::Url;
 
-#[derive(Clone)]
-pub struct Auth {
-    url: Url,
-}
-
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("error occured with sending request: `{0}`")]
-    ReqwestError(#[from] reqwest::Error),
-
+#[derive(Debug, thiserror::Error)]
+pub enum AuthError {
     #[error("refreshing access token failed with: `{0}`")]
     RefreshAccessTokenError(#[from] AccessTokenResponseError),
 
@@ -31,16 +22,11 @@ pub enum Error {
     LoginError(#[from] LoginResponseError),
 }
 
-impl Auth {
-    pub fn new(server_address: std::net::SocketAddr) -> Self {
-        Self {
-            url: Url::parse(&format!("http://{}/auth/", server_address)).unwrap(),
-        }
-    }
-
+#[cfg(feature = "auth")]
+impl HouseflowAPI {
     pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("register").unwrap();
+        let url = self.auth_url.join("register").unwrap();
 
         let response = client
             .post(url)
@@ -55,7 +41,7 @@ impl Auth {
 
     pub async fn login(&self, request: LoginRequest) -> Result<LoginResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("login").unwrap();
+        let url = self.auth_url.join("login").unwrap();
 
         let response = client
             .post(url)
@@ -70,7 +56,7 @@ impl Auth {
 
     pub async fn logout(&self, refresh_token: &Token) -> Result<LogoutResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("logout").unwrap();
+        let url = self.auth_url.join("logout").unwrap();
 
         let response = client
             .post(url)
@@ -92,7 +78,7 @@ impl Auth {
             grant_type: GrantType::RefreshToken,
             refresh_token: refresh_token.clone(),
         };
-        let url = self.url.join("token").unwrap();
+        let url = self.auth_url.join("token").unwrap();
 
         let response = client
             .post(url)
@@ -107,7 +93,7 @@ impl Auth {
 
     pub async fn whoami(&self, access_token: &Token) -> Result<WhoamiResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("whoami").unwrap();
+        let url = self.auth_url.join("whoami").unwrap();
 
         let response = client
             .get(url)

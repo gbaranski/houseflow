@@ -7,13 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+api = { path = "../api", package = "houseflow-api", features = ["auth", "fulfillment"] }
 houseflow-server = { path = "../server" }
 types              = { path = "../types/"             , package = "houseflow-types" }
 token              = { path = "../token/"             , package = "houseflow-token", features = [ "store" ] }
-auth               = { path = "../auth/core/"         , package = "houseflow-auth"     }
 db                 = { path = "../db/"                , package = "houseflow-db" }
 lighthouse         = { path = "../lighthouse/core"    , package = "houseflow-lighthouse" }
-fulfillment        = { path = "../fulfillment/core"   , package = "houseflow-fulfillment" }
+auth-types         = { path = "../auth/types/"         , package = "houseflow-auth-types"     }
+fulfillment-types  = { path = "../fulfillment/types"   , package = "houseflow-fulfillment-types" }
 device             = { path = "../devices/virtual"    , package = "houseflow-device" }
 config             = { path = "../config"             , package = "houseflow-config", features = [ 
 											"server",

@@ -1,16 +1,12 @@
 [workspace]
 members = [
-  "fulfillment/api",
   "fulfillment/types",
-  "fulfillment/core",
 
   "lighthouse/proto",
   "lighthouse/types",
   "lighthouse/macros",
 
   "auth/types",
-  "auth/api",
-  "auth/core",
 
   "config",
 
@@ -25,5 +21,6 @@ members = [
   "db",
 
   "core",
+  "api",
 ]
 default-members = [ "core" ]

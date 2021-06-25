@@ -990,11 +990,12 @@ dependencies = [
  "env_logger",
  "futures",
  "hex",
- "houseflow-auth",
+ "houseflow-api",
+ "houseflow-auth-types",
  "houseflow-config",
  "houseflow-db",
  "houseflow-device",
- "houseflow-fulfillment",
+ "houseflow-fulfillment-types",
  "houseflow-lighthouse",
  "houseflow-server",
  "houseflow-token",
@@ -1013,21 +1014,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "houseflow-auth"
-version = "0.1.0"
-dependencies = [
- "houseflow-auth-api",
- "houseflow-auth-types",
-]
-
-[[package]]
-name = "houseflow-auth-api"
+name = "houseflow-api"
 version = "0.1.0"
 dependencies = [
  "houseflow-auth-types",
+ "houseflow-fulfillment-types",
  "houseflow-token",
- "houseflow-types",
- "rand",
  "reqwest",
  "serde",
  "serde_json",
@@ -1101,29 +1093,6 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "tungstenite",
- "url",
-]
-
-[[package]]
-name = "houseflow-fulfillment"
-version = "0.1.0"
-dependencies = [
- "houseflow-fulfillment-api",
- "houseflow-fulfillment-types",
-]
-
-[[package]]
-name = "houseflow-fulfillment-api"
-version = "0.1.0"
-dependencies = [
- "houseflow-config",
- "houseflow-fulfillment-types",
- "houseflow-token",
- "houseflow-types",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
  "url",
 ]
 
