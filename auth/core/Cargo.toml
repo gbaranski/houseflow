@@ -9,4 +9,3 @@ edition = "2018"
 [dependencies]
 auth-api    = { path = "../api/"   , package = "houseflow-auth-api" }
 auth-types  = { path = "../types/" , package = "houseflow-auth-types" }
-auth-server = { path = "../server/", package = "houseflow-auth-server" }

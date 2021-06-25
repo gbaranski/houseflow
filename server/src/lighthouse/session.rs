@@ -1,19 +1,18 @@
-use crate::aliases::{
-    ActorExecuteFrame, ActorExecuteResponseFrame, ActorStateCheckFrame, ActorStateFrame,
-};
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
 use lighthouse_proto::{
     execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID,
 };
-use lighthouse_types::DeviceError;
+use lighthouse_types::DeviceCommunicationError;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::sync::{broadcast, oneshot};
 use types::DeviceID;
+
+use super::aliases::*;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const STATE_CHANNEL_SIZE: usize = 4;
@@ -61,7 +60,7 @@ impl Actor for Session {
 }
 
 impl Handler<ActorStateCheckFrame> for Session {
-    type Result = actix::ResponseActFuture<Self, std::result::Result<ActorStateFrame, DeviceError>>;
+    type Result = actix::ResponseActFuture<Self, std::result::Result<ActorStateFrame, DeviceCommunicationError>>;
 
     fn handle(&mut self, frame: ActorStateCheckFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
@@ -75,10 +74,10 @@ impl Handler<ActorStateCheckFrame> for Session {
         let fut = async move {
             let resp = tokio::time::timeout(REQUEST_TIMEOUT, rx.recv())
                 .await
-                .map_err(|_| DeviceError::Timeout)?
+                .map_err(|_| DeviceCommunicationError::Timeout)?
                 .expect("Sender is dropped when receiving response");
 
-            Ok::<ActorStateFrame, DeviceError>(resp.into())
+            Ok::<ActorStateFrame, DeviceCommunicationError>(resp.into())
         }
         .into_actor(self);
 
@@ -88,7 +87,7 @@ impl Handler<ActorStateCheckFrame> for Session {
 
 impl Handler<ActorExecuteFrame> for Session {
     type Result =
-        actix::ResponseActFuture<Self, std::result::Result<ActorExecuteResponseFrame, DeviceError>>;
+        actix::ResponseActFuture<Self, std::result::Result<ActorExecuteResponseFrame, DeviceCommunicationError>>;
 
     fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
@@ -105,10 +104,10 @@ impl Handler<ActorExecuteFrame> for Session {
         let fut = async move {
             let resp = tokio::time::timeout(REQUEST_TIMEOUT, rx)
                 .await
-                .map_err(|_| DeviceError::Timeout)?
+                .map_err(|_| DeviceCommunicationError::Timeout)?
                 .expect("Sender is dropped when receiving response");
 
-            Ok::<ActorExecuteResponseFrame, DeviceError>(resp.into())
+            Ok::<ActorExecuteResponseFrame, DeviceCommunicationError>(resp.into())
         }
         .into_actor(self)
         .map(move |res, session: &mut Self, _| {

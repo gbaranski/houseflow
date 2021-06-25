@@ -1,6 +1,6 @@
 use actix::{Message, MessageResponse};
 use lighthouse_proto::{execute, execute_response, state, state_check};
-use lighthouse_types::DeviceError;
+use lighthouse_types::DeviceCommunicationError;
 
 pub struct ActorExecuteFrame {
     inner: execute::Frame,
@@ -36,7 +36,7 @@ impl From<ActorExecuteResponseFrame> for execute_response::Frame {
 }
 
 impl Message for ActorExecuteFrame {
-    type Result = Result<ActorExecuteResponseFrame, DeviceError>;
+    type Result = Result<ActorExecuteResponseFrame, DeviceCommunicationError>;
 }
 
 pub struct ActorStateCheckFrame {
@@ -67,5 +67,6 @@ impl From<state::Frame> for ActorStateFrame {
 // }
 
 impl Message for ActorStateCheckFrame {
-    type Result = Result<ActorStateFrame, DeviceError>;
+    type Result = Result<ActorStateFrame, DeviceCommunicationError>;
 }
+

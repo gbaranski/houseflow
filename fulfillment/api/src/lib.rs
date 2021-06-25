@@ -17,13 +17,13 @@ pub enum Error {
 impl Fulfillment {
     pub fn new(server_address: std::net::SocketAddr) -> Self {
         Self {
-            url: Url::parse(&format!("http://{}/fulfillment/", server_address)).unwrap(),
+            url: Url::parse(&format!("http://{}/fulfillment/internal/", server_address)).unwrap(),
         }
     }
 
     pub async fn sync(&self, access_token: &Token) -> Result<SyncResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("internal/sync").unwrap();
+        let url = self.url.join("sync").unwrap();
         let response = client
             .get(url)
             .json(&SyncRequest {})
@@ -42,9 +42,9 @@ impl Fulfillment {
         request: &ExecuteRequest,
     ) -> Result<ExecuteResponse, Error> {
         let client = Client::new();
-        let url = self.url.join("internal/execute").unwrap();
+        let url = self.url.join("execute").unwrap();
         let response = client
-            .get(url)
+            .post(url)
             .json(request)
             .bearer_auth(access_token.to_string())
             .send()

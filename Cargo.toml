@@ -1,18 +1,14 @@
 [workspace]
 members = [
   "fulfillment/api",
-  "fulfillment/server",
   "fulfillment/types",
   "fulfillment/core",
 
   "lighthouse/proto",
-  "lighthouse/server",
-  "lighthouse/api",
   "lighthouse/types",
   "lighthouse/macros",
 
   "auth/types",
-  "auth/server",
   "auth/api",
   "auth/core",
 
@@ -21,6 +17,8 @@ members = [
   "devices/virtual",
 
   "token",
+
+  "server",
 
   "types",
 

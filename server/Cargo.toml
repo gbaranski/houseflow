@@ -1,0 +1,37 @@
+[package]
+name = "houseflow-server"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lighthouse-proto = { path = "../lighthouse/proto", package = "houseflow-lighthouse-proto"}
+lighthouse-types = { path = "../lighthouse/types", package = "houseflow-lighthouse-types", features = ["actix"]}
+fulfillment-types = { path = "../fulfillment/types", package = "houseflow-fulfillment-types", features = ["actix", "db"]}
+auth-types = { path = "../auth/types", package = "houseflow-auth-types", features = [ "actix", "db" ] }
+
+db = { path = "../db", package = "houseflow-db" }
+types = { path = "../types", package = "houseflow-types" }
+token = { path = "../token", package = "houseflow-token", features = ["actix"] }
+config = { path = "../config", package = "houseflow-config", features = [ "server" ] }
+
+actix 	 	 = "0.11.1"
+actix-web 	 = "4.0.0-beta.7" 
+actix-web-actors = "4.0.0-beta.5"
+actix-service 	 = "2.0.0-beta.5"
+tokio            = { version = "1.5", features = ["sync" ] }
+
+validator    = "0.13.0"
+thiserror        = "1.0"
+log              = "0.4"
+
+itertools        = "0.10"
+
+bytes            = "1.0"
+serde            = "1.0"
+serde_json       = "1.0"
+rust-argon2 = "0.8.3"
+semver = "1.0.3"
+rand = "0.8.4"
+

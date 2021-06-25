@@ -1,4 +1,5 @@
-use crate::{AppState, Session};
+use super::Session;
+use crate::Sessions;
 use actix_web::{get, http, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use db::Database;
@@ -42,7 +43,7 @@ fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePass
 pub async fn on_websocket(
     req: HttpRequest,
     stream: web::Payload,
-    app_state: web::Data<AppState>,
+    sessions: web::Data<Sessions>,
     database: web::Data<dyn Database>,
 ) -> Result<HttpResponse, ConnectResponseError> {
     let address = req.peer_addr().unwrap();
@@ -66,7 +67,7 @@ pub async fn on_websocket(
     );
     let session = Session::new(device_id.clone(), address);
     let (address, response) = ws::start_with_addr(session, &req, stream).unwrap();
-    app_state.sessions.lock().await.insert(device_id, address);
+    sessions.lock().await.insert(device_id, address);
     log::debug!("Response: {:?}", response);
 
     Ok(response)
