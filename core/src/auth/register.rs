@@ -49,7 +49,11 @@ impl Command<ClientCommandState> for RegisterCommand {
             password,
         };
 
-        state.houseflow_api.register(register_request).await?.into_result()?;
+        state
+            .houseflow_api
+            .register(register_request)
+            .await?
+            .into_result()?;
         log::info!("✔ Created new account");
 
         Ok(())
