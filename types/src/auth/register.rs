@@ -53,13 +53,6 @@ pub struct RegisterResponseBody {
     pub user_id: UserID,
 }
 
-#[cfg(feature = "db")]
-impl From<db::Error> for RegisterResponseError {
-    fn from(v: db::Error) -> Self {
-        Self::InternalError(v.to_string())
-    }
-}
-
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for RegisterResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {

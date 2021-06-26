@@ -58,13 +58,6 @@ pub struct LoginResponseBody {
     pub access_token: Token,
 }
 
-#[cfg(feature = "db")]
-impl From<houseflow_db::Error> for LoginResponseError {
-    fn from(v: houseflow_db::Error) -> Self {
-        Self::InternalError(v.to_string())
-    }
-}
-
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for LoginResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {

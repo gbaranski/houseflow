@@ -29,13 +29,6 @@ pub struct SyncResponseBody {
     pub devices: Vec<Device>,
 }
 
-#[cfg(feature = "db")]
-impl From<db::Error> for SyncResponseError {
-    fn from(v: db::Error) -> Self {
-        Self::InternalError(v.to_string())
-    }
-}
-
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for SyncResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {

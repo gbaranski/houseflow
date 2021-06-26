@@ -44,13 +44,6 @@ pub struct ExecuteResponseBody {
     pub frame: execute_response::Frame,
 }
 
-#[cfg(feature = "db")]
-impl From<db::Error> for ExecuteResponseError {
-    fn from(v: db::Error) -> Self {
-        Self::InternalError(v.to_string())
-    }
-}
-
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for ExecuteResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
