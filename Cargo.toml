@@ -26,12 +26,12 @@ members = [
 
 
 [dependencies]
-houseflow-api = { path = "api", features = ["auth", "fulfillment"] }
-houseflow-server = { path = "server" }
-houseflow-types = { path = "types/", features = ["token"] }
-houseflow-db = { path = "db/" }
-houseflow-device = { path = "devices/virtual"}
-houseflow-config = { path = "config", features = ["server", "device", "client", "postgres", "fs"] }
+houseflow-api = { version = "0.1.0", path = "api", features = ["auth", "fulfillment"] }
+houseflow-server = { version = "0.1.0", path = "server" }
+houseflow-types = { version = "0.1.0", path = "types/", features = ["token"] }
+houseflow-db = { version = "0.1.0", path = "db/" }
+houseflow-device = { version = "0.1.0", path = "devices/virtual"}
+houseflow-config = { version = "0.1.0", path = "config", features = ["server", "device", "client", "postgres", "fs"] }
 
 tokio              = { version = "1.6.1"             , features = ["sync", "rt-multi-thread", "macros", "fs"] }
 url                = { version = "2.2.2"             , features = ["serde"] }
