@@ -1,8 +1,8 @@
 use super::DeviceCommandState;
 use crate::Command;
 use async_trait::async_trait;
-use device::devices;
-use types::DeviceType;
+use houseflow_device::devices;
+use houseflow_types::DeviceType;
 
 use clap::Clap;
 
@@ -23,7 +23,7 @@ impl Command<DeviceCommandState> for RunDeviceCommand {
             state: DeviceCommandState,
             device: D,
         ) -> anyhow::Result<()> {
-            device::run(state.config, device).await
+            houseflow_device::run(state.config, device).await
         }
 
         match self.device_type {

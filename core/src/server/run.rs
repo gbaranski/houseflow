@@ -2,9 +2,9 @@ use crate::{Command, ServerCommandState};
 use actix_web::{web::Data, App, HttpServer};
 use anyhow::Context;
 use async_trait::async_trait;
-use db::Database;
+use houseflow_db::{postgres::Database as PostgresDatabase, Database};
+use houseflow_server::{RedisTokenStore, TokenStore};
 use std::sync::Arc;
-use token::store::TokenStore;
 
 use clap::Clap;
 
@@ -14,12 +14,12 @@ pub struct RunServerCommand {}
 #[async_trait(?Send)]
 impl Command<ServerCommandState> for RunServerCommand {
     async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
-        let token_store = token::store::RedisTokenStore::new()
+        let token_store = RedisTokenStore::new()
             .await
             .with_context(|| "connect to redis failed, is redis on?")?;
         let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
 
-        let database = db::postgres::Database::new(&state.config.postgres)
+        let database = PostgresDatabase::new(&state.config.postgres)
             .await
             .with_context(|| "connect to postgres failed, is postgres on?")?;
         let database = Data::from(Arc::new(database) as Arc<dyn Database>);

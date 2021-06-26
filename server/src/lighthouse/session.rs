@@ -1,10 +1,10 @@
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
-use houseflow_lighthouse_proto::{
-    execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID,
+use houseflow_types::lighthouse::{
+    proto::{execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID},
+    DeviceCommunicationError,
 };
-use houseflow_lighthouse_types::DeviceCommunicationError;
 use houseflow_types::DeviceID;
 use std::collections::HashMap;
 use std::net::SocketAddr;

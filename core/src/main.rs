@@ -14,11 +14,14 @@ pub use server::ServerCommand;
 
 use anyhow::Context;
 use cli::{CliConfig, Subcommand};
+use houseflow_config::{
+    client::Config as ClientConfig, defaults as ConfigDefaults, device::Config as DeviceConfig,
+    server::Config as ServerConfig,
+};
+use houseflow_types::{token::Token, Device};
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, EnumString};
 use szafka::Szafka;
-use token::Token;
-use types::Device;
 
 #[derive(Clone, Debug, EnumString, strum::Display, EnumIter)]
 pub enum Target {
@@ -57,7 +60,7 @@ pub struct Tokens {
 
 #[derive(Clone)]
 pub struct ClientCommandState {
-    pub config: ::config::client::Config,
+    pub config: ClientConfig,
     pub houseflow_api: api::HouseflowAPI,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Device>>,
@@ -65,12 +68,12 @@ pub struct ClientCommandState {
 
 #[derive(Clone)]
 pub struct ServerCommandState {
-    pub config: ::config::server::Config,
+    pub config: ServerConfig,
 }
 
 #[derive(Clone)]
 pub struct DeviceCommandState {
-    pub config: ::config::device::Config,
+    pub config: houseflow_config::device::Config,
 }
 
 impl ClientCommandState {
@@ -124,9 +127,7 @@ fn main() -> anyhow::Result<()> {
     })
     .block_on(async {
         let client_command_state = || async {
-            use ::config::client::Config;
-
-            let config = Config::get(Config::default_path())
+            let config = ClientConfig::get(ClientConfig::default_path())
                 .await
                 .with_context(|| "read client config file")?;
 
@@ -134,15 +135,14 @@ fn main() -> anyhow::Result<()> {
             let state = ClientCommandState {
                 config: config.clone(),
                 houseflow_api: api::HouseflowAPI::new(config.server_address),
-                tokens: Szafka::new(::config::defaults::data_home().join("tokens")),
-                devices: Szafka::new(::config::defaults::data_home().join("devices")),
+                tokens: Szafka::new(ConfigDefaults::data_home().join("tokens")),
+                devices: Szafka::new(ConfigDefaults::data_home().join("devices")),
             };
             Ok::<_, anyhow::Error>(state)
         };
 
         let server_command_state = || async {
-            use ::config::server::Config;
-            let config = Config::get(Config::default_path())
+            let config = ServerConfig::get(ServerConfig::default_path())
                 .await
                 .with_context(|| "read server config file")?;
 
@@ -152,8 +152,7 @@ fn main() -> anyhow::Result<()> {
         };
 
         let device_command_state = || async {
-            use ::config::device::Config;
-            let config = Config::get(Config::default_path())
+            let config = DeviceConfig::get(DeviceConfig::default_path())
                 .await
                 .with_context(|| "read server config file")?;
 

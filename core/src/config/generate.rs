@@ -16,9 +16,9 @@ impl Command<()> for ConfigGenerateCommand {
     async fn run(&self, _state: ()) -> anyhow::Result<()> {
         let create_config = |target: Target| async move {
             let config = match target {
-                Target::Server => config::server::Config::default_toml(),
-                Target::Client => config::client::Config::default_toml(),
-                Target::Device => config::device::Config::default_toml(),
+                Target::Server => houseflow_config::server::Config::default_toml(),
+                Target::Client => houseflow_config::client::Config::default_toml(),
+                Target::Device => houseflow_config::device::Config::default_toml(),
             };
             let path = target.config_path();
             if path.exists() && !self.force {

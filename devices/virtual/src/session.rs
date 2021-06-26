@@ -2,9 +2,9 @@ use crate::devices;
 use bytes::{Buf, BytesMut};
 use config::device::Config;
 use futures_util::{Sink, SinkExt, StreamExt};
-use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
+use types::lighthouse::proto::{execute_response, Decoder, Encoder, Frame};
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -81,7 +81,7 @@ impl Session {
                 WebsocketMessage::Binary(bytes) => {
                     let mut bytes = BytesMut::from(bytes.as_slice());
                     let frame = Frame::decode(&mut bytes)?;
-                    log::info!("Received frame: {:?}", frame);
+                    log::debug!("Received frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
                             let params: EP = serde_json::from_value(frame.params)?;

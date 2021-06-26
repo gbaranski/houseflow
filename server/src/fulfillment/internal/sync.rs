@@ -5,8 +5,10 @@ use actix_web::{
 };
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
-use houseflow_fulfillment_types::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError};
-use houseflow_token::Token;
+use houseflow_types::{
+    fulfillment::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError},
+    token::Token,
+};
 use houseflow_types::{DevicePermission, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
@@ -29,7 +31,8 @@ pub async fn on_sync(
 
     let devices = db
         .get_user_devices(access_token.user_id(), &SYNC_PERMISSION)
-        .await?;
+        .await
+        .map_err(|err| SyncResponseError::InternalError(err.to_string()))?;
     let response = SyncResponseBody { devices };
 
     Ok(Json(SyncResponse::Ok(response)))

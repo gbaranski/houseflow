@@ -1,18 +1,10 @@
 [workspace]
 members = [
-  "fulfillment/types",
-
-  "lighthouse/proto",
-  "lighthouse/types",
-  "lighthouse/macros",
-
-  "auth/types",
+  "macros",
 
   "config",
 
   "devices/virtual",
-
-  "token",
 
   "server",
 

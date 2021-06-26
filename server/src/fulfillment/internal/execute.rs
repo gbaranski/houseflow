@@ -1,10 +1,10 @@
 use actix_web::{post, web, HttpRequest};
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
-use houseflow_fulfillment_types::{
-    ExecuteRequest, ExecuteResponse, ExecuteResponseBody, ExecuteResponseError,
+use houseflow_types::{
+    fulfillment::{ExecuteRequest, ExecuteResponse, ExecuteResponseBody, ExecuteResponseError},
+    token::Token,
 };
-use houseflow_token::Token;
 use houseflow_types::{DevicePermission, UserAgent};
 
 use crate::Sessions;
@@ -33,7 +33,8 @@ pub async fn on_execute(
             &execute_request.device_id,
             &EXECUTE_PERMISSION,
         )
-        .await?
+        .await
+        .map_err(|err| ExecuteResponseError::InternalError(err.to_string()))?
     {
         return Err(ExecuteResponseError::NoDevicePermission);
     }

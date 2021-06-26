@@ -1,11 +1,14 @@
+use crate::TokenStore;
 use actix_web::{
     post,
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_auth_types::{LogoutResponse, LogoutResponseBody, LogoutResponseError};
 use houseflow_config::server::Secrets;
-use houseflow_token::{store::TokenStore, Token};
+use houseflow_types::{
+    auth::{LogoutResponse, LogoutResponseBody, LogoutResponseError},
+    token::Token,
+};
 
 #[post("/logout")]
 pub async fn on_logout(

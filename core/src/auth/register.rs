@@ -18,8 +18,8 @@ pub struct RegisterCommand {
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for RegisterCommand {
     async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        use auth_types::RegisterRequest;
         use dialoguer::{Input, Password};
+        use houseflow_types::auth::RegisterRequest;
 
         let theme = crate::cli::get_dialoguer_theme();
 

@@ -9,15 +9,10 @@ edition = "2018"
 [dependencies]
 api = { path = "../api", package = "houseflow-api", features = ["auth", "fulfillment"] }
 houseflow-server = { path = "../server" }
-types              = { path = "../types/"             , package = "houseflow-types" }
-token              = { path = "../token/"             , package = "houseflow-token", features = [ "store" ] }
-db                 = { path = "../db/"                , package = "houseflow-db" }
-lighthouse-types   = { path = "../lighthouse/types"    , package = "houseflow-lighthouse-types" }
-lighthouse-proto   = { path = "../lighthouse/proto"    , package = "houseflow-lighthouse-proto" }
-auth-types         = { path = "../auth/types/"         , package = "houseflow-auth-types"     }
-fulfillment-types  = { path = "../fulfillment/types"   , package = "houseflow-fulfillment-types" }
-device             = { path = "../devices/virtual"    , package = "houseflow-device" }
-config             = { path = "../config"             , package = "houseflow-config", features = [ 
+houseflow-types = { path = "../types/", features = ["token"] }
+houseflow-db = { path = "../db/" }
+houseflow-device = { path = "../devices/virtual"}
+houseflow-config = { path = "../config", features = [ 
 											"server",
 											"device",
 											"client",

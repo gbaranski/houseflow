@@ -1,11 +1,11 @@
 use crate::Error;
 
 use async_trait::async_trait;
-use config::postgres::Config;
 use deadpool_postgres::Pool;
+use houseflow_config::postgres::Config;
+use houseflow_types::{Device, DeviceID, DevicePermission, User, UserID};
 use semver::Version;
 use tokio_postgres::NoTls;
-use types::{Device, DeviceID, DevicePermission, User, UserID};
 
 use refinery::embed_migrations;
 embed_migrations!("migrations");

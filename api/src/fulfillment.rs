@@ -1,7 +1,7 @@
 use super::{Error, HouseflowAPI};
-use fulfillment_types::{ExecuteRequest, ExecuteResponse, SyncRequest, SyncResponse};
+use houseflow_types::fulfillment::{ExecuteRequest, ExecuteResponse, SyncRequest, SyncResponse};
+use houseflow_types::token::Token;
 use reqwest::Client;
-use token::Token;
 
 #[derive(Debug, thiserror::Error)]
 pub enum FulfillmentError {}

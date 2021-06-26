@@ -1,8 +1,8 @@
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
-use fulfillment_types::ExecuteRequest;
-use lighthouse_proto::execute;
-use types::{DeviceCommand, DeviceID, DeviceStatus};
+use houseflow_types::{
+    fulfillment::ExecuteRequest, lighthouse::proto::execute, DeviceCommand, DeviceID, DeviceStatus,
+};
 
 use clap::Clap;
 

@@ -1,9 +1,10 @@
 use super::{Error, HouseflowAPI};
-use auth_types::{
+use houseflow_types::auth::{
     AccessTokenRequest, AccessTokenResponse, AccessTokenResponseError, GrantType, LoginRequest,
     LoginResponse, LoginResponseError, LogoutResponse, RegisterRequest, RegisterResponse,
     RegisterResponseError, WhoamiResponse,
 };
+use houseflow_types::token;
 use reqwest::Client;
 use token::Token;
 

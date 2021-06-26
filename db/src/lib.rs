@@ -23,7 +23,7 @@ impl<T: DatabaseInternalError + 'static> From<T> for Error {
     }
 }
 
-use types::{Device, DeviceID, DevicePermission, User, UserID};
+use houseflow_types::{Device, DeviceID, DevicePermission, User, UserID};
 
 #[async_trait]
 pub trait Database: Send + Sync {

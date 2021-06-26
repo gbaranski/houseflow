@@ -1,20 +1,19 @@
+use crate::TokenStore;
 use actix_web::{
     post,
     web::{Data, Json},
 };
-use houseflow_auth_types::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError};
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
+use houseflow_types::{
+    auth::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError},
+    token::Token,
+};
 
-use houseflow_token::{store::TokenStore, Token};
-
-fn verify_password(
-    hash: &str,
-    password: &str,
-) -> Result<(), houseflow_auth_types::LoginResponseError> {
+fn verify_password(hash: &str, password: &str) -> Result<(), LoginResponseError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
         true => Ok(()),
-        false => Err(houseflow_auth_types::LoginResponseError::InvalidPassword),
+        false => Err(LoginResponseError::InvalidPassword),
     }
 }
 
@@ -29,7 +28,8 @@ pub async fn on_login(
 
     let user = db
         .get_user_by_email(&request.email)
-        .await?
+        .await
+        .map_err(|err| LoginResponseError::InternalError(err.to_string()))?
         .ok_or(LoginResponseError::UserNotFound)?;
     verify_password(&user.password_hash, &request.password)?;
     let refresh_token =

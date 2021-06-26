@@ -1,9 +1,9 @@
 use crate::{DatabaseInternalError, Error};
 use async_trait::async_trait;
+use houseflow_types::{Device, DeviceID, DevicePermission, User, UserID};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::{Device, DeviceID, DevicePermission, User, UserID};
 
 #[derive(Debug, thiserror::Error)]
 pub enum InternalError {}

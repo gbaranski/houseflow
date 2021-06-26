@@ -1,6 +1,9 @@
 mod auth;
 mod fulfillment;
 mod lighthouse;
+mod token_store;
+
+pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
 
 use actix_web::web;
 use houseflow_config::server::Secrets;
@@ -13,7 +16,7 @@ pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
 pub fn configure(
     cfg: &mut web::ServiceConfig,
-    token_store: web::Data<dyn houseflow_token::store::TokenStore>,
+    token_store: web::Data<dyn TokenStore>,
     database: web::Data<dyn Database>,
     secrets: web::Data<Secrets>,
     sessions: web::Data<Sessions>,
@@ -86,8 +89,8 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
 
 #[cfg(test)]
 mod test_utils {
+    use crate::{MemoryTokenStore, TokenStore};
     use houseflow_db::memory::Database;
-    use houseflow_token::store::{MemoryTokenStore, TokenStore};
     use houseflow_types::{Device, DeviceType, User, UserID};
 
     use actix_web::web::Data;

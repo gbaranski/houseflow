@@ -1,14 +1,16 @@
+use crate::{token_store, TokenStore};
 use actix_web::{
     post,
     web::{self, Data, Form, FormConfig, Json},
 };
-use houseflow_auth_types::{
-    AccessTokenRequest, AccessTokenResponse, AccessTokenResponseBody, AccessTokenResponseError,
-    TokenType,
-};
 use houseflow_config::server::Secrets;
-use houseflow_token::store::TokenStore;
-use houseflow_token::{ExpirationDate, Payload as TokenPayload, Token};
+use houseflow_types::{
+    auth::{
+        AccessTokenRequest, AccessTokenResponse, AccessTokenResponseBody, AccessTokenResponseError,
+        TokenType,
+    },
+    token::{self, Token},
+};
 
 pub fn on_exchange_refresh_token_form_config() -> FormConfig {
     FormConfig::default().error_handler(|err, _| {
@@ -24,7 +26,7 @@ pub enum RefreshTokenExchangeError {
     InvalidRequest(#[from] AccessTokenResponseError),
 
     #[error("error with token_store: `{0}`")]
-    TokenStoreError(#[from] houseflow_token::store::Error),
+    TokenStoreError(#[from] token_store::Error),
 }
 
 impl actix_web::ResponseError for RefreshTokenExchangeError {
@@ -69,8 +71,8 @@ pub async fn on_exchange_refresh_token(
     }
 
     let expires_in = refresh_token.user_agent().access_token_duration();
-    let expires_at = ExpirationDate::from_duration(expires_in);
-    let access_token_payload = TokenPayload {
+    let expires_at = token::ExpirationDate::from_duration(expires_in);
+    let access_token_payload = token::Payload {
         id: refresh_token.user_id().clone(),
         user_agent: *refresh_token.user_agent(),
         user_id: refresh_token.user_id().clone(),
@@ -92,7 +94,7 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{test, App};
-    use houseflow_auth_types::GrantType;
+    use houseflow_types::auth::GrantType;
     use rand::random;
     use std::time::{Duration, SystemTime};
 
@@ -181,10 +183,12 @@ mod tests {
         let token_store = get_token_store();
         let database = get_database();
         let secrets = Data::new(random::<Secrets>());
-        let refresh_token_payload = TokenPayload::new(
+        let refresh_token_payload = token::Payload::new(
             random(),
             random(),
-            ExpirationDate::from_system_time(SystemTime::now().checked_sub(Duration::from_secs(5))),
+            token::ExpirationDate::from_system_time(
+                SystemTime::now().checked_sub(Duration::from_secs(5)),
+            ),
         );
         let refresh_token_signature = refresh_token_payload.sign(&secrets.refresh_key);
         let refresh_token = Token::new(refresh_token_payload, refresh_token_signature);

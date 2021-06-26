@@ -991,15 +991,10 @@ dependencies = [
  "futures",
  "hex",
  "houseflow-api",
- "houseflow-auth-types",
  "houseflow-config",
  "houseflow-db",
  "houseflow-device",
- "houseflow-fulfillment-types",
- "houseflow-lighthouse-proto",
- "houseflow-lighthouse-types",
  "houseflow-server",
- "houseflow-token",
  "houseflow-types",
  "humantime",
  "log",
@@ -1018,29 +1013,13 @@ dependencies = [
 name = "houseflow-api"
 version = "0.1.0"
 dependencies = [
- "houseflow-auth-types",
- "houseflow-fulfillment-types",
- "houseflow-token",
+ "houseflow-types",
  "reqwest",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
  "url",
-]
-
-[[package]]
-name = "houseflow-auth-types"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "houseflow-db",
- "houseflow-token",
- "houseflow-types",
- "serde",
- "serde_json",
- "thiserror",
- "validator",
 ]
 
 [[package]]
@@ -1084,7 +1063,6 @@ dependencies = [
  "bytes",
  "futures-util",
  "houseflow-config",
- "houseflow-lighthouse-proto",
  "houseflow-types",
  "http",
  "log",
@@ -1098,52 +1076,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "houseflow-fulfillment-types"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "houseflow-db",
- "houseflow-lighthouse-proto",
- "houseflow-lighthouse-types",
- "houseflow-token",
- "houseflow-types",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "houseflow-lighthouse-macros"
+name = "houseflow-macros"
 version = "0.1.0"
 dependencies = [
  "quote",
  "syn",
-]
-
-[[package]]
-name = "houseflow-lighthouse-proto"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "houseflow-lighthouse-macros",
- "houseflow-types",
- "rand",
- "serde",
- "serde_json",
- "strum",
- "thiserror",
-]
-
-[[package]]
-name = "houseflow-lighthouse-types"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "houseflow-lighthouse-proto",
- "houseflow-types",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -1155,19 +1092,16 @@ dependencies = [
  "actix-service",
  "actix-web",
  "actix-web-actors",
+ "async-trait",
  "bytes",
  "futures",
- "houseflow-auth-types",
  "houseflow-config",
  "houseflow-db",
- "houseflow-fulfillment-types",
- "houseflow-lighthouse-proto",
- "houseflow-lighthouse-types",
- "houseflow-token",
  "houseflow-types",
  "itertools",
  "log",
  "rand",
+ "redis",
  "rust-argon2",
  "semver 1.0.3",
  "serde",
@@ -1178,37 +1112,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "houseflow-token"
+name = "houseflow-types"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "async-trait",
  "base64",
  "bytes",
  "hex",
  "hmac 0.11.0",
- "houseflow-types",
- "rand",
- "redis",
- "serde",
- "serde_json",
- "sha2",
- "thiserror",
- "tokio",
-]
-
-[[package]]
-name = "houseflow-types"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "hex",
+ "houseflow-macros",
  "postgres-types",
  "rand",
  "semver 1.0.3",
  "serde",
+ "serde_json",
+ "sha2",
  "strum",
  "thiserror",
+ "validator",
 ]
 
 [[package]]

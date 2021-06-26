@@ -2,11 +2,13 @@ use actix_web::{
     get,
     web::{Data, HttpRequest, Json},
 };
-use houseflow_auth_types::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError};
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
-use houseflow_token::Token;
-use houseflow_types::UserAgent;
+use houseflow_types::{
+    auth::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError},
+    token::Token,
+    UserAgent,
+};
 
 #[get("/whoami")]
 pub async fn on_whoami(
@@ -35,7 +37,7 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{http, test, App, ResponseError};
-    use houseflow_types::User;
+    use houseflow_types::{token, User};
 
     use rand::random;
 
@@ -109,9 +111,8 @@ mod tests {
 
         let request = test::TestRequest::get().uri("/auth/whoami").to_request();
         let response = test::call_service(&mut app, request).await;
-        const EXPECTED_ERROR: WhoamiResponseError = WhoamiResponseError::DecodeHeaderError(
-            houseflow_token::DecodeHeaderError::MissingHeader,
-        );
+        const EXPECTED_ERROR: WhoamiResponseError =
+            WhoamiResponseError::DecodeHeaderError(token::DecodeHeaderError::MissingHeader);
 
         assert_eq!(
             response.status(),
@@ -156,7 +157,7 @@ mod tests {
             .to_request();
         let response = test::call_service(&mut app, request).await;
         const EXPECTED_ERROR: WhoamiResponseError =
-            WhoamiResponseError::VerifyError(houseflow_token::VerifyError::InvalidSignature);
+            WhoamiResponseError::VerifyError(token::VerifyError::InvalidSignature);
 
         assert_eq!(
             response.status(),
