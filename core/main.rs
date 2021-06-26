@@ -7,6 +7,8 @@ mod device;
 mod fulfillment;
 mod server;
 
+use houseflow_api::HouseflowAPI;
+
 pub use self::config::ConfigCommand;
 pub use self::device::DeviceCommand;
 pub use crate::{auth::AuthCommand, device::RunDeviceCommand, fulfillment::FulfillmentCommand};
@@ -61,7 +63,7 @@ pub struct Tokens {
 #[derive(Clone)]
 pub struct ClientCommandState {
     pub config: ClientConfig,
-    pub houseflow_api: api::HouseflowAPI,
+    pub houseflow_api: HouseflowAPI,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Device>>,
 }
@@ -134,7 +136,7 @@ fn main() -> anyhow::Result<()> {
             log::trace!("config loaded: {:#?}", config);
             let state = ClientCommandState {
                 config: config.clone(),
-                houseflow_api: api::HouseflowAPI::new(config.server_address),
+                houseflow_api: HouseflowAPI::new(config.server_address),
                 tokens: Szafka::new(ConfigDefaults::data_home().join("tokens")),
                 devices: Szafka::new(ConfigDefaults::data_home().join("devices")),
             };
