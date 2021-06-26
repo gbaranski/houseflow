@@ -1,8 +1,8 @@
 use crate::lighthouse::proto::{DecodeError, Decoder, Encoder, Framed};
+use crate::DeviceCommand;
 use bytes::{Buf, BufMut};
 use houseflow_macros::decoder;
 use std::{convert::TryInto, mem::size_of};
-use crate::DeviceCommand;
 
 impl<'de> Framed<'de> for DeviceCommand {}
 

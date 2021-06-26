@@ -1,4 +1,4 @@
-use crate::token::{DecodeError, Encoder, Decoder};
+use crate::token::{DecodeError, Decoder, Encoder};
 use std::time::{Duration, SystemTime};
 
 /// Token expiration date

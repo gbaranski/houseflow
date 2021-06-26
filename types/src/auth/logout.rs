@@ -1,5 +1,5 @@
+use crate::{token, ResultTagged};
 use serde::{Deserialize, Serialize};
-use crate::{ResultTagged, token};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LogoutRequest {}

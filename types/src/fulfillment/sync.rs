@@ -1,5 +1,5 @@
+use crate::{token, Device, ResultTagged};
 use serde::{Deserialize, Serialize};
-use crate::{Device, ResultTagged, token};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SyncRequest {}

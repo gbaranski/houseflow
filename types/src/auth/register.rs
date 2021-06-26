@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::{ResultTagged, UserID};
+use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]

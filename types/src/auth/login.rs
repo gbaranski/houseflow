@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::token::Token;
 use crate::{ResultTagged, UserAgent};
+use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]

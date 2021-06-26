@@ -1,9 +1,6 @@
 mod payload;
 mod signature;
 
-#[cfg(feature = "store")]
-pub mod store;
-
 pub use payload::*;
 pub use signature::*;
 
@@ -12,7 +9,6 @@ use serde::{
     de::{self, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
 };
-
 
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -316,11 +312,11 @@ impl Serialize for Token {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::UserID;
     use bytes::BytesMut;
     use rand::random;
     use std::str::FromStr;
     use std::time::{Duration, SystemTime};
-    use crate::UserID;
     const KEY: &[u8] = b"some hmac key";
 
     #[test]

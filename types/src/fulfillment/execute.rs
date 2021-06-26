@@ -1,6 +1,6 @@
 use crate::lighthouse::proto::{execute, execute_response};
+use crate::{lighthouse, token, DeviceID, ResultTagged};
 use serde::{Deserialize, Serialize};
-use crate::{DeviceID, ResultTagged, token, lighthouse};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ExecuteRequest {
@@ -54,8 +54,8 @@ impl From<db::Error> for ExecuteResponseError {
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for ExecuteResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
         use crate::lighthouse::DeviceCommunicationError;
+        use actix_web::http::StatusCode;
 
         match self {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,

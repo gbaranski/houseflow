@@ -1,9 +1,9 @@
 use crate::lighthouse::proto::{DecodeError, Decoder, Encoder, Framed};
+use crate::DeviceError;
 use bytes::{Buf, BufMut};
 use houseflow_macros::decoder;
 use std::convert::TryFrom;
 use std::mem::size_of;
-use crate::DeviceError;
 
 impl Decoder for DeviceError {
     const MIN_SIZE: usize = size_of::<Self>();

@@ -1,6 +1,6 @@
-use std::time::Duration;
 use crate::token::Token;
 use crate::ResultUntagged;
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 

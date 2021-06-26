@@ -1,9 +1,9 @@
 use crate::lighthouse::proto::{DecodeError, Decoder, Encoder, Frame, FrameID, Framed};
+use crate::DeviceCommand;
 use bytes::{Buf, BufMut};
 use houseflow_macros::decoder;
 use serde::{Deserialize, Serialize};
 use std::mem::size_of;
-use crate::DeviceCommand;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ExecuteFrame {

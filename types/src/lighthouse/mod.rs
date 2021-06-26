@@ -1,8 +1,8 @@
 pub mod proto;
 
+use crate::{DeviceID, ResultTagged};
 use proto::{execute, execute_response};
 use serde::{Deserialize, Serialize};
-use crate::{DeviceID, ResultTagged};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ExecuteRequest {

@@ -1,6 +1,6 @@
 use crate::token::{DecodeError, Decoder, Encoder};
-use std::convert::TryFrom;
 use crate::UserAgent;
+use std::convert::TryFrom;
 
 impl Decoder for UserAgent {
     const SIZE: usize = std::mem::size_of::<UserAgent>();
