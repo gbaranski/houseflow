@@ -2,7 +2,7 @@ use crate::devices;
 use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_config::device::Config;
-use houseflow_types::lighthouse::proto::{execute_response, Decoder, Encoder, Frame};
+use houseflow_types::lighthouse::proto::{execute_response, state, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
@@ -93,6 +93,17 @@ impl Session {
                                 state: device.state(),
                             };
                             let response_frame = Frame::ExecuteResponse(response_frame);
+                            let response_event = Event::LighthouseFrame(response_frame);
+                            events
+                                .send(response_event)
+                                .await
+                                .expect("failed sending event");
+                        }
+                        Frame::Query(_) => {
+                            let response_frame = state::Frame {
+                                state: device.state(),
+                            };
+                            let response_frame = Frame::State(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);
                             events
                                 .send(response_event)

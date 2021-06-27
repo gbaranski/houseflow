@@ -1,5 +1,6 @@
 use super::frame::{self, Frame, Opcode};
 use bytes::{Buf, BufMut};
+use houseflow_macros::decoder;
 use std::convert::TryInto;
 use std::mem::size_of;
 use thiserror::Error;
@@ -30,6 +31,7 @@ pub trait Encoder {
 impl Decoder for Frame {
     const MIN_SIZE: usize = size_of::<Opcode>();
 
+    #[decoder]
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
         use frame::*;
         use Opcode::*;
@@ -41,7 +43,7 @@ impl Decoder for Frame {
         let frame: Self = match opcode {
             NoOperation => no_operation::Frame::decode(buf)?.into(),
             State => state::Frame::decode(buf)?.into(),
-            StateCheck => query::Frame::decode(buf)?.into(),
+            Query => query::Frame::decode(buf)?.into(),
             Execute => execute::Frame::decode(buf)?.into(),
             ExecuteResponse => execute_response::Frame::decode(buf)?.into(),
         };

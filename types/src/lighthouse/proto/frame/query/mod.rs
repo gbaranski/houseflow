@@ -1,3 +1,3 @@
 mod frame;
 
-pub use frame::StateCheckFrame as Frame;
+pub use frame::QueryFrame as Frame;

@@ -1,8 +1,8 @@
 pub mod execute;
 pub mod execute_response;
 
-pub mod state;
 pub mod query;
+pub mod state;
 
 pub mod no_operation;
 
@@ -55,7 +55,7 @@ impl Frame {
         match self {
             Frame::NoOperation(_) => Opcode::NoOperation,
             Frame::State(_) => Opcode::State,
-            Frame::Query(_) => Opcode::StateCheck,
+            Frame::Query(_) => Opcode::Query,
             Frame::Execute(_) => Opcode::Execute,
             Frame::ExecuteResponse(_) => Opcode::ExecuteResponse,
         }

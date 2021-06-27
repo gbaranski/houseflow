@@ -4,9 +4,9 @@ use houseflow_macros::decoder;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct StateCheckFrame {}
+pub struct QueryFrame {}
 
-impl Decoder for StateCheckFrame {
+impl Decoder for QueryFrame {
     const MIN_SIZE: usize = 0;
 
     #[decoder]
@@ -15,14 +15,14 @@ impl Decoder for StateCheckFrame {
     }
 }
 
-impl Encoder for StateCheckFrame {
+impl Encoder for QueryFrame {
     fn encode(&self, _buf: &mut impl BufMut) {}
 }
 
-impl<'de> Framed<'de> for StateCheckFrame {}
+impl<'de> Framed<'de> for QueryFrame {}
 
-impl From<StateCheckFrame> for Frame {
-    fn from(val: StateCheckFrame) -> Self {
+impl From<QueryFrame> for Frame {
+    fn from(val: QueryFrame) -> Self {
         Frame::Query(val)
     }
 }

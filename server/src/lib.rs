@@ -41,6 +41,7 @@ pub fn configure(
             web::scope("/fulfillment").service(
                 web::scope("/internal")
                     .service(fulfillment::internal::on_execute)
+                    .service(fulfillment::internal::on_query)
                     .service(fulfillment::internal::on_sync),
             ),
         )

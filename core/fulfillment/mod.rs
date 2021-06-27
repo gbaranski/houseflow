@@ -1,11 +1,13 @@
 mod execute;
 mod sync;
+mod query;
 
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 
 use execute::ExecuteCommand;
 use sync::SyncCommand;
+use query::QueryCommand;
 
 use clap::Clap;
 
@@ -22,6 +24,9 @@ pub enum FulfillmentSubcommand {
 
     /// Execute command on device
     Execute(ExecuteCommand),
+
+    /// Query state of the device
+    Query(QueryCommand),
 }
 
 #[async_trait(?Send)]
@@ -30,6 +35,7 @@ impl Command<ClientCommandState> for FulfillmentCommand {
         match &self.subcommand {
             FulfillmentSubcommand::Sync(cmd) => cmd.run(state).await,
             FulfillmentSubcommand::Execute(cmd) => cmd.run(state).await,
+            FulfillmentSubcommand::Query(cmd) => cmd.run(state).await,
         }
     }
 }

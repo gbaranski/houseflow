@@ -2,7 +2,7 @@ use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
 use houseflow_types::lighthouse::{
-    proto::{execute, execute_response, state, query, Decoder, Encoder, Frame, FrameID},
+    proto::{execute, execute_response, query, state, Decoder, Encoder, Frame, FrameID},
     DeviceCommunicationError,
 };
 use houseflow_types::DeviceID;
@@ -14,7 +14,8 @@ use tokio::sync::{broadcast, oneshot};
 
 use super::aliases::*;
 
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
+const EXECUTE_TIMEOUT: Duration = Duration::from_secs(5);
+const QUERY_TIMEOUT: Duration = Duration::from_secs(5);
 const STATE_CHANNEL_SIZE: usize = 4;
 
 #[derive(Debug, Error)]
@@ -68,6 +69,7 @@ impl Handler<ActorQueryFrame> for Session {
     fn handle(&mut self, frame: ActorQueryFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
         let frame: query::Frame = frame.into();
+        let frame = Frame::Query(frame);
 
         let mut buf = BytesMut::with_capacity(512);
         let mut rx = self.state_channel.subscribe();
@@ -75,10 +77,10 @@ impl Handler<ActorQueryFrame> for Session {
         ctx.binary(buf);
 
         let fut = async move {
-            let resp = tokio::time::timeout(REQUEST_TIMEOUT, rx.recv())
+            let resp = tokio::time::timeout(QUERY_TIMEOUT, rx.recv())
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
-                .expect("Sender is dropped when receiving response");
+                .unwrap();
 
             Ok::<ActorStateFrame, DeviceCommunicationError>(resp.into())
         }
@@ -107,7 +109,7 @@ impl Handler<ActorExecuteFrame> for Session {
         ctx.binary(buf);
 
         let fut = async move {
-            let resp = tokio::time::timeout(REQUEST_TIMEOUT, rx)
+            let resp = tokio::time::timeout(EXECUTE_TIMEOUT, rx)
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
                 .expect("Sender is dropped when receiving response");

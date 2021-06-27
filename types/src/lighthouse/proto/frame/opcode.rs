@@ -6,7 +6,7 @@ use strum::{EnumIter, IntoEnumIterator};
 pub(crate) enum Opcode {
     NoOperation,
     State,
-    StateCheck,
+    Query,
     Execute,
     ExecuteResponse,
 }
