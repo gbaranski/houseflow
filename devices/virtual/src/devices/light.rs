@@ -1,7 +1,7 @@
 use super::Device;
 use async_trait::async_trait;
+use houseflow_types::{DeviceCommand, DeviceError, DeviceStatus};
 use serde::{Deserialize, Serialize};
-use types::{DeviceCommand, DeviceError, DeviceStatus};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]

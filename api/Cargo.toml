@@ -1,6 +1,11 @@
 [package]
 name = "houseflow-api"
 version = "0.1.0"
+description = "API for Houseflow"
+homepage = "https://github.com/gbaranski/houseflow"
+repository = "https://github.com/gbaranski/houseflow"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,7 +18,7 @@ serde_json = "1.0"
 thiserror  = "1.0"
 url        = "2.2"
 
-houseflow-types = { path = "../types", features = ["token"], optional = true }
+houseflow-types = { path = "../types", version = "0.1.0", features = ["token"], optional = true }
 
 [features]
 auth = ["houseflow-types/auth"]

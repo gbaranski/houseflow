@@ -3,7 +3,7 @@ mod light;
 pub use light::Light;
 
 use async_trait::async_trait;
-use types::{DeviceCommand, DeviceError, DeviceStatus};
+use houseflow_types::{DeviceCommand, DeviceError, DeviceStatus};
 
 pub trait ExecuteParams: serde::de::DeserializeOwned {}
 

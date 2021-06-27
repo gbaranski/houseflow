@@ -1,14 +1,19 @@
 [package]
 name = "houseflow-server"
 version = "0.1.0"
+description = "Server for Houseflow"
+homepage = "https://github.com/gbaranski/houseflow"
+repository = "https://github.com/gbaranski/houseflow"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-db 			= { path = "../db" }
-houseflow-types			= { path = "../types", features = ["actix","token", "auth", "fulfillment", "lighthouse"] }
-houseflow-config 		= { path = "../config", features = [ "server" ] }
+houseflow-db 			= { path = "../db", version = "0.1.0" }
+houseflow-types			= { path = "../types", version = "0.1.0", features = ["actix","token", "auth", "fulfillment", "lighthouse"] }
+houseflow-config 		= { path = "../config", version = "0.1.0", features = [ "server" ] }
 
 actix 	 	 = "0.11.1"
 actix-rt 	 = "2.2.0"

@@ -1,10 +1,10 @@
 use crate::devices;
 use bytes::{Buf, BytesMut};
-use config::device::Config;
 use futures_util::{Sink, SinkExt, StreamExt};
+use houseflow_config::device::Config;
+use houseflow_types::lighthouse::proto::{execute_response, Decoder, Encoder, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
-use types::lighthouse::proto::{execute_response, Decoder, Encoder, Frame};
 use url::Url;
 
 #[derive(Debug, Clone)]

@@ -1,6 +1,11 @@
 [package]
 name = "houseflow-config"
 version = "0.1.0"
+description = "Configuration for Houseflow"
+homepage = "https://github.com/gbaranski/houseflow"
+repository = "https://github.com/gbaranski/houseflow"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,7 +16,7 @@ rand = "0.8.4"
 serde = { version = "1.0.126", features = ["derive"] }
 thiserror = "1.0.25"
 tokio = { version = "1.7.1", optional = true, features = ["io-util", "fs"] }
-types = { path = "../types/", package = "houseflow-types" }
+types = { path = "../types/", version = "0.1.0", package = "houseflow-types" }
 xdg = "2.2.0"
 toml = { version = "0.5.8", optional = true }
 

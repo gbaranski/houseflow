@@ -1,4 +1,4 @@
-use config::device::Config;
+use houseflow_config::device::Config;
 use session::Session;
 
 pub mod devices;

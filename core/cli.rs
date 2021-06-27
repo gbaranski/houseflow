@@ -1,30 +1,32 @@
-use dialoguer::theme::{ColorfulTheme, Theme};
-
-pub fn get_dialoguer_theme() -> impl Theme {
-    ColorfulTheme {
-        ..ColorfulTheme::default()
+#[cfg(feature = "client")]
+pub(crate) fn get_dialoguer_theme() -> impl dialoguer::theme::Theme {
+    dialoguer::theme::ColorfulTheme {
+        ..dialoguer::theme::ColorfulTheme::default()
     }
 }
 
-use crate::{AuthCommand, ConfigCommand, DeviceCommand, FulfillmentCommand, ServerCommand};
 use clap::Clap;
 
 #[derive(Clap)]
 pub enum Subcommand {
+    #[cfg(feature = "client")]
     /// Login, register, logout, and refresh your authentication
-    Auth(AuthCommand),
+    Auth(crate::AuthCommand),
 
-    /// Login, register, logout, and refresh your authentication
-    Server(ServerCommand),
-
-    /// Run, manage device
-    Device(DeviceCommand),
-
+    #[cfg(feature = "client")]
     /// Manage the fulfillment service, sync devices, execute command, query state
-    Fulfillment(FulfillmentCommand),
+    Fulfillment(crate::FulfillmentCommand),
+
+    #[cfg(feature = "server")]
+    /// Login, register, logout, and refresh your authentication
+    Server(crate::ServerCommand),
+
+    #[cfg(feature = "device")]
+    /// Run, manage device
+    Device(crate::DeviceCommand),
 
     /// Manage configuration(s)
-    Config(ConfigCommand),
+    Config(crate::ConfigCommand),
 }
 
 use std::path::PathBuf;
@@ -34,23 +36,7 @@ pub struct CliConfig {
     #[clap(subcommand)]
     pub subcommand: Subcommand,
 
-    /// Server config in TOML format, can be used to pass configuration as argument instead of
-    /// editing the config file
+    /// Config directory, server.toml, client.toml, device.toml will be used. Default: $XDG_CONFIG_HOME/houseflow
     #[clap(long)]
-    pub server_config: Option<String>,
-
-    /// Client config in TOML format, can be used to pass configuration as argument instead of
-    /// editing the config file
-    #[clap(long)]
-    pub client_config: Option<String>,
-
-    /// Path to the server config.
-    /// Uses `$XDG_CONFIG_HOME/houseflow/server.toml` by default
-    #[clap(long)]
-    pub server_config_path: Option<PathBuf>,
-
-    /// Path to the server config.
-    /// Uses `$XDG_CONFIG_HOME/houseflow/server.toml` by default
-    #[clap(long)]
-    pub client_config_path: Option<PathBuf>,
+    pub config_directory: Option<PathBuf>,
 }

@@ -1,14 +1,18 @@
 [package]
 name = "houseflow-db"
 version = "0.1.0"
-authors = ["gbaranski <root@gbaranski.com>"]
+description = "Server for Houseflow"
+homepage = "https://github.com/gbaranski/houseflow"
+repository = "https://github.com/gbaranski/houseflow"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+license = "GPL-3.0-or-later"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types   = { path = "../types", features = [ "postgres-types" ] }
-houseflow-config  = { path = "../config", features = [ "postgres" ] }
+houseflow-types   = { path = "../types", version = "0.1.0", features = [ "postgres-types" ] }
+houseflow-config  = { path = "../config", version = "0.1.0", features = [ "postgres" ] }
 refinery          = { version = "0.5.0", features = [ "tokio-postgres" ] }
 serde             = { version = "1.0.126", features = ["derive"] }
 tokio             = { version = "1.6", features = [ "macros" ] }

@@ -34,7 +34,7 @@ pub struct HouseflowAPI {
 }
 
 impl HouseflowAPI {
-    pub fn new(server_address: std::net::SocketAddr) -> Self {
+    pub fn new(#[allow(unused_variables)] server_address: std::net::SocketAddr) -> Self {
         Self {
             #[cfg(feature = "auth")]
             auth_url: Url::parse(&format!("http://{}/auth/", server_address)).unwrap(),
