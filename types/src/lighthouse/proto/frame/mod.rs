@@ -2,7 +2,7 @@ pub mod execute;
 pub mod execute_response;
 
 pub mod state;
-pub mod state_check;
+pub mod query;
 
 pub mod no_operation;
 
@@ -18,29 +18,29 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum Frame {
-    /// Placeholder, MUST NOT be used
+    /// No operation, nothing should happen
     ///
     /// Opcode: 0x00
     NoOperation(no_operation::Frame),
 
-    /// Packet which will be send to get current state from device
+    /// Packet which will received from device to share its state
     ///
-    /// Opcode: 0x03
+    /// Opcode: 0x01
     State(state::Frame),
 
     /// Packet which will be send to get current state from device
     ///
-    /// Opcode: 0x03
-    StateCheck(state_check::Frame),
+    /// Opcode: 0x02
+    Query(query::Frame),
 
     /// Packet which will be send to execute some action on client side
     ///
-    /// Opcode: 0x01
+    /// Opcode: 0x03
     Execute(execute::Frame),
 
     /// Packet which will be send as a response to Execute request from server
     ///
-    /// Opcode: 0x02
+    /// Opcode: 0x04
     ExecuteResponse(execute_response::Frame),
 }
 
@@ -55,7 +55,7 @@ impl Frame {
         match self {
             Frame::NoOperation(_) => Opcode::NoOperation,
             Frame::State(_) => Opcode::State,
-            Frame::StateCheck(_) => Opcode::StateCheck,
+            Frame::Query(_) => Opcode::StateCheck,
             Frame::Execute(_) => Opcode::Execute,
             Frame::ExecuteResponse(_) => Opcode::ExecuteResponse,
         }

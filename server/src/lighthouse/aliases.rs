@@ -1,6 +1,6 @@
 use actix::{Message, MessageResponse};
 use houseflow_types::lighthouse::{
-    proto::{execute, execute_response, state, state_check},
+    proto::{execute, execute_response, state, query},
     DeviceCommunicationError,
 };
 
@@ -41,12 +41,12 @@ impl Message for ActorExecuteFrame {
     type Result = Result<ActorExecuteResponseFrame, DeviceCommunicationError>;
 }
 
-pub struct ActorStateCheckFrame {
-    inner: state_check::Frame,
+pub struct ActorQueryFrame {
+    inner: query::Frame,
 }
 
-impl From<ActorStateCheckFrame> for state_check::Frame {
-    fn from(val: ActorStateCheckFrame) -> Self {
+impl From<ActorQueryFrame> for query::Frame {
+    fn from(val: ActorQueryFrame) -> Self {
         val.inner
     }
 }
@@ -68,6 +68,6 @@ impl From<state::Frame> for ActorStateFrame {
 //     }
 // }
 
-impl Message for ActorStateCheckFrame {
+impl Message for ActorQueryFrame {
     type Result = Result<ActorStateFrame, DeviceCommunicationError>;
 }

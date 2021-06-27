@@ -23,6 +23,6 @@ impl<'de> Framed<'de> for StateCheckFrame {}
 
 impl From<StateCheckFrame> for Frame {
     fn from(val: StateCheckFrame) -> Self {
-        Frame::StateCheck(val)
+        Frame::Query(val)
     }
 }

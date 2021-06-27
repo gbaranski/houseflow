@@ -41,7 +41,7 @@ impl Decoder for Frame {
         let frame: Self = match opcode {
             NoOperation => no_operation::Frame::decode(buf)?.into(),
             State => state::Frame::decode(buf)?.into(),
-            StateCheck => state_check::Frame::decode(buf)?.into(),
+            StateCheck => query::Frame::decode(buf)?.into(),
             Execute => execute::Frame::decode(buf)?.into(),
             ExecuteResponse => execute_response::Frame::decode(buf)?.into(),
         };
@@ -57,7 +57,7 @@ impl Encoder for Frame {
         match self {
             NoOperation(frame) => frame.encode(buf),
             State(frame) => frame.encode(buf),
-            StateCheck(frame) => frame.encode(buf),
+            Query(frame) => frame.encode(buf),
             Execute(frame) => frame.encode(buf),
             ExecuteResponse(frame) => frame.encode(buf),
         }
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn state_check() {
-        let frame = frame::state_check::Frame {};
+        let frame = frame::query::Frame {};
         test_frame_codec(frame)
     }
 

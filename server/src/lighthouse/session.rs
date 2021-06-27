@@ -2,7 +2,7 @@ use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use bytes::BytesMut;
 use houseflow_types::lighthouse::{
-    proto::{execute, execute_response, state, state_check, Decoder, Encoder, Frame, FrameID},
+    proto::{execute, execute_response, state, query, Decoder, Encoder, Frame, FrameID},
     DeviceCommunicationError,
 };
 use houseflow_types::DeviceID;
@@ -59,15 +59,15 @@ impl Actor for Session {
     }
 }
 
-impl Handler<ActorStateCheckFrame> for Session {
+impl Handler<ActorQueryFrame> for Session {
     type Result = actix::ResponseActFuture<
         Self,
         std::result::Result<ActorStateFrame, DeviceCommunicationError>,
     >;
 
-    fn handle(&mut self, frame: ActorStateCheckFrame, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, frame: ActorQueryFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
-        let frame: state_check::Frame = frame.into();
+        let frame: query::Frame = frame.into();
 
         let mut buf = BytesMut::with_capacity(512);
         let mut rx = self.state_channel.subscribe();
@@ -147,7 +147,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                     Frame::State(frame) => {
                         self.state_channel.send(frame).expect("failed sending");
                     }
-                    Frame::StateCheck(_frame) => panic!("Unexpected state check received"),
+                    Frame::Query(_frame) => panic!("Unexpected state check received"),
                     Frame::Execute(_) => panic!("Unexpected command received"),
                     Frame::ExecuteResponse(frame) => {
                         log::debug!("Received CommandResponse, ID: {:?}", frame.id);
