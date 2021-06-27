@@ -69,9 +69,9 @@ impl From<state::Frame> for ActorStateFrame {
     }
 }
 
-impl Into<state::Frame> for ActorStateFrame {
-    fn into(self) -> state::Frame {
-        self.inner
+impl From<ActorStateFrame> for state::Frame {
+    fn from(val: ActorStateFrame) -> Self {
+        val.inner
     }
 }
 
