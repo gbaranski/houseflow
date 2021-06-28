@@ -8,7 +8,7 @@
 
 Set up, manage, and control your Houseflow devices, that includes connected home products like lights, cameras, thermostats, relays and more – all from the Houseflow app.
 
-# 🔴 Documentation is outdated, will update soon
+# 🔴 Documentation is outdated, see ongoing work on [PR #155](https://github.com/gbaranski/houseflow/pull/155)
 
 - [Houseflow](#houseflow)
   - [Get started](#get-started)
