@@ -2,6 +2,7 @@ mod auth;
 mod fulfillment;
 mod lighthouse;
 mod token_store;
+mod admin;
 
 pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
 

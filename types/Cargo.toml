@@ -35,6 +35,7 @@ validator = { version = "0.13.0", features = ["derive"], optional = true }
 default        = [ "serde" ]
 actix          = [ "actix-web" ]
 token          = [ "base64", "hmac", "sha2" ]
+admin          = [ "validator" ]
 auth           = [ "token", "validator" ]
 fulfillment    = [ "token", "lighthouse" ]
 lighthouse     = [ "houseflow-macros", "serde_json"  ]

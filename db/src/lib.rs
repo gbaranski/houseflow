@@ -36,11 +36,16 @@ pub trait Database: Send + Sync {
         permission: &DevicePermission,
     ) -> Result<Vec<Device>, Error>;
 
-    async fn check_user_device_permission(
+    async fn check_user_device_access(
         &self,
         user_id: &UserID,
         device_id: &DeviceID,
-        permission: &DevicePermission,
+    ) -> Result<bool, Error>;
+
+    async fn check_user_device_manager_access(
+        &self,
+        user_id: &UserID,
+        device_id: &DeviceID,
     ) -> Result<bool, Error>;
 
     async fn add_user_device(
