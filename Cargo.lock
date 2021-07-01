@@ -987,6 +987,7 @@ dependencies = [
  "humantime",
  "log",
  "rand",
+ "semver 1.0.3",
  "serde",
  "serde_json",
  "strum",

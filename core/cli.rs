@@ -14,8 +14,10 @@ pub enum Subcommand {
     Auth(crate::AuthCommand),
 
     #[cfg(feature = "client")]
+    /// Administrate server
+    Admin(crate::AdminCommand),
 
-
+    #[cfg(feature = "client")]
     /// Manage the fulfillment service, sync devices, execute command, query state
     Fulfillment(crate::FulfillmentCommand),
 

@@ -75,7 +75,7 @@ cfg_if! {
     use szafka::Szafka;
     use houseflow_types::{token::Token, Device};
 
-    #[derive(Clone, Serialize, Deserialize)]
+    #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
     pub struct Tokens {
         access: Token,
         refresh: Token,
@@ -216,17 +216,16 @@ fn main() -> anyhow::Result<()> {
             Subcommand::Auth(cmd) => cmd.run(ClientCommandState::new().await?).await,
 
             #[cfg(feature = "client")]
+            Subcommand::Admin(cmd) => cmd.run(ClientCommandState::new().await?).await,
 
+            #[cfg(feature = "client")]
             Subcommand::Fulfillment(cmd) => cmd.run(ClientCommandState::new().await?).await,
-
 
             #[cfg(feature = "server")]
             Subcommand::Server(cmd) => cmd.run(ServerCommandState::new().await?).await,
 
-
             #[cfg(feature = "device")]
             Subcommand::Device(cmd) => cmd.run(DeviceCommandState::new().await?).await,
-
 
             Subcommand::Config(cmd) => cmd.run(()).await,
         }

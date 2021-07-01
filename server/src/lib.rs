@@ -1,8 +1,8 @@
+mod admin;
 mod auth;
 mod fulfillment;
 mod lighthouse;
 mod token_store;
-mod admin;
 
 pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
 
@@ -26,6 +26,13 @@ pub fn configure(
         .app_data(token_store)
         .app_data(sessions)
         .app_data(database)
+        .service(
+            web::scope("/admin")
+                .service(admin::on_add_device)
+                .service(admin::on_add_room)
+                .service(admin::on_add_structure)
+                .service(admin::on_add_user_structure),
+        )
         .service(
             web::scope("/auth")
                 .service(auth::on_login)
@@ -54,12 +61,14 @@ pub fn configure(
 #[actix_web::get("/just-for-testing")]
 async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Responder {
     use actix_web::HttpResponse;
-    use houseflow_types::{Device, DeviceTrait, DeviceType, UserID, Structure, Room, UserStructure};
+    use houseflow_types::{
+        Device, DeviceTrait, DeviceType, Room, Structure, UserID, UserStructure,
+    };
     use semver::Version;
     use std::str::FromStr;
 
     let user_id = UserID::from_str("8f87102a274c25a9b7f9041ac3eca632").unwrap();
-    
+
     let structure = Structure {
         id: rand::random(),
         name: "zukowo".to_string(),
@@ -102,7 +111,7 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
 mod test_utils {
     use crate::{MemoryTokenStore, TokenStore};
     use houseflow_db::memory::Database;
-    use houseflow_types::{Device, DeviceType, User, UserID, Room, Structure};
+    use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
 
     use actix_web::web::Data;
     use std::sync::Arc;
@@ -136,7 +145,6 @@ mod test_utils {
         }
     }
 
-
     pub fn get_room(structure: &Structure) -> Room {
         Room {
             id: rand::random(),
@@ -162,5 +170,4 @@ mod test_utils {
             attributes: std::collections::HashMap::new(),
         }
     }
-
 }

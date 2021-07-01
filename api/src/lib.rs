@@ -1,3 +1,6 @@
+#[cfg(feature = "admin")]
+mod admin;
+
 #[cfg(feature = "auth")]
 mod auth;
 
@@ -10,7 +13,7 @@ pub use crate::fulfillment::FulfillmentError;
 #[cfg(feature = "auth")]
 pub use crate::auth::AuthError;
 
-#[cfg(any(feature = "auth", feature = "fulfillment"))]
+#[cfg(any(feature = "auth", feature = "fulfillment", feature = "admin"))]
 use url::Url;
 
 #[derive(Debug, thiserror::Error)]
@@ -31,6 +34,9 @@ pub struct HouseflowAPI {
 
     #[cfg(feature = "fulfillment")]
     fulfillment_url: Url,
+
+    #[cfg(feature = "admin")]
+    admin_url: Url,
 }
 
 impl HouseflowAPI {
@@ -45,6 +51,9 @@ impl HouseflowAPI {
                 server_address
             ))
             .unwrap(),
+
+            #[cfg(feature = "admin")]
+            admin_url: Url::parse(&format!("http://{}/admin/", server_address)).unwrap(),
         }
     }
 }

@@ -56,7 +56,9 @@ pub async fn on_add_device(
         .await
         .map_err(|err| AddDeviceResponseError::InternalError(err.to_string()))?;
 
-    let response = AddDeviceResponseBody {};
+    let response = AddDeviceResponseBody {
+        device_id: device.id,
+    };
 
     Ok(Json(AddDeviceResponse::Ok(response)))
 }

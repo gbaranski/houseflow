@@ -165,10 +165,7 @@ impl crate::Database for Database {
         Ok(have_access)
     }
 
-    async fn check_user_admin(
-        &self,
-        user_id: &UserID,
-    ) -> Result<bool, Error> {
+    async fn check_user_admin(&self, user_id: &UserID) -> Result<bool, Error> {
         let admins = self.admins.lock().await;
         let is_admin = admins.iter().any(|admin| admin.user_id == *user_id);
 

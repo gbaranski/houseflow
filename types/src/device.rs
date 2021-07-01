@@ -73,7 +73,6 @@ pub struct UserStructure {
     pub is_manager: bool,
 }
 
-
 use strum::EnumString;
 
 /// Traits defines what functionality device supports

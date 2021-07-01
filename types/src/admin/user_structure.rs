@@ -1,26 +1,16 @@
-use crate::{DeviceID, DeviceTrait, DeviceType, ResultTagged, RoomID};
-use semver::Version;
+use crate::{ResultTagged, StructureID, UserID};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
-pub struct AddDeviceRequest {
-    pub room_id: RoomID,
-
-    #[validate(length(min = 8))]
-    pub password: String,
-    pub device_type: DeviceType,
-    pub traits: Vec<DeviceTrait>,
-    pub name: String,
-    pub will_push_state: bool,
-    pub model: String,
-    pub hw_version: Version,
-    pub sw_version: Version,
-    pub attributes: HashMap<String, Option<String>>,
+pub struct AddUserStructureRequest {
+    pub structure_id: StructureID,
+    pub user_id: UserID,
+    pub is_manager: bool,
 }
 
-pub type AddDeviceResponse = ResultTagged<AddDeviceResponseBody, AddDeviceResponseError>;
+pub type AddUserStructureResponse =
+    ResultTagged<AddUserStructureResponseBody, AddUserStructureResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(
@@ -28,7 +18,7 @@ pub type AddDeviceResponse = ResultTagged<AddDeviceResponseBody, AddDeviceRespon
     content = "error_description",
     rename_all = "snake_case"
 )]
-pub enum AddDeviceResponseError {
+pub enum AddUserStructureResponseError {
     #[error("internal error: `{0}`")]
     // Replace it with better type if needed
     InternalError(String),
@@ -49,28 +39,11 @@ pub enum AddDeviceResponseError {
     UserNotAdmin,
 }
 
-impl From<validator::ValidationErrors> for AddDeviceResponseError {
-    fn from(val: validator::ValidationErrors) -> Self {
-        Self::ValidationError(
-            val.field_errors()
-                .iter()
-                .next()
-                .unwrap()
-                .1
-                .first()
-                .unwrap()
-                .clone(),
-        )
-    }
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AddDeviceResponseBody {
-    pub device_id: DeviceID,
-}
+pub struct AddUserStructureResponseBody {}
 
 #[cfg(feature = "actix")]
-impl actix_web::ResponseError for AddDeviceResponseError {
+impl actix_web::ResponseError for AddUserStructureResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         use actix_web::http::StatusCode;
 
@@ -85,7 +58,7 @@ impl actix_web::ResponseError for AddDeviceResponseError {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse {
-        let response = AddDeviceResponse::Err(self.clone());
+        let response = AddUserStructureResponse::Err(self.clone());
         let json = actix_web::web::Json(response);
         actix_web::HttpResponse::build(self.status_code()).json(json)
     }
