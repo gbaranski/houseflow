@@ -19,8 +19,8 @@ pub enum DeviceSubcommand {
 
 #[async_trait(?Send)]
 impl Command<DeviceCommandState> for DeviceCommand {
-    async fn run(&self, state: DeviceCommandState) -> anyhow::Result<()> {
-        match &self.subcommand {
+    async fn run(self, state: DeviceCommandState) -> anyhow::Result<()> {
+        match self.subcommand {
             DeviceSubcommand::Run(cmd) => cmd.run(state).await,
         }
     }

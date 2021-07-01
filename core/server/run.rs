@@ -13,7 +13,7 @@ pub struct RunServerCommand {}
 
 #[async_trait(?Send)]
 impl Command<ServerCommandState> for RunServerCommand {
-    async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ServerCommandState) -> anyhow::Result<()> {
         let token_store = RedisTokenStore::new()
             .await
             .with_context(|| "connect to redis failed, is redis on?")?;

@@ -84,7 +84,7 @@ impl StatusCommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for StatusCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
 
         match state.houseflow_api.whoami(&access_token).await? {

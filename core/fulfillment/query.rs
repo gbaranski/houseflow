@@ -13,7 +13,7 @@ pub struct QueryCommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for QueryCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
         let devices = state.devices.get().await?;
         let _ =  devices

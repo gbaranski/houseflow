@@ -20,8 +20,8 @@ pub enum ConfigSubcommand {
 
 #[async_trait(?Send)]
 impl Command<()> for ConfigCommand {
-    async fn run(&self, state: ()) -> anyhow::Result<()> {
-        match &self.subcommand {
+    async fn run(self, state: ()) -> anyhow::Result<()> {
+        match self.subcommand {
             ConfigSubcommand::Generate(cmd) => cmd.run(state).await,
         }
     }

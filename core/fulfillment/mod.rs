@@ -31,8 +31,8 @@ pub enum FulfillmentSubcommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for FulfillmentCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        match &self.subcommand {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
+        match self.subcommand {
             FulfillmentSubcommand::Sync(cmd) => cmd.run(state).await,
             FulfillmentSubcommand::Execute(cmd) => cmd.run(state).await,
             FulfillmentSubcommand::Query(cmd) => cmd.run(state).await,

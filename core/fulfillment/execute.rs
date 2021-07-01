@@ -17,7 +17,7 @@ pub struct ExecuteCommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for ExecuteCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
         let devices = state.devices.get().await?;
         let device = devices

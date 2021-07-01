@@ -8,7 +8,7 @@ pub struct RefreshCommand {}
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for RefreshCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let tokens = state.tokens.get().await?;
         let response = state
             .houseflow_api

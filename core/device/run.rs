@@ -13,7 +13,7 @@ pub struct RunDeviceCommand {
 
 #[async_trait(?Send)]
 impl Command<DeviceCommandState> for RunDeviceCommand {
-    async fn run(&self, state: DeviceCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: DeviceCommandState) -> anyhow::Result<()> {
         log::info!(
             "Starting virtual device with ID: {}",
             state.config.device_id

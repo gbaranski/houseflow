@@ -8,7 +8,7 @@ pub struct LogoutCommand {}
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for LogoutCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let tokens = state.tokens.get().await?;
 
         state

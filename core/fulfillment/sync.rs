@@ -9,7 +9,7 @@ pub struct SyncCommand {}
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for SyncCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
         let response = state
             .houseflow_api

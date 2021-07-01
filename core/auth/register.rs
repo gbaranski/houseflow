@@ -17,7 +17,7 @@ pub struct RegisterCommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for RegisterCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         use dialoguer::{Input, Password};
         use houseflow_types::auth::RegisterRequest;
 

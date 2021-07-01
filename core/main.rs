@@ -12,9 +12,11 @@ macro_rules! cfg_if {
 cfg_if! {
     mod auth;
     mod fulfillment;
+    mod admin;
 
     pub use auth::AuthCommand;
     pub use fulfillment::FulfillmentCommand;
+    pub use admin::AdminCommand;
     use houseflow_api::HouseflowAPI;
 }
 
@@ -193,7 +195,7 @@ cfg_if! {
 
 #[async_trait(?Send)]
 pub trait Command<T: CommandState> {
-    async fn run(&self, state: T) -> anyhow::Result<()>;
+    async fn run(self, state: T) -> anyhow::Result<()>;
 }
 
 fn main() -> anyhow::Result<()> {
@@ -214,13 +216,17 @@ fn main() -> anyhow::Result<()> {
             Subcommand::Auth(cmd) => cmd.run(ClientCommandState::new().await?).await,
 
             #[cfg(feature = "client")]
+
             Subcommand::Fulfillment(cmd) => cmd.run(ClientCommandState::new().await?).await,
+
 
             #[cfg(feature = "server")]
             Subcommand::Server(cmd) => cmd.run(ServerCommandState::new().await?).await,
 
+
             #[cfg(feature = "device")]
             Subcommand::Device(cmd) => cmd.run(DeviceCommandState::new().await?).await,
+
 
             Subcommand::Config(cmd) => cmd.run(()).await,
         }

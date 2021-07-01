@@ -41,8 +41,8 @@ pub enum AuthSubcommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for AuthCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
-        match &self.subcommand {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
+        match self.subcommand {
             AuthSubcommand::Login(cmd) => cmd.run(state).await,
             AuthSubcommand::Register(cmd) => cmd.run(state).await,
             AuthSubcommand::Status(cmd) => cmd.run(state).await,

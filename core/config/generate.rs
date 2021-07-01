@@ -13,7 +13,8 @@ pub struct ConfigGenerateCommand {
 
 #[async_trait(?Send)]
 impl Command<()> for ConfigGenerateCommand {
-    async fn run(&self, _state: ()) -> anyhow::Result<()> {
+    async fn run(self, _state: ()) -> anyhow::Result<()> {
+        let force = self.force;
         let create_config = |target: Target| async move {
             let config = match target {
                 Target::Server => houseflow_config::server::Config::default_toml(),
@@ -21,7 +22,7 @@ impl Command<()> for ConfigGenerateCommand {
                 Target::Device => houseflow_config::device::Config::default_toml(),
             };
             let path = target.config_path();
-            if path.exists() && !self.force {
+            if path.exists() && !force {
                 println!(
                     "{} config already exists, use -f argument to overwrite",
                     target

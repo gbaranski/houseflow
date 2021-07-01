@@ -14,7 +14,7 @@ pub struct LoginCommand {
 
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for LoginCommand {
-    async fn run(&self, state: ClientCommandState) -> anyhow::Result<()> {
+    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         use houseflow_types::auth::LoginRequest;
 
         use dialoguer::{Input, Password};

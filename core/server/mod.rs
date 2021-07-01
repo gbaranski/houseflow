@@ -27,8 +27,8 @@ pub struct ServerCommand {
 
 #[async_trait(?Send)]
 impl Command<ServerCommandState> for ServerCommand {
-    async fn run(&self, state: ServerCommandState) -> anyhow::Result<()> {
-        match &self.subcommand {
+    async fn run(self, state: ServerCommandState) -> anyhow::Result<()> {
+        match self.subcommand {
             ServerSubcommand::Run(cmd) => cmd.run(state).await,
         }
     }
