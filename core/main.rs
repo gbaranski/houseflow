@@ -132,7 +132,7 @@ cfg_if! {
                     .access_token;
                 let tokens = Tokens {
                     refresh: tokens.refresh,
-                    access: tokens.access,
+                    access: fetched_access_token.clone(),
                 };
                 self.tokens.save(&tokens).await?;
 
