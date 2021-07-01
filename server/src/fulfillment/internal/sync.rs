@@ -11,8 +11,6 @@ use houseflow_types::{
     token::Token,
 };
 
-const USER_AGENT: UserAgent = UserAgent::Internal;
-
 #[get("/sync")]
 pub async fn on_sync(
     _sync_request: Json<SyncRequest>,
@@ -21,7 +19,7 @@ pub async fn on_sync(
     db: Data<dyn Database>,
 ) -> Result<Json<SyncResponse>, SyncResponseError> {
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
+    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
 
     let devices = db
         .get_user_devices(access_token.user_id())

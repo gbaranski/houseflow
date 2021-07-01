@@ -15,8 +15,6 @@ use houseflow_types::{
     UserStructure,
 };
 
-const USER_AGENT: UserAgent = UserAgent::Internal;
-
 #[put("/user_structure")]
 pub async fn on_add_user_structure(
     add_user_structure_request: Json<AddUserStructureRequest>,
@@ -26,7 +24,7 @@ pub async fn on_add_user_structure(
 ) -> Result<Json<AddUserStructureResponse>, AddUserStructureResponseError> {
     let add_user_structure_request = add_user_structure_request.0;
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
+    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
 
     if !db
         .check_user_admin(access_token.user_id())

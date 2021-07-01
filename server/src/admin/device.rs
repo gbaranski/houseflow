@@ -12,8 +12,6 @@ use houseflow_types::{
     Device,
 };
 
-const USER_AGENT: UserAgent = UserAgent::Internal;
-
 #[put("/device")]
 pub async fn on_add_device(
     add_device_request: Json<AddDeviceRequest>,
@@ -23,7 +21,7 @@ pub async fn on_add_device(
 ) -> Result<Json<AddDeviceResponse>, AddDeviceResponseError> {
     let add_device_request = add_device_request.0;
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
+    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
 
     if !db
         .check_user_admin(access_token.user_id())

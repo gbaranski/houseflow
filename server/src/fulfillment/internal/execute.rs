@@ -9,8 +9,6 @@ use houseflow_types::{
 
 use crate::Sessions;
 
-const USER_AGENT: UserAgent = UserAgent::Internal;
-
 #[post("/execute")]
 pub async fn on_execute(
     execute_request: web::Json<ExecuteRequest>,
@@ -20,7 +18,7 @@ pub async fn on_execute(
     sessions: web::Data<Sessions>,
 ) -> Result<web::Json<ExecuteResponse>, ExecuteResponseError> {
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
+    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
     if !db
         .check_user_device_access(access_token.user_id(), &execute_request.device_id)
         .await

@@ -12,8 +12,6 @@ use houseflow_types::{
     Room,
 };
 
-const USER_AGENT: UserAgent = UserAgent::Internal;
-
 #[put("/room")]
 pub async fn on_add_room(
     add_room_request: Json<AddRoomRequest>,
@@ -23,7 +21,7 @@ pub async fn on_add_room(
 ) -> Result<Json<AddRoomResponse>, AddRoomResponseError> {
     let add_room_request = add_room_request.0;
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
+    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
 
     if !db
         .check_user_admin(access_token.user_id())
