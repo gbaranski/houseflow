@@ -1,20 +1,28 @@
 use crate::{DatabaseInternalError, Error};
 use async_trait::async_trait;
-use houseflow_types::{Device, DeviceID, DevicePermission, User, UserID};
-use std::collections::HashMap;
+use houseflow_types::{Device, DeviceID, Room, Structure, User, UserID, UserStructure};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 #[derive(Debug, thiserror::Error)]
 pub enum InternalError {}
 
+struct Admin {
+    user_id: UserID,
+}
+
 impl DatabaseInternalError for InternalError {}
+
+type ThreadVec<T> = Arc<Mutex<Vec<T>>>;
 
 #[derive(Clone, Default)]
 pub struct Database {
-    users: Arc<Mutex<HashMap<UserID, User>>>,
-    user_devices: Arc<Mutex<HashMap<(UserID, DeviceID), DevicePermission>>>,
-    devices: Arc<Mutex<HashMap<DeviceID, Device>>>,
+    users: ThreadVec<User>,
+    admins: ThreadVec<Admin>,
+    structures: ThreadVec<Structure>,
+    rooms: ThreadVec<Room>,
+    user_structures: ThreadVec<UserStructure>,
+    devices: ThreadVec<Device>,
 }
 
 impl Database {
@@ -25,102 +33,155 @@ impl Database {
 
 #[async_trait]
 impl crate::Database for Database {
-    async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
-        Ok(self.devices.lock().await.get(device_id).cloned())
+    async fn add_structure(&self, structure: &Structure) -> Result<(), Error> {
+        let mut structures = self.structures.lock().await;
+        structures.push(structure.clone());
+
+        Ok(())
+    }
+
+    async fn add_room(&self, room: &Room) -> Result<(), Error> {
+        let mut rooms = self.rooms.lock().await;
+        rooms.push(room.clone());
+
+        Ok(())
     }
 
     async fn add_device(&self, device: &Device) -> Result<(), Error> {
         let mut devices = self.devices.lock().await;
-        devices.insert(device.id.clone(), device.clone());
+        devices.push(device.clone());
         Ok(())
     }
 
-    async fn get_user_devices(
-        &self,
-        user_id: &UserID,
-        permission: &DevicePermission,
-    ) -> Result<Vec<Device>, Error> {
-        let user_devices = self.user_devices.lock().await;
-        let devices = self.devices.lock().await;
-        let user_devices: Vec<Device> = user_devices
-            .iter()
-            .filter_map(|((d_user_id, d_device_id), d_permission)| {
-                if d_user_id == user_id
-                    && d_permission.read >= permission.read
-                    && d_permission.write >= permission.write
-                    && d_permission.execute >= permission.execute
-                {
-                    Some(
-                        devices
-                            .iter()
-                            .find(|device| device.0 == d_device_id)
-                            .unwrap()
-                            .1
-                            .clone(),
-                    )
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        Ok(user_devices)
-    }
-
-    async fn check_user_device_permission(
-        &self,
-        user_id: &UserID,
-        device_id: &DeviceID,
-        permission: &DevicePermission,
-    ) -> Result<bool, Error> {
-        let user_devices = self.user_devices.lock().await;
-        Ok(user_devices
-            .iter()
-            .any(|((d_user_id, d_device_id), d_permission)| {
-                d_user_id == user_id
-                    && d_device_id == device_id
-                    && d_permission.read >= permission.read
-                    && d_permission.write >= permission.write
-                    && d_permission.execute >= permission.execute
-            }))
-    }
-
-    async fn add_user_device(
-        &self,
-        device_id: &DeviceID,
-        user_id: &UserID,
-        permission: &DevicePermission,
-    ) -> Result<(), Error> {
-        let mut user_devices = self.user_devices.lock().await;
-        user_devices.insert((user_id.clone(), device_id.clone()), permission.clone());
-
+    async fn add_user_structure(&self, user_structure: &UserStructure) -> Result<(), Error> {
+        let mut user_structures = self.user_structures.lock().await;
+        user_structures.push(user_structure.clone());
         Ok(())
-    }
-
-    async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error> {
-        Ok(self.users.lock().await.get(user_id).cloned())
-    }
-
-    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error> {
-        let users = self.users.lock().await;
-        let user = users.iter().find_map(|(_, user)| {
-            if user.email == *email {
-                Some(user.clone())
-            } else {
-                None
-            }
-        });
-        Ok(user)
     }
 
     async fn add_user(&self, user: &User) -> Result<(), Error> {
         let mut users = self.users.lock().await;
-        users.insert(user.id.clone(), user.clone());
+        users.push(user.clone());
         Ok(())
     }
 
+    async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
+        Ok(self
+            .devices
+            .lock()
+            .await
+            .iter()
+            .find(|device| device.id == *device_id)
+            .cloned())
+    }
+
+    async fn get_user_devices(&self, user_id: &UserID) -> Result<Vec<Device>, Error> {
+        let user_structures = self.user_structures.lock().await;
+        let rooms = self.rooms.lock().await;
+        let devices = self.devices.lock().await;
+        let user_devices = user_structures
+            .iter()
+            .filter(|user_structure| user_structure.user_id == *user_id)
+            .filter_map(|user_structure| {
+                rooms
+                    .iter()
+                    .find(|room| room.structure_id == user_structure.structure_id)
+            })
+            .filter_map(|room| devices.iter().find(|device| device.room_id == room.id))
+            .cloned()
+            .collect::<Vec<_>>();
+
+        Ok(user_devices)
+    }
+
+    async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error> {
+        let user = self
+            .users
+            .lock()
+            .await
+            .iter()
+            .find(|user| user.id == *user_id)
+            .cloned();
+        Ok(user)
+    }
+
+    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error> {
+        let users = self.users.lock().await;
+        let user = users.iter().find(|user| user.email == *email).cloned();
+        Ok(user)
+    }
+
+    async fn check_user_device_access(
+        &self,
+        user_id: &UserID,
+        device_id: &DeviceID,
+    ) -> Result<bool, Error> {
+        let user_structures = self.user_structures.lock().await;
+        let rooms = self.rooms.lock().await;
+        let devices = self.devices.lock().await;
+        let have_access = user_structures
+            .iter()
+            .filter(|user_structure| user_structure.user_id == *user_id)
+            .filter_map(|user_structure| {
+                rooms
+                    .iter()
+                    .find(|room| room.structure_id == user_structure.structure_id)
+            })
+            .any(|room| {
+                devices
+                    .iter()
+                    .filter(|device| device.room_id == room.id)
+                    .any(|device| device.id == *device_id)
+            });
+
+        Ok(have_access)
+    }
+
+    async fn check_user_device_manager_access(
+        &self,
+        user_id: &UserID,
+        device_id: &DeviceID,
+    ) -> Result<bool, Error> {
+        let user_structures = self.user_structures.lock().await;
+        let rooms = self.rooms.lock().await;
+        let devices = self.devices.lock().await;
+        let have_access = user_structures
+            .iter()
+            .filter(|user_structure| {
+                user_structure.is_manager && user_structure.user_id == *user_id
+            })
+            .filter_map(|user_structure| {
+                rooms
+                    .iter()
+                    .find(|room| room.structure_id == user_structure.structure_id)
+            })
+            .any(|room| {
+                devices
+                    .iter()
+                    .filter(|device| device.room_id == room.id)
+                    .any(|device| device.id == *device_id)
+            });
+
+        Ok(have_access)
+    }
+
+    async fn check_user_admin(
+        &self,
+        user_id: &UserID,
+    ) -> Result<bool, Error> {
+        let admins = self.admins.lock().await;
+        let is_admin = admins.iter().any(|admin| admin.user_id == *user_id);
+
+        Ok(is_admin)
+    }
+
     async fn delete_user(&self, user_id: &UserID) -> Result<(), Error> {
-        self.users.lock().await.remove(user_id);
+        let mut users = self.users.lock().await;
+        let pos = users
+            .iter()
+            .position(|user| user.id == *user_id)
+            .ok_or(Error::NotModified)?;
+        users.remove(pos);
         Ok(())
     }
 }

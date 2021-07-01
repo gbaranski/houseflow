@@ -3,7 +3,7 @@ mod device;
 mod user;
 
 #[cfg(feature = "admin")]
-mod admin;
+pub mod admin;
 
 #[cfg(feature = "auth")]
 pub mod auth;

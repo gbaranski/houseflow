@@ -1,7 +1,7 @@
-use crate::{ResultTagged, UserID, DeviceType, DeviceTrait};
+use crate::{DeviceTrait, DeviceType, ResultTagged, UserID};
 use semver::Version;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
@@ -37,6 +37,9 @@ pub enum AddDeviceResponseError {
 
     #[error("Device already exists")]
     DeviceAlreadyExists,
+
+    #[error("User is not admin")]
+    UserNotAdmin,
 }
 
 impl From<validator::ValidationErrors> for AddDeviceResponseError {
@@ -68,6 +71,7 @@ impl actix_web::ResponseError for AddDeviceResponseError {
             Self::DeviceAlreadyExists => StatusCode::BAD_REQUEST,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
+            Self::UserNotAdmin => StatusCode::FORBIDDEN,
         }
     }
 

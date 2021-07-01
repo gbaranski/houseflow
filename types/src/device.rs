@@ -15,6 +15,9 @@ pub struct Device {
     /// Identifier of the device
     pub id: DeviceID,
 
+    /// Name of room(if available)
+    pub room_id: RoomID,
+
     /// Hashed password for device
     pub password_hash: String,
 
@@ -30,9 +33,6 @@ pub struct Device {
     /// True if device will push state by itself, otherwise will use polling
     pub will_push_state: bool,
 
-    /// Name of room(if available)
-    pub room: Option<String>,
-
     /// The model or SKU identifier of the device
     pub model: String,
 
@@ -46,14 +46,33 @@ pub struct Device {
     pub attributes: HashMap<String, Option<String>>,
 }
 
-/// User permission to a device
+pub type StructureID = Credential<16>;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct DevicePermission {
-    pub read: bool,
-    pub write: bool,
-    pub execute: bool,
+pub struct Structure {
+    pub id: StructureID,
+    pub name: String,
 }
+
+pub type RoomID = Credential<16>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Room {
+    pub id: RoomID,
+    pub structure_id: StructureID,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct UserStructure {
+    pub structure_id: StructureID,
+    pub user_id: crate::UserID,
+    pub is_manager: bool,
+}
+
 
 use strum::EnumString;
 

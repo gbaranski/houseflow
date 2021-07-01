@@ -2,7 +2,6 @@ mod auth;
 mod fulfillment;
 mod lighthouse;
 mod token_store;
-mod admin;
 
 pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
 
@@ -54,37 +53,46 @@ pub fn configure(
 #[actix_web::get("/just-for-testing")]
 async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Responder {
     use actix_web::HttpResponse;
-    use houseflow_types::{Device, DevicePermission, DeviceTrait, DeviceType, UserID};
+    use houseflow_types::{Device, DeviceTrait, DeviceType, UserID, Structure, Room, UserStructure};
     use semver::Version;
     use std::str::FromStr;
 
     let user_id = UserID::from_str("eeb3f58b28b8bd1815c3cc1bd0028fee").unwrap();
+    
+    let structure = Structure {
+        id: rand::random(),
+        name: "zukowo".to_string(),
+    };
+
+    let room = Room {
+        id: rand::random(),
+        name: "garage".to_string(),
+        structure_id: structure.id.clone(),
+    };
+
+    let user_structure = UserStructure {
+        structure_id: structure.id.clone(),
+        user_id,
+        is_manager: true,
+    };
 
     let device = Device {
         id: rand::random(),
+        room_id: room.id.clone(),
         password_hash: "$argon2i$v=19$m=4096,t=3,p=1$NjNjMTdhODU2YTJkNTdiZDViYjJkNTBhY2IxNmI4MzE$chXOPqhv21hnnp/C2Pv/UKm1tjSAXkBY3vkQzBNU9w8".to_string(),
         device_type: DeviceType::Light,
         traits: vec![DeviceTrait::OnOff],
         name: "Night Lamp".to_string(),
         will_push_state: true,
-        room: None,
         model: "super-lamp".to_string(),
         hw_version: Version::parse("0.1.0").unwrap(),
         sw_version: Version::parse("0.1.0").unwrap(),
         attributes: Default::default(),
     };
+    db.add_structure(&structure).await.unwrap();
+    db.add_room(&room).await.unwrap();
     db.add_device(&device).await.unwrap();
-    db.add_user_device(
-        &device.id,
-        &user_id,
-        &DevicePermission {
-            read: true,
-            write: true,
-            execute: true,
-        },
-    )
-    .await
-    .unwrap();
+    db.add_user_structure(&user_structure).await.unwrap();
 
     HttpResponse::Ok()
 }
@@ -93,7 +101,7 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
 mod test_utils {
     use crate::{MemoryTokenStore, TokenStore};
     use houseflow_db::memory::Database;
-    use houseflow_types::{Device, DeviceType, User, UserID};
+    use houseflow_types::{Device, DeviceType, User, UserID, Room, Structure};
 
     use actix_web::web::Data;
     use std::sync::Arc;
@@ -120,20 +128,38 @@ mod test_utils {
         }
     }
 
-    pub fn get_device() -> Device {
+    pub fn get_structure() -> Structure {
+        Structure {
+            id: rand::random(),
+            name: "test-home".to_string(),
+        }
+    }
+
+
+    pub fn get_room(structure: &Structure) -> Room {
+        Room {
+            id: rand::random(),
+            structure_id: structure.id.clone(),
+            name: "test-garage".to_string(),
+        }
+    }
+
+    pub fn get_device(room: &Room) -> Device {
         use semver::Version;
+
         Device {
             id: rand::random(),
+            room_id: room.id.clone(),
             password_hash: PASSWORD_HASH.into(),
             device_type: DeviceType::Gate,
             traits: vec![],
             name: String::from("SuperTestingGate"),
             will_push_state: true,
-            room: Some(String::from("SuperTestingRoom")),
             model: String::from("gate-1200"),
             hw_version: Version::new(1, 0, 0),
             sw_version: Version::new(1, 0, 1),
             attributes: std::collections::HashMap::new(),
         }
     }
+
 }

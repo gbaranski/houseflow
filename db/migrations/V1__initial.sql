@@ -11,41 +11,48 @@ CREATE TABLE users (
   )
 );
 
-CREATE TABLE user_structures (
-  structure_id  CHAR(32) REFERENCES structures (id) ON DELETE CASCADE,
-  user_id       CHAR(32) REFERENCES users      (id) ON DELETE CASCADE,
-  manager       BOOL     NOT NULL,
+CREATE TABLE admins (
+  user_id CHAR(32) REFERENCES users (id) ON DELETE CASCADE,
 
   PRIMARY KEY (
-    structure_id,
-    user_id,
+    user_id
   )
 );
 
-
 CREATE TABLE structures (
   id          CHAR(32)  UNIQUE NOT NULL,
-  label       TEXT      NOT NULL,
+  name        TEXT             NOT NULL,
 
   PRIMARY KEY (
     id
   )
 );
 
-
-CREATE TABLE rooms (
-  room_id      CHAR(32) UNIQUE NOT NULL,
-  structure_id CHAR(32) REFERENCES structures (id) ON DELETE CASCADE,
-  label        TEXT     NOT NULL,
+CREATE TABLE user_structures (
+  structure_id  CHAR(32) REFERENCES structures (id) ON DELETE CASCADE,
+  user_id       CHAR(32) REFERENCES users      (id) ON DELETE CASCADE,
+  is_manager    BOOL     NOT NULL,
 
   PRIMARY KEY (
-    room_id
+    structure_id,
+    user_id
+  )
+);
+
+
+CREATE TABLE rooms (
+  id           CHAR(32) UNIQUE NOT NULL,
+  structure_id CHAR(32) REFERENCES structures (id) ON DELETE CASCADE,
+  name         TEXT     NOT NULL,
+
+  PRIMARY KEY (
+    id
   )
 );
 
 CREATE TABLE devices (
   id              CHAR(32)    UNIQUE NOT NULL,
-  room_id         CHAR(32)    REFERENCES room (id) ON DELETE CASCADE,
+  room_id         CHAR(32)    REFERENCES rooms (id) ON DELETE CASCADE,
   password_hash   TEXT        NOT NULL,
   type            TEXT        NOT NULL,
   traits          TEXT[]      NOT NULL,
@@ -57,7 +64,6 @@ CREATE TABLE devices (
   attributes      hstore      NOT NULL,
 
   PRIMARY KEY (
-    id,
-    structure_id
+    id
   )
 );

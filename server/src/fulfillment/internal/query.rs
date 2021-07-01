@@ -1,21 +1,15 @@
 use actix_web::{post, web, HttpRequest};
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
+use houseflow_types::UserAgent;
 use houseflow_types::{
     fulfillment::{QueryRequest, QueryResponse, QueryResponseBody, QueryResponseError},
     token::Token,
 };
-use houseflow_types::{DevicePermission, UserAgent};
 
 use crate::Sessions;
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
-
-const QUERY_PERMISSION: DevicePermission = DevicePermission {
-    read: true,
-    write: false,
-    execute: false,
-};
 
 #[post("/query")]
 pub async fn on_query(
@@ -28,11 +22,7 @@ pub async fn on_query(
     let access_token = Token::from_request(&http_request)?;
     access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
     if !db
-        .check_user_device_permission(
-            access_token.user_id(),
-            &query_request.device_id,
-            &QUERY_PERMISSION,
-        )
+        .check_user_device_access(access_token.user_id(), &query_request.device_id)
         .await
         .map_err(|err| QueryResponseError::InternalError(err.to_string()))?
     {

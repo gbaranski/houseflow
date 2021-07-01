@@ -5,19 +5,13 @@ use actix_web::{
 };
 use houseflow_config::server::Secrets;
 use houseflow_db::Database;
+use houseflow_types::UserAgent;
 use houseflow_types::{
     fulfillment::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError},
     token::Token,
 };
-use houseflow_types::{DevicePermission, UserAgent};
 
 const USER_AGENT: UserAgent = UserAgent::Internal;
-
-const SYNC_PERMISSION: DevicePermission = DevicePermission {
-    read: true,
-    write: false,
-    execute: false,
-};
 
 #[get("/sync")]
 pub async fn on_sync(
@@ -30,7 +24,7 @@ pub async fn on_sync(
     access_token.verify(&secrets.access_key, Some(&USER_AGENT))?;
 
     let devices = db
-        .get_user_devices(access_token.user_id(), &SYNC_PERMISSION)
+        .get_user_devices(access_token.user_id())
         .await
         .map_err(|err| SyncResponseError::InternalError(err.to_string()))?;
     let response = SyncResponseBody { devices };
@@ -43,19 +37,30 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{http, test, App};
-    use houseflow_types::{Device, UserID};
+    use houseflow_types::{Device, UserID, UserStructure};
 
     async fn get_authorized_device(db: &dyn Database, user_id: &UserID) -> Device {
-        let device = get_device();
+        let structure = get_structure();
+        let room = get_room(&structure);
+        let user_structure = UserStructure {
+            structure_id: structure.id.clone(),
+            user_id: user_id.clone(),
+            is_manager: false,
+        };
+        let device = get_device(&room);
+        db.add_structure(&structure).await.unwrap();
+        db.add_room(&room).await.unwrap();
         db.add_device(&device).await.unwrap();
-        db.add_user_device(&device.id, user_id, &SYNC_PERMISSION)
-            .await
-            .unwrap();
+        db.add_user_structure(&user_structure).await.unwrap();
         device
     }
 
     async fn get_unauthorized_device(db: &dyn Database) -> Device {
-        let device = get_device();
+        let structure = get_structure();
+        let room = get_room(&structure);
+        let device = get_device(&room);
+        db.add_structure(&structure).await.unwrap();
+        db.add_room(&room).await.unwrap();
         db.add_device(&device).await.unwrap();
         device
     }
