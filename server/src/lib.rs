@@ -2,6 +2,7 @@ mod auth;
 mod fulfillment;
 mod lighthouse;
 mod token_store;
+mod admin;
 
 pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
 
@@ -57,7 +58,7 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
     use semver::Version;
     use std::str::FromStr;
 
-    let user_id = UserID::from_str("eeb3f58b28b8bd1815c3cc1bd0028fee").unwrap();
+    let user_id = UserID::from_str("8f87102a274c25a9b7f9041ac3eca632").unwrap();
     
     let structure = Structure {
         id: rand::random(),
@@ -66,7 +67,7 @@ async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Respon
 
     let room = Room {
         id: rand::random(),
-        name: "garage".to_string(),
+        name: "bedroom".to_string(),
         structure_id: structure.id.clone(),
     };
 

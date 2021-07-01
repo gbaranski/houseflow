@@ -1,4 +1,4 @@
-use crate::{DeviceTrait, DeviceType, ResultTagged, UserID};
+use crate::{DeviceTrait, DeviceType, ResultTagged, RoomID};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -6,13 +6,14 @@ use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 pub struct AddDeviceRequest {
+    pub room_id: RoomID,
+
     #[validate(length(min = 8))]
     pub password: String,
     pub device_type: DeviceType,
     pub traits: Vec<DeviceTrait>,
     pub name: String,
     pub will_push_state: bool,
-    pub room: Option<String>,
     pub model: String,
     pub hw_version: Version,
     pub sw_version: Version,
@@ -38,6 +39,12 @@ pub enum AddDeviceResponseError {
     #[error("Device already exists")]
     DeviceAlreadyExists,
 
+    #[error("invalid in-header token: {0}")]
+    InvalidHeaderToken(#[from] crate::token::DecodeHeaderError),
+
+    #[error("invalid token: {0}")]
+    InvalidToken(#[from] crate::token::VerifyError),
+
     #[error("User is not admin")]
     UserNotAdmin,
 }
@@ -58,9 +65,7 @@ impl From<validator::ValidationErrors> for AddDeviceResponseError {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AddDeviceResponseBody {
-    pub user_id: UserID,
-}
+pub struct AddDeviceResponseBody {}
 
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for AddDeviceResponseError {
@@ -68,10 +73,12 @@ impl actix_web::ResponseError for AddDeviceResponseError {
         use actix_web::http::StatusCode;
 
         match self {
+            Self::InvalidHeaderToken(_) => StatusCode::BAD_REQUEST,
             Self::DeviceAlreadyExists => StatusCode::BAD_REQUEST,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
             Self::UserNotAdmin => StatusCode::FORBIDDEN,
+            Self::InvalidToken(_) => StatusCode::UNAUTHORIZED,
         }
     }
 
