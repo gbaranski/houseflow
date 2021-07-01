@@ -11,7 +11,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types   = { path = "../../types", version = "0.1.0", features = ["lighthouse"] }
+houseflow-types   = { path = "../../types", version = "0.1.1", features = ["lighthouse"] }
 houseflow-config  = { path = "../../config", version = "0.1.1", features = [ "device" ] }
 
 tokio             = { version = "1.5", features = [ "rt-multi-thread", "macros", "fs", "sync" ] }

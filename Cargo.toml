@@ -43,7 +43,7 @@ houseflow-config = { version="0.1.1", path="config", features=[
   "postgres",
   "fs",
 ] }
-houseflow-types = { version="0.1.0", path="types/", features=["token"] }
+houseflow-types = { version="0.1.1", path="types/", features=["token"] }
 
 tokio = { version="1.6.1", features=["sync", "rt-multi-thread", "macros", "fs"] }
 url = { version="2.2.2", features=["serde"] }
