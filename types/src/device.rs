@@ -120,8 +120,6 @@ impl DeviceType {
 
 #[derive(Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
-#[strum(serialize_all = "snake_case")]
 #[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceCommand {
@@ -131,7 +129,6 @@ pub enum DeviceCommand {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
-#[strum(serialize_all = "snake_case")]
 #[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceError {
