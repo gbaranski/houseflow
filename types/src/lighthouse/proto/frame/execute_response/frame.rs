@@ -10,7 +10,7 @@ pub struct ExecuteResponseFrame {
     pub id: FrameID,
     pub status: DeviceStatus,
     pub error: DeviceError,
-    pub state: serde_json::Value,
+    pub state: serde_json::Map<String, serde_json::Value>,
 }
 
 impl<'de> Framed<'de> for ExecuteResponseFrame {}
@@ -24,7 +24,7 @@ impl Decoder for ExecuteResponseFrame {
         let id = FrameID::decode(buf)?;
         let status = DeviceStatus::decode(buf)?;
         let error = DeviceError::decode(buf)?;
-        let state = serde_json::Value::decode(buf)?;
+        let state = serde_json::Map::<String, serde_json::Value>::decode(buf)?;
 
         Ok(Self {
             id,

@@ -39,7 +39,11 @@ impl Device<ExecuteParams> for Light {
         Ok(result)
     }
 
-    fn state(&self) -> serde_json::Value {
-        serde_json::to_value(self).unwrap()
+    fn state(&self) -> serde_json::Map<String, serde_json::Value> {
+        serde_json::to_value(self)
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .clone()
     }
 }

@@ -2,7 +2,7 @@ use crate::lighthouse::proto::{DecodeError, Decoder, Encoder, Framed};
 use bytes::{Buf, BufMut};
 use houseflow_macros::decoder;
 
-impl Decoder for serde_json::Value {
+impl Decoder for serde_json::Map<String, serde_json::Value> {
     const MIN_SIZE: usize = 0;
 
     #[decoder]
@@ -12,11 +12,12 @@ impl Decoder for serde_json::Value {
     }
 }
 
-impl Encoder for serde_json::Value {
+
+impl Encoder for serde_json::Map<String, serde_json::Value> {
     fn encode(&self, buf: &mut impl BufMut) {
         let bytes = serde_json::to_vec(self).expect("invalid JSON");
         buf.put_slice(&bytes);
     }
 }
 
-impl<'de> Framed<'de> for serde_json::Value {}
+impl<'de> Framed<'de> for serde_json::Map<String, serde_json::Value> {}

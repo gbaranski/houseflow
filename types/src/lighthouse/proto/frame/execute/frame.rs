@@ -9,7 +9,7 @@ use std::mem::size_of;
 pub struct ExecuteFrame {
     pub id: FrameID,
     pub command: DeviceCommand,
-    pub params: serde_json::Value,
+    pub params: serde_json::Map<String, serde_json::Value>,
 }
 
 impl<'de> Framed<'de> for ExecuteFrame {}
@@ -21,7 +21,7 @@ impl Decoder for ExecuteFrame {
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
         let id = FrameID::decode(buf)?;
         let command = DeviceCommand::decode(buf)?;
-        let params = serde_json::Value::decode(buf)?;
+        let params = serde_json::Map::decode(buf)?;
 
         Ok(Self {
             id,

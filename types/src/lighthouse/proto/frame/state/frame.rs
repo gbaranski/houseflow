@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct StateFrame {
-    pub state: serde_json::Value,
+    pub state: serde_json::Map<String, serde_json::Value>,
 }
 
 impl Decoder for StateFrame {
@@ -13,7 +13,7 @@ impl Decoder for StateFrame {
 
     #[decoder]
     fn decode(buf: &mut impl Buf) -> Result<Self, DecodeError> {
-        let state = serde_json::Value::decode(buf)?;
+        let state = serde_json::Map::<String, serde_json::Value>::decode(buf)?;
 
         Ok(Self { state })
     }

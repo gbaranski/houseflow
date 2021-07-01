@@ -6,13 +6,17 @@ use houseflow_types::{
 
 use clap::Clap;
 
+fn object_from_str(s: &str) -> Result<serde_json::Map<String, serde_json::Value>, serde_json::Error> {
+    serde_json::from_str(s)
+}
+
 #[derive(Clap)]
 pub struct ExecuteCommand {
     pub device_id: DeviceID,
     pub command: DeviceCommand,
 
-    #[clap(default_value)]
-    pub params: serde_json::Value,
+    #[clap(default_value = "{}", parse(try_from_str = object_from_str))]
+    pub params: serde_json::Map<String, serde_json::Value>,
 }
 
 #[async_trait(?Send)]

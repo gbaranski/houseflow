@@ -84,7 +84,8 @@ impl Session {
                     log::debug!("Received frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
-                            let params: EP = serde_json::from_value(frame.params)?;
+                            let params: EP =
+                                serde_json::from_value(serde_json::Value::Object(frame.params))?;
                             let (status, error) = device.on_execute(frame.command, params).await?;
                             let response_frame = execute_response::Frame {
                                 id: frame.id,

@@ -18,5 +18,5 @@ where
         params: EP,
     ) -> anyhow::Result<(DeviceStatus, DeviceError)>;
 
-    fn state(&self) -> serde_json::Value;
+    fn state(&self) -> serde_json::Map<String, serde_json::Value>;
 }
