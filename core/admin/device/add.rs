@@ -35,7 +35,7 @@ impl std::str::FromStr for Traits {
             .map(|s| s.trim())
             .map(|s| DeviceTrait::from_str(s))
             .collect::<Result<Vec<_>, _>>()
-            .map(|traits| Self::from(traits))
+            .map(Self::from)
     }
 }
 
