@@ -1,6 +1,6 @@
 use crate::defaults;
 use serde::{Deserialize, Serialize};
-use types::{DeviceID, DevicePassword};
+use houseflow_types::{DeviceID, DevicePassword};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
