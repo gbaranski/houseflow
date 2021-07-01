@@ -1,6 +1,6 @@
 [package]
 name = "houseflow"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
 description = "Houseflow is house automation platform for microcontrollers."
 homepage = "https://github.com/gbaranski/houseflow"
