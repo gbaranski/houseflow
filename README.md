@@ -4,4 +4,4 @@
 [![commit-weekly](https://img.shields.io/github/commit-activity/w/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
 [![lines-of-code](https://img.shields.io/tokei/lines/github/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
 
-There's ongoing work on adding completly new documentation, see [PR #155](https://github.com/gbaranski/houseflow/pull/155)
+There's ongoing work on adding completely new documentation, see [PR #155](https://github.com/gbaranski/houseflow/pull/155)
