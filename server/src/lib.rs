@@ -53,58 +53,7 @@ pub fn configure(
                     .service(fulfillment::internal::on_sync),
             ),
         )
-        .service(web::scope("/lighthouse").service(lighthouse::on_websocket))
-        .service(just_for_testing);
-}
-
-// TODO: remove that
-#[actix_web::get("/just-for-testing")]
-async fn just_for_testing(db: web::Data<dyn Database>) -> impl actix_web::Responder {
-    use actix_web::HttpResponse;
-    use houseflow_types::{
-        Device, DeviceTrait, DeviceType, Room, Structure, UserID, UserStructure,
-    };
-    use semver::Version;
-    use std::str::FromStr;
-
-    let user_id = UserID::from_str("8f87102a274c25a9b7f9041ac3eca632").unwrap();
-
-    let structure = Structure {
-        id: rand::random(),
-        name: "zukowo".to_string(),
-    };
-
-    let room = Room {
-        id: rand::random(),
-        name: "bedroom".to_string(),
-        structure_id: structure.id.clone(),
-    };
-
-    let user_structure = UserStructure {
-        structure_id: structure.id.clone(),
-        user_id,
-        is_manager: true,
-    };
-
-    let device = Device {
-        id: rand::random(),
-        room_id: room.id.clone(),
-        password_hash: "$argon2i$v=19$m=4096,t=3,p=1$NjNjMTdhODU2YTJkNTdiZDViYjJkNTBhY2IxNmI4MzE$chXOPqhv21hnnp/C2Pv/UKm1tjSAXkBY3vkQzBNU9w8".to_string(),
-        device_type: DeviceType::Light,
-        traits: vec![DeviceTrait::OnOff],
-        name: "Night Lamp".to_string(),
-        will_push_state: true,
-        model: "super-lamp".to_string(),
-        hw_version: Version::parse("0.1.0").unwrap(),
-        sw_version: Version::parse("0.1.0").unwrap(),
-        attributes: Default::default(),
-    };
-    db.add_structure(&structure).await.unwrap();
-    db.add_room(&room).await.unwrap();
-    db.add_device(&device).await.unwrap();
-    db.add_user_structure(&user_structure).await.unwrap();
-
-    HttpResponse::Ok()
+        .service(web::scope("/lighthouse").service(lighthouse::on_websocket));
 }
 
 #[cfg(test)]
