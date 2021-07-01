@@ -21,9 +21,9 @@ impl From<Vec<DeviceTrait>> for Traits {
     }
 }
 
-impl Into<Vec<DeviceTrait>> for Traits {
-    fn into(self) -> Vec<DeviceTrait> {
-        self.inner
+impl From<Traits> for Vec<DeviceTrait> {
+    fn from(val: Traits) -> Self {
+        val.inner
     }
 }
 
