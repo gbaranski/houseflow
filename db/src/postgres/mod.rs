@@ -235,9 +235,7 @@ impl crate::Database for Database {
 
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
         const QUERY: &str = "
-            SELECT 
-                devices.*, 
-                rooms.name AS room_name 
+            SELECT * 
             FROM devices 
             WHERE id = $1";
         let connection = self.pool.get().await?;
@@ -280,21 +278,23 @@ impl crate::Database for Database {
                 r#"
             SELECT *
             FROM devices
-            WHERE room_id = 
+            WHERE room_id = (
                 SELECT id 
                 FROM rooms 
-                WHERE structure_id = 
-                    SELECT id
+                WHERE structure_id = (
+                    SELECT structure_id
                     FROM user_structures
                     WHERE user_id = $1
-            )"#,
+                )
+            )
+            "#,
             )
             .await?;
         let row = connection.query(&query_statement, &[&user_id]).await?;
         let devices = row.iter().map(|row| {
             Ok::<Device, Error>(Device {
                 id: row.try_get("id")?,
-                room_id: row.try_get("room")?,
+                room_id: row.try_get("room_id")?,
                 password_hash: row.try_get("password_hash")?,
                 device_type: row.try_get("type")?,
                 traits: row.try_get("traits")?,
@@ -366,13 +366,15 @@ impl crate::Database for Database {
             SELECT 1
             FROM devices
             WHERE id = $1
-            AND room_id = 
+            AND room_id = ( 
                 SELECT id 
                 FROM rooms 
-                WHERE structure_id = 
-                    SELECT id
+                WHERE structure_id = (
+                    SELECT structure_id
                     FROM user_structures
                     WHERE user_id = $2
+                )
+            )
             "#,
             )
             .await?;
@@ -395,14 +397,16 @@ impl crate::Database for Database {
             SELECT 1
             FROM devices
             WHERE id = $1
-            AND room_id = 
+            AND room_id = ( 
                 SELECT id 
                 FROM rooms 
-                WHERE structure_id = 
-                    SELECT id
+                WHERE structure_id = (
+                    SELECT structure_id
                     FROM user_structures
                     WHERE user_id = $2
-                    AND manager = true
+                    AND is_manager = true
+                )
+            )
             "#,
             )
             .await?;
