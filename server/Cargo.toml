@@ -1,6 +1,6 @@
 [package]
 name = "houseflow-server"
-version = "0.1.1"
+version = "0.1.2"
 description = "Server for Houseflow"
 homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"
