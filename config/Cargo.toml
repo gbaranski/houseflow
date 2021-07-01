@@ -1,6 +1,6 @@
 [package]
 name = "houseflow-config"
-version = "0.1.0"
+version = "0.1.1"
 description = "Configuration for Houseflow"
 homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"

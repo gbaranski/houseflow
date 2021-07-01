@@ -20,7 +20,7 @@ houseflow-types = { path="../types", version="0.1.0", features=[
     "lighthouse",
     "admin",
 ] }
-houseflow-config = { path="../config", version="0.1.0", features=["server"] }
+houseflow-config = { path="../config", version="0.1.1", features=["server"] }
 
 actix = "0.12.0"
 actix-rt = "2.2.0"

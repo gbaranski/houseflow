@@ -12,7 +12,7 @@ edition = "2018"
 
 [dependencies]
 houseflow-types   = { path = "../../types", version = "0.1.0", features = ["lighthouse"] }
-houseflow-config  = { path = "../../config", version = "0.1.0", features = [ "device" ] }
+houseflow-config  = { path = "../../config", version = "0.1.1", features = [ "device" ] }
 
 tokio             = { version = "1.5", features = [ "rt-multi-thread", "macros", "fs", "sync" ] }
 bytes             = "1.0"
