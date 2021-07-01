@@ -27,7 +27,7 @@ members = [
 
 [dependencies]
 houseflow-server = { version="0.1.1", path="server", optional=true }
-houseflow-db = { version="0.1.0", path="db/", optional=true }
+houseflow-db = { version="0.1.1", path="db/", optional=true }
 actix-web = { version="4.0.0-beta.8", optional=true }
 
 houseflow-api = { version="0.1.0", path="api", features=["auth", "fulfillment", "admin"], optional=true }
