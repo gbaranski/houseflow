@@ -19,7 +19,7 @@ pub mod response {
     #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Payload {
-        /// Reflects the unique (and immutable) user ID on the agent's platform. 
+        /// Reflects the unique (and immutable) user ID on the agent's platform.
         pub agent_user_id: UserID,
 
         /// An error code for the entire transaction for auth failures and developer system unavailability.
@@ -29,19 +29,19 @@ pub mod response {
         /// Detailed error which will never be presented to users but may be logged or used during development.
         pub debug_string: Option<String>,
 
-        /// Reflects the unique (and immutable) user ID on the agent's platform. 
+        /// Reflects the unique (and immutable) user ID on the agent's platform.
         pub devices: Vec<PayloadDevice>,
     }
 
-    use crate::{DeviceType, DeviceTrait};
+    use crate::{DeviceTrait, DeviceType};
 
     /// Device execution result.
     #[derive(Debug, Clone, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadDevice {
-        /// The ID of the device in the developer's cloud. 
-        /// This must be unique for the user and for the developer, 
-        /// as in cases of sharing we may use this to dedupe multiple views of the same device. 
+        /// The ID of the device in the developer's cloud.
+        /// This must be unique for the user and for the developer,
+        /// as in cases of sharing we may use this to dedupe multiple views of the same device.
         /// It should be immutable for the device; if it changes, the Assistant will treat it as a new device.
         pub id: DeviceID,
 
@@ -78,7 +78,7 @@ pub mod response {
         pub custom_data: Option<serde_json::Map<String, serde_json::Value>>,
 
         /// List of alternate IDs used to identify a cloud synced device for local execution.
-        pub other_device_ids: Option<Vec<PayloadOtherDeviceID>>
+        pub other_device_ids: Option<Vec<PayloadOtherDeviceID>>,
     }
 
     #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -86,8 +86,8 @@ pub mod response {
     pub struct PayloadDeviceName {
         /// List of names provided by the developer rather than the user, often manufacturer names, SKUs, etc.
         pub default_names: Option<Vec<String>>,
-        
-        /// Primary name of the device, generally provided by the user. 
+
+        /// Primary name of the device, generally provided by the user.
         /// This is also the name the Assistant will prefer to describe the device in responses.
         pub name: String,
 

@@ -37,7 +37,6 @@ pub trait Database: Send + Sync {
 
     async fn add_user(&self, user: &User) -> Result<(), Error>;
 
-
     async fn get_room(&self, room_id: &RoomID) -> Result<Option<Room>, Error>;
 
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
@@ -47,7 +46,6 @@ pub trait Database: Send + Sync {
     async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
 
     async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;
-
 
     async fn check_user_device_access(
         &self,
@@ -62,7 +60,6 @@ pub trait Database: Send + Sync {
     ) -> Result<bool, Error>;
 
     async fn check_user_admin(&self, user_id: &UserID) -> Result<bool, Error>;
-
 
     async fn delete_user(&self, user_id: &UserID) -> Result<(), Error>;
 }

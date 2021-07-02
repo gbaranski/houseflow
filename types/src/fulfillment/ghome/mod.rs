@@ -16,15 +16,14 @@ pub enum DeviceStatus {
     /// Target device is in offline state or unreachable.
     Offline,
 
-    /// There is an issue or alert associated with a query. 
-    /// The query could succeed or fail. 
+    /// There is an issue or alert associated with a query.
+    /// The query could succeed or fail.
     /// This status type is typically set when you want to send additional information about another connected device.
     Exceptions,
 
     /// Target device is unable to perform the command.
     Error,
 }
-
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,7 +68,7 @@ pub enum IntentResponseBody {
     Disconnect,
 }
 
-use crate::{token, lighthouse};
+use crate::{lighthouse, token};
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(

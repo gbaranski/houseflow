@@ -12,7 +12,6 @@ impl Decoder for serde_json::Map<String, serde_json::Value> {
     }
 }
 
-
 impl Encoder for serde_json::Map<String, serde_json::Value> {
     fn encode(&self, buf: &mut impl BufMut) {
         let bytes = serde_json::to_vec(self).expect("invalid JSON");
