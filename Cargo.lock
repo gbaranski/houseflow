@@ -1038,6 +1038,7 @@ dependencies = [
  "rust-argon2",
  "semver 1.0.3",
  "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-postgres",
