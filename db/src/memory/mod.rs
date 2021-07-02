@@ -65,6 +65,12 @@ impl crate::Database for Database {
         Ok(())
     }
 
+    async fn get_room(&self, room_id: &houseflow_types::RoomID) -> Result<Option<Room>, Error> {
+        let rooms = self.rooms.lock().await;
+        let room = rooms.iter().find(|room| room.id == *room_id);
+        Ok(room.cloned())
+    }
+
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
         Ok(self
             .devices

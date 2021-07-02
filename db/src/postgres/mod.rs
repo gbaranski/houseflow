@@ -3,7 +3,7 @@ use crate::Error;
 use async_trait::async_trait;
 use deadpool_postgres::Pool;
 use houseflow_config::postgres::Config;
-use houseflow_types::{Device, DeviceID, User, UserID, UserStructure};
+use houseflow_types::{Device, DeviceID, Room, User, UserID, UserStructure};
 use semver::Version;
 use tokio_postgres::NoTls;
 
@@ -26,6 +26,7 @@ pub enum InternalError {
 
     #[error("Error when running migrations: `{0}`")]
     MigrationError(#[from] refinery::Error),
+
     #[error("ser/de JSON column failed: {0}")]
     SerdeJSONError(#[from] serde_json::Error),
 }
@@ -93,7 +94,7 @@ impl crate::Database for Database {
         }
     }
 
-    async fn add_room(&self, room: &houseflow_types::Room) -> Result<(), Error> {
+    async fn add_room(&self, room: &Room) -> Result<(), Error> {
         let connection = self.pool.get().await?;
         let insert_statement = connection
             .prepare(
@@ -234,6 +235,22 @@ impl crate::Database for Database {
             1 => Ok(()),
             _ => unreachable!(),
         }
+    }
+
+    async fn get_room(&self, room_id: &houseflow_types::RoomID) -> Result<Option<Room>, Error> {
+        const QUERY: &str = "SELECT * FROM rooms WHERE id = $1";
+        let connection = self.pool.get().await?;
+        let row = match connection.query_opt(QUERY, &[&room_id]).await? {
+            Some(row) => row,
+            None => return Ok(None),
+        };
+        let user = Room {
+            id: row.try_get("id")?,
+            name: row.try_get("name")?,
+            structure_id: row.try_get("structure_id")?,
+        };
+
+        Ok(Some(user))
     }
 
     async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error> {
