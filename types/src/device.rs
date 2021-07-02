@@ -1,6 +1,5 @@
 use crate::common::Credential;
 use semver::Version;
-use std::collections::HashMap;
 use strum::{EnumIter, IntoEnumIterator};
 
 #[cfg(feature = "serde")]
@@ -43,7 +42,7 @@ pub struct Device {
     pub sw_version: Version,
 
     /// Aligned with per-trait attributes described in each trait schema reference.
-    pub attributes: HashMap<String, Option<String>>,
+    pub attributes: serde_json::Map<String, serde_json::Value>,
 }
 
 pub type StructureID = Credential<16>;

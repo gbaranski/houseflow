@@ -1,5 +1,3 @@
-CREATE EXTENSION hstore;
-
 CREATE TABLE users (
   id            CHAR(32)        NOT NULL,
   username      TEXT            NOT NULL,
@@ -61,7 +59,7 @@ CREATE TABLE devices (
   model           TEXT        NOT NULL,
   hw_version      TEXT        NOT NULL,
   sw_version      TEXT        NOT NULL,
-  attributes      hstore      NOT NULL,
+  attributes      jsonb       NOT NULL,
 
   PRIMARY KEY (
     id

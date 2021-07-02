@@ -1,7 +1,6 @@
 use crate::{DeviceID, DeviceTrait, DeviceType, ResultTagged, RoomID};
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
@@ -17,7 +16,7 @@ pub struct AddDeviceRequest {
     pub model: String,
     pub hw_version: Version,
     pub sw_version: Version,
-    pub attributes: HashMap<String, Option<String>>,
+    pub attributes: serde_json::Map<String, serde_json::Value>,
 }
 
 pub type AddDeviceResponse = ResultTagged<AddDeviceResponseBody, AddDeviceResponseError>;

@@ -116,7 +116,7 @@ mod test_utils {
             model: String::from("gate-1200"),
             hw_version: Version::new(1, 0, 0),
             sw_version: Version::new(1, 0, 1),
-            attributes: std::collections::HashMap::new(),
+            attributes: Default::default(),
         }
     }
 }

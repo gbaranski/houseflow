@@ -26,6 +26,8 @@ pub enum InternalError {
 
     #[error("Error when running migrations: `{0}`")]
     MigrationError(#[from] refinery::Error),
+    #[error("ser/de JSON column failed: {0}")]
+    SerdeJSONError(#[from] serde_json::Error),
 }
 
 use crate::DatabaseInternalError;
@@ -145,7 +147,8 @@ impl crate::Database for Database {
                     &device.model,
                     &device.hw_version.to_string(),
                     &device.sw_version.to_string(),
-                    &device.attributes,
+                    &serde_json::to_string(&device.attributes)
+                        .map_err(InternalError::SerdeJSONError)?,
                 ],
             )
             .await?;
@@ -265,7 +268,8 @@ impl crate::Database for Database {
                     error: Box::new(err),
                 }
             })?,
-            attributes: row.try_get("attributes")?,
+            attributes: serde_json::from_str(row.try_get("attributes")?)
+                .map_err(InternalError::SerdeJSONError)?,
         };
 
         Ok(Some(device))
@@ -313,7 +317,8 @@ impl crate::Database for Database {
                         error: Box::new(err),
                     }
                 })?,
-                attributes: row.try_get("attributes")?,
+                attributes: serde_json::from_str(row.try_get("attributes")?)
+                    .map_err(InternalError::SerdeJSONError)?,
             })
         });
         let devices: Result<Vec<Device>, Error> = devices.collect();
