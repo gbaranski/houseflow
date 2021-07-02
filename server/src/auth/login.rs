@@ -3,7 +3,7 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
     auth::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError},
@@ -21,20 +21,21 @@ fn verify_password(hash: &str, password: &str) -> Result<(), LoginResponseError>
 pub async fn on_login(
     request: Json<LoginRequest>,
     token_store: Data<dyn TokenStore>,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
 ) -> Result<Json<LoginResponse>, LoginResponseError> {
     validator::Validate::validate(&request.0)?;
-
     let user = db
         .get_user_by_email(&request.email)
         .await
         .map_err(|err| LoginResponseError::InternalError(err.to_string()))?
         .ok_or(LoginResponseError::UserNotFound)?;
+
     verify_password(&user.password_hash, &request.password)?;
     let refresh_token =
-        Token::new_refresh_token(&secrets.refresh_key, &user.id, &request.user_agent);
-    let access_token = Token::new_access_token(&secrets.access_key, &user.id, &request.user_agent);
+        Token::new_refresh_token(&config.secrets.refresh_key, &user.id, &request.user_agent);
+    let access_token =
+        Token::new_access_token(&config.secrets.access_key, &user.id, &request.user_agent);
     token_store
         .add(&refresh_token)
         .await
@@ -51,33 +52,21 @@ pub async fn on_login(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::{test, App};
+    use actix_web::test;
     use houseflow_types::User;
 
     use rand::random;
 
     #[actix_rt::test]
     async fn test_login() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
+        let state = get_state();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database,
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
+        state.database.add_user(&user).await.unwrap();
 
         let request_body = LoginRequest {
             email: user.email,
@@ -86,22 +75,13 @@ mod tests {
         };
         let request = test::TestRequest::post()
             .uri("/auth/login")
-            .set_json(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            200,
-            "status is not succesfull, body: {:?}",
-            test::read_body(response).await
-        );
-        let response: LoginResponse = test::read_body_json(response).await;
-        let response = match response {
-            LoginResponse::Ok(response) => response,
-            LoginResponse::Err(err) => panic!("unexpected login error: {:?}", err),
-        };
+            .set_json(&request_body);
+        let response = send_request_with_state::<LoginResponseBody>(request, &state).await;
         let (at, rt) = (response.access_token, response.refresh_token);
-        let verify_result = at.verify(&secrets.access_key, Some(&request_body.user_agent));
+        let verify_result = at.verify(
+            &state.config.secrets.access_key,
+            Some(&request_body.user_agent),
+        );
         assert!(
             verify_result.is_ok(),
             "failed access token verification: `{}`",
@@ -110,37 +90,25 @@ mod tests {
         assert_eq!(at.user_agent(), rt.user_agent());
         assert_eq!(at.user_id(), rt.user_id());
         assert!(
-            !token_store.exists(at.id()).await.unwrap(),
+            !state.token_store.exists(at.id()).await.unwrap(),
             "access token found in token store"
         );
         assert!(
-            token_store.exists(rt.id()).await.unwrap(),
+            state.token_store.exists(rt.id()).await.unwrap(),
             "refresh token not found in token store"
         );
     }
 
     #[actix_rt::test]
     async fn test_login_invalid_password() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
+        let state = get_state();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database,
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
+        state.database.add_user(&user).await.unwrap();
 
         let request_body = LoginRequest {
             email: user.email,
@@ -149,64 +117,24 @@ mod tests {
         };
         let request = test::TestRequest::post()
             .uri("/auth/login")
-            .set_json(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            400,
-            "unexpected status code, body: {:?}",
-            test::read_body(response).await
-        );
-        let response: LoginResponse = test::read_body_json(response).await;
-        match response {
-            LoginResponse::Err(LoginResponseError::InvalidPassword) => (),
-            _ => panic!("unexpected response returned: {:?}", response),
-        }
+            .set_json(&request_body);
+        let response = send_request_with_state::<LoginResponseError>(request, &state).await;
+        assert_eq!(response, LoginResponseError::InvalidPassword);
     }
 
     #[actix_rt::test]
     async fn test_login_not_existing_user() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
-        let user = User {
-            id: random(),
-            username: String::from("John Smith"),
-            email: String::from("john_smith@example.com"),
-            password_hash: PASSWORD_HASH.into(),
-        };
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database,
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
-
         let request_body = LoginRequest {
-            email: user.email,
+            email: String::from("jhon_smith@example.com"),
             password: PASSWORD.into(),
             user_agent: random(),
         };
+
         let request = test::TestRequest::post()
             .uri("/auth/login")
-            .set_json(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            404,
-            "unexpected status code, body: {:?}",
-            test::read_body(response).await
-        );
-        let response: LoginResponse = test::read_body_json(response).await;
-        match response {
-            LoginResponse::Err(LoginResponseError::UserNotFound) => (),
-            _ => panic!("invalid response returned: {:?}", response),
-        }
+            .set_json(&request_body);
+
+        let (response, _) = send_request::<LoginResponseError>(request).await;
+        assert_eq!(response, LoginResponseError::UserNotFound);
     }
 }

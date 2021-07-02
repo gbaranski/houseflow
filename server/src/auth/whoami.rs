@@ -2,7 +2,7 @@ use actix_web::{
     get,
     web::{Data, HttpRequest, Json},
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
     auth::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError},
@@ -12,12 +12,12 @@ use houseflow_types::{
 
 #[get("/whoami")]
 pub async fn on_whoami(
-    app_data: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
     req: HttpRequest,
 ) -> Result<Json<WhoamiResponse>, WhoamiResponseError> {
     let token = Token::from_request(&req)?;
-    token.verify(&app_data.access_key, Some(&UserAgent::Internal))?;
+    token.verify(&config.secrets.access_key, Some(&UserAgent::Internal))?;
     let user = db
         .get_user(token.user_id())
         .await
@@ -36,137 +36,65 @@ pub async fn on_whoami(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::{http, test, App, ResponseError};
-    use houseflow_types::{token, User};
+    use actix_web::{http, test};
+    use houseflow_types::User;
 
     use rand::random;
 
     #[actix_rt::test]
     async fn valid() {
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
+        let state = get_state();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        let token = Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
-        database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                get_token_store(),
-                database,
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
-
-        let request = test::TestRequest::get()
-            .uri("/auth/whoami")
-            .append_header((
-                http::header::AUTHORIZATION,
-                format!("Bearer {}", token.to_string()),
-            ))
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            200,
-            "status is not succesfull, body: {:?}",
-            test::read_body(response).await
+        let token = Token::new_access_token(
+            &state.config.secrets.access_key,
+            &user.id,
+            &UserAgent::Internal,
         );
-        let response: WhoamiResponse = test::read_body_json(response).await;
-        let response = match response {
-            WhoamiResponse::Ok(response) => response,
-            WhoamiResponse::Err(err) => panic!("unexpected error: {}", err),
-        };
+        state.database.add_user(&user).await.unwrap();
+
+        let request = test::TestRequest::get().uri("/auth/whoami").append_header((
+            http::header::AUTHORIZATION,
+            format!("Bearer {}", token.to_string()),
+        ));
+
+        let response = send_request_with_state::<WhoamiResponseBody>(request, &state).await;
         assert_eq!(user.email, response.email);
         assert_eq!(user.username, response.username);
     }
 
     #[actix_rt::test]
     async fn missing_header() {
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
-        let user = User {
-            id: random(),
-            username: String::from("John Smith"),
-            email: String::from("john_smith@example.com"),
-            password_hash: PASSWORD_HASH.into(),
-        };
-        database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                get_token_store(),
-                database,
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
-
-        let request = test::TestRequest::get().uri("/auth/whoami").to_request();
-        let response = test::call_service(&mut app, request).await;
-        const EXPECTED_ERROR: WhoamiResponseError =
-            WhoamiResponseError::DecodeHeaderError(token::DecodeHeaderError::MissingHeader);
-
-        assert_eq!(
-            response.status(),
-            EXPECTED_ERROR.status_code(),
-            "unexpected status: {}, body: {:?}",
-            response.status(),
-            test::read_body(response).await
-        );
-        let response: WhoamiResponseError = test::read_body_json(response).await;
-        assert_eq!(response, EXPECTED_ERROR);
+        let request = test::TestRequest::get().uri("/auth/whoami");
+        let (response, _) = send_request::<WhoamiResponseError>(request).await;
+        assert!(matches!(
+            response,
+            WhoamiResponseError::DecodeHeaderError(_)
+        ));
     }
 
     #[actix_rt::test]
     async fn invalid_token_signature() {
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
+        let state = get_state();
         let user = User {
             id: random(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        let token = Token::new_access_token(&"dsahsdadsh", &user.id, &UserAgent::Internal);
-        database.add_user(&user).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                get_token_store(),
-                database,
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
+        let token = Token::new_access_token(b"other_key", &user.id, &UserAgent::Internal);
+        state.database.add_user(&user).await.unwrap();
 
-        let request = test::TestRequest::get()
-            .uri("/auth/whoami")
-            .append_header((
-                http::header::AUTHORIZATION,
-                format!("Bearer {}", token.to_string()),
-            ))
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        const EXPECTED_ERROR: WhoamiResponseError =
-            WhoamiResponseError::VerifyError(token::VerifyError::InvalidSignature);
+        let request = test::TestRequest::get().uri("/auth/whoami").append_header((
+            http::header::AUTHORIZATION,
+            format!("Bearer {}", token.to_string()),
+        ));
 
-        assert_eq!(
-            response.status(),
-            EXPECTED_ERROR.status_code(),
-            "unexpected status: {}, body: {:?}",
-            response.status(),
-            test::read_body(response).await
-        );
-        let response: WhoamiResponseError = test::read_body_json(response).await;
-        assert_eq!(response, EXPECTED_ERROR);
+        let response = send_request_with_state::<WhoamiResponseError>(request, &state).await;
+        assert!(matches!(response, WhoamiResponseError::VerifyError(_)));
     }
 }

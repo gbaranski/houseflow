@@ -3,7 +3,7 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::UserAgent;
 use houseflow_types::{
@@ -15,11 +15,11 @@ use houseflow_types::{
 pub async fn on_sync(
     _sync_request: Json<SyncRequest>,
     http_request: HttpRequest,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
 ) -> Result<Json<SyncResponse>, SyncResponseError> {
     let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
+    access_token.verify(&config.secrets.access_key, Some(&UserAgent::Internal))?;
 
     let devices = db
         .get_user_devices(access_token.user_id())
@@ -34,7 +34,7 @@ pub async fn on_sync(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::{http, test, App};
+    use actix_web::{http, test};
     use houseflow_types::{Device, UserID, UserStructure};
 
     async fn get_authorized_device(db: &dyn Database, user_id: &UserID) -> Device {
@@ -68,16 +68,18 @@ mod tests {
         use futures::future::join_all;
         use std::iter::repeat_with;
 
-        let database = get_database();
-        let token_store = get_token_store();
-        let secrets = Data::new(rand::random::<Secrets>());
+        let state = get_state();
+
         let user = get_user();
-        let access_token =
-            Token::new_access_token(&secrets.access_key, &user.id, &UserAgent::Internal);
-        database.add_user(&user).await.unwrap();
+        let access_token = Token::new_access_token(
+            &state.config.secrets.access_key,
+            &user.id,
+            &UserAgent::Internal,
+        );
+        state.database.add_user(&user).await.unwrap();
 
         let mut authorized_devices: Vec<Device> = join_all(
-            repeat_with(|| get_authorized_device(database.as_ref(), &user.id))
+            repeat_with(|| get_authorized_device(state.database.as_ref(), &user.id))
                 .take(5)
                 .collect::<Vec<_>>(),
         )
@@ -86,21 +88,10 @@ mod tests {
         let authorized_devices = authorized_devices;
 
         let _: Vec<Device> = join_all(
-            repeat_with(|| get_unauthorized_device(database.as_ref()))
+            repeat_with(|| get_unauthorized_device(state.database.as_ref()))
                 .take(10)
                 .collect::<Vec<_>>(),
         )
-        .await;
-
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database.clone(),
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
         .await;
 
         let request_body = SyncRequest {};
@@ -110,16 +101,8 @@ mod tests {
                 http::header::AUTHORIZATION,
                 format!("Bearer {}", access_token.to_string()),
             ))
-            .set_json(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            200,
-            "status is not succesfull, body: {:?}",
-            test::read_body(response).await
-        );
-        let mut response: SyncResponseBody = test::read_body_json(response).await;
+            .set_json(&request_body);
+        let mut response = send_request_with_state::<SyncResponseBody>(request, &state).await;
         response.devices.sort_by_key(|device| device.id.clone());
         assert_eq!(response.devices, authorized_devices);
     }

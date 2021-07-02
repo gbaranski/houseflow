@@ -3,7 +3,7 @@ use actix_web::{
     post,
     web::{self, Data, Form, FormConfig, Json},
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_types::{
     auth::{
         AccessTokenRequest, AccessTokenResponse, AccessTokenResponseBody, AccessTokenResponseError,
@@ -52,11 +52,11 @@ impl actix_web::ResponseError for RefreshTokenExchangeError {
 pub async fn on_exchange_refresh_token(
     request: Form<AccessTokenRequest>,
     token_store: Data<dyn TokenStore>,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
 ) -> Result<Json<AccessTokenResponse>, RefreshTokenExchangeError> {
     let refresh_token = &request.refresh_token;
     refresh_token
-        .verify(&secrets.refresh_key, None)
+        .verify(&config.secrets.refresh_key, None)
         .map_err(|err| AccessTokenResponseError::InvalidGrant(Some(err.to_string())))?;
 
     let stored_refresh_token = token_store.get(&refresh_token.id()).await?.ok_or_else(|| {
@@ -78,7 +78,7 @@ pub async fn on_exchange_refresh_token(
         user_id: refresh_token.user_id().clone(),
         expires_at,
     };
-    let access_token_signature = access_token_payload.sign(&secrets.access_key);
+    let access_token_signature = access_token_payload.sign(&config.secrets.access_key);
     let access_token = Token::new(access_token_payload, access_token_signature);
     Ok(web::Json(AccessTokenResponse::Ok(
         AccessTokenResponseBody {
@@ -93,47 +93,28 @@ pub async fn on_exchange_refresh_token(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::{test, App};
+    use actix_web::test;
     use houseflow_types::auth::GrantType;
     use rand::random;
     use std::time::{Duration, SystemTime};
 
     #[actix_rt::test]
     async fn test_exchange_refresh_token() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
-        let refresh_token = Token::new_refresh_token(&secrets.refresh_key, &random(), &random());
-        token_store.add(&refresh_token).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database.clone(),
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
+        let state = get_state();
+        let refresh_token =
+            Token::new_refresh_token(&state.config.secrets.refresh_key, &random(), &random());
+        state.token_store.add(&refresh_token).await.unwrap();
         let request_body = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
             refresh_token: refresh_token.clone(),
         };
         let request = test::TestRequest::post()
             .uri("/auth/token")
-            .set_form(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            200,
-            "status is not succesfull, body: {:?}",
-            test::read_body(response).await
-        );
-        let response_body: AccessTokenResponseBody = test::read_body_json(response).await;
-        let access_token = &response_body.access_token;
-        let verify_result = response_body.access_token.verify(
-            &secrets.access_key,
+            .set_form(&request_body);
+        let response = send_request_with_state::<AccessTokenResponseBody>(request, &state).await;
+        let access_token = &response.access_token;
+        let verify_result = response.access_token.verify(
+            &state.config.secrets.access_key,
             Some(&request_body.refresh_token.user_agent()),
         );
         assert!(
@@ -147,42 +128,27 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_exchange_refresh_token_not_existing_token() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
-        let refresh_token = Token::new_refresh_token(&secrets.refresh_key, &random(), &random());
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database.clone(),
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
+        let state = get_state();
+        let refresh_token =
+            Token::new_refresh_token(&state.config.secrets.refresh_key, &random(), &random());
         let request_body = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
             refresh_token,
         };
         let request = test::TestRequest::post()
             .uri("/auth/token")
-            .set_form(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(response.status(), 400);
-        let response_body: AccessTokenResponseError = test::read_body_json(response).await;
-        match response_body {
-            AccessTokenResponseError::InvalidGrant(_) => (),
-            _ => panic!("unexpected error received: {:?}", response_body),
-        }
+            .set_form(&request_body);
+        let response = send_request_with_state::<AccessTokenResponseError>(request, &state).await;
+
+        assert!(matches!(
+            response,
+            AccessTokenResponseError::InvalidGrant(..)
+        ));
     }
 
     #[actix_rt::test]
     async fn test_exchange_refresh_token_expired_token() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
+        let state = get_state();
         let refresh_token_payload = token::Payload::new(
             random(),
             random(),
@@ -190,33 +156,20 @@ mod tests {
                 SystemTime::now().checked_sub(Duration::from_secs(5)),
             ),
         );
-        let refresh_token_signature = refresh_token_payload.sign(&secrets.refresh_key);
+        let refresh_token_signature = refresh_token_payload.sign(&state.config.secrets.refresh_key);
         let refresh_token = Token::new(refresh_token_payload, refresh_token_signature);
-        token_store.add(&refresh_token).await.unwrap();
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database.clone(),
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
+        state.token_store.add(&refresh_token).await.unwrap();
         let request_body = AccessTokenRequest {
             grant_type: GrantType::RefreshToken,
-            refresh_token,
+            refresh_token: refresh_token.clone(),
         };
         let request = test::TestRequest::post()
             .uri("/auth/token")
-            .set_form(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(response.status(), 400);
-        let response_body: AccessTokenResponseError = test::read_body_json(response).await;
-        match response_body {
-            AccessTokenResponseError::InvalidGrant(_) => (),
-            _ => panic!("unexpected error received: {:?}", response_body),
-        }
+            .set_form(&request_body);
+        let response = send_request_with_state::<AccessTokenResponseError>(request, &state).await;
+        assert!(matches!(
+            response,
+            AccessTokenResponseError::InvalidGrant(..)
+        ));
     }
 }

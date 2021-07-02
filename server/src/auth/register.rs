@@ -2,7 +2,7 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::auth::{
     RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError,
@@ -13,14 +13,14 @@ use rand::random;
 #[post("/register")]
 pub async fn on_register(
     request: Json<RegisterRequest>,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
 ) -> Result<Json<RegisterResponse>, RegisterResponseError> {
     validator::Validate::validate(&request.0)?;
 
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
-        secrets.password_salt.as_bytes(),
+        config.secrets.password_salt.as_bytes(),
         &argon2::Config::default(),
     )
     .unwrap();
@@ -46,24 +46,10 @@ pub async fn on_register(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::{test, App};
+    use actix_web::test;
 
     #[actix_rt::test]
     async fn test_register() {
-        let token_store = get_token_store();
-        let database = get_database();
-        let secrets = Data::new(random::<Secrets>());
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                token_store.clone(),
-                database.clone(),
-                secrets.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
-
         let request_body = RegisterRequest {
             password: PASSWORD.into(),
             username: String::from("John Smith"),
@@ -71,17 +57,11 @@ mod tests {
         };
         let request = test::TestRequest::post()
             .uri("/auth/register")
-            .set_json(&request_body)
-            .to_request();
-        let response = test::call_service(&mut app, request).await;
-        assert_eq!(
-            response.status(),
-            200,
-            "status is not succesfull, body: {:?}",
-            test::read_body(response).await
-        );
-        let response: RegisterResponseBody = test::read_body_json(response).await;
-        let db_user = database
+            .set_json(&request_body);
+        let (response, state) = send_request::<RegisterResponseBody>(request).await;
+
+        let db_user = state
+            .database
             .get_user_by_email(&request_body.email)
             .await
             .unwrap()

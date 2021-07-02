@@ -7,7 +7,7 @@ mod token_store;
 pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
 
 use actix_web::web;
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
 
 use {
@@ -15,19 +15,29 @@ use {
 };
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
+const AUTHORIZATION_TMPL: &'static str = include_str!("templates/authorization.html");
+
 pub fn configure(
     cfg: &mut web::ServiceConfig,
     token_store: web::Data<dyn TokenStore>,
     database: web::Data<dyn Database>,
-    secrets: web::Data<Secrets>,
+    config: web::Data<Config>,
     sessions: web::Data<Sessions>,
 ) {
-    cfg.app_data(secrets)
+    use tinytemplate::TinyTemplate;
+
+    log::debug!("adding template");
+    let mut tt = TinyTemplate::new();
+    tt.add_template("authorization.html", AUTHORIZATION_TMPL)
+        .expect("invalid authorization tmpl");
+
+    cfg.app_data(config)
         .app_data(token_store)
         .app_data(sessions)
         .app_data(database)
         .service(
             web::scope("/admin")
+                .app_data(tt)
                 .service(admin::on_add_device)
                 .service(admin::on_add_room)
                 .service(admin::on_add_structure)
@@ -58,19 +68,85 @@ pub fn configure(
 
 #[cfg(test)]
 mod test_utils {
+    use super::Config;
     use crate::{MemoryTokenStore, TokenStore};
-    use houseflow_db::memory::Database;
+    use houseflow_db::{memory::Database as MemoryDatabase, Database};
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
 
-    use actix_web::web::Data;
+    use actix_web::{test, web::Data, App};
     use std::sync::Arc;
 
     pub const PASSWORD: &str = "SomePassword";
     pub const PASSWORD_INVALID: &str = "SomeOtherPassword";
     pub const PASSWORD_HASH: &str = "$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU";
 
+    pub struct State {
+        pub database: Data<dyn Database>,
+        pub token_store: Data<dyn TokenStore>,
+        pub config: Data<Config>,
+    }
+
+    pub async fn send_request<T: serde::de::DeserializeOwned>(
+        request: test::TestRequest,
+    ) -> (T, State) {
+        let database = get_database();
+        let token_store = get_token_store();
+        let config = get_config();
+        let state = State {
+            database,
+            token_store,
+            config,
+        };
+
+        let response = send_request_with_state(request, &state).await;
+        (response, state)
+    }
+
+    pub async fn send_request_with_state<T: serde::de::DeserializeOwned>(
+        request: test::TestRequest,
+        state: &State,
+    ) -> T {
+        let mut app = test::init_service(App::new().configure(|cfg| {
+            crate::configure(
+                cfg,
+                state.token_store.clone(),
+                state.database.clone(),
+                state.config.clone(),
+                Data::new(Default::default()),
+            )
+        }))
+        .await;
+        let response = test::call_service(&mut app, request.to_request()).await;
+
+        test::read_body_json(response).await
+    }
+
+    pub fn get_state() -> State {
+        State {
+            database: get_database(),
+            token_store: get_token_store(),
+            config: get_config(),
+        }
+    }
+
+    pub fn get_config() -> Data<Config> {
+        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+        Data::from(Arc::new(Config {
+            address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
+            secrets: rand::random(),
+            postgres: Default::default(),
+            redis: Default::default(),
+            google: Some(houseflow_config::server::google::Config {
+                client_id: "some-client-id".to_string(),
+                client_secret: "some-client-secret".to_string(),
+                project_id: "some-project-id".to_string(),
+            }),
+        }))
+    }
+
     pub fn get_database() -> Data<dyn houseflow_db::Database> {
-        Data::from(Arc::new(Database::new()) as Arc<dyn houseflow_db::Database>)
+        Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
     }
 
     pub fn get_token_store() -> Data<dyn TokenStore> {
