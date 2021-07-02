@@ -5,7 +5,6 @@ use clap::Clap;
 
 use houseflow_types::{admin::AddDeviceRequest, DeviceTrait, DeviceType, RoomID};
 use semver::Version;
-use std::collections::HashMap;
 
 fn from_json<'de, T: serde::de::Deserialize<'de>>(v: &'de str) -> Result<T, serde_json::Error> {
     serde_json::from_str(v)
@@ -71,7 +70,7 @@ pub struct AddDeviceCommand {
 
     /// Additional attributes of the device
     #[clap(parse(try_from_str = from_json))]
-    attributes: HashMap<String, Option<String>>,
+    attributes: serde_json::Map<String, serde_json::Value>,
 }
 
 #[async_trait(?Send)]
