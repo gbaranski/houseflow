@@ -10,9 +10,6 @@ mod fulfillment;
 #[cfg(feature = "auth")]
 pub use crate::fulfillment::FulfillmentError;
 
-#[cfg(feature = "auth")]
-pub use crate::auth::AuthError;
-
 #[cfg(any(feature = "auth", feature = "fulfillment", feature = "admin"))]
 use url::Url;
 
@@ -21,10 +18,6 @@ use url::Url;
 pub enum Error {
     #[error("error occured with sending request: `{0}`")]
     ReqwestError(#[from] reqwest::Error),
-
-    #[cfg(feature = "auth")]
-    #[error("auth error: {0}")]
-    AuthError(#[from] AuthError),
 }
 
 #[derive(Debug, Clone)]

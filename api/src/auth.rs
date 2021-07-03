@@ -1,31 +1,11 @@
 use super::{Error, HouseflowAPI};
-use houseflow_types::auth::{
-    AccessTokenRequest, AccessTokenResponse, AccessTokenResponseError, GrantType, LoginRequest,
-    LoginResponse, LoginResponseError, LogoutResponse, RegisterRequest, RegisterResponse,
-    RegisterResponseError, WhoamiResponse,
-};
-use houseflow_types::token;
+use houseflow_types::auth;
+use houseflow_types::token::{RefreshToken, AccessToken};
 use reqwest::Client;
-use token::Token;
-
-#[derive(Debug, thiserror::Error)]
-pub enum AuthError {
-    #[error("refreshing access token failed with: `{0}`")]
-    RefreshAccessTokenError(#[from] AccessTokenResponseError),
-
-    #[error("not logged in")]
-    NotLoggedIn,
-
-    #[error("registration failed: `{0}`")]
-    RegisterError(#[from] RegisterResponseError),
-
-    #[error("login failed: `{0}`")]
-    LoginError(#[from] LoginResponseError),
-}
 
 #[cfg(feature = "auth")]
 impl HouseflowAPI {
-    pub async fn register(&self, request: RegisterRequest) -> Result<RegisterResponse, Error> {
+    pub async fn register(&self, request: auth::register::Request) -> Result<auth::register::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("register").unwrap();
 
@@ -34,13 +14,13 @@ impl HouseflowAPI {
             .json(&request)
             .send()
             .await?
-            .json::<RegisterResponse>()
+            .json::<auth::register::Response>()
             .await?;
 
         Ok(response)
     }
 
-    pub async fn login(&self, request: LoginRequest) -> Result<LoginResponse, Error> {
+    pub async fn login(&self, request: auth::login::Request) -> Result<auth::login::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("login").unwrap();
 
@@ -49,13 +29,13 @@ impl HouseflowAPI {
             .json(&request)
             .send()
             .await?
-            .json::<LoginResponse>()
+            .json::<auth::login::Response>()
             .await?;
 
         Ok(response)
     }
 
-    pub async fn logout(&self, refresh_token: &Token) -> Result<LogoutResponse, Error> {
+    pub async fn logout(&self, refresh_token: &RefreshToken) -> Result<auth::logout::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("logout").unwrap();
 
@@ -64,7 +44,7 @@ impl HouseflowAPI {
             .bearer_auth(refresh_token.to_string())
             .send()
             .await?
-            .json::<LogoutResponse>()
+            .json::<auth::logout::Response>()
             .await?;
 
         Ok(response)
@@ -72,12 +52,12 @@ impl HouseflowAPI {
 
     pub async fn fetch_access_token(
         &self,
-        refresh_token: &Token,
-    ) -> Result<AccessTokenResponse, Error> {
+        refresh_token: &RefreshToken,
+    ) -> Result<auth::token::Response, Error> {
         let client = Client::new();
-        let request = AccessTokenRequest {
-            grant_type: GrantType::RefreshToken,
-            refresh_token: refresh_token.clone(),
+        let request = auth::token::Request {
+            grant_type: auth::token::GrantType::RefreshToken,
+            refresh_token: refresh_token.to_string(),
         };
         let url = self.auth_url.join("token").unwrap();
 
@@ -86,22 +66,22 @@ impl HouseflowAPI {
             .form(&request)
             .send()
             .await?
-            .json::<AccessTokenResponse>()
+            .json::<auth::token::Response>()
             .await?;
 
         Ok(response)
     }
 
-    pub async fn whoami(&self, access_token: &Token) -> Result<WhoamiResponse, Error> {
+    pub async fn whoami(&self, access_token: &AccessToken) -> Result<auth::whoami::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("whoami").unwrap();
 
         let response = client
             .get(url)
-            .bearer_auth(access_token.to_string())
+            .bearer_auth(access_token)
             .send()
             .await?
-            .json::<WhoamiResponse>()
+            .json::<auth::whoami::Response>()
             .await?;
 
         Ok(response)
