@@ -22,19 +22,20 @@ impl MemoryTokenStore {
 
 #[async_trait]
 impl TokenStore for MemoryTokenStore {
-    async fn exists(&self, id: &TokenID) -> Result<bool, super::Error> {
-        Ok(self.store.lock().await.contains_key(id))
+    async fn exists(&self, id: &RefreshTokenID) -> Result<bool, super::Error> {
+        Ok(self.store.lock().await.contains(id))
     }
 
     async fn add(&self, id: &RefreshTokenID) -> Result<(), super::Error> {
         self.store
             .lock()
             .await
-            .get(token.id().clone(), token.clone());
+            .insert(id.clone());
+
         Ok(())
     }
 
-    async fn remove(&self, id: &TokenID) -> Result<bool, super::Error> {
-        Ok(self.store.lock().await.remove(id).is_some())
+    async fn remove(&self, id: &RefreshTokenID) -> Result<bool, super::Error> {
+        Ok(self.store.lock().await.remove(id))
     }
 }
