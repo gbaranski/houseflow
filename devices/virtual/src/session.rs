@@ -1,8 +1,7 @@
 use crate::devices;
-use bytes::{Buf, BytesMut};
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_config::device::Config;
-use houseflow_types::lighthouse::proto::{execute_response, state, Decoder, Encoder, Frame};
+use houseflow_types::lighthouse::proto::{execute_response, state, Frame};
 use tokio::sync::mpsc;
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
@@ -15,8 +14,6 @@ pub enum Event {
     Pong,
     LighthouseFrame(Frame),
 }
-
-const BUFFER_CAPACITY: usize = 1024;
 
 pub type EventSender = mpsc::Sender<Event>;
 pub type EventReceiver = mpsc::Receiver<Event>;
@@ -76,11 +73,8 @@ impl Session {
             let message = message?;
             match message {
                 WebsocketMessage::Text(text) => {
-                    log::info!("Received text data: {:?}", text);
-                }
-                WebsocketMessage::Binary(bytes) => {
-                    let mut bytes = BytesMut::from(bytes.as_slice());
-                    let frame = Frame::decode(&mut bytes)?;
+                    log::debug!("received frame: `{}`", text);
+                    let frame: Frame = serde_json::from_str(&text)?;
                     log::debug!("Received frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
@@ -116,6 +110,9 @@ impl Session {
                         }
                     }
                 }
+                WebsocketMessage::Binary(bytes) => {
+                    log::debug!("received binary: {:?}", bytes);
+                }
                 WebsocketMessage::Ping(payload) => {
                     events
                         .send(Event::Pong)
@@ -143,7 +140,6 @@ impl Session {
     where
         S: Sink<WebsocketMessage, Error = tungstenite::Error> + Unpin,
     {
-        let mut buf = BytesMut::with_capacity(BUFFER_CAPACITY);
         while let Some(event) = events.recv().await {
             match event {
                 Event::Ping => {
@@ -155,12 +151,8 @@ impl Session {
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
                 }
                 Event::LighthouseFrame(frame) => {
-                    assert_eq!(buf.remaining(), 0);
-
-                    frame.encode(&mut buf);
-                    let vec = buf.to_vec();
-                    buf.advance(vec.len());
-                    stream.send(WebsocketMessage::Binary(vec)).await?;
+                    let json = serde_json::to_string(&frame).unwrap();
+                    stream.send(WebsocketMessage::Text(json)).await?;
                 }
             }
         }
