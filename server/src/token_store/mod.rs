@@ -5,7 +5,7 @@ pub use self::memory::{Error as MemoryTokenStoreError, MemoryTokenStore};
 pub use self::redis::{Error as RedisTokenStoreError, RedisTokenStore};
 
 use async_trait::async_trait;
-use houseflow_types::token::{DecodeError, Token, TokenID};
+use houseflow_types::token::RefreshTokenID;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -27,9 +27,7 @@ impl<T: TokenStoreInternalError + 'static> From<T> for Error {
 pub trait TokenStore: Send + Sync {
     async fn exists(&self, id: &TokenID) -> Result<bool, Error>;
 
-    async fn get(&self, id: &TokenID) -> Result<Option<Token>, Error>;
+    async fn remove(&self, id: &RefreshTokenID) -> Result<bool, Error>;
 
-    async fn remove(&self, id: &TokenID) -> Result<bool, Error>;
-
-    async fn add(&self, token: &Token) -> Result<(), Error>;
+    async fn add(&self, id: &RefreshTokenID) -> Result<(), Error>;
 }

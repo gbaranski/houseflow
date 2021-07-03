@@ -1,6 +1,6 @@
 use super::{TokenStore, TokenStoreInternalError};
 use async_trait::async_trait;
-use houseflow_types::token::{Token, TokenID};
+use houseflow_types::token::RefreshTokenID;
 use redis::{aio::Connection, AsyncCommands, Client};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -26,7 +26,7 @@ impl RedisTokenStore {
 
 #[async_trait]
 impl TokenStore for RedisTokenStore {
-    async fn exists(&self, id: &TokenID) -> Result<bool, super::Error> {
+    async fn exists(&self, id: &RefreshTokenID) -> Result<bool, super::Error> {
         Ok(self
             .connection
             .lock()
@@ -35,27 +35,16 @@ impl TokenStore for RedisTokenStore {
             .await?)
     }
 
-    async fn get(&self, id: &TokenID) -> Result<Option<Token>, super::Error> {
-        use std::str::FromStr;
-
-        let token: Option<String> = self.connection.lock().await.get(id.to_string()).await?;
-        let token: Option<Token> = match token.map(|token| Token::from_str(token.as_str())) {
-            Some(token) => Some(token?),
-            None => None,
-        };
-        Ok(token)
-    }
-
-    async fn remove(&self, id: &TokenID) -> Result<bool, super::Error> {
+    async fn remove(&self, id: &RefreshTokenID) -> Result<bool, super::Error> {
         let removed: bool = self.connection.lock().await.del(id.to_string()).await?;
         Ok(removed)
     }
 
-    async fn add(&self, token: &Token) -> Result<(), super::Error> {
+    async fn add(&self, id: &RefreshTokenID) -> Result<(), super::Error> {
         self.connection
             .lock()
             .await
-            .set(token.id().to_string(), token.to_string())
+            .set(token.id().to_string(), ())
             .await?;
 
         Ok(())
