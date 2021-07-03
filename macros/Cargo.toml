@@ -1,7 +1,7 @@
 [package]
 name = "houseflow-macros"
-version = "0.1.0"
-description = "Macros for Houseflow"
+version = "0.1.1"
+description = "Macros for Houseflow - archived"
 homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
