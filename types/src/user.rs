@@ -2,14 +2,11 @@ use crate::common::Credential;
 use std::convert::TryFrom;
 use strum::{EnumIter, IntoEnumIterator};
 
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 pub type UserID = Credential<16>;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, EnumIter, strum::Display)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(rename = "snake_case"))]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, EnumIter, strum::Display, Serialize, Deserialize)]
 #[repr(u8)]
 pub enum UserAgent {
     Internal,
@@ -47,8 +44,7 @@ impl rand::distributions::Distribution<UserAgent> for rand::distributions::Stand
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize,Deserialize)]
 pub struct User {
     /// Unique ID of the user
     pub id: UserID,
