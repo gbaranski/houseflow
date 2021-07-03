@@ -25,14 +25,14 @@ strum          = { version = "0.21.0", features = ["derive"] }
 serde          = { version = "1.0", features = ["derive"] }
 serde_json     = { version = "1.0.64" }
 
-base64 = { version = "0.13.0", optional = true }
-hmac = { version = "0.11.0", optional = true }
-sha2 = { version = "0.9.5", optional = true }
 validator = { version = "0.13.0", features = ["derive"], optional = true }
+chrono = { version = "0.4.19", features = ["serde"], optional = true }
+ring = { version = "0.16.20", optional = true }
+base64 = { version = "0.13.0", optional = true }
 
 [features]
 actix          = [ "actix-web" ]
-token          = [ "base64", "hmac", "sha2" ]
+token          = [ "ring", "chrono", "base64" ]
 admin          = [ "validator" ]
 auth           = [ "token", "validator" ]
 fulfillment    = [ "token", "lighthouse" ]
