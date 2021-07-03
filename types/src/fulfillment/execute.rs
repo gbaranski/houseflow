@@ -1,16 +1,15 @@
-use crate::lighthouse::proto::{execute, execute_response};
-use crate::{lighthouse, token, DeviceID, ResultTagged};
+use crate::{lighthouse, token, DeviceID};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ExecuteRequest {
+pub struct Request {
     pub device_id: DeviceID,
 
     #[serde(flatten)]
-    pub frame: execute::Frame,
+    pub frame: lighthouse::proto::execute::Frame,
 }
 
-pub type ExecuteResponse = ResultTagged<ExecuteResponseBody, ExecuteResponseError>;
+pub type Response = Result<ResponseBody, ResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(
@@ -18,16 +17,9 @@ pub type ExecuteResponse = ResultTagged<ExecuteResponseBody, ExecuteResponseErro
     content = "error_description",
     rename_all = "snake_case"
 )]
-pub enum ExecuteResponseError {
-    #[error("internal error: `{0}`")]
-    // Replace it with better type if needed
-    InternalError(String),
-
-    #[error("decode token header error: {0}")]
-    DecodeTokenHeaderError(#[from] token::DecodeHeaderError),
-
-    #[error("token verify error: {0}")]
-    TokenVerifyError(#[from] token::VerifyError),
+pub enum ResponseError {
+    #[error("token error: {0}")]
+    TokenError(#[from] token::Error),
 
     #[error("no device permission")]
     NoDevicePermission,
@@ -40,31 +32,6 @@ pub enum ExecuteResponseError {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ExecuteResponseBody {
-    pub frame: execute_response::Frame,
-}
-
-#[cfg(feature = "actix")]
-impl actix_web::ResponseError for ExecuteResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use crate::lighthouse::DeviceCommunicationError;
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::DecodeTokenHeaderError(_) => StatusCode::BAD_REQUEST,
-            Self::TokenVerifyError(_) => StatusCode::UNAUTHORIZED,
-            Self::NoDevicePermission => StatusCode::FORBIDDEN,
-            Self::DeviceNotConnected => StatusCode::NOT_FOUND,
-            Self::DeviceCommunicationError(err) => match err {
-                DeviceCommunicationError::Timeout => StatusCode::GATEWAY_TIMEOUT,
-            },
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let response = ExecuteResponse::Err(self.clone());
-        let json = actix_web::web::Json(response);
-        actix_web::HttpResponse::build(self.status_code()).json(json)
-    }
+pub struct ResponseBody {
+    pub frame: lighthouse::proto::execute_response::Frame,
 }

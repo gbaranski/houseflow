@@ -1,8 +1,16 @@
-use crate::token::Token;
-use crate::ResultUntagged;
 use std::time::Duration;
-
 use serde::{Deserialize, Serialize};
+use validator::Validate;
+
+
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
+pub struct Request {
+    /// The grant_type parameter must be set to `GrantType::RefreshToken`.
+    pub grant_type: GrantType,
+
+    /// The refresh token previously issued to the client.
+    pub refresh_token: String,
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -10,26 +18,13 @@ pub enum GrantType {
     RefreshToken,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AccessTokenRequest {
-    /// The grant_type parameter must be set to `GrantType::RefreshToken`.
-    pub grant_type: GrantType,
 
-    /// The refresh token previously issued to the client.
-    pub refresh_token: Token,
-}
+pub type Response = Result<ResponseBody, ResponseError>;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum TokenType {
-    Bearer,
-}
-
-pub type AccessTokenResponse = ResultUntagged<AccessTokenResponseBody, AccessTokenResponseError>;
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AccessTokenResponseBody {
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
+pub struct ResponseBody {
     /// The access token string as issued by the authorization server.
-    pub access_token: Token,
+    pub access_token: String,
 
     /// The type of token this is, typically just the string “Bearer”.
     pub token_type: TokenType,
@@ -39,13 +34,18 @@ pub struct AccessTokenResponseBody {
     pub expires_in: Option<Duration>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, thiserror::Error)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum TokenType {
+    Bearer,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
-    rename_all = "snake_case",
     tag = "error",
-    content = "error_description"
+    content = "error_description",
+    rename_all = "snake_case"
 )]
-pub enum AccessTokenResponseError {
+pub enum ResponseError {
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
     #[error("invalid request, description: {0:?}")]
@@ -74,28 +74,6 @@ pub enum AccessTokenResponseError {
     /// Note that unknown grant types also use this specific error code rather than using the invalid_request above.
     #[error("unsupported grant type, description: {0:?}")]
     UnsupportedGrantType(Option<String>),
-}
-
-#[cfg(feature = "actix")]
-impl actix_web::ResponseError for AccessTokenResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InvalidRequest(_) => StatusCode::BAD_REQUEST,
-            Self::InvalidClient(_) => StatusCode::UNAUTHORIZED,
-            Self::InvalidGrant(_) => StatusCode::BAD_REQUEST,
-            Self::InvalidScope(_) => StatusCode::BAD_REQUEST,
-            Self::UnauthorizedClient(_) => StatusCode::BAD_REQUEST,
-            Self::UnsupportedGrantType(_) => StatusCode::BAD_REQUEST,
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let response = AccessTokenResponse::Err(self.clone());
-        let json = actix_web::web::Json(response);
-        actix_web::HttpResponse::build(self.status_code()).json(json)
-    }
 }
 
 mod token_expiration {
@@ -133,6 +111,7 @@ mod token_expiration {
         {
             Ok(None)
         }
+
         fn visit_unit<E>(self) -> Result<Option<Duration>, E>
         where
             E: de::Error,

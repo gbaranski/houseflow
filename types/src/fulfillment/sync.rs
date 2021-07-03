@@ -1,10 +1,10 @@
-use crate::{token, Device, ResultTagged};
+use crate::{token, Device};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SyncRequest {}
+pub struct Request {}
 
-pub type SyncResponse = ResultTagged<SyncResponseBody, SyncResponseError>;
+pub type Response = Result<ResponseBody, ResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(
@@ -12,38 +12,12 @@ pub type SyncResponse = ResultTagged<SyncResponseBody, SyncResponseError>;
     content = "error_description",
     rename_all = "snake_case"
 )]
-pub enum SyncResponseError {
-    #[error("internal error: `{0}`")]
-    // Replace it with better type if needed
-    InternalError(String),
-
-    #[error("decode token header error: {0}")]
-    DecodeTokenHeaderError(#[from] token::DecodeHeaderError),
-
-    #[error("token verify error: {0}")]
-    TokenVerifyError(#[from] token::VerifyError),
+pub enum ResponseError {
+    #[error("token error: {0}")]
+    TokenError(#[from] token::Error),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SyncResponseBody {
+pub struct ResponseBody {
     pub devices: Vec<Device>,
-}
-
-#[cfg(feature = "actix")]
-impl actix_web::ResponseError for SyncResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::DecodeTokenHeaderError(_) => StatusCode::BAD_REQUEST,
-            Self::TokenVerifyError(_) => StatusCode::FORBIDDEN,
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let response = SyncResponse::Err(self.clone());
-        let json = actix_web::web::Json(response);
-        actix_web::HttpResponse::build(self.status_code()).json(json)
-    }
 }

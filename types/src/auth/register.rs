@@ -1,9 +1,9 @@
-use crate::{ResultTagged, UserID};
+use crate::UserID;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
-pub struct RegisterRequest {
+pub struct Request {
     #[validate(email)]
     pub email: String,
 
@@ -13,61 +13,20 @@ pub struct RegisterRequest {
     pub password: String,
 }
 
-pub type RegisterResponse = ResultTagged<RegisterResponseBody, RegisterResponseError>;
+pub type Response = Result<ResponseBody, ResponseError>;
 
-#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
+pub struct ResponseBody {
+    pub user_id: UserID,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
     tag = "error",
     content = "error_description",
     rename_all = "snake_case"
 )]
-pub enum RegisterResponseError {
-    #[error("internal error: `{0}`")]
-    // Replace it with better type if needed
-    InternalError(String),
-
-    #[error("{0}")]
-    ValidationError(#[from] validator::ValidationError),
-
-    #[error("User already exists")]
+pub enum ResponseError {
+    #[error("user already exists")]
     UserAlreadyExists,
-}
-
-impl From<validator::ValidationErrors> for RegisterResponseError {
-    fn from(val: validator::ValidationErrors) -> Self {
-        Self::ValidationError(
-            val.field_errors()
-                .iter()
-                .next()
-                .unwrap()
-                .1
-                .first()
-                .unwrap()
-                .clone(),
-        )
-    }
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RegisterResponseBody {
-    pub user_id: UserID,
-}
-
-#[cfg(feature = "actix")]
-impl actix_web::ResponseError for RegisterResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::UserAlreadyExists => StatusCode::BAD_REQUEST,
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let response = RegisterResponse::Err(self.clone());
-        let json = actix_web::web::Json(response);
-        actix_web::HttpResponse::build(self.status_code()).json(json)
-    }
 }

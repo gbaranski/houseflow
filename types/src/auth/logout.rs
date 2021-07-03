@@ -1,44 +1,22 @@
-use crate::{token, ResultTagged};
+use crate::token;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LogoutRequest {}
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
+pub struct Request {}
 
-pub type LogoutResponse = ResultTagged<LogoutResponseBody, LogoutResponseError>;
+pub type Response = Result<ResponseBody, ResponseError>;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct LogoutResponseBody {
-    pub token_removed: bool,
-}
+#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
+pub struct ResponseBody {}
 
-#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
     tag = "error",
     content = "error_description",
     rename_all = "snake_case"
 )]
-pub enum LogoutResponseError {
-    #[error("invalid token: {0}")]
-    InvalidToken(#[from] token::VerifyError),
-
-    #[error("invalid token: {0}")]
-    DecodeHeaderError(#[from] token::DecodeHeaderError),
-}
-
-#[cfg(feature = "actix")]
-impl actix_web::ResponseError for LogoutResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InvalidToken(_) => StatusCode::BAD_REQUEST,
-            Self::DecodeHeaderError(_) => StatusCode::BAD_REQUEST,
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let response = LogoutResponse::Err(self.clone());
-        let json = actix_web::web::Json(response);
-        actix_web::HttpResponse::build(self.status_code()).json(json)
-    }
+pub enum ResponseError {
+    #[error("token error: {0}")]
+    TokenError(#[from] token::Error),
 }

@@ -42,8 +42,7 @@ impl<const N: usize> AsRef<[u8]> for Credential<N> {
     }
 }
 
-#[derive(Debug, Clone, Error, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Error, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CredentialError {
     #[error("Invalid size, expected: {expected}, received: {received}")]
     InvalidSize { expected: usize, received: usize },
@@ -170,13 +169,10 @@ impl<'a, const N: usize> postgres_types::FromSql<'a> for Credential<N> {
     }
 }
 
-#[cfg(feature = "serde")]
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg(feature = "serde")]
 struct CredentialVisitor<const N: usize>;
 
-#[cfg(feature = "serde")]
 impl<'de, const N: usize> Visitor<'de> for CredentialVisitor<N> {
     type Value = Credential<N>;
 
@@ -197,7 +193,6 @@ impl<'de, const N: usize> Visitor<'de> for CredentialVisitor<N> {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de, const N: usize> Deserialize<'de> for Credential<N> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -207,7 +202,6 @@ impl<'de, const N: usize> Deserialize<'de> for Credential<N> {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<const N: usize> Serialize for Credential<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

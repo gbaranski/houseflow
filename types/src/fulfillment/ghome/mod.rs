@@ -48,7 +48,7 @@ pub enum IntentRequestInput {
     Disconnect,
 }
 
-pub type IntentResponse = crate::ResultUntagged<IntentResponseBody, IntentResponseError>;
+pub type IntentResponse = Result<IntentResponseBody, IntentResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged)]
@@ -78,14 +78,10 @@ use crate::{lighthouse, token};
 )]
 pub enum IntentResponseError {
     #[error("internal error: `{0}`")]
-    // Replace it with better type if needed
     InternalError(String),
 
-    #[error("decode token header error: {0}")]
-    DecodeTokenHeaderError(#[from] token::DecodeHeaderError),
-
-    #[error("token verify error: {0}")]
-    TokenVerifyError(#[from] token::VerifyError),
+    #[error("token error: {0}")]
+    TokenError(#[from] token::Error),
 
     #[error("no device permission")]
     NoDevicePermission,
@@ -102,8 +98,7 @@ impl actix_web::ResponseError for IntentResponseError {
 
         match self {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::DecodeTokenHeaderError(_) => StatusCode::BAD_REQUEST,
-            Self::TokenVerifyError(_) => StatusCode::UNAUTHORIZED,
+            Self::TokenError(err) => err.status_code(),
             Self::NoDevicePermission => StatusCode::FORBIDDEN,
             Self::DeviceCommunicationError(err) => match err {
                 DeviceCommunicationError::Timeout => StatusCode::GATEWAY_TIMEOUT,

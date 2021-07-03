@@ -1,15 +1,12 @@
 use crate::common::Credential;
 use semver::Version;
 use strum::{EnumIter, IntoEnumIterator};
-
-#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Device {
     /// Identifier of the device
     pub id: DeviceID,
@@ -47,8 +44,7 @@ pub struct Device {
 
 pub type StructureID = Credential<16>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Structure {
     pub id: StructureID,
     pub name: String,
@@ -56,16 +52,14 @@ pub struct Structure {
 
 pub type RoomID = Credential<16>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Room {
     pub id: RoomID,
     pub structure_id: StructureID,
     pub name: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserStructure {
     pub structure_id: StructureID,
     pub user_id: crate::UserID,
@@ -75,8 +69,7 @@ pub struct UserStructure {
 use strum::EnumString;
 
 /// Traits defines what functionality device supports
-#[derive(Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, Serialize, Deserialize)]
 #[strum(serialize_all = "snake_case")]
 #[repr(u16)]
 #[non_exhaustive]
@@ -95,9 +88,8 @@ impl DeviceTrait {
 }
 
 /// Type of the device
-#[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 #[repr(u16)]
 #[non_exhaustive]
@@ -117,8 +109,7 @@ impl DeviceType {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString, Serialize, Deserialize)]
 #[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceCommand {
