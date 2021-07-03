@@ -11,8 +11,6 @@ use houseflow_types::token::RefreshTokenID;
 pub enum Error {
     #[error("internal error: `{0}`")]
     InternalError(Box<dyn TokenStoreInternalError>),
-    #[error("decoding token failed: `{0}`")]
-    DecodeError(#[from] DecodeError),
 }
 
 pub trait TokenStoreInternalError: std::fmt::Debug + std::error::Error {}
@@ -25,7 +23,7 @@ impl<T: TokenStoreInternalError + 'static> From<T> for Error {
 
 #[async_trait]
 pub trait TokenStore: Send + Sync {
-    async fn exists(&self, id: &TokenID) -> Result<bool, Error>;
+    async fn exists(&self, id: &RefreshTokenID) -> Result<bool, Error>;
 
     async fn remove(&self, id: &RefreshTokenID) -> Result<bool, Error>;
 
