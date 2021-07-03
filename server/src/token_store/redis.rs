@@ -44,7 +44,7 @@ impl TokenStore for RedisTokenStore {
         self.connection
             .lock()
             .await
-            .set(token.id().to_string(), ())
+            .set(id.to_string(), "")
             .await?;
 
         Ok(())
