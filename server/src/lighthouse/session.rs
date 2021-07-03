@@ -1,8 +1,7 @@
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
-use bytes::BytesMut;
 use houseflow_types::lighthouse::{
-    proto::{execute, execute_response, query, state, Decoder, Encoder, Frame, FrameID},
+    proto::{execute, execute_response, query, state, Frame, FrameID},
     DeviceCommunicationError,
 };
 use houseflow_types::DeviceID;
@@ -71,10 +70,12 @@ impl Handler<ActorQueryFrame> for Session {
         let frame: query::Frame = frame.into();
         let frame = Frame::Query(frame);
 
-        let mut buf = BytesMut::with_capacity(512);
         let mut rx = self.state_channel.subscribe();
-        frame.encode(&mut buf);
-        ctx.binary(buf);
+        let json = match serde_json::to_string(&frame) {
+            Ok(json) => json,
+            Err(err) => return Box::pin(async move { Err(err.into()) }.into_actor(self)),
+        };
+        ctx.text(json);
 
         let fut = async move {
             let resp = tokio::time::timeout(QUERY_TIMEOUT, rx.recv())
@@ -102,11 +103,14 @@ impl Handler<ActorExecuteFrame> for Session {
         let request_id = frame.id.clone();
         let frame = Frame::Execute(frame);
 
-        let mut buf = BytesMut::with_capacity(512);
+        let json = match serde_json::to_string(&frame) {
+            Ok(json) => json,
+            Err(err) => return Box::pin(async move { Err(err.into()) }.into_actor(self)),
+        };
+
         let (tx, rx) = oneshot::channel();
         self.execute_channels.insert(request_id.clone(), tx);
-        frame.encode(&mut buf);
-        ctx.binary(buf);
+        ctx.text(json);
 
         let fut = async move {
             let resp = tokio::time::timeout(EXECUTE_TIMEOUT, rx)
@@ -141,11 +145,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
         match msg {
             ws::Message::Text(text) => {
                 log::info!("Received text: {}", text);
-            }
-            ws::Message::Binary(mut bytes) => {
-                let frame = Frame::decode(&mut bytes).expect("failed decoding");
+
+                // FIXME: handle it properly to avoid mutex poisoning by panicking
+                let frame = serde_json::from_str(&text).expect("client sent invalid JSON");
                 match frame {
-                    Frame::NoOperation(_frame) => (),
                     Frame::State(frame) => {
                         self.state_channel.send(frame).expect("failed sending");
                     }
@@ -159,7 +162,12 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                             .send(frame)
                             .expect("failed sending response");
                     }
+                    // FIXME: handle that by returning some kind of response, or at least logging
+                    _ => unimplemented!(),
                 }
+            }
+            ws::Message::Binary(bytes) => {
+                log::info!("Received binary: {:?}", bytes);
             }
             ws::Message::Continuation(item) => {
                 log::info!("Received continuation: {:?}", item);
