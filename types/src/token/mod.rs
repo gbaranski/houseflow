@@ -91,9 +91,9 @@ pub struct Token<P: ser::Serialize + de::DeserializeOwned> {
     signature: Signature,
 }
 
-impl<P: ser::Serialize + de::DeserializeOwned> ToString for Token<P> {
-    fn to_string(&self) -> String {
-        self.encode()
+impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.encode())
     }
 }
 
