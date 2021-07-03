@@ -102,6 +102,7 @@ impl actix_web::ResponseError for IntentResponseError {
             Self::NoDevicePermission => StatusCode::FORBIDDEN,
             Self::DeviceCommunicationError(err) => match err {
                 DeviceCommunicationError::Timeout => StatusCode::GATEWAY_TIMEOUT,
+                DeviceCommunicationError::InvalidJSON(_) => StatusCode::BAD_REQUEST,
             },
         }
     }

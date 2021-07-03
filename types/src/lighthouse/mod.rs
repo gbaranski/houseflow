@@ -12,6 +12,15 @@ use serde::{Deserialize, Serialize};
 pub enum DeviceCommunicationError {
     #[error("Timeout when sending request to device")]
     Timeout,
+
+    #[error("invalid JSON input")]
+    InvalidJSON(String),
+}
+
+impl From<serde_json::Error> for DeviceCommunicationError {
+    fn from(val: serde_json::Error) -> Self {
+        Self::InvalidJSON(val.to_string())
+    }
 }
 
 #[derive(Debug, thiserror::Error, Deserialize, Serialize, Clone)]
