@@ -1,6 +1,8 @@
 use crate::{defaults, postgres, redis};
 use serde::{Deserialize, Serialize};
 
+pub mod google;
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     /// Host, e.g 127.0.0.1
@@ -17,6 +19,9 @@ pub struct Config {
     /// Configuration of the Redis Database
     #[serde(default)]
     pub redis: redis::Config,
+
+    /// Configuration of the Google 3rd party service
+    pub google: Option<google::Config>,
 }
 
 impl Config {
