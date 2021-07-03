@@ -15,7 +15,6 @@ name = "houseflow"
 
 [workspace]
 members = [
-  "macros",
   "config",
   "devices/virtual",
   "server",
