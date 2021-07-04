@@ -100,7 +100,7 @@ impl Handler<ActorExecuteFrame> for Session {
     fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
         let frame: execute::Frame = frame.into();
-        let request_id = frame.id.clone();
+        let request_id = frame.id;
         let frame = Frame::Execute(frame);
 
         let json = match serde_json::to_string(&frame) {
@@ -109,7 +109,7 @@ impl Handler<ActorExecuteFrame> for Session {
         };
 
         let (tx, rx) = oneshot::channel();
-        self.execute_channels.insert(request_id.clone(), tx);
+        self.execute_channels.insert(request_id, tx);
         ctx.text(json);
 
         let fut = async move {
