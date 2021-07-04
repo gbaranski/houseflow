@@ -12,9 +12,8 @@ impl Command<ClientCommandState> for RefreshCommand {
         let tokens = state.tokens.get().await?;
         let response = state
             .houseflow_api
-            .fetch_access_token(&tokens.refresh)
-            .await?
-            .into_result()?;
+            .fetch_access_token(&state.refresh_token().await?)
+            .await??;
         let tokens = Tokens {
             refresh: tokens.refresh,
             access: response.access_token,

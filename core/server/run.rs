@@ -25,7 +25,7 @@ impl Command<ServerCommandState> for RunServerCommand {
         let database = Data::from(Arc::new(database) as Arc<dyn Database>);
 
         let address = state.config.address;
-        let secrets = Data::new(state.config.secrets);
+        let config = Data::new(state.config);
         let sessions = Data::new(houseflow_server::Sessions::default());
         let server = HttpServer::new(move || {
             App::new()
@@ -35,7 +35,7 @@ impl Command<ServerCommandState> for RunServerCommand {
                         cfg,
                         token_store.clone(),
                         database.clone(),
-                        secrets.clone(),
+                        config.clone(),
                         sessions.clone(),
                     )
                 })

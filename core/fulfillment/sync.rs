@@ -14,8 +14,7 @@ impl Command<ClientCommandState> for SyncCommand {
         let response = state
             .houseflow_api
             .sync(&access_token)
-            .await?
-            .into_result()?;
+            .await??;
 
         println!("Synced {} devices", response.devices.len());
         response.devices.iter().for_each(|device| {

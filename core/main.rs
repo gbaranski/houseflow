@@ -73,12 +73,12 @@ cfg_if! {
     use houseflow_config::client::Config as ClientConfig;
     use serde::{Deserialize, Serialize};
     use szafka::Szafka;
-    use houseflow_types::{token::Token, Device};
+    use houseflow_types::{token::{AccessToken, RefreshToken}, Device};
 
     #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
     pub struct Tokens {
-        access: Token,
-        refresh: Token,
+        access: String,
+        refresh: String,
     }
 
     #[derive(Clone)]
@@ -108,36 +108,43 @@ cfg_if! {
         }
 
 
-        pub async fn access_token(&self) -> anyhow::Result<Token> {
+        pub async fn access_token(&self) -> anyhow::Result<AccessToken> {
             use anyhow::Context;
 
             let tokens = self.tokens.get().await.with_context(|| "get tokens")?;
-            if tokens.refresh.has_expired() {
-                log::debug!("cached refresh token is expired");
-                return Err(anyhow::Error::msg(
-                    "refresh token expired, you need to log in again using `houseflow auth login`",
-                ));
-            }
+            let refresh_token = RefreshToken::decode_unsafe(&tokens.refresh).with_context(|| "you may need to log in again using `houseflow auth login`")?;
 
-            if !tokens.access.has_expired() {
-                log::debug!("cached access token is not expired");
-                Ok(tokens.access)
-            } else {
-                log::debug!("cached access token is expired, fetching new one");
-                let fetched_access_token = self
-                    .houseflow_api
-                    .fetch_access_token(&tokens.refresh)
-                    .await?
-                    .into_result()?
-                    .access_token;
-                let tokens = Tokens {
-                    refresh: tokens.refresh,
-                    access: fetched_access_token.clone(),
-                };
-                self.tokens.save(&tokens).await?;
+            let access_token = AccessToken::decode_unsafe(&tokens.access);
+            match access_token {
+                Ok(token) => {
+                    log::debug!("cached access token is valid");
+                    Ok(token)
+                }
+                Err(err) => {
+                    log::debug!("token verify returned error: {}", err);
+                    log::debug!("cached access token is expired, fetching new one");
+                    let raw_fetched_access_token = self
+                        .houseflow_api
+                        .fetch_access_token(&refresh_token)
+                        .await??.access_token;
+                    let fetched_access_token = AccessToken::decode_unsafe(&raw_fetched_access_token)?;
+                    let tokens = Tokens {
+                        refresh: tokens.refresh,
+                        access: raw_fetched_access_token,
+                    };
 
-                Ok(fetched_access_token)
+                    self.tokens.save(&tokens).await?;
+                    Ok(fetched_access_token)
+
+                }
             }
+        }
+
+        pub async fn refresh_token(&self) -> anyhow::Result<RefreshToken> {
+            use anyhow::Context;
+
+            let tokens = self.tokens.get().await.with_context(|| "get tokens")?;
+            RefreshToken::decode_unsafe(&tokens.refresh).with_context(|| "you may need to log in again using `houseflow auth login`")
         }
     }
 

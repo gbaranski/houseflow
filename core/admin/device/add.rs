@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 use clap::Clap;
 
-use houseflow_types::{admin::AddDeviceRequest, DeviceTrait, DeviceType, RoomID};
+use houseflow_types::{admin, DeviceTrait, DeviceType, RoomID};
 use semver::Version;
 
 fn from_json<'de, T: serde::de::Deserialize<'de>>(v: &'de str) -> Result<T, serde_json::Error> {
@@ -77,7 +77,7 @@ pub struct AddDeviceCommand {
 impl Command<ClientCommandState> for AddDeviceCommand {
     async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         // TODO: try to simplify that
-        let request = AddDeviceRequest {
+        let request = admin::device::add::Request {
             room_id: self.room_id.clone(),
             password: self.password,
             device_type: self.device_type,
@@ -94,8 +94,7 @@ impl Command<ClientCommandState> for AddDeviceCommand {
         let response = state
             .houseflow_api
             .admin_add_device(&access_token, &request)
-            .await?
-            .into_result()?;
+            .await??;
 
         log::info!("✔ Succesfully added device with ID: {}", response.device_id);
 

@@ -15,10 +15,9 @@ pub struct LoginCommand {
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for LoginCommand {
     async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        use houseflow_types::auth::LoginRequest;
+        use houseflow_types::auth::login;
 
         use dialoguer::{Input, Password};
-        use houseflow_types::UserAgent;
 
         let theme = crate::cli::get_dialoguer_theme();
         let email = match self.email {
@@ -35,17 +34,16 @@ impl Command<ClientCommandState> for LoginCommand {
                 .interact()?,
         };
 
-        let login_request = LoginRequest {
+        let login_request = login::Request {
             email,
             password,
-            user_agent: UserAgent::Internal,
         };
 
         let login_response = state
             .houseflow_api
             .login(login_request.clone())
-            .await?
-            .into_result()?;
+            .await??;
+
         log::info!("✔ Logged in as {}", login_request.email);
         let tokens = Tokens {
             refresh: login_response.refresh_token,

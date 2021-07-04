@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 use clap::Clap;
 
-use houseflow_types::{admin::AddRoomRequest, StructureID};
+use houseflow_types::{admin, StructureID};
 
 #[derive(Clap)]
 pub struct AddRoomCommand {
@@ -17,8 +17,7 @@ pub struct AddRoomCommand {
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for AddRoomCommand {
     async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        // TODO: try to simplify that
-        let request = AddRoomRequest {
+        let request = admin::room::add::Request {
             room_name: self.name,
             structure_id: self.structure_id,
         };
@@ -27,8 +26,7 @@ impl Command<ClientCommandState> for AddRoomCommand {
         let response = state
             .houseflow_api
             .admin_add_room(&access_token, &request)
-            .await?
-            .into_result()?;
+            .await??;
 
         log::info!("✔ Succesfully added room with ID: {}", response.room_id);
 

@@ -1,7 +1,7 @@
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 use houseflow_types::{
-    fulfillment::ExecuteRequest, lighthouse::proto::execute, DeviceCommand, DeviceID, DeviceStatus,
+    fulfillment::execute, lighthouse::proto, DeviceCommand, DeviceID, DeviceStatus,
 };
 
 use clap::Clap;
@@ -50,20 +50,19 @@ impl Command<ClientCommandState> for ExecuteCommand {
             )));
         }
 
-        let execute_frame = execute::Frame {
+        let execute_frame = proto::execute::Frame {
             id: rand::random(),
             command: self.command.clone(),
             params: self.params.clone(),
         };
-        let request = ExecuteRequest {
+        let request = execute::Request {
             device_id: self.device_id.clone(),
             frame: execute_frame,
         };
         let response = state
             .houseflow_api
             .execute(&access_token, &request)
-            .await?
-            .into_result()?;
+            .await??;
         match response.frame.status {
             DeviceStatus::Success => println!("✔ Device responded with success!"),
             DeviceStatus::Error => println!(

@@ -9,13 +9,12 @@ pub struct LogoutCommand {}
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for LogoutCommand {
     async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let tokens = state.tokens.get().await?;
+        let refresh_token = state.refresh_token().await?;
 
         state
             .houseflow_api
-            .logout(&tokens.refresh)
-            .await?
-            .into_result()?;
+            .logout(&refresh_token)
+            .await??;
 
         state.tokens.flush().await?;
         log::info!("✔ Succesfully logged out");

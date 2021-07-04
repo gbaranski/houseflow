@@ -183,6 +183,49 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         [raw_header, raw_payload, raw_signature].join(".")
     }
 
+    pub fn decode_unsafe(token: &str) -> Result<Self, DecodeError> {
+        let mut iter = token.split(".");
+        let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;
+        let raw_payload = iter.next().ok_or(DecodeError::MissingPayload)?;
+        let raw_signature = iter.next().ok_or(DecodeError::MissingSignature)?;
+
+        let header = decode_part::<Header>(raw_header)?;
+        let signature = base64_decode(raw_signature)
+            .map_err(|err| DecodeError::InvalidEncoding(err.to_string()))?;
+
+        let payload_base = decode_part::<BasePayload>(raw_payload)?;
+        validate(&payload_base)?;
+        let payload = decode_part::<P>(raw_payload)?;
+        let token = Token {
+            header,
+            payload,
+            signature,
+        };
+
+        Ok(token)
+    }
+
+    pub fn decode_unsafe_novalidate(token: &str) -> Result<Self, DecodeError> {
+        let mut iter = token.split(".");
+        let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;
+        let raw_payload = iter.next().ok_or(DecodeError::MissingPayload)?;
+        let raw_signature = iter.next().ok_or(DecodeError::MissingSignature)?;
+
+        let header = decode_part::<Header>(raw_header)?;
+        let signature = base64_decode(raw_signature)
+            .map_err(|err| DecodeError::InvalidEncoding(err.to_string()))?;
+
+        let payload = decode_part::<P>(raw_payload)?;
+        let token = Token {
+            header,
+            payload,
+            signature,
+        };
+
+        Ok(token)
+    }
+
+
     pub fn decode(key: &Key, token: &str) -> Result<Self, DecodeError> {
         let mut iter = token.split(".");
         let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;

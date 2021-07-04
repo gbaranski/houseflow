@@ -3,7 +3,7 @@ use async_trait::async_trait;
 
 use clap::Clap;
 
-use houseflow_types::{admin::AddUserStructureRequest, StructureID, UserID};
+use houseflow_types::{admin, StructureID, UserID};
 
 #[derive(Clap)]
 pub struct AddUserStructureCommand {
@@ -21,7 +21,7 @@ pub struct AddUserStructureCommand {
 #[async_trait(?Send)]
 impl Command<ClientCommandState> for AddUserStructureCommand {
     async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let request = AddUserStructureRequest {
+        let request = admin::user_structure::add::Request {
             structure_id: self.structure_id,
             user_id: self.user_id,
             is_manager: self.is_manager,
@@ -31,8 +31,7 @@ impl Command<ClientCommandState> for AddUserStructureCommand {
         state
             .houseflow_api
             .admin_add_user_structure(&access_token, &request)
-            .await?
-            .into_result()?;
+            .await??;
 
         log::info!("✔ Succesfully added user structure");
 

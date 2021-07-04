@@ -2,7 +2,6 @@ use chrono::Duration;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 pub struct Request {
     /// The grant_type parameter must be set to `GrantType::RefreshToken`.
@@ -17,7 +16,6 @@ pub struct Request {
 pub enum GrantType {
     RefreshToken,
 }
-
 
 pub type Response = Result<ResponseBody, ResponseError>;
 
@@ -94,6 +92,17 @@ mod token_expiration {
             formatter.write_str("duration in seconds")
         }
 
+        fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            use std::convert::TryInto;
+            let v: i64 = v.try_into().map_err(|err| {
+                serde::de::Error::custom(&format!("u64 to i64 cast fail: {}", err))
+            })?;
+            self.visit_i64(v)
+        }
+
         fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
         where
             E: de::Error,
@@ -148,7 +157,7 @@ impl actix_web::ResponseError for ResponseError {
 
         match self {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            _ => StatusCode::BAD_REQUEST
+            _ => StatusCode::BAD_REQUEST,
         }
     }
 

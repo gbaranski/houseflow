@@ -39,7 +39,7 @@ impl HouseflowAPI {
     pub async fn admin_add_structure(
         &self,
         access_token: &AccessToken,
-        request: &admin::device::add::Request,
+        request: &admin::structure::add::Request,
     ) -> Result<admin::structure::add::Response, Error> {
         self.admin_add_thing(access_token, request, "structure")
             .await
@@ -48,7 +48,7 @@ impl HouseflowAPI {
     pub async fn admin_add_room(
         &self,
         access_token: &AccessToken,
-        request: &admin::device::add::Request,
+        request: &admin::room::add::Request,
     ) -> Result<admin::room::add::Response, Error> {
         self.admin_add_thing(access_token, request, "room").await
     }

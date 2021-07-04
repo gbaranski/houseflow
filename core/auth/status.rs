@@ -1,8 +1,9 @@
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use houseflow_types::{
-    auth::{WhoamiResponse, WhoamiResponseBody, WhoamiResponseError},
-    token::Token,
+    auth::whoami,
+    token::{AccessToken, RefreshToken},
 };
 
 use clap::Clap;
@@ -18,30 +19,25 @@ impl StatusCommand {
     async fn logged_in(
         &self,
         state: &ClientCommandState,
-        whoami_response: WhoamiResponseBody,
+        whoami_response: whoami::ResponseBody,
     ) -> anyhow::Result<()> {
         let tokens = state.tokens.get().await?;
-        let (access_token, refresh_token) = (tokens.access, tokens.refresh);
+        let (access_token, refresh_token) = (
+            AccessToken::decode_unsafe_novalidate(&tokens.access)?,
+            RefreshToken::decode_unsafe_novalidate(&tokens.refresh)?,
+        );
 
-        let get_token_expiration = |token: &Token| match token.expires_at().as_ref() {
-            Some(expires_at) => {
+        let get_token_expiration = |exp_at: Option<&DateTime<Utc>>| match exp_at {
+            Some(exp_at) => {
                 use std::cmp::Ordering;
-                use std::time::{Duration, SystemTime};
-                let round_duration = |duration: Duration| Duration::from_secs(duration.as_secs());
 
-                match expires_at.cmp(&SystemTime::now()) {
+                match exp_at.cmp(&Utc::now()) {
                     Ordering::Equal => "just expired".to_string(),
                     Ordering::Greater => {
-                        let difference = expires_at.duration_since(SystemTime::now()).unwrap();
-                        let difference = round_duration(difference);
-                        let difference = humantime::Duration::from(difference);
-                        format!("expire in: {}", difference)
+                        format!("expire at {}", exp_at.to_rfc2822())
                     }
                     Ordering::Less => {
-                        let difference = expires_at.elapsed().unwrap();
-                        let difference = round_duration(difference);
-                        let difference = humantime::Duration::from(difference);
-                        format!("expired for: {}", difference)
+                        format!("expired since {}", exp_at.to_rfc2822())
                     }
                 }
             }
@@ -49,8 +45,8 @@ impl StatusCommand {
         };
 
         let (access_token_expiration, refresh_token_expiration) = (
-            get_token_expiration(&access_token),
-            get_token_expiration(&refresh_token),
+            get_token_expiration(Some(&access_token.exp)),
+            get_token_expiration(refresh_token.exp.as_ref()),
         );
         let censor = |s: &str| std::iter::repeat("*").take(s.len()).collect();
         let (access_token, refresh_token) = match self.show_token {
@@ -76,10 +72,6 @@ impl StatusCommand {
 
         Ok(())
     }
-
-    fn error(&self, error: WhoamiResponseError) {
-        println!("❌ Error: {}", error);
-    }
 }
 
 #[async_trait(?Send)]
@@ -87,10 +79,8 @@ impl Command<ClientCommandState> for StatusCommand {
     async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
         let access_token = state.access_token().await?;
 
-        match state.houseflow_api.whoami(&access_token).await? {
-            WhoamiResponse::Ok(response) => self.logged_in(&state, response).await?,
-            WhoamiResponse::Err(err) => self.error(err),
-        };
+        let response = state.houseflow_api.whoami(&access_token).await??;
+        self.logged_in(&state, response).await?;
         Ok(())
     }
 }

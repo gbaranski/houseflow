@@ -1,7 +1,7 @@
 use crate::{ClientCommandState, Command};
 use async_trait::async_trait;
 use houseflow_types::{
-    fulfillment::QueryRequest, lighthouse::proto::query, DeviceID,
+    fulfillment::query, lighthouse::proto, DeviceID,
 };
 
 use clap::Clap;
@@ -25,16 +25,15 @@ impl Command<ClientCommandState> for QueryCommand {
                 )
             })?;
 
-        let query_frame = query::Frame {};
-        let request = QueryRequest {
+        let query_frame = proto::query::Frame {};
+        let request = query::Request {
             device_id: self.device_id.clone(),
             frame: query_frame,
         };
         let response = state
             .houseflow_api
             .query(&access_token, &request)
-            .await?
-            .into_result()?;
+            .await??;
 
         println!("Device responded with state: {:#?}", response.frame.state);
 

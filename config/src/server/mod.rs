@@ -63,9 +63,11 @@ impl Config {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Secrets {
     /// Key used to sign refresh tokens. Must be secret and should be farily random.
+    #[serde(with = "serde_token_key")]
     pub refresh_key: houseflow_types::token::Key,
 
     /// Key used to sign access tokens. Must be secret and should be farily random.
+    #[serde(with = "serde_token_key")]
     pub access_key: houseflow_types::token::Key,
 
     /// Salt used with hashing passwords
@@ -87,6 +89,38 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
     }
 }
 
+mod serde_token_key {
+    pub fn serialize<S>(key: &houseflow_types::token::Key, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&hex::encode(key))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<houseflow_types::token::Key, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct TokenKeyVisitor;
+        impl<'de> serde::de::Visitor<'de> for TokenKeyVisitor {
+            type Value = houseflow_types::token::Key;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("hex encoded bytes")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                hex::decode(v).map_err(|err| serde::de::Error::custom(err.to_string()))
+            }
+        }
+
+        deserializer.deserialize_str(TokenKeyVisitor)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Config;
@@ -94,6 +128,7 @@ mod tests {
     #[test]
     fn default_toml() {
         let config = Config::default_toml();
+        dbg!(&config);
         let _: Config = toml::from_str(&config).unwrap();
     }
 }
