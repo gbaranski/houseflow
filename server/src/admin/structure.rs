@@ -18,7 +18,7 @@ pub async fn on_add(
     config: Data<Config>,
     db: Data<dyn Database>,
 ) -> Result<Json<ResponseBody>, ResponseError> {
-    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
+    let access_token = AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
 
     if !db
         .check_user_admin(&access_token.sub)

@@ -69,7 +69,6 @@ impl Error {
     }
 }
 
-pub type Key = Vec<u8>;
 pub type Signature = Vec<u8>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -155,7 +154,7 @@ fn decode_part<T: de::DeserializeOwned>(val: &str) -> Result<T, DecodeError> {
 use ring::hmac;
 
 impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
-    pub fn new(key: &Key, payload: P) -> Self {
+    pub fn new(key: &[u8], payload: P) -> Self {
         const ALGORITHM: Algorithm = Algorithm::HS256; // that can be changed in the future
         const HEADER: Header = Header { alg: ALGORITHM };
 
@@ -225,7 +224,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         Ok(token)
     }
 
-    pub fn decode(key: &Key, token: &str) -> Result<Self, DecodeError> {
+    pub fn decode(key: &[u8], token: &str) -> Result<Self, DecodeError> {
         let mut iter = token.split(".");
         let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;
         let raw_payload = iter.next().ok_or(DecodeError::MissingPayload)?;
@@ -263,7 +262,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     }
 
     #[cfg(feature = "actix")]
-    pub fn from_request(key: &Key, req: &actix_web::HttpRequest) -> Result<Self, Error> {
+    pub fn from_request(key: &[u8], req: &actix_web::HttpRequest) -> Result<Self, Error> {
         let header_str = req
             .headers()
             .get(actix_web::http::header::AUTHORIZATION)
@@ -302,7 +301,7 @@ mod tests {
     use chrono::SubsecRound;
     use rand::random;
 
-    fn get_key() -> Key {
+    fn get_key() -> Vec<u8> {
         use rand::RngCore;
         let mut bytes = [0; 32];
         rand::thread_rng().fill_bytes(&mut bytes);

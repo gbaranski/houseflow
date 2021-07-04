@@ -16,7 +16,7 @@ pub async fn on_logout(
     config: Data<Config>,
     http_request: HttpRequest,
 ) -> Result<Json<ResponseBody>, ResponseError> {
-    let refresh_token = RefreshToken::from_request(&config.secrets.refresh_key, &http_request)?;
+    let refresh_token = RefreshToken::from_request(config.secrets.refresh_key.as_bytes(), &http_request)?;
     token_store.remove(&refresh_token.tid).await.unwrap();
     Ok(Json(ResponseBody {}))
 }
