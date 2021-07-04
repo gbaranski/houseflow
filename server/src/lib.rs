@@ -15,7 +15,7 @@ use {
 };
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
-const AUTHORIZATION_TMPL: &'static str = include_str!("templates/authorization.html");
+const AUTHORIZATION_TMPL: &str = include_str!("templates/authorization.html");
 
 pub fn configure(
     cfg: &mut web::ServiceConfig,
