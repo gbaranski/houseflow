@@ -3,8 +3,8 @@ pub mod room;
 pub mod structure;
 pub mod user_structure;
 
-use serde::{Serialize, Deserialize};
 use crate::token;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
 #[serde(
@@ -18,7 +18,7 @@ pub enum AddResponseError {
 
     #[error("validation error: {0}")]
     ValidationError(#[from] crate::ValidationError),
-    
+
     #[error("token error: {0}")]
     TokenError(#[from] token::Error),
 

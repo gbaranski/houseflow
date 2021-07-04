@@ -41,11 +41,7 @@ impl TokenStore for RedisTokenStore {
     }
 
     async fn add(&self, id: &RefreshTokenID) -> Result<(), super::Error> {
-        self.connection
-            .lock()
-            .await
-            .set(id.to_string(), "")
-            .await?;
+        self.connection.lock().await.set(id.to_string(), "").await?;
 
         Ok(())
     }

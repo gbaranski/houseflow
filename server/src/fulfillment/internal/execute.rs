@@ -1,4 +1,8 @@
-use actix_web::{post, web::{Data, Json}, HttpRequest};
+use actix_web::{
+    post,
+    web::{Data, Json},
+    HttpRequest,
+};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{

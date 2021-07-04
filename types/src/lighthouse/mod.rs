@@ -2,7 +2,6 @@ pub mod proto;
 
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, thiserror::Error, Deserialize, Serialize, Clone)]
 #[serde(
     tag = "error",
