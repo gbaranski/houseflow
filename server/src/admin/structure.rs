@@ -3,49 +3,41 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
-    admin::{
-        AddStructureRequest, AddStructureResponse, AddStructureResponseBody,
-        AddStructureResponseError,
-    },
-    token::Token,
+    admin::structure::add::{Request, ResponseBody, ResponseError},
+    token::AccessToken,
     Structure,
 };
 
 #[put("/structure")]
-pub async fn on_add_structure(
-    add_structure_request: Json<AddStructureRequest>,
+pub async fn on_add(
+    Json(request): Json<Request>,
     http_request: HttpRequest,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<AddStructureResponse>, AddStructureResponseError> {
-    let add_structure_request = add_structure_request.0;
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
 
     if !db
-        .check_user_admin(access_token.user_id())
+        .check_user_admin(&access_token.sub)
         .await
-        .map_err(|err| AddStructureResponseError::InternalError(err.to_string()))?
+        .map_err(houseflow_db::Error::into_internal_server_error)?
     {
-        return Err(AddStructureResponseError::UserNotAdmin);
+        return Err(ResponseError::UserNotAdmin);
     }
 
     let structure = Structure {
         id: rand::random(),
-        name: add_structure_request.structure_name,
+        name: request.structure_name,
     };
 
     db.add_structure(&structure)
         .await
-        .map_err(|err| AddStructureResponseError::InternalError(err.to_string()))?;
+        .map_err(houseflow_db::Error::into_internal_server_error)?;
 
-    let response = AddStructureResponseBody {
+    Ok(Json(ResponseBody {
         structure_id: structure.id,
-    };
-
-    Ok(Json(AddStructureResponse::Ok(response)))
+    }))
 }

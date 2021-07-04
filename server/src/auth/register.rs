@@ -4,19 +4,17 @@ use actix_web::{
 };
 use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::auth::{
-    RegisterRequest, RegisterResponse, RegisterResponseBody, RegisterResponseError,
-};
+use houseflow_types::auth::register::{Request, ResponseBody, ResponseError};
 use houseflow_types::User;
 use rand::random;
 
 #[post("/register")]
 pub async fn on_register(
-    request: Json<RegisterRequest>,
+    Json(request): Json<Request>,
     config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<RegisterResponse>, RegisterResponseError> {
-    validator::Validate::validate(&request.0)?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    validator::Validate::validate(&request).map_err(houseflow_types::ValidationError::from)?;
 
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
@@ -32,14 +30,13 @@ pub async fn on_register(
         password_hash,
     };
     db.add_user(&new_user).await.map_err(|err| match err {
-        houseflow_db::Error::AlreadyExists => RegisterResponseError::UserAlreadyExists,
-        _ => RegisterResponseError::InternalError(err.to_string()),
+        houseflow_db::Error::AlreadyExists => ResponseError::UserAlreadyExists,
+        other => other.into_internal_server_error().into(),
     })?;
 
-    let response = RegisterResponse::Ok(RegisterResponseBody {
+    Ok(Json(ResponseBody {
         user_id: new_user.id,
-    });
-    Ok(Json(response))
+    }))
 }
 
 #[cfg(test)]
@@ -50,7 +47,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_register() {
-        let request_body = RegisterRequest {
+        let request_body = Request {
             password: PASSWORD.into(),
             username: String::from("John Smith"),
             email: String::from("john_smith@example.com"),
@@ -58,7 +55,7 @@ mod tests {
         let request = test::TestRequest::post()
             .uri("/auth/register")
             .set_json(&request_body);
-        let (response, state) = send_request::<RegisterResponseBody>(request).await;
+        let (response, state) = send_request::<ResponseBody>(request).await;
 
         let db_user = state
             .database

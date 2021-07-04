@@ -1,47 +1,49 @@
-use actix_web::{post, web, HttpRequest};
-use houseflow_config::server::Secrets;
+use actix_web::{
+    post,
+    web::{self, Data, Json},
+    HttpRequest,
+};
+use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
     fulfillment::ghome::{
-        self, IntentRequest, IntentRequestInput, IntentResponse, IntentResponseBody,
-        IntentResponseError,
+        self, IntentRequest, IntentRequestInput, IntentResponseBody, IntentResponseError,
     },
-    token::Token,
+    token::AccessToken,
 };
 
 use crate::Sessions;
 
 #[post("/webhook")]
 pub async fn on_webhook(
-    ghome_request: web::Json<IntentRequest>,
+    Json(request): Json<IntentRequest>,
     http_request: HttpRequest,
-    secrets: web::Data<Secrets>,
+    config: Data<Config>,
     db: web::Data<dyn Database>,
     sessions: web::Data<Sessions>,
-) -> Result<web::Json<IntentResponse>, IntentResponseError> {
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
-
-    let input = ghome_request.0.inputs.first().unwrap();
+) -> Result<web::Json<IntentResponseBody>, IntentResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
+    let input = request.inputs.first().unwrap();
 
     let body: Result<IntentResponseBody, IntentResponseError> = match input {
         IntentRequestInput::Sync(_) => {
             use ghome::sync;
 
             let user_devices = db
-                .get_user_devices(access_token.user_id())
+                .get_user_devices(&access_token.sub)
                 .await
-                .map_err(|err| IntentResponseError::InternalError(err.to_string()))?;
+                .map_err(houseflow_db::Error::into_internal_server_error)?;
 
             let user_devices = user_devices.into_iter().map(|device| async {
                 let room = db
                     .get_room(&device.room_id)
                     .await
-                    .map_err(|err| IntentResponseError::InternalError(err.to_string()))?
+                    .map_err(houseflow_db::Error::into_internal_server_error)?
                     .ok_or_else(|| {
                         IntentResponseError::InternalError(
-                            "couldn't find matching room".to_string(),
+                            houseflow_types::InternalServerError::Other(
+                                "couldn't find matching room".to_string(),
+                            ),
                         )
                     })?;
 
@@ -72,13 +74,13 @@ pub async fn on_webhook(
             });
             let user_devices = futures::future::try_join_all(user_devices).await?;
             let payload = sync::response::Payload {
-                agent_user_id: access_token.user_id().clone(),
+                agent_user_id: access_token.sub.clone(),
                 error_code: None,
                 debug_string: None,
                 devices: user_devices,
             };
             Ok(IntentResponseBody::Sync {
-                request_id: ghome_request.request_id.clone(),
+                request_id: request.request_id.clone(),
                 payload,
             })
         }
@@ -91,9 +93,9 @@ pub async fn on_webhook(
 
             let device_responses = payload.devices.iter().map(|device| async move {
                 if !db
-                    .check_user_device_access(access_token.user_id(), &device.id)
+                    .check_user_device_access(&access_token.sub, &device.id)
                     .await
-                    .map_err(|err| IntentResponseError::InternalError(err.to_string()))?
+                    .map_err(houseflow_db::Error::into_internal_server_error)?
                 {
                     return Err::<query::response::PayloadDevice, IntentResponseError>(
                         IntentResponseError::NoDevicePermission,
@@ -135,7 +137,7 @@ pub async fn on_webhook(
             };
 
             Ok(IntentResponseBody::Query {
-                request_id: ghome_request.request_id.clone(),
+                request_id: request.request_id.clone(),
                 payload,
             })
         }
@@ -144,5 +146,5 @@ pub async fn on_webhook(
     };
     let body = body?;
 
-    Ok(web::Json(IntentResponse::Ok(body)))
+    Ok(web::Json(body))
 }

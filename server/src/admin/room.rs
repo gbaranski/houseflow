@@ -3,45 +3,40 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
-    admin::{AddRoomRequest, AddRoomResponse, AddRoomResponseBody, AddRoomResponseError},
-    token::Token,
+    admin::room::add::{Request, ResponseBody, ResponseError},
+    token::AccessToken,
     Room,
 };
 
 #[put("/room")]
-pub async fn on_add_room(
-    add_room_request: Json<AddRoomRequest>,
+pub async fn on_add(
+    Json(request): Json<Request>,
     http_request: HttpRequest,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<AddRoomResponse>, AddRoomResponseError> {
-    let add_room_request = add_room_request.0;
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
 
     if !db
-        .check_user_admin(access_token.user_id())
+        .check_user_admin(&access_token.sub)
         .await
-        .map_err(|err| AddRoomResponseError::InternalError(err.to_string()))?
+        .map_err(houseflow_db::Error::into_internal_server_error)?
     {
-        return Err(AddRoomResponseError::UserNotAdmin);
+        return Err(ResponseError::UserNotAdmin);
     }
 
     let room = Room {
         id: rand::random(),
-        structure_id: add_room_request.structure_id,
-        name: add_room_request.room_name,
+        structure_id: request.structure_id,
+        name: request.room_name,
     };
 
     db.add_room(&room)
         .await
-        .map_err(|err| AddRoomResponseError::InternalError(err.to_string()))?;
+        .map_err(houseflow_db::Error::into_internal_server_error)?;
 
-    let response = AddRoomResponseBody { room_id: room.id };
-
-    Ok(Json(AddRoomResponse::Ok(response)))
+    Ok(Json(ResponseBody { room_id: room.id }))
 }

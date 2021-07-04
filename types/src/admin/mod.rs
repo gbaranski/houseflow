@@ -13,15 +13,14 @@ use crate::token;
     rename_all = "snake_case"
 )]
 pub enum AddResponseError {
-    #[error("internal error: `{0}`")]
-    // Replace it with better type if needed
-    InternalError(String),
+    #[error("internal error: {0}")]
+    InternalError(#[from] crate::InternalServerError),
+
+    #[error("validation error: {0}")]
+    ValidationError(#[from] crate::ValidationError),
     
     #[error("token error: {0}")]
     TokenError(#[from] token::Error),
-
-    #[error("{0}")]
-    ValidationError(#[from] validator::ValidationError),
 
     #[error("Device already exists")]
     DeviceAlreadyExists,
@@ -29,22 +28,6 @@ pub enum AddResponseError {
     #[error("User is not admin")]
     UserNotAdmin,
 }
-
-impl From<validator::ValidationErrors> for AddResponseError {
-    fn from(val: validator::ValidationErrors) -> Self {
-        Self::ValidationError(
-            val.field_errors()
-                .iter()
-                .next()
-                .unwrap()
-                .1
-                .first()
-                .unwrap()
-                .clone(),
-        )
-    }
-}
-
 
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for AddResponseError {
@@ -61,7 +44,6 @@ impl actix_web::ResponseError for AddResponseError {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse {
-        let json = actix_web::web::Json(self.clone());
-        actix_web::HttpResponse::build(self.status_code()).json(json)
+        crate::json_error_response(self.status_code(), self)
     }
 }

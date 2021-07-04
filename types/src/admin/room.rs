@@ -12,7 +12,8 @@ pub mod add {
         pub structure_id: StructureID,
     }
 
-    pub type Response = Result<ResponseBody, AddResponseError>;
+    pub type Response = Result<ResponseBody, ResponseError>;
+    pub type ResponseError = AddResponseError;
 
     #[derive(Debug, Clone, Deserialize, Serialize)]
     pub struct ResponseBody {

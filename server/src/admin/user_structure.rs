@@ -3,48 +3,40 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
-    admin::{
-        AddUserStructureRequest, AddUserStructureResponse, AddUserStructureResponseBody,
-        AddUserStructureResponseError,
-    },
-    token::Token,
+    admin::user_structure::add::{Request, ResponseBody, ResponseError},
+    token::AccessToken,
     UserStructure,
 };
 
 #[put("/user_structure")]
-pub async fn on_add_user_structure(
-    add_user_structure_request: Json<AddUserStructureRequest>,
+pub async fn on_add(
+    Json(request): Json<Request>,
     http_request: HttpRequest,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<AddUserStructureResponse>, AddUserStructureResponseError> {
-    let add_user_structure_request = add_user_structure_request.0;
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
 
     if !db
-        .check_user_admin(access_token.user_id())
+        .check_user_admin(&access_token.sub)
         .await
-        .map_err(|err| AddUserStructureResponseError::InternalError(err.to_string()))?
+        .map_err(houseflow_db::Error::into_internal_server_error)?
     {
-        return Err(AddUserStructureResponseError::UserNotAdmin);
+        return Err(ResponseError::UserNotAdmin);
     }
 
     let user_structure = UserStructure {
-        structure_id: add_user_structure_request.structure_id,
-        user_id: add_user_structure_request.user_id,
-        is_manager: add_user_structure_request.is_manager,
+        structure_id: request.structure_ud,
+        user_id: request.user_id,
+        is_manager: request.is_manager,
     };
 
     db.add_user_structure(&user_structure)
         .await
-        .map_err(|err| AddUserStructureResponseError::InternalError(err.to_string()))?;
+        .map_err(houseflow_db::Error::into_internal_server_error)?;
 
-    let response = AddUserStructureResponseBody {};
-
-    Ok(Json(AddUserStructureResponse::Ok(response)))
+    Ok(Json(ResponseBody {}))
 }

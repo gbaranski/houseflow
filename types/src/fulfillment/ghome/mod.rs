@@ -77,8 +77,8 @@ use crate::{lighthouse, token};
     rename_all = "snake_case"
 )]
 pub enum IntentResponseError {
-    #[error("internal error: `{0}`")]
-    InternalError(String),
+    #[error("internal error: {0}")]
+    InternalError(#[from] crate::InternalServerError),
 
     #[error("token error: {0}")]
     TokenError(#[from] token::Error),
@@ -93,23 +93,17 @@ pub enum IntentResponseError {
 #[cfg(feature = "actix")]
 impl actix_web::ResponseError for IntentResponseError {
     fn status_code(&self) -> actix_web::http::StatusCode {
-        use crate::lighthouse::DeviceCommunicationError;
         use actix_web::http::StatusCode;
 
         match self {
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::TokenError(err) => err.status_code(),
-            Self::NoDevicePermission => StatusCode::FORBIDDEN,
-            Self::DeviceCommunicationError(err) => match err {
-                DeviceCommunicationError::Timeout => StatusCode::GATEWAY_TIMEOUT,
-                DeviceCommunicationError::InvalidJSON(_) => StatusCode::BAD_REQUEST,
-            },
+            Self::TokenError(_) => StatusCode::UNAUTHORIZED,
+            Self::NoDevicePermission => StatusCode::UNAUTHORIZED,
+            Self::DeviceCommunicationError(_) => StatusCode::BAD_GATEWAY,
         }
     }
 
     fn error_response(&self) -> actix_web::HttpResponse {
-        let response = IntentResponse::Err(self.clone());
-        let json = actix_web::web::Json(response);
-        actix_web::HttpResponse::build(self.status_code()).json(json)
+        crate::json_error_response(self.status_code(), self)
     }
 }

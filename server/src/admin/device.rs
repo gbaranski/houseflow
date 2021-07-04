@@ -3,60 +3,55 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest,
 };
-use houseflow_config::server::Secrets;
+use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
-    admin::{AddDeviceRequest, AddDeviceResponse, AddDeviceResponseBody, AddDeviceResponseError},
-    token::Token,
+    admin::device::add::{Request, ResponseBody, ResponseError},
+    token::AccessToken,
     Device,
 };
 
 #[put("/device")]
-pub async fn on_add_device(
-    add_device_request: Json<AddDeviceRequest>,
+pub async fn on_add(
+    Json(request): Json<Request>,
     http_request: HttpRequest,
-    secrets: Data<Secrets>,
+    config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<AddDeviceResponse>, AddDeviceResponseError> {
-    let add_device_request = add_device_request.0;
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
 
     if !db
-        .check_user_admin(access_token.user_id())
+        .check_user_admin(&access_token.sub)
         .await
-        .map_err(|err| AddDeviceResponseError::InternalError(err.to_string()))?
+        .map_err(houseflow_db::Error::into_internal_server_error)?
     {
-        return Err(AddDeviceResponseError::UserNotAdmin);
+        return Err(ResponseError::UserNotAdmin);
     }
 
     let device = Device {
         id: rand::random(),
-        room_id: add_device_request.room_id,
+        room_id: request.room_id,
         password_hash: argon2::hash_encoded(
-            add_device_request.password.as_bytes(),
-            secrets.password_salt.as_bytes(),
+            request.password.as_bytes(),
+            config.secrets.password_salt.as_bytes(),
             &argon2::Config::default(),
         )
         .unwrap(),
-        device_type: add_device_request.device_type,
-        traits: add_device_request.traits,
-        name: add_device_request.name,
-        will_push_state: add_device_request.will_push_state,
-        model: add_device_request.model,
-        hw_version: add_device_request.hw_version,
-        sw_version: add_device_request.sw_version,
-        attributes: add_device_request.attributes,
+        device_type: request.device_type,
+        traits: request.traits,
+        name: request.name,
+        will_push_state: request.will_push_state,
+        model: request.model,
+        hw_version: request.hw_version,
+        sw_version: request.sw_version,
+        attributes: request.attributes,
     };
 
     db.add_device(&device)
         .await
-        .map_err(|err| AddDeviceResponseError::InternalError(err.to_string()))?;
+        .map_err(houseflow_db::Error::into_internal_server_error)?;
 
-    let response = AddDeviceResponseBody {
+    Ok(Json(ResponseBody {
         device_id: device.id,
-    };
-
-    Ok(Json(AddDeviceResponse::Ok(response)))
+    }))
 }

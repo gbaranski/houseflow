@@ -1,51 +1,62 @@
-use crate::TokenStore;
+use crate::{token_store::Error as TokenStoreError, TokenStore};
 use actix_web::{
     post,
     web::{Data, Json},
 };
+use chrono::{Duration, Utc};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
-    auth::{LoginRequest, LoginResponse, LoginResponseBody, LoginResponseError},
-    token::Token,
+    auth::login::{Request, ResponseBody, ResponseError},
+    token::{AccessToken, AccessTokenPayload, RefreshToken, RefreshTokenPayload},
 };
 
-fn verify_password(hash: &str, password: &str) -> Result<(), LoginResponseError> {
+fn verify_password(hash: &str, password: &str) -> Result<(), ResponseError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
         true => Ok(()),
-        false => Err(LoginResponseError::InvalidPassword),
+        false => Err(ResponseError::InvalidPassword),
     }
 }
 
 #[post("/login")]
 pub async fn on_login(
-    request: Json<LoginRequest>,
+    Json(request): Json<Request>,
     token_store: Data<dyn TokenStore>,
     config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<LoginResponse>, LoginResponseError> {
-    validator::Validate::validate(&request.0)?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    validator::Validate::validate(&request).map_err(houseflow_types::ValidationError::from)?;
     let user = db
         .get_user_by_email(&request.email)
         .await
-        .map_err(|err| LoginResponseError::InternalError(err.to_string()))?
-        .ok_or(LoginResponseError::UserNotFound)?;
+        .map_err(houseflow_db::Error::into_internal_server_error)?
+        .ok_or(ResponseError::UserNotFound)?;
 
     verify_password(&user.password_hash, &request.password)?;
-    let refresh_token =
-        Token::new_refresh_token(&config.secrets.refresh_key, &user.id, &request.user_agent);
-    let access_token =
-        Token::new_access_token(&config.secrets.access_key, &user.id, &request.user_agent);
+    let refresh_token = RefreshToken::new(
+        &config.secrets.refresh_key,
+        RefreshTokenPayload {
+            sub: user.id.clone(),
+            exp: Some(Utc::now() + Duration::days(7)), // TODO: extend the time only for Google Actions
+            tid: rand::random(),
+        },
+    );
+    let access_token = AccessToken::new(
+        &config.secrets.access_key,
+        AccessTokenPayload {
+            sub: user.id,
+            exp: Utc::now() + Duration::minutes(10),
+        },
+    );
     token_store
-        .add(&refresh_token)
+        .add(&refresh_token.tid)
         .await
-        .map_err(|err| LoginResponseError::InternalError(err.to_string()))?;
+        .map_err(TokenStoreError::into_internal_server_error)?;
 
-    let response = LoginResponse::Ok(LoginResponseBody {
-        refresh_token,
-        access_token,
-    });
-    Ok(Json(response))
+    Ok(Json(ResponseBody {
+        access_token: access_token.encode(),
+        refresh_token: refresh_token.encode(),
+    }))
 }
 
 #[cfg(test)]
@@ -68,33 +79,22 @@ mod tests {
         };
         state.database.add_user(&user).await.unwrap();
 
-        let request_body = LoginRequest {
+        let request_body = Request {
             email: user.email,
             password: PASSWORD.into(),
-            user_agent: random(),
         };
         let request = test::TestRequest::post()
             .uri("/auth/login")
             .set_json(&request_body);
-        let response = send_request_with_state::<LoginResponseBody>(request, &state).await;
+        let response = send_request_with_state::<ResponseBody>(request, &state).await;
         let (at, rt) = (response.access_token, response.refresh_token);
-        let verify_result = at.verify(
-            &state.config.secrets.access_key,
-            Some(&request_body.user_agent),
+        let (at, rt) = (
+            AccessToken::decode(&state.config.secrets.access_key, &at).unwrap(),
+            RefreshToken::decode(&state.config.secrets.refresh_key, &rt).unwrap(),
         );
+        assert_eq!(at.sub, rt.sub);
         assert!(
-            verify_result.is_ok(),
-            "failed access token verification: `{}`",
-            verify_result.err().unwrap()
-        );
-        assert_eq!(at.user_agent(), rt.user_agent());
-        assert_eq!(at.user_id(), rt.user_id());
-        assert!(
-            !state.token_store.exists(at.id()).await.unwrap(),
-            "access token found in token store"
-        );
-        assert!(
-            state.token_store.exists(rt.id()).await.unwrap(),
+            state.token_store.exists(&rt.tid).await.unwrap(),
             "refresh token not found in token store"
         );
     }
@@ -110,31 +110,29 @@ mod tests {
         };
         state.database.add_user(&user).await.unwrap();
 
-        let request_body = LoginRequest {
+        let request_body = Request {
             email: user.email,
             password: PASSWORD_INVALID.into(),
-            user_agent: random(),
         };
         let request = test::TestRequest::post()
             .uri("/auth/login")
             .set_json(&request_body);
-        let response = send_request_with_state::<LoginResponseError>(request, &state).await;
-        assert_eq!(response, LoginResponseError::InvalidPassword);
+        let response = send_request_with_state::<ResponseError>(request, &state).await;
+        assert_eq!(response, ResponseError::InvalidPassword);
     }
 
     #[actix_rt::test]
     async fn test_login_not_existing_user() {
-        let request_body = LoginRequest {
+        let request_body = Request {
             email: String::from("jhon_smith@example.com"),
             password: PASSWORD.into(),
-            user_agent: random(),
         };
 
         let request = test::TestRequest::post()
             .uri("/auth/login")
             .set_json(&request_body);
 
-        let (response, _) = send_request::<LoginResponseError>(request).await;
-        assert_eq!(response, LoginResponseError::UserNotFound);
+        let (response, _) = send_request::<ResponseError>(request).await;
+        assert_eq!(response, ResponseError::UserNotFound);
     }
 }

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use chrono::Duration;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -46,6 +46,9 @@ pub enum TokenType {
     rename_all = "snake_case"
 )]
 pub enum ResponseError {
+    #[error("internal error: {0}")]
+    InternalError(#[from] crate::InternalServerError),
+
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
     #[error("invalid request, description: {0:?}")]
@@ -91,11 +94,11 @@ mod token_expiration {
             formatter.write_str("duration in seconds")
         }
 
-        fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
         where
             E: de::Error,
         {
-            Ok(Some(Duration::from_secs(value)))
+            Ok(Some(Duration::seconds(value)))
         }
 
         fn visit_some<D>(self, d: D) -> Result<Option<Duration>, D::Error>
@@ -125,7 +128,7 @@ mod token_expiration {
         S: ser::Serializer,
     {
         match *duration {
-            Some(duration) => serializer.serialize_some(&duration.as_secs()),
+            Some(duration) => serializer.serialize_some(&duration.num_seconds()),
             None => serializer.serialize_none(),
         }
     }
@@ -135,5 +138,21 @@ mod token_expiration {
         D: de::Deserializer<'de>,
     {
         d.deserialize_option(TokenExpirationVisitor)
+    }
+}
+
+#[cfg(feature = "actix")]
+impl actix_web::ResponseError for ResponseError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        use actix_web::http::StatusCode;
+
+        match self {
+            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            _ => StatusCode::BAD_REQUEST
+        }
+    }
+
+    fn error_response(&self) -> actix_web::HttpResponse {
+        crate::json_error_response(self.status_code(), self)
     }
 }

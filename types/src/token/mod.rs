@@ -97,6 +97,14 @@ impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<P> {
     }
 }
 
+impl<P: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<P> {
+    type Target = P;
+
+    fn deref(&self) -> &Self::Target {
+        &self.payload
+    }
+}
+
 pub type AccessToken = Token<AccessTokenPayload>;
 pub type RefreshToken = Token<RefreshTokenPayload>;
 
@@ -146,28 +154,28 @@ fn decode_part<T: de::DeserializeOwned>(val: &str) -> Result<T, DecodeError> {
 
 use ring::hmac;
 
-pub fn sign<P: ser::Serialize + de::DeserializeOwned>(key: &Key, payload: P) -> Token<P> {
-    const ALGORITHM: Algorithm = Algorithm::HS256; // that can be changed in the future
-    const HEADER: Header = Header { alg: ALGORITHM };
-
-    let raw_header = encode_part(&HEADER);
-    let raw_payload = encode_part(&payload);
-    let message = [raw_header, raw_payload].join(".");
-    let signature: Signature = match ALGORITHM {
-        Algorithm::HS256 => {
-            let key = hmac::Key::new(hmac::HMAC_SHA256, key);
-            Vec::from(hmac::sign(&key, message.as_bytes()).as_ref())
-        }
-    };
-
-    Token {
-        header: HEADER,
-        payload,
-        signature,
-    }
-}
-
 impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
+    pub fn new(key: &Key, payload: P) -> Self {
+        const ALGORITHM: Algorithm = Algorithm::HS256; // that can be changed in the future
+        const HEADER: Header = Header { alg: ALGORITHM };
+
+        let raw_header = encode_part(&HEADER);
+        let raw_payload = encode_part(&payload);
+        let message = [raw_header, raw_payload].join(".");
+        let signature: Signature = match ALGORITHM {
+            Algorithm::HS256 => {
+                let key = hmac::Key::new(hmac::HMAC_SHA256, key);
+                Vec::from(hmac::sign(&key, message.as_bytes()).as_ref())
+            }
+        };
+
+        Self {
+            header: HEADER,
+            payload,
+            signature,
+        }
+    }
+
     pub fn encode(&self) -> String {
         let raw_header = encode_part(&self.header);
         let raw_payload = encode_part(&self.payload);
@@ -211,6 +219,26 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
 
         Ok(token)
     }
+
+    #[cfg(feature = "actix")]
+    pub fn from_request(key: &Key, req: &actix_web::HttpRequest) -> Result<Self, Error> {
+        let header_str = req
+            .headers()
+            .get(actix_web::http::header::AUTHORIZATION)
+            .ok_or(DecodeHeaderError::MissingHeader)?
+            .to_str()
+            .map_err(|err| DecodeHeaderError::InvalidEncoding(err.to_string()))?;
+
+        let (schema, token) = header_str
+            .split_once(' ')
+            .ok_or(DecodeHeaderError::InvalidSyntax)?;
+
+        if schema != "Bearer" {
+            Err(DecodeHeaderError::InvalidSchema(schema.to_string()).into())
+        } else {
+            Self::decode(key, token).map_err(Error::Decode)
+        }
+    }
 }
 
 fn validate(base_payload: &BasePayload) -> Result<(), ValidationError> {
@@ -250,9 +278,9 @@ mod tests {
                 sub: random(),
                 exp: Utc::now().round_subsecs(0) + chrono::Duration::hours(1),
             };
-            let token = sign(&key, payload);
+            let token = AccessToken::new(&key, payload);
             let encoded = token.encode();
-            let decoded = Token::decode(&key, &encoded).unwrap();
+            let decoded = AccessToken::decode(&key, &encoded).unwrap();
             assert_eq!(token, decoded);
         }
 
@@ -264,7 +292,7 @@ mod tests {
                 sub: random(),
                 exp: Utc::now() - expired_by,
             };
-            let token = sign(&key, payload);
+            let token = AccessToken::new(&key, payload);
             let encoded = token.encode();
             let err = Token::<AccessTokenPayload>::decode(&key, &encoded).unwrap_err();
             assert_eq!(
@@ -283,9 +311,9 @@ mod tests {
                 sub: random(),
                 exp: Utc::now() - chrono::Duration::hours(1),
             };
-            let token = sign(&valid_key, payload);
+            let token = AccessToken::new(&valid_key, payload);
             let encoded = token.encode();
-            let err = Token::<AccessTokenPayload>::decode(&invalid_key, &encoded).unwrap_err();
+            let err = AccessToken::decode(&invalid_key, &encoded).unwrap_err();
             assert_eq!(err, DecodeError::InvalidSignature);
         }
     }
@@ -301,9 +329,9 @@ mod tests {
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
                 tid: random(),
             };
-            let token = sign(&key, payload);
+            let token = RefreshToken::new(&key, payload);
             let encoded = token.encode();
-            let decoded = Token::decode(&key, &encoded).unwrap();
+            let decoded = RefreshToken::decode(&key, &encoded).unwrap();
             assert_eq!(token, decoded);
         }
 
@@ -315,9 +343,9 @@ mod tests {
                 exp: None,
                 tid: random(),
             };
-            let token = sign(&key, payload);
+            let token = RefreshToken::new(&key, payload);
             let encoded = token.encode();
-            let decoded = Token::decode(&key, &encoded).unwrap();
+            let decoded = RefreshToken::decode(&key, &encoded).unwrap();
             assert_eq!(token, decoded);
         }
 
@@ -330,9 +358,9 @@ mod tests {
                 exp: Some(Utc::now() - expired_by),
                 tid: random(),
             };
-            let token = sign(&key, payload);
+            let token = Token::new(&key, payload);
             let encoded = token.encode();
-            let err = Token::<RefreshTokenPayload>::decode(&key, &encoded).unwrap_err();
+            let err = RefreshToken::decode(&key, &encoded).unwrap_err();
             assert_eq!(
                 err,
                 DecodeError::ValidationError(ValidationError::Expired {
@@ -350,9 +378,9 @@ mod tests {
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
                 tid: random(),
             };
-            let token = sign(&valid_key, payload);
+            let token = RefreshToken::new(&valid_key, payload);
             let encoded = token.encode();
-            let err = Token::<RefreshTokenPayload>::decode(&invalid_key, &encoded).unwrap_err();
+            let err = RefreshToken::decode(&invalid_key, &encoded).unwrap_err();
             assert_eq!(err, DecodeError::InvalidSignature);
         }
     }

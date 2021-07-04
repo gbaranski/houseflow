@@ -1,36 +1,34 @@
-use actix_web::{post, web, HttpRequest};
-use houseflow_config::server::Secrets;
+use actix_web::{post, web::{Data, Json}, HttpRequest};
+use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
-    fulfillment::{ExecuteRequest, ExecuteResponse, ExecuteResponseBody, ExecuteResponseError},
-    token::Token,
+    fulfillment::execute::{Request, ResponseBody, ResponseError},
+    token::AccessToken,
 };
 
 use crate::Sessions;
 
 #[post("/execute")]
 pub async fn on_execute(
-    execute_request: web::Json<ExecuteRequest>,
+    execute_request: Json<Request>,
     http_request: HttpRequest,
-    secrets: web::Data<Secrets>,
-    db: web::Data<dyn Database>,
-    sessions: web::Data<Sessions>,
-) -> Result<web::Json<ExecuteResponse>, ExecuteResponseError> {
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&secrets.access_key, Some(&UserAgent::Internal))?;
+    config: Data<Config>,
+    db: Data<dyn Database>,
+    sessions: Data<Sessions>,
+) -> Result<Json<ResponseBody>, ResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
     if !db
-        .check_user_device_access(access_token.user_id(), &execute_request.device_id)
+        .check_user_device_access(&access_token.sub, &execute_request.device_id)
         .await
-        .map_err(|err| ExecuteResponseError::InternalError(err.to_string()))?
+        .map_err(houseflow_db::Error::into_internal_server_error)?
     {
-        return Err(ExecuteResponseError::NoDevicePermission);
+        return Err(ResponseError::NoDevicePermission);
     }
 
     let sessions = sessions.lock().await;
     let session = sessions
         .get(&execute_request.device_id)
-        .ok_or(ExecuteResponseError::DeviceNotConnected)?;
+        .ok_or(ResponseError::DeviceNotConnected)?;
     let response_frame = session
         .send(crate::lighthouse::aliases::ActorExecuteFrame::from(
             execute_request.frame.clone(),
@@ -38,7 +36,7 @@ pub async fn on_execute(
         .await
         .unwrap()?;
 
-    Ok(web::Json(ExecuteResponse::Ok(ExecuteResponseBody {
+    Ok(Json(ResponseBody {
         frame: response_frame.into(),
-    })))
+    }))
 }

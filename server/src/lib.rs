@@ -38,10 +38,10 @@ pub fn configure(
         .service(
             web::scope("/admin")
                 .app_data(tt)
-                .service(admin::on_add_device)
-                .service(admin::on_add_room)
-                .service(admin::on_add_structure)
-                .service(admin::on_add_user_structure),
+                .service(admin::device::on_add)
+                .service(admin::room::on_add)
+                .service(admin::structure::on_add)
+                .service(admin::user_structure::on_add),
         )
         .service(
             web::scope("/auth")

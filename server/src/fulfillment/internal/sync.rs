@@ -5,29 +5,27 @@ use actix_web::{
 };
 use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::UserAgent;
 use houseflow_types::{
-    fulfillment::{SyncRequest, SyncResponse, SyncResponseBody, SyncResponseError},
-    token::Token,
+    fulfillment::sync::{Request, ResponseBody, ResponseError},
+    token::AccessToken,
 };
 
 #[get("/sync")]
 pub async fn on_sync(
-    _sync_request: Json<SyncRequest>,
+    _sync_request: Json<Request>,
     http_request: HttpRequest,
     config: Data<Config>,
     db: Data<dyn Database>,
-) -> Result<Json<SyncResponse>, SyncResponseError> {
-    let access_token = Token::from_request(&http_request)?;
-    access_token.verify(&config.secrets.access_key, Some(&UserAgent::Internal))?;
+) -> Result<Json<ResponseBody>, ResponseError> {
+    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
 
     let devices = db
-        .get_user_devices(access_token.user_id())
+        .get_user_devices(&access_token.sub)
         .await
-        .map_err(|err| SyncResponseError::InternalError(err.to_string()))?;
-    let response = SyncResponseBody { devices };
+        .map_err(houseflow_db::Error::into_internal_server_error)?;
+    let response = ResponseBody { devices };
 
-    Ok(Json(SyncResponse::Ok(response)))
+    Ok(Json(response))
 }
 
 #[cfg(test)]
@@ -35,7 +33,11 @@ mod tests {
     use super::*;
     use crate::test_utils::*;
     use actix_web::{http, test};
-    use houseflow_types::{Device, UserID, UserStructure};
+    use chrono::{Duration, Utc};
+    use houseflow_types::{
+        token::{AccessToken, AccessTokenPayload},
+        Device, UserID, UserStructure,
+    };
 
     async fn get_authorized_device(db: &dyn Database, user_id: &UserID) -> Device {
         let structure = get_structure();
@@ -71,10 +73,12 @@ mod tests {
         let state = get_state();
 
         let user = get_user();
-        let access_token = Token::new_access_token(
+        let access_token = AccessToken::new(
             &state.config.secrets.access_key,
-            &user.id,
-            &UserAgent::Internal,
+            AccessTokenPayload {
+                sub: user.id.clone(),
+                exp: Utc::now() + Duration::minutes(10),
+            },
         );
         state.database.add_user(&user).await.unwrap();
 
@@ -94,7 +98,7 @@ mod tests {
         )
         .await;
 
-        let request_body = SyncRequest {};
+        let request_body = Request {};
         let request = test::TestRequest::get()
             .uri("/fulfillment/internal/sync")
             .insert_header((
@@ -102,7 +106,7 @@ mod tests {
                 format!("Bearer {}", access_token.to_string()),
             ))
             .set_json(&request_body);
-        let mut response = send_request_with_state::<SyncResponseBody>(request, &state).await;
+        let mut response = send_request_with_state::<ResponseBody>(request, &state).await;
         response.devices.sort_by_key(|device| device.id.clone());
         assert_eq!(response.devices, authorized_devices);
     }
