@@ -81,17 +81,17 @@ impl<const N: usize> FromStr for Credential<N> {
     fn from_str(v: &str) -> Result<Self, Self::Err> {
         // N * 2 because encoding with hex doubles the size
 
-        if v.len() != N * 2 {
-            Err(CredentialError::InvalidSize {
-                expected: N * 2,
-                received: v.len(),
-            })
-        } else {
+        if v.len() == N * 2 {
             Ok(Self {
                 inner: hex::decode(v)
                     .map_err(|err| CredentialError::InvalidEncoding(err.to_string()))?
                     .try_into()
                     .unwrap(),
+            })
+        } else {
+            Err(CredentialError::InvalidSize {
+                expected: N * 2,
+                received: v.len(),
             })
         }
     }
