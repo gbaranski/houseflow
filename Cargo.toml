@@ -39,7 +39,6 @@ houseflow-config = { version="0.1.1", path="config", features=[
   "server",
   "device",
   "client",
-  "postgres",
   "fs",
 ] }
 houseflow-types = { version="0.1.1", path="types/", features=["token"] }

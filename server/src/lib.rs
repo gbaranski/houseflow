@@ -135,7 +135,6 @@ mod test_utils {
         Data::from(Arc::new(Config {
             address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
             secrets: rand::random(),
-            postgres: Default::default(),
             redis: Default::default(),
             google: Some(houseflow_config::server::google::Config {
                 client_id: "some-client-id".to_string(),

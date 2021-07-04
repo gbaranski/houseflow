@@ -8,10 +8,3 @@
 refresh_key = "{}"
 access_key = "{}"
 password_salt = "{}"
-
-# Configuration of the PostgreSQL
-# [postgres]
-# address = "{}"
-# database_name = "{}"
-# user = "{}"
-# password = "{}"

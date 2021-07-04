@@ -192,36 +192,3 @@ impl rand::distributions::Distribution<DeviceCommand> for rand::distributions::S
     }
 }
 
-#[cfg(feature = "postgres-types")]
-impl<'a> postgres_types::FromSql<'a> for DeviceType {
-    fn from_sql(
-        _ty: &postgres_types::Type,
-        raw: &'a [u8],
-    ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        use std::str::FromStr;
-
-        let str = std::str::from_utf8(raw)?;
-        Ok(Self::from_str(str)?)
-    }
-
-    fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::TEXT
-    }
-}
-
-#[cfg(feature = "postgres-types")]
-impl<'a> postgres_types::FromSql<'a> for DeviceTrait {
-    fn from_sql(
-        _ty: &postgres_types::Type,
-        raw: &'a [u8],
-    ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        use std::str::FromStr;
-
-        let str = std::str::from_utf8(raw)?;
-        Ok(Self::from_str(str)?)
-    }
-
-    fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::TEXT
-    }
-}
