@@ -29,7 +29,7 @@ pub async fn on_add(
     }
 
     let user_structure = UserStructure {
-        structure_id: request.structure_ud,
+        structure_id: request.structure_id,
         user_id: request.user_id,
         is_manager: request.is_manager,
     };

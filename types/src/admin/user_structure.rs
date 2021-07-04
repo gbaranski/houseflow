@@ -8,7 +8,7 @@ pub mod add {
 
     #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
     pub struct Request {
-        pub structure_ud: StructureID,
+        pub structure_id: StructureID,
         pub user_id: UserID,
         pub is_manager: bool,
     }
