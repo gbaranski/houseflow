@@ -9,9 +9,6 @@ pub mod device;
 #[cfg(any(test, feature = "client"))]
 pub mod client;
 
-#[cfg(feature = "postgres")]
-pub mod postgres;
-
 #[cfg(feature = "redis")]
 pub mod redis;
 
@@ -52,7 +49,6 @@ pub async fn read_file<T: serde::de::DeserializeOwned>(
     feature = "device",
     feature = "client",
     feature = "server",
-    feature = "postgres"
 ))]
 pub(crate) mod resolve_socket_address {
     use serde::{

@@ -18,7 +18,6 @@ bytes          = "1"
 semver         = { version = "1.0.3", features = ["serde"] }
 
 actix-web  	= { version = "4.0.0-beta.7", optional = true, default-features = false }
-postgres-types  = { version = "0.2.1", optional = true }
 
 strum          = { version = "0.21.0", features = ["derive"] }
 

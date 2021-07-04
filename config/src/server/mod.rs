@@ -1,4 +1,4 @@
-use crate::{defaults, postgres, redis};
+use crate::{defaults, redis};
 use serde::{Deserialize, Serialize};
 
 pub mod google;
@@ -11,10 +11,6 @@ pub struct Config {
 
     /// Secret data
     pub secrets: Secrets,
-
-    /// Configuration of the PostgreSQL Database
-    #[serde(default)]
-    pub postgres: postgres::Config,
 
     /// Configuration of the Redis Database
     #[serde(default)]
@@ -31,8 +27,6 @@ impl Config {
             hex::encode(random)
         });
 
-        let pg_defaults = postgres::Config::default();
-
         format!(
             include_str!("default.toml"),
             defaults::server_port(),
@@ -40,10 +34,6 @@ impl Config {
             rand.next().unwrap(),
             rand.next().unwrap(),
             rand.next().unwrap(),
-            pg_defaults.address,
-            pg_defaults.database_name,
-            pg_defaults.user,
-            pg_defaults.password,
         )
     }
 }

@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 
 pub mod memory;
-pub mod postgres;
 
 pub trait DatabaseInternalError: std::fmt::Debug + std::error::Error + Send + Sync {}
 

@@ -11,13 +11,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types   = { path = "../types", version = "0.1.1", features = [ "postgres-types" ] }
-houseflow-config  = { path = "../config", version = "0.1.1", features = [ "postgres" ] }
-refinery          = { version = "0.5.0", features = [ "tokio-postgres" ] }
+houseflow-types   = { path = "../types", version = "0.1.1" }
+houseflow-config  = { path = "../config", version = "0.1.1" }
+refinery          = { version = "0.5.0" }
 serde             = { version = "1.0.126", features = ["derive"] }
 tokio             = { version = "1.6", features = [ "macros" ] }
-tokio-postgres    = "0.7"
-deadpool-postgres = "0.9.0"
 semver            = "1.0.3"
 
 log               = "0.4"
