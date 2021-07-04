@@ -63,10 +63,10 @@ impl Config {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Secrets {
     /// Key used to sign refresh tokens. Must be secret and should be farily random.
-    pub refresh_key: String,
+    pub refresh_key: houseflow_types::token::Key,
 
     /// Key used to sign access tokens. Must be secret and should be farily random.
-    pub access_key: String,
+    pub access_key: houseflow_types::token::Key,
 
     /// Salt used with hashing passwords
     pub password_salt: String,
@@ -80,8 +80,8 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
             hex::encode(bytes)
         };
         Secrets {
-            refresh_key: gen_secret(),
-            access_key: gen_secret(),
+            refresh_key: gen_secret().into(),
+            access_key: gen_secret().into(),
             password_salt: gen_secret(),
         }
     }
