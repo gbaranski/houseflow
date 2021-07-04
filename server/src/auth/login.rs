@@ -34,7 +34,7 @@ pub async fn on_login(
 
     verify_password(&user.password_hash, &request.password)?;
     let refresh_token = RefreshToken::new(
-        &config.secrets.refresh_key,
+        config.secrets.refresh_key.as_bytes(),
         RefreshTokenPayload {
             sub: user.id.clone(),
             exp: Some(Utc::now() + Duration::days(7)), // TODO: extend the time only for Google Actions
@@ -42,7 +42,7 @@ pub async fn on_login(
         },
     );
     let access_token = AccessToken::new(
-        &config.secrets.access_key,
+        config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
             sub: user.id,
             exp: Utc::now() + Duration::minutes(10),
@@ -89,8 +89,8 @@ mod tests {
         let response = send_request_with_state::<ResponseBody>(request, &state).await;
         let (at, rt) = (response.access_token, response.refresh_token);
         let (at, rt) = (
-            AccessToken::decode(&state.config.secrets.access_key, &at).unwrap(),
-            RefreshToken::decode(&state.config.secrets.refresh_key, &rt).unwrap(),
+            AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
+            RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &rt).unwrap(),
         );
         assert_eq!(at.sub, rt.sub);
         assert!(

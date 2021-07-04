@@ -17,7 +17,7 @@ pub async fn on_sync(
     config: Data<Config>,
     db: Data<dyn Database>,
 ) -> Result<Json<ResponseBody>, ResponseError> {
-    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
+    let access_token = AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
 
     let devices = db
         .get_user_devices(&access_token.sub)
@@ -74,7 +74,7 @@ mod tests {
 
         let user = get_user();
         let access_token = AccessToken::new(
-            &state.config.secrets.access_key,
+            state.config.secrets.access_key.as_bytes(),
             AccessTokenPayload {
                 sub: user.id.clone(),
                 exp: Utc::now() + Duration::minutes(10),

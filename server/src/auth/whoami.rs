@@ -15,7 +15,7 @@ pub async fn on_whoami(
     db: Data<dyn Database>,
     http_request: HttpRequest,
 ) -> Result<Json<ResponseBody>, ResponseError> {
-    let access_token = AccessToken::from_request(&config.secrets.access_key, &http_request)?;
+    let access_token = AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     let user = db
         .get_user(&access_token.sub)
         .await
@@ -49,7 +49,7 @@ mod tests {
         };
 
         let access_token = AccessToken::new(
-            &state.config.secrets.access_key,
+            state.config.secrets.access_key.as_bytes(),
             AccessTokenPayload {
                 sub: user.id.clone(),
                 exp: Utc::now() + Duration::seconds(5),
