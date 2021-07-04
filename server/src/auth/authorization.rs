@@ -64,11 +64,6 @@ impl actix_web::ResponseError for AuthorizationResponseError {
             Self::InvalidRedirectURI(_) => StatusCode::BAD_REQUEST,
         }
     }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        let json = actix_web::web::Json(self.clone());
-        actix_web::HttpResponse::build(self.status_code()).json(json)
-    }
 }
 
 #[get("/authorize")]
