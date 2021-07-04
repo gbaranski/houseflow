@@ -108,13 +108,16 @@ fn verify_redirect_uri(
         .path_segments()
         .ok_or(InvalidRedirectURIError::InvalidPath)?;
 
+    let first_segment = segments.next().ok_or(InvalidRedirectURIError::InvalidPath)?;
+    let second_segment = segments.next().ok_or(InvalidRedirectURIError::InvalidPath)?;
+
     if scheme != "https" {
         Err(InvalidRedirectURIError::InvalidScheme(scheme.to_string()))
     } else if host != GOOGLE_OAUTH_REDIRECT_URL && host != GOOGLE_SANDBOX_OAUTH_REDIRECT_URL {
         Err(InvalidRedirectURIError::InvalidHost)
-    } else if segments.next() != Some("r") {
-        Err(InvalidRedirectURIError::InvalidHost)
-    } else if segments.next() != Some(project_id) {
+    } else if first_segment != "r" {
+        Err(InvalidRedirectURIError::InvalidPath)
+    } else if second_segment != project_id {
         Err(InvalidRedirectURIError::InvalidProjectID)
     } else {
         Ok(())
