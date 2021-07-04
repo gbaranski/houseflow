@@ -44,7 +44,7 @@ impl rand::distributions::Distribution<UserAgent> for rand::distributions::Stand
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize,Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct User {
     /// Unique ID of the user
     pub id: UserID,

@@ -39,7 +39,7 @@ pub enum InternalServerError {
 
     #[error("token store error: {0}")]
     TokenStoreError(String),
-    
+
     #[error("other error: {0}")]
     Other(String),
 }

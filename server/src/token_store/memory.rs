@@ -27,10 +27,7 @@ impl TokenStore for MemoryTokenStore {
     }
 
     async fn add(&self, id: &RefreshTokenID) -> Result<(), super::Error> {
-        self.store
-            .lock()
-            .await
-            .insert(id.clone());
+        self.store.lock().await.insert(id.clone());
 
         Ok(())
     }

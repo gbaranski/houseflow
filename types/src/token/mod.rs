@@ -225,7 +225,6 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         Ok(token)
     }
 
-
     pub fn decode(key: &Key, token: &str) -> Result<Self, DecodeError> {
         let mut iter = token.split(".");
         let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;

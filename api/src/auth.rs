@@ -1,11 +1,14 @@
 use super::{Error, HouseflowAPI};
 use houseflow_types::auth;
-use houseflow_types::token::{RefreshToken, AccessToken};
+use houseflow_types::token::{AccessToken, RefreshToken};
 use reqwest::Client;
 
 #[cfg(feature = "auth")]
 impl HouseflowAPI {
-    pub async fn register(&self, request: auth::register::Request) -> Result<auth::register::Response, Error> {
+    pub async fn register(
+        &self,
+        request: auth::register::Request,
+    ) -> Result<auth::register::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("register").unwrap();
 
@@ -20,7 +23,10 @@ impl HouseflowAPI {
         Ok(response)
     }
 
-    pub async fn login(&self, request: auth::login::Request) -> Result<auth::login::Response, Error> {
+    pub async fn login(
+        &self,
+        request: auth::login::Request,
+    ) -> Result<auth::login::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("login").unwrap();
 
@@ -35,7 +41,10 @@ impl HouseflowAPI {
         Ok(response)
     }
 
-    pub async fn logout(&self, refresh_token: &RefreshToken) -> Result<auth::logout::Response, Error> {
+    pub async fn logout(
+        &self,
+        refresh_token: &RefreshToken,
+    ) -> Result<auth::logout::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("logout").unwrap();
 
@@ -72,7 +81,10 @@ impl HouseflowAPI {
         Ok(response)
     }
 
-    pub async fn whoami(&self, access_token: &AccessToken) -> Result<auth::whoami::Response, Error> {
+    pub async fn whoami(
+        &self,
+        access_token: &AccessToken,
+    ) -> Result<auth::whoami::Response, Error> {
         let client = Client::new();
         let url = self.auth_url.join("whoami").unwrap();
 

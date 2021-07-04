@@ -6,7 +6,10 @@ use reqwest::Client;
 pub enum FulfillmentError {}
 
 impl HouseflowAPI {
-    pub async fn sync(&self, access_token: &AccessToken) -> Result<fulfillment::sync::Response, Error> {
+    pub async fn sync(
+        &self,
+        access_token: &AccessToken,
+    ) -> Result<fulfillment::sync::Response, Error> {
         let client = Client::new();
         let url = self.fulfillment_url.join("sync").unwrap();
         let response = client
