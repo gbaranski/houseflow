@@ -183,7 +183,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     }
 
     pub fn decode_unsafe(token: &str) -> Result<Self, DecodeError> {
-        let mut iter = token.split(".");
+        let mut iter = token.split('.');
         let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;
         let raw_payload = iter.next().ok_or(DecodeError::MissingPayload)?;
         let raw_signature = iter.next().ok_or(DecodeError::MissingSignature)?;
@@ -205,7 +205,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     }
 
     pub fn decode_unsafe_novalidate(token: &str) -> Result<Self, DecodeError> {
-        let mut iter = token.split(".");
+        let mut iter = token.split('.');
         let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;
         let raw_payload = iter.next().ok_or(DecodeError::MissingPayload)?;
         let raw_signature = iter.next().ok_or(DecodeError::MissingSignature)?;
@@ -225,7 +225,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     }
 
     pub fn decode(key: &[u8], token: &str) -> Result<Self, DecodeError> {
-        let mut iter = token.split(".");
+        let mut iter = token.split('.');
         let raw_header = iter.next().ok_or(DecodeError::MissingHeader)?;
         let raw_payload = iter.next().ok_or(DecodeError::MissingPayload)?;
         let raw_signature = iter.next().ok_or(DecodeError::MissingSignature)?;
