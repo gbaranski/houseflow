@@ -1,4 +1,4 @@
-use crate::{get_with_token, post, post_with_token, Error, HouseflowAPI};
+use crate::{Error, HouseflowAPI, get_with_token, post, post_with_token, send_request};
 use houseflow_types::{
     auth,
     token::{AccessToken, RefreshToken},
@@ -38,8 +38,10 @@ impl HouseflowAPI {
             grant_type: auth::token::GrantType::RefreshToken,
             refresh_token: refresh_token.to_string(),
         };
+        let client = reqwest::Client::new();
         let url = self.auth_url.join("token").unwrap();
-        post_with_token(url, &request, refresh_token).await
+        let request = client.post(url).form(&request);
+        send_request(request).await
     }
 
     pub async fn whoami(
