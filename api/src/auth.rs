@@ -1,4 +1,4 @@
-use crate::{post, post_with_token, Error, HouseflowAPI};
+use crate::{post, post_with_token, get_with_token, Error, HouseflowAPI};
 use houseflow_types::{
     auth,
     token::{AccessToken, RefreshToken},
@@ -47,6 +47,6 @@ impl HouseflowAPI {
         access_token: &AccessToken,
     ) -> Result<auth::whoami::Response, Error> {
         let url = self.auth_url.join("whoami").unwrap();
-        post_with_token(url, &auth::whoami::Request{}, access_token).await
+        get_with_token(url, &auth::whoami::Request{}, access_token).await
     }
 }
