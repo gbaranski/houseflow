@@ -22,7 +22,6 @@ pub async fn on_sync(
 
     let devices = db
         .get_user_devices(&access_token.sub)
-        .await
         .map_err(houseflow_db::Error::into_internal_server_error)?;
     let response = ResponseBody { devices };
 
@@ -49,10 +48,10 @@ mod tests {
             is_manager: false,
         };
         let device = get_device(&room);
-        db.add_structure(&structure).await.unwrap();
-        db.add_room(&room).await.unwrap();
-        db.add_device(&device).await.unwrap();
-        db.add_user_structure(&user_structure).await.unwrap();
+        db.add_structure(&structure).unwrap();
+        db.add_room(&room).unwrap();
+        db.add_device(&device).unwrap();
+        db.add_user_structure(&user_structure).unwrap();
         device
     }
 
@@ -60,9 +59,9 @@ mod tests {
         let structure = get_structure();
         let room = get_room(&structure);
         let device = get_device(&room);
-        db.add_structure(&structure).await.unwrap();
-        db.add_room(&room).await.unwrap();
-        db.add_device(&device).await.unwrap();
+        db.add_structure(&structure).unwrap();
+        db.add_room(&room).unwrap();
+        db.add_device(&device).unwrap();
         device
     }
 
@@ -81,7 +80,7 @@ mod tests {
                 exp: Utc::now() + Duration::minutes(10),
             },
         );
-        state.database.add_user(&user).await.unwrap();
+        state.database.add_user(&user).unwrap();
 
         let mut authorized_devices: Vec<Device> = join_all(
             repeat_with(|| get_authorized_device(state.database.as_ref(), &user.id))

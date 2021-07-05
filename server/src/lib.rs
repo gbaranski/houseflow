@@ -70,7 +70,7 @@ pub fn configure(
 mod test_utils {
     use super::Config;
     use crate::{MemoryTokenStore, TokenStore};
-    use houseflow_db::{memory::Database as MemoryDatabase, Database};
+    use houseflow_db::{Database, sqlite::Database as SqliteDatabase};
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
 
     use actix_web::{test, web::Data, App};
@@ -145,7 +145,7 @@ mod test_utils {
     }
 
     pub fn get_database() -> Data<dyn houseflow_db::Database> {
-        Data::from(Arc::new(MemoryDatabase::new()) as Arc<dyn Database>)
+        Data::from(Arc::new(SqliteDatabase::new_in_memory().unwrap()) as Arc<dyn Database>)
     }
 
     pub fn get_token_store() -> Data<dyn TokenStore> {

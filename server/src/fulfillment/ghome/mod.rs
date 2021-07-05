@@ -32,13 +32,11 @@ pub async fn on_webhook(
 
             let user_devices = db
                 .get_user_devices(&access_token.sub)
-                .await
                 .map_err(houseflow_db::Error::into_internal_server_error)?;
 
-            let user_devices = user_devices.into_iter().map(|device| async {
+            let user_devices = user_devices.into_iter().map(|device| {
                 let room = db
                     .get_room(&device.room_id)
-                    .await
                     .map_err(houseflow_db::Error::into_internal_server_error)?
                     .ok_or_else(|| {
                         IntentResponseError::InternalError(
@@ -72,8 +70,7 @@ pub async fn on_webhook(
                 };
 
                 Ok::<_, IntentResponseError>(payload)
-            });
-            let user_devices = futures::future::try_join_all(user_devices).await?;
+            }).collect::<Result<Vec<_>, _>>()?;
             let payload = sync::response::Payload {
                 agent_user_id: access_token.sub.clone(),
                 error_code: None,
@@ -95,7 +92,6 @@ pub async fn on_webhook(
             let device_responses = payload.devices.iter().map(|device| async move {
                 if !db
                     .check_user_device_access(&access_token.sub, &device.id)
-                    .await
                     .map_err(houseflow_db::Error::into_internal_server_error)?
                 {
                     return Err::<query::response::PayloadDevice, IntentResponseError>(

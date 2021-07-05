@@ -23,7 +23,6 @@ pub async fn on_add(
 
     if !db
         .check_user_admin(&access_token.sub)
-        .await
         .map_err(houseflow_db::Error::into_internal_server_error)?
     {
         return Err(ResponseError::UserNotAdmin);
@@ -49,7 +48,6 @@ pub async fn on_add(
     };
 
     db.add_device(&device)
-        .await
         .map_err(houseflow_db::Error::into_internal_server_error)?;
 
     Ok(Json(ResponseBody {
