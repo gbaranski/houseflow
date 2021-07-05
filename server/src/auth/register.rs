@@ -2,7 +2,6 @@ use actix_web::{
     post,
     web::{Data, Json},
 };
-use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::auth::register::{Request, ResponseBody, ResponseError};
 use houseflow_types::User;
@@ -11,14 +10,13 @@ use rand::random;
 #[post("/register")]
 pub async fn on_register(
     Json(request): Json<Request>,
-    config: Data<Config>,
     db: Data<dyn Database>,
 ) -> Result<Json<ResponseBody>, ResponseError> {
     validator::Validate::validate(&request).map_err(houseflow_types::ValidationError::from)?;
 
     let password_hash = argon2::hash_encoded(
         request.password.as_bytes(),
-        config.secrets.password_salt.as_bytes(),
+        &crate::get_password_salt(),
         &argon2::Config::default(),
     )
     .unwrap();

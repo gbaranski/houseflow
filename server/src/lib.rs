@@ -17,6 +17,10 @@ pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
 const AUTHORIZATION_TMPL: &str = include_str!("templates/authorization.html");
 
+pub(crate) fn get_password_salt() -> [u8; 16] {
+    rand::random()
+}
+
 pub fn configure(
     cfg: &mut web::ServiceConfig,
     token_store: web::Data<dyn TokenStore>,

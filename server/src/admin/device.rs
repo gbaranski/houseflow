@@ -33,7 +33,7 @@ pub async fn on_add(
         room_id: request.room_id,
         password_hash: argon2::hash_encoded(
             request.password.as_bytes(),
-            config.secrets.password_salt.as_bytes(),
+            &crate::get_password_salt(),
             &argon2::Config::default(),
         )
         .unwrap(),

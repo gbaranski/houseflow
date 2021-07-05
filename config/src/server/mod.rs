@@ -61,9 +61,6 @@ pub struct Secrets {
 
     /// Key used to sign access tokens. Must be secret and should be farily random.
     pub access_key: String,
-
-    /// Salt used with hashing passwords
-    pub password_salt: String,
 }
 
 impl rand::distributions::Distribution<Secrets> for rand::distributions::Standard {
@@ -76,7 +73,6 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
         Secrets {
             refresh_key: gen_secret(),
             access_key: gen_secret(),
-            password_salt: gen_secret(),
         }
     }
 }
