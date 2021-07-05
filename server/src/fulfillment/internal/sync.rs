@@ -39,37 +39,8 @@ mod tests {
         Device, UserID, UserStructure,
     };
 
-    async fn get_authorized_device(db: &dyn Database, user_id: &UserID) -> Device {
-        let structure = get_structure();
-        let room = get_room(&structure);
-        let user_structure = UserStructure {
-            structure_id: structure.id.clone(),
-            user_id: user_id.clone(),
-            is_manager: false,
-        };
-        let device = get_device(&room);
-        db.add_structure(&structure).unwrap();
-        db.add_room(&room).unwrap();
-        db.add_device(&device).unwrap();
-        db.add_user_structure(&user_structure).unwrap();
-        device
-    }
-
-    async fn get_unauthorized_device(db: &dyn Database) -> Device {
-        let structure = get_structure();
-        let room = get_room(&structure);
-        let device = get_device(&room);
-        db.add_structure(&structure).unwrap();
-        db.add_room(&room).unwrap();
-        db.add_device(&device).unwrap();
-        device
-    }
-
     #[actix_rt::test]
     async fn sync() {
-        use futures::future::join_all;
-        use std::iter::repeat_with;
-
         let state = get_state();
 
         let user = get_user();
@@ -82,21 +53,32 @@ mod tests {
         );
         state.database.add_user(&user).unwrap();
 
-        let mut authorized_devices: Vec<Device> = join_all(
-            repeat_with(|| get_authorized_device(state.database.as_ref(), &user.id))
-                .take(5)
-                .collect::<Vec<_>>(),
-        )
-        .await;
-        authorized_devices.sort_by_key(|device| device.id.clone());
-        let authorized_devices = authorized_devices;
+        let structure_allow = get_structure();
+        let structure_deny = get_structure();
+        let room_allow = get_room(&structure_allow);
+        let room_deny = get_room(&structure_deny);
+        state.database.add_structure(&structure_allow).unwrap();
+        state.database.add_structure(&structure_deny).unwrap();
+        state.database.add_room(&room_allow).unwrap();
+        state.database.add_room(&room_deny).unwrap();
+        let devices_allow = std::iter::repeat_with(|| get_device(&room_allow))
+            .take(5)
+            .collect::<Vec<_>>();
+        let devices_deny = std::iter::repeat_with(|| get_device(&room_deny))
+            .take(5)
+            .collect::<Vec<_>>();
 
-        let _: Vec<Device> = join_all(
-            repeat_with(|| get_unauthorized_device(state.database.as_ref()))
-                .take(10)
-                .collect::<Vec<_>>(),
-        )
-        .await;
+        devices_allow
+            .iter()
+            .chain(devices_deny.iter())
+            .for_each(|device| state.database.add_device(&device).unwrap());
+
+        let user_structure = UserStructure {
+            structure_id: structure_allow.id.clone(),
+            user_id: user.id.clone(),
+            is_manager: false,
+        };
+        state.database.add_user_structure(&user_structure).unwrap();
 
         let request_body = Request {};
         let request = test::TestRequest::get()
@@ -106,8 +88,12 @@ mod tests {
                 format!("Bearer {}", access_token.to_string()),
             ))
             .set_json(&request_body);
-        let mut response = send_request_with_state::<ResponseBody>(request, &state).await;
-        response.devices.sort_by_key(|device| device.id.clone());
-        assert_eq!(response.devices, authorized_devices);
+        let response = send_request_with_state::<ResponseBody>(request, &state).await;
+
+        let sort_devices = |devices: Vec<Device>| {
+            devices.clone().sort_by(|a, b| a.id.cmp(&b.id));
+            devices
+        };
+        assert_eq!(sort_devices(response.devices), sort_devices(devices_allow));
     }
 }
