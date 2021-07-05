@@ -2,6 +2,7 @@ use crate::common::Credential;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
+use std::str::FromStr;
 
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
@@ -192,3 +193,38 @@ impl rand::distributions::Distribution<DeviceCommand> for rand::distributions::S
     }
 }
 
+#[cfg(feature = "rusqlite")]
+impl rusqlite::ToSql for DeviceType {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::Owned(
+            rusqlite::types::Value::Text(self.to_string()),
+        ))
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl rusqlite::ToSql for DeviceTrait {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::Owned(
+            rusqlite::types::Value::Text(self.to_string()),
+        ))
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl rusqlite::types::FromSql for DeviceType {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        Self::from_str(value.as_str()?)
+            .map_err(|err| rusqlite::types::FromSqlError::Other(Box::new(err)))
+    }
+}
+
+
+
+#[cfg(feature = "rusqlite")]
+impl rusqlite::types::FromSql for DeviceTrait {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        Self::from_str(value.as_str()?)
+            .map_err(|err| rusqlite::types::FromSqlError::Other(Box::new(err)))
+    }
+}

@@ -165,6 +165,23 @@ impl<const N: usize> Serialize for Credential<N> {
     }
 }
 
+#[cfg(feature = "rusqlite")]
+impl<const N: usize> rusqlite::ToSql for Credential<N> {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::Owned(
+            rusqlite::types::Value::Text(self.to_string()),
+        ))
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl<const N: usize> rusqlite::types::FromSql for Credential<N> {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        Self::from_str(value.as_str()?)
+            .map_err(|err| rusqlite::types::FromSqlError::Other(Box::new(err)))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
