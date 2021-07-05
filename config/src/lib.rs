@@ -44,12 +44,7 @@ pub async fn read_file<T: serde::de::DeserializeOwned>(
     Ok(config)
 }
 
-#[cfg(any(
-    test,
-    feature = "device",
-    feature = "client",
-    feature = "server",
-))]
+#[cfg(any(test, feature = "device", feature = "client", feature = "server",))]
 pub(crate) mod resolve_socket_address {
     use serde::{
         de::{self, Visitor},

@@ -15,7 +15,8 @@ pub async fn on_whoami(
     db: Data<dyn Database>,
     http_request: HttpRequest,
 ) -> Result<Json<ResponseBody>, ResponseError> {
-    let access_token = AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
+    let access_token =
+        AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     let user = db
         .get_user(&access_token.sub)
         .await

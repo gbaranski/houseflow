@@ -20,7 +20,8 @@ pub async fn on_execute(
     db: Data<dyn Database>,
     sessions: Data<Sessions>,
 ) -> Result<Json<ResponseBody>, ResponseError> {
-    let access_token = AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
+    let access_token =
+        AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     if !db
         .check_user_device_access(&access_token.sub, &execute_request.device_id)
         .await
