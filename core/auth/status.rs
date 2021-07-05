@@ -48,13 +48,10 @@ impl StatusCommand {
             get_token_expiration(Some(&access_token.exp)),
             get_token_expiration(refresh_token.exp.as_ref()),
         );
-        let censor = |s: &str| std::iter::repeat("*").take(s.len()).collect();
+        let censored = || std::iter::repeat("*").take(32).collect();
         let (access_token, refresh_token) = match self.show_token {
             true => (access_token.to_string(), refresh_token.to_string()),
-            false => (
-                censor(&access_token.to_string()),
-                censor(&refresh_token.to_string()),
-            ),
+            false => (censored(), censored()),
         };
 
         println!("✔ Logged in");
