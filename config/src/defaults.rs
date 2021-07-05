@@ -23,3 +23,7 @@ pub fn config_home() -> std::path::PathBuf {
 pub fn data_home() -> std::path::PathBuf {
     base_directories().get_data_home()
 }
+
+pub fn database_path() -> std::path::PathBuf {
+    data_home().join("database.sqlite3")
+}

@@ -18,6 +18,10 @@ pub struct Config {
 
     /// Configuration of the Google 3rd party service
     pub google: Option<google::Config>,
+
+    /// Path to the SQLite database
+    #[serde(default = "defaults::database_path")]
+    pub database_path: std::path::PathBuf,
 }
 
 impl Config {

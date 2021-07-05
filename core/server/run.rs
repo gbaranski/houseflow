@@ -19,7 +19,7 @@ impl Command<ServerCommandState> for RunServerCommand {
             .with_context(|| "connect to redis failed, is redis on?")?;
         let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
 
-        let database = SqliteDatabase::new_in_memory()?;
+        let database = SqliteDatabase::new(&state.config.database_path)?;
         let database = Data::from(Arc::new(database) as Arc<dyn Database>);
 
         let address = state.config.address;
