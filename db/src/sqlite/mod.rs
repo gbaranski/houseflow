@@ -539,8 +539,13 @@ mod tests {
             let structure_deny = super::structure::gen();
             let room_allow = super::room::gen(structure_allow.id.clone());
             let room_deny = super::room::gen(structure_deny.id.clone());
-            let device_allow = super::device::gen(room_allow.id.clone());
-            let device_deny = super::device::gen(room_deny.id.clone());
+            let devices_allow =
+                std::iter::repeat_with(|| super::device::gen(room_allow.id.clone()))
+                    .take(5)
+                    .collect::<Vec<_>>();
+            let devices_deny = std::iter::repeat_with(|| super::device::gen(room_deny.id.clone()))
+                .take(5)
+                .collect::<Vec<_>>();
             let user = super::user::gen();
             let user_structure = gen(user.id.clone(), structure_allow.id.clone(), false);
             db.add_user(&user).unwrap();
@@ -548,22 +553,35 @@ mod tests {
             db.add_structure(&structure_deny).unwrap();
             db.add_room(&room_allow).unwrap();
             db.add_room(&room_deny).unwrap();
-            db.add_device(&device_allow).unwrap();
-            db.add_device(&device_deny).unwrap();
+            devices_allow
+                .iter()
+                .chain(devices_deny.iter())
+                .for_each(|device| db.add_device(&device).unwrap());
 
             db.add_user_structure(&user_structure).unwrap();
 
+            devices_allow.iter().for_each(|device| {
+                assert_eq!(
+                    db.check_user_device_access(&user.id, &device.id).unwrap(),
+                    true
+                )
+            });
+
+            devices_deny.iter().for_each(|device| {
+                assert_eq!(
+                    db.check_user_device_access(&user.id, &device.id).unwrap(),
+                    false
+                )
+            });
+
+            let sort_devices = |devices: Vec<Device>| {
+                devices.clone().sort_by(|a, b| a.id.cmp(&b.id));
+                devices
+            };
             assert_eq!(
-                db.check_user_device_access(&user.id, &device_allow.id)
-                    .unwrap(),
-                true
+                sort_devices(db.get_user_devices(&user.id).unwrap()),
+                sort_devices(devices_allow)
             );
-            assert_eq!(
-                db.check_user_device_access(&user.id, &device_deny.id)
-                    .unwrap(),
-                false
-            );
-            assert_eq!(db.get_user_devices(&user.id).unwrap(), vec![device_allow]);
         }
 
         #[test]
