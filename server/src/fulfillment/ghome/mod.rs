@@ -34,43 +34,46 @@ pub async fn on_webhook(
                 .get_user_devices(&access_token.sub)
                 .map_err(houseflow_db::Error::into_internal_server_error)?;
 
-            let user_devices = user_devices.into_iter().map(|device| {
-                let room = db
-                    .get_room(&device.room_id)
-                    .map_err(houseflow_db::Error::into_internal_server_error)?
-                    .ok_or_else(|| {
-                        IntentResponseError::InternalError(
-                            houseflow_types::InternalServerError::Other(
-                                "couldn't find matching room".to_string(),
-                            ),
-                        )
-                    })?;
+            let user_devices = user_devices
+                .into_iter()
+                .map(|device| {
+                    let room = db
+                        .get_room(&device.room_id)
+                        .map_err(houseflow_db::Error::into_internal_server_error)?
+                        .ok_or_else(|| {
+                            IntentResponseError::InternalError(
+                                houseflow_types::InternalServerError::Other(
+                                    "couldn't find matching room".to_string(),
+                                ),
+                            )
+                        })?;
 
-                let payload = sync::response::PayloadDevice {
-                    id: device.id,
-                    device_type: device.device_type,
-                    traits: device.traits,
-                    name: ghome::sync::response::PayloadDeviceName {
-                        default_names: None,
-                        name: device.name,
-                        nicknames: None,
-                    },
-                    will_report_state: device.will_push_state,
-                    notification_supported_by_agent: false, // not sure about that
-                    room_hint: Some(room.name),
-                    device_info: Some(sync::response::PayloadDeviceInfo {
-                        manufacturer: Some("houseflow".to_string()),
-                        model: None,
-                        hw_version: Some(device.hw_version),
-                        sw_version: Some(device.sw_version),
-                    }),
-                    attributes: Some(device.attributes),
-                    custom_data: None,
-                    other_device_ids: None,
-                };
+                    let payload = sync::response::PayloadDevice {
+                        id: device.id,
+                        device_type: device.device_type,
+                        traits: device.traits,
+                        name: ghome::sync::response::PayloadDeviceName {
+                            default_names: None,
+                            name: device.name,
+                            nicknames: None,
+                        },
+                        will_report_state: device.will_push_state,
+                        notification_supported_by_agent: false, // not sure about that
+                        room_hint: Some(room.name),
+                        device_info: Some(sync::response::PayloadDeviceInfo {
+                            manufacturer: Some("houseflow".to_string()),
+                            model: None,
+                            hw_version: Some(device.hw_version),
+                            sw_version: Some(device.sw_version),
+                        }),
+                        attributes: Some(device.attributes),
+                        custom_data: None,
+                        other_device_ids: None,
+                    };
 
-                Ok::<_, IntentResponseError>(payload)
-            }).collect::<Result<Vec<_>, _>>()?;
+                    Ok::<_, IntentResponseError>(payload)
+                })
+                .collect::<Result<Vec<_>, _>>()?;
             let payload = sync::response::Payload {
                 agent_user_id: access_token.sub.clone(),
                 error_code: None,

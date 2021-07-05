@@ -70,7 +70,7 @@ pub fn configure(
 mod test_utils {
     use super::Config;
     use crate::{MemoryTokenStore, TokenStore};
-    use houseflow_db::{Database, sqlite::Database as SqliteDatabase};
+    use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
 
     use actix_web::{test, web::Data, App};
