@@ -1,4 +1,4 @@
-use crate::{get_with_token, Error, HouseflowAPI};
+use crate::{get_with_token, post_with_token, Error, HouseflowAPI};
 use houseflow_types::{fulfillment, token::AccessToken};
 
 #[derive(Debug, thiserror::Error)]
@@ -19,7 +19,7 @@ impl HouseflowAPI {
         request: &fulfillment::execute::Request,
     ) -> Result<fulfillment::execute::Response, Error> {
         let url = self.fulfillment_url.join("execute").unwrap();
-        get_with_token(url, request, access_token).await
+        post_with_token(url, request, access_token).await
     }
 
     pub async fn query(
