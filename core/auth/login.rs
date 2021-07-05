@@ -41,7 +41,7 @@ impl Command<ClientCommandState> for LoginCommand {
 
         let login_response = state
             .houseflow_api
-            .login(login_request.clone())
+            .login(&login_request)
             .await??;
 
         log::info!("✔ Logged in as {}", login_request.email);

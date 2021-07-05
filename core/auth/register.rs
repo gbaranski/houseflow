@@ -51,7 +51,7 @@ impl Command<ClientCommandState> for RegisterCommand {
 
         state
             .houseflow_api
-            .register(register_request)
+            .register(&register_request)
             .await??;
         log::info!("✔ Created new account");
 

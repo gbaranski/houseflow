@@ -1,39 +1,18 @@
-use super::{Error, HouseflowAPI};
+use crate::{Error, HouseflowAPI, post_with_token};
 use houseflow_types::admin;
 use houseflow_types::token::AccessToken;
-use reqwest::Client;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AdminError {}
 
 impl HouseflowAPI {
-    async fn admin_add_thing<REQ: serde::ser::Serialize, RESP: serde::de::DeserializeOwned>(
-        &self,
-        access_token: &AccessToken,
-        request: &REQ,
-        path: &str,
-    ) -> Result<RESP, Error> {
-        let client = Client::new();
-
-        let url = self.admin_url.join(path).unwrap();
-        let response = client
-            .put(url)
-            .json(request)
-            .bearer_auth(access_token)
-            .send()
-            .await?
-            .json::<RESP>()
-            .await?;
-
-        Ok(response)
-    }
-
     pub async fn admin_add_device(
         &self,
         access_token: &AccessToken,
         request: &admin::device::add::Request,
     ) -> Result<admin::device::add::Response, Error> {
-        self.admin_add_thing(access_token, request, "device").await
+        let url = self.admin_url.join("device").unwrap();
+        post_with_token(url, request, access_token).await
     }
 
     pub async fn admin_add_structure(
@@ -41,8 +20,8 @@ impl HouseflowAPI {
         access_token: &AccessToken,
         request: &admin::structure::add::Request,
     ) -> Result<admin::structure::add::Response, Error> {
-        self.admin_add_thing(access_token, request, "structure")
-            .await
+        let url = self.admin_url.join("structure").unwrap();
+        post_with_token(url, request, access_token).await
     }
 
     pub async fn admin_add_room(
@@ -50,7 +29,8 @@ impl HouseflowAPI {
         access_token: &AccessToken,
         request: &admin::room::add::Request,
     ) -> Result<admin::room::add::Response, Error> {
-        self.admin_add_thing(access_token, request, "room").await
+        let url = self.admin_url.join("room").unwrap();
+        post_with_token(url, request, access_token).await
     }
 
     pub async fn admin_add_user_structure(
@@ -58,7 +38,7 @@ impl HouseflowAPI {
         access_token: &AccessToken,
         request: &admin::user_structure::add::Request,
     ) -> Result<admin::user_structure::add::Response, Error> {
-        self.admin_add_thing(access_token, request, "user_structure")
-            .await
+        let url = self.admin_url.join("user_structure").unwrap();
+        post_with_token(url, request, access_token).await
     }
 }
