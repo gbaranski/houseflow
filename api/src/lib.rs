@@ -18,6 +18,13 @@ use url::Url;
 pub enum Error {
     #[error("error occured with sending request: `{0}`")]
     ReqwestError(#[from] reqwest::Error),
+
+    #[error("invalid response body, code: `{status_code}`, error: `{error}`, body: `{body}`")]
+    InvalidResponseBody {
+        error: Box<dyn std::error::Error + Send + Sync>,
+        status_code: reqwest::StatusCode,
+        body: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -54,14 +61,29 @@ impl HouseflowAPI {
 use houseflow_types::token::Token;
 use serde::{de::DeserializeOwned, ser::Serialize};
 
-async fn send<B: DeserializeOwned, E: DeserializeOwned>(
+pub(crate) async fn send_request<B: DeserializeOwned, E: DeserializeOwned>(
     request: reqwest::RequestBuilder,
 ) -> Result<Result<B, E>, Error> {
     let response = request.send().await?;
+    let status_code = response.status();
     let result = if response.status().is_success() {
-        Ok(response.json::<B>().await?)
+        let bytes = response.bytes().await?;
+        let parsed =
+            serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
+                error: Box::new(err),
+                status_code,
+                body: String::from_utf8(bytes.to_vec()).unwrap(),
+            })?;
+        Ok(parsed)
     } else {
-        Err(response.json::<E>().await?)
+        let bytes = response.bytes().await?;
+        let parsed =
+            serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
+                error: Box::new(err),
+                status_code,
+                body: String::from_utf8(bytes.to_vec()).unwrap(),
+            })?;
+        Err(parsed)
     };
     Ok(result)
 }
@@ -75,7 +97,7 @@ where
 {
     let client = Client::new();
     let request = client.post(url).json(body);
-    send(request).await
+    send_request(request).await
 }
 
 #[allow(dead_code)]
@@ -86,7 +108,7 @@ where
 {
     let client = Client::new();
     let request = client.get(url).json(body);
-    send(request).await
+    send_request(request).await
 }
 
 pub(crate) async fn post_with_token<TP, B, E>(
@@ -101,7 +123,22 @@ where
 {
     let client = Client::new();
     let request = client.post(url).json(body).bearer_auth(token);
-    send(request).await
+    send_request(request).await
+}
+
+pub(crate) async fn put_with_token<TP, B, E>(
+    url: Url,
+    body: &impl Serialize,
+    token: &Token<TP>,
+) -> Result<Result<B, E>, Error>
+where
+    TP: Serialize + DeserializeOwned,
+    B: DeserializeOwned,
+    E: DeserializeOwned,
+{
+    let client = Client::new();
+    let request = client.put(url).json(body).bearer_auth(token);
+    send_request(request).await
 }
 
 pub(crate) async fn get_with_token<TP, B, E>(
@@ -116,5 +153,5 @@ where
 {
     let client = Client::new();
     let request = client.get(url).json(body).bearer_auth(token);
-    send(request).await
+    send_request(request).await
 }
