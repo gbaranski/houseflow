@@ -36,7 +36,7 @@ mod tests {
     use chrono::{Duration, Utc};
     use houseflow_types::{
         token::{AccessToken, AccessTokenPayload},
-        Device, UserID, UserStructure,
+        Device, UserStructure,
     };
 
     #[actix_rt::test]
