@@ -26,7 +26,7 @@ pub async fn on_register(
     let new_user = User {
         id: random(),
         username: request.username.clone(),
-        email: request.email.clone(),
+        email: request.email,
         password_hash,
     };
     db.add_user(&new_user).map_err(|err| match err {
