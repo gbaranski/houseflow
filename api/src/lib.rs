@@ -68,10 +68,7 @@ async fn send<B: DeserializeOwned, E: DeserializeOwned>(
 
 use reqwest::Client;
 
-pub(crate) async fn post<B, E>(
-    url: Url,
-    body: &impl Serialize,
-) -> Result<Result<B, E>, Error>
+pub(crate) async fn post<B, E>(url: Url, body: &impl Serialize) -> Result<Result<B, E>, Error>
 where
     B: DeserializeOwned,
     E: DeserializeOwned,
@@ -82,10 +79,7 @@ where
 }
 
 #[allow(dead_code)]
-pub(crate) async fn get<B, E>(
-    url: Url,
-    body: &impl Serialize,
-) -> Result<Result<B, E>, Error>
+pub(crate) async fn get<B, E>(url: Url, body: &impl Serialize) -> Result<Result<B, E>, Error>
 where
     B: DeserializeOwned,
     E: DeserializeOwned,

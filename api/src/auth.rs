@@ -1,4 +1,4 @@
-use crate::{post, post_with_token, get_with_token, Error, HouseflowAPI};
+use crate::{get_with_token, post, post_with_token, Error, HouseflowAPI};
 use houseflow_types::{
     auth,
     token::{AccessToken, RefreshToken},
@@ -27,7 +27,7 @@ impl HouseflowAPI {
         refresh_token: &RefreshToken,
     ) -> Result<auth::logout::Response, Error> {
         let url = self.auth_url.join("logout").unwrap();
-        post_with_token(url, &auth::logout::Request{}, refresh_token).await
+        post_with_token(url, &auth::logout::Request {}, refresh_token).await
     }
 
     pub async fn fetch_access_token(
@@ -47,6 +47,6 @@ impl HouseflowAPI {
         access_token: &AccessToken,
     ) -> Result<auth::whoami::Response, Error> {
         let url = self.auth_url.join("whoami").unwrap();
-        get_with_token(url, &auth::whoami::Request{}, access_token).await
+        get_with_token(url, &auth::whoami::Request {}, access_token).await
     }
 }

@@ -1,4 +1,4 @@
-use crate::{Error, HouseflowAPI, post_with_token};
+use crate::{post_with_token, Error, HouseflowAPI};
 use houseflow_types::admin;
 use houseflow_types::token::AccessToken;
 
