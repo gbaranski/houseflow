@@ -1,4 +1,4 @@
-use crate::{Error, HouseflowAPI, get_with_token, post, post_with_token, send_request};
+use crate::{get_with_token, post, post_with_token, send_request, Error, HouseflowAPI};
 use houseflow_types::{
     auth,
     token::{AccessToken, RefreshToken},

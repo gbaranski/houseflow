@@ -68,21 +68,19 @@ pub(crate) async fn send_request<B: DeserializeOwned, E: DeserializeOwned>(
     let status_code = response.status();
     let result = if response.status().is_success() {
         let bytes = response.bytes().await?;
-        let parsed =
-            serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
-                error: Box::new(err),
-                status_code,
-                body: String::from_utf8(bytes.to_vec()).unwrap(),
-            })?;
+        let parsed = serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
+            error: Box::new(err),
+            status_code,
+            body: String::from_utf8(bytes.to_vec()).unwrap(),
+        })?;
         Ok(parsed)
     } else {
         let bytes = response.bytes().await?;
-        let parsed =
-            serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
-                error: Box::new(err),
-                status_code,
-                body: String::from_utf8(bytes.to_vec()).unwrap(),
-            })?;
+        let parsed = serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
+            error: Box::new(err),
+            status_code,
+            body: String::from_utf8(bytes.to_vec()).unwrap(),
+        })?;
         Err(parsed)
     };
     Ok(result)
