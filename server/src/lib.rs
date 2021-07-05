@@ -141,6 +141,7 @@ mod test_utils {
                 client_secret: "some-client-secret".to_string(),
                 project_id: "some-project-id".to_string(),
             }),
+            database_path: std::path::PathBuf::new(),
         }))
     }
 
