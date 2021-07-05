@@ -120,13 +120,9 @@ impl crate::Database for Database {
     }
 
     fn add_admin(&self, user_id: &UserID) -> Result<(), Error> {
-        const SQL: &str =
-            "INSERT INTO admins(user_id) VALUES(?)";
+        const SQL: &str = "INSERT INTO admins(user_id) VALUES(?)";
         let connection = self.pool.get()?;
-        let n = connection.execute(
-            SQL,
-            params![user_id],
-        )?;
+        let n = connection.execute(SQL, params![user_id])?;
 
         match n {
             0 => Err(Error::NotModified),

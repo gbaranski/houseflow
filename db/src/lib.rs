@@ -26,7 +26,9 @@ pub enum Error {
     AlreadyExists,
 }
 
-use houseflow_types::{Device, DeviceID, Room, RoomID, Structure, StructureID, User, UserID, UserStructure};
+use houseflow_types::{
+    Device, DeviceID, Room, RoomID, Structure, StructureID, User, UserID, UserStructure,
+};
 
 pub trait Database: Send + Sync {
     fn add_structure(&self, structure: &Structure) -> Result<(), Error>;
@@ -35,7 +37,6 @@ pub trait Database: Send + Sync {
     fn add_user(&self, user: &User) -> Result<(), Error>;
     fn add_admin(&self, user_id: &UserID) -> Result<(), Error>;
     fn add_user_structure(&self, user_structure: &UserStructure) -> Result<(), Error>;
-
 
     fn get_structure(&self, structure_id: &StructureID) -> Result<Option<Structure>, Error>;
     fn get_room(&self, room_id: &RoomID) -> Result<Option<Room>, Error>;
@@ -51,7 +52,6 @@ pub trait Database: Send + Sync {
     ) -> Result<bool, Error>;
 
     fn check_user_admin(&self, user_id: &UserID) -> Result<bool, Error>;
-
 }
 
 impl From<Error> for houseflow_types::InternalServerError {

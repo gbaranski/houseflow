@@ -24,8 +24,11 @@ pub async fn on_exchange_refresh_token(
 ) -> Result<Json<ResponseBody>, ResponseError> {
     let expires_in = Duration::minutes(10);
 
-    let refresh_token = RefreshToken::decode(config.secrets.refresh_key.as_bytes(), &request.refresh_token)
-        .map_err(|err| {
+    let refresh_token = RefreshToken::decode(
+        config.secrets.refresh_key.as_bytes(),
+        &request.refresh_token,
+    )
+    .map_err(|err| {
         ResponseError::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string())))
     })?;
 
@@ -80,8 +83,11 @@ mod tests {
             .uri("/auth/token")
             .set_form(&request_body);
         let response = send_request_with_state::<ResponseBody>(request, &state).await;
-        let access_token =
-            AccessToken::decode(state.config.secrets.access_key.as_bytes(), &response.access_token).unwrap();
+        let access_token = AccessToken::decode(
+            state.config.secrets.access_key.as_bytes(),
+            &response.access_token,
+        )
+        .unwrap();
         assert_eq!(access_token.sub, refresh_token.sub);
     }
 

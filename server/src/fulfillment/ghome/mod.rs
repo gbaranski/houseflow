@@ -22,7 +22,8 @@ pub async fn on_webhook(
     db: web::Data<dyn Database>,
     sessions: web::Data<Sessions>,
 ) -> Result<web::Json<IntentResponseBody>, IntentResponseError> {
-    let access_token = AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
+    let access_token =
+        AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     let input = request.inputs.first().unwrap();
 
     let body: Result<IntentResponseBody, IntentResponseError> = match input {

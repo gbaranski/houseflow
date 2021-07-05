@@ -108,8 +108,12 @@ fn verify_redirect_uri(
         .path_segments()
         .ok_or(InvalidRedirectURIError::InvalidPath)?;
 
-    let first_segment = segments.next().ok_or(InvalidRedirectURIError::InvalidPath)?;
-    let second_segment = segments.next().ok_or(InvalidRedirectURIError::InvalidPath)?;
+    let first_segment = segments
+        .next()
+        .ok_or(InvalidRedirectURIError::InvalidPath)?;
+    let second_segment = segments
+        .next()
+        .ok_or(InvalidRedirectURIError::InvalidPath)?;
 
     if scheme != "https" {
         Err(InvalidRedirectURIError::InvalidScheme(scheme.to_string()))
