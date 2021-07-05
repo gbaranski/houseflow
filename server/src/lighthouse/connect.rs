@@ -51,7 +51,6 @@ pub async fn on_websocket(
 
     let device = database
         .get_device(&device_id)
-        .await
         .map_err(|err| ConnectResponseError::InternalError(err.to_string()))?
         .ok_or(ConnectResponseError::InvalidCredentials)?;
 

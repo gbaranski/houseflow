@@ -28,7 +28,6 @@ pub async fn on_login(
     validator::Validate::validate(&request).map_err(houseflow_types::ValidationError::from)?;
     let user = db
         .get_user_by_email(&request.email)
-        .await
         .map_err(houseflow_db::Error::into_internal_server_error)?
         .ok_or(ResponseError::UserNotFound)?;
 
@@ -77,7 +76,7 @@ mod tests {
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        state.database.add_user(&user).await.unwrap();
+        state.database.add_user(&user).unwrap();
 
         let request_body = Request {
             email: user.email,
@@ -108,7 +107,7 @@ mod tests {
             email: String::from("john_smith@example.com"),
             password_hash: PASSWORD_HASH.into(),
         };
-        state.database.add_user(&user).await.unwrap();
+        state.database.add_user(&user).unwrap();
 
         let request_body = Request {
             email: user.email,

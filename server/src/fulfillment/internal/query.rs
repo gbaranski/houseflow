@@ -24,7 +24,6 @@ pub async fn on_query(
         AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     if !db
         .check_user_device_access(&access_token.sub, &request.device_id)
-        .await
         .map_err(houseflow_db::Error::into_internal_server_error)?
     {
         return Err(ResponseError::NoDevicePermission);

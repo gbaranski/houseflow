@@ -29,7 +29,7 @@ pub async fn on_register(
         email: request.email.clone(),
         password_hash,
     };
-    db.add_user(&new_user).await.map_err(|err| match err {
+    db.add_user(&new_user).map_err(|err| match err {
         houseflow_db::Error::AlreadyExists => ResponseError::UserAlreadyExists,
         other => other.into_internal_server_error().into(),
     })?;
@@ -60,7 +60,6 @@ mod tests {
         let db_user = state
             .database
             .get_user_by_email(&request_body.email)
-            .await
             .unwrap()
             .expect("user not found in database");
 

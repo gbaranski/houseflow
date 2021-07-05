@@ -19,7 +19,6 @@ pub async fn on_whoami(
         AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     let user = db
         .get_user(&access_token.sub)
-        .await
         .map_err(houseflow_db::Error::into_internal_server_error)?
         .ok_or(ResponseError::UserNotFound)?;
 
@@ -57,7 +56,7 @@ mod tests {
             },
         );
 
-        state.database.add_user(&user).await.unwrap();
+        state.database.add_user(&user).unwrap();
 
         let request = test::TestRequest::get().uri("/auth/whoami").append_header((
             http::header::AUTHORIZATION,
@@ -93,7 +92,7 @@ mod tests {
             },
         );
 
-        state.database.add_user(&user).await.unwrap();
+        state.database.add_user(&user).unwrap();
 
         let request = test::TestRequest::get().uri("/auth/whoami").append_header((
             http::header::AUTHORIZATION,
