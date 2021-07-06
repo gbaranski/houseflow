@@ -23,8 +23,7 @@ toml = { version = "0.5.8", optional = true }
 [features]
 device = []
 client = []
-server = ["redis"]
-redis = []
+server = []
 fs = ["tokio", "toml"]
 
 [dev-dependencies]

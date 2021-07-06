@@ -1,4 +1,4 @@
-use crate::{defaults, redis};
+use crate::defaults;
 use serde::{Deserialize, Serialize};
 
 pub mod google;
@@ -11,10 +11,6 @@ pub struct Config {
 
     /// Secret data
     pub secrets: Secrets,
-
-    /// Configuration of the Redis Database
-    #[serde(default)]
-    pub redis: redis::Config,
 
     /// Configuration of the Google 3rd party service
     pub google: Option<google::Config>,

@@ -9,9 +9,6 @@ pub mod device;
 #[cfg(any(test, feature = "client"))]
 pub mod client;
 
-#[cfg(feature = "redis")]
-pub mod redis;
-
 pub struct Config {
     #[cfg(feature = "server")]
     pub server: server::Config,

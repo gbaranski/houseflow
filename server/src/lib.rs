@@ -139,13 +139,13 @@ mod test_utils {
         Data::from(Arc::new(Config {
             address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
             secrets: rand::random(),
-            redis: Default::default(),
             google: Some(houseflow_config::server::google::Config {
                 client_id: "some-client-id".to_string(),
                 client_secret: "some-client-secret".to_string(),
                 project_id: "some-project-id".to_string(),
             }),
             database_path: std::path::PathBuf::new(),
+            tokens_path: std::path::PathBuf::new(),
         }))
     }
 
