@@ -2142,9 +2142,9 @@ dependencies = [
 
 [[package]]
 name = "szafka"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a832a8bf69c802fd187d45aab60c035e3b8219d400430790248ce2b590a1769"
+checksum = "713fdc99cf476ec912d7b4e159d29de8a59e1b681049419e9d331e8cdee02691"
 dependencies = [
  "serde",
  "serde_json",
