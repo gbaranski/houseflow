@@ -8,6 +8,7 @@ repository = "https://github.com/gbaranski/houseflow"
 keywords = ["iot", "home-automation", "smart-home", "cli"]
 license = "GPL-3.0-or-later"
 edition = "2018"
+resolver = "2"
 
 [[bin]]
 path = "core/main.rs"
