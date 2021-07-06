@@ -27,3 +27,7 @@ pub fn data_home() -> std::path::PathBuf {
 pub fn database_path() -> std::path::PathBuf {
     data_home().join("database.sqlite3")
 }
+
+pub fn token_store_path() -> std::path::PathBuf {
+    data_home().join("token_store.sled")
+}

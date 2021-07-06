@@ -3,7 +3,7 @@ use actix_web::{web::Data, App, HttpServer};
 use anyhow::Context;
 use async_trait::async_trait;
 use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
-use houseflow_server::{RedisTokenStore, TokenStore};
+use houseflow_server::{SledTokenStore, TokenStore};
 use std::sync::Arc;
 
 use clap::Clap;
@@ -14,8 +14,7 @@ pub struct RunServerCommand {}
 #[async_trait(?Send)]
 impl Command<ServerCommandState> for RunServerCommand {
     async fn run(self, state: ServerCommandState) -> anyhow::Result<()> {
-        let token_store = RedisTokenStore::new()
-            .await
+        let token_store = SledTokenStore::new(&state.config.tokens_path)
             .with_context(|| "connect to redis failed, is redis on?")?;
         let token_store = Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);
 

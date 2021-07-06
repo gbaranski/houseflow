@@ -48,7 +48,7 @@ pub async fn on_login(
         },
     );
     token_store
-        .add(&refresh_token.tid)
+        .add(&refresh_token.tid, refresh_token.exp.as_ref())
         .await
         .map_err(TokenStoreError::into_internal_server_error)?;
 

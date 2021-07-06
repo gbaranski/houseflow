@@ -22,6 +22,10 @@ pub struct Config {
     /// Path to the SQLite database
     #[serde(default = "defaults::database_path")]
     pub database_path: std::path::PathBuf,
+
+    /// Path to the token store
+    #[serde(default = "defaults::token_store_path")]
+    pub tokens_path: std::path::PathBuf,
 }
 
 impl Config {

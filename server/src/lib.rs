@@ -4,7 +4,7 @@ mod fulfillment;
 mod lighthouse;
 mod token_store;
 
-pub use token_store::{MemoryTokenStore, RedisTokenStore, TokenStore};
+pub use token_store::{sled::TokenStore as SledTokenStore, TokenStore};
 
 use actix_web::web;
 use houseflow_config::server::Config;
@@ -73,7 +73,7 @@ pub fn configure(
 #[cfg(test)]
 mod test_utils {
     use super::Config;
-    use crate::{MemoryTokenStore, TokenStore};
+    use crate::{token_store, TokenStore};
     use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
 
@@ -154,7 +154,12 @@ mod test_utils {
     }
 
     pub fn get_token_store() -> Data<dyn TokenStore> {
-        Data::from(Arc::new(MemoryTokenStore::new()) as Arc<dyn TokenStore>)
+        let path =
+            std::env::temp_dir().join(format!("houseflow-server_test-{}", rand::random::<u32>()));
+        Data::from(
+            Arc::new(token_store::sled::TokenStore::new_temporary(path).unwrap())
+                as Arc<dyn TokenStore>,
+        )
     }
 
     pub fn get_user() -> User {

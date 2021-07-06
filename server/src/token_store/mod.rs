@@ -1,24 +1,16 @@
-mod memory;
-mod redis;
-
-pub use self::memory::{Error as MemoryTokenStoreError, MemoryTokenStore};
-pub use self::redis::{Error as RedisTokenStoreError, RedisTokenStore};
+pub mod sled;
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use houseflow_types::token::RefreshTokenID;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("internal error: `{0}`")]
-    InternalError(Box<dyn TokenStoreInternalError>),
-}
+    #[error("sled error: {0}")]
+    SledError(#[from] ::sled::Error),
 
-pub trait TokenStoreInternalError: std::fmt::Debug + std::error::Error {}
-
-impl<T: TokenStoreInternalError + 'static> From<T> for Error {
-    fn from(v: T) -> Self {
-        Self::InternalError(Box::new(v))
-    }
+    #[error("invalid data {0}")]
+    InvalidData(String),
 }
 
 #[async_trait]
@@ -27,7 +19,11 @@ pub trait TokenStore: Send + Sync {
 
     async fn remove(&self, id: &RefreshTokenID) -> Result<bool, Error>;
 
-    async fn add(&self, id: &RefreshTokenID) -> Result<(), Error>;
+    async fn add(
+        &self,
+        id: &RefreshTokenID,
+        expire_at: Option<&DateTime<Utc>>,
+    ) -> Result<(), Error>;
 }
 
 impl From<Error> for houseflow_types::InternalServerError {
