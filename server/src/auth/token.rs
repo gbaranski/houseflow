@@ -74,7 +74,11 @@ mod tests {
                 exp: Some(Utc::now() + Duration::days(7)),
             },
         );
-        state.token_store.add(&refresh_token.tid).await.unwrap();
+        state
+            .token_store
+            .add(&refresh_token.tid, refresh_token.exp.as_ref())
+            .await
+            .unwrap();
         let request_body = Request {
             grant_type: GrantType::RefreshToken,
             refresh_token: refresh_token.to_string(),
@@ -125,7 +129,11 @@ mod tests {
                 exp: Some(Utc::now() - Duration::hours(1)),
             },
         );
-        state.token_store.add(&refresh_token.tid).await.unwrap();
+        state
+            .token_store
+            .add(&refresh_token.tid, refresh_token.exp.as_ref())
+            .await
+            .unwrap();
         let request_body = Request {
             grant_type: GrantType::RefreshToken,
             refresh_token: refresh_token.to_string(),
