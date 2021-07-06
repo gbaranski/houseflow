@@ -19,7 +19,7 @@ serde_json = "1.0"
 thiserror  = "1.0"
 url        = "2.2"
 
-houseflow-types = { path = "../types", version = "0.1.1", features = ["token"], optional = true }
+houseflow-types = { path = "../types", version = "0.1.1", features = ["token"] }
 
 [features]
 auth = ["houseflow-types/auth"]

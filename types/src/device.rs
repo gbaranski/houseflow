@@ -1,7 +1,6 @@
 use crate::common::Credential;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use strum::{EnumIter, IntoEnumIterator};
 
 pub type DeviceID = Credential<16>;
@@ -210,6 +209,9 @@ impl rusqlite::ToSql for DeviceTrait {
         ))
     }
 }
+
+#[cfg(feature = "rusqlite")]
+use std::str::FromStr;
 
 #[cfg(feature = "rusqlite")]
 impl rusqlite::types::FromSql for DeviceType {
