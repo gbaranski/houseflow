@@ -61,10 +61,10 @@ impl HouseflowAPI {
 #[cfg(any(feature = "auth", feature = "fulfillment", feature = "admin"))]
 mod utils {
     use super::Error;
-    use url::Url;
     use houseflow_types::token::Token;
     use reqwest::Client;
     use serde::{de::DeserializeOwned, ser::Serialize};
+    use url::Url;
 
     pub(crate) async fn send_request<B: DeserializeOwned, E: DeserializeOwned>(
         request: reqwest::RequestBuilder,
