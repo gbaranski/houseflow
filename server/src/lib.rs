@@ -34,6 +34,7 @@ pub fn configure(
     let mut tt = TinyTemplate::new();
     tt.add_template("authorization.html", AUTHORIZATION_TMPL)
         .expect("invalid authorization tmpl");
+    let tt = web::Data::new(tt);
 
     cfg.app_data(config)
         .app_data(token_store)
@@ -41,7 +42,6 @@ pub fn configure(
         .app_data(database)
         .service(
             web::scope("/admin")
-                .app_data(tt)
                 .service(admin::device::on_add)
                 .service(admin::room::on_add)
                 .service(admin::structure::on_add)
@@ -49,10 +49,12 @@ pub fn configure(
         )
         .service(
             web::scope("/auth")
+                .app_data(tt)
                 .service(auth::on_login)
                 .service(auth::on_logout)
                 .service(auth::on_register)
                 .service(auth::on_whoami)
+                .service(auth::on_authorize)
                 .service(
                     web::scope("/")
                         .app_data(auth::on_exchange_refresh_token_form_config())

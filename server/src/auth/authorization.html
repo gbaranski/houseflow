@@ -1,0 +1,38 @@
+<html>
+<div>
+    <h1>Login</h1>
+    <form action="#" method="POST" id="login-form">
+        <input type="email" autocomplete="email" name="email" placeholder="Email" required />
+        <br />
+        <input type="password" autocomplete="new-password" min="8" name="password" placeholder="Password" required />
+        <br />
+        <input type="submit" disabled />
+    </form>
+    <br />
+    <h1>Register</h1>
+    <form action="#" method="POST" target="__blank" id="register-form">
+        <input type="text" autocomplete="given-name" name="firstName" placeholder="First name" required />
+        <br />
+        <input type="text" autocomplete="family-name" name="lastName" placeholder="Last name" required />
+        <br />
+        <input type="email" autocomplete="email" name="email" placeholder="Email" required />
+        <br />
+        <input type="password" autocomplete="new-password" min="8" name="password" placeholder="Password" required />
+        <br />
+        <input type="submit" disabled />
+    </form>
+</div>
+<script>
+    const state = "{state}";
+    const redirect_uri = "{redirect_uri}";
+    const loginForm = document.getElementById("login-form")
+    loginForm.action = () => {
+        console.log("hello");
+    };
+    const registerForm = document.getElementById("register-form")
+    loginForm.action = window.location.pathname + "/login" + window.location.search
+    registerForm.action = window.location.pathname + "/register" + window.location.search
+    document.querySelectorAll('input[type="submit"]').forEach((e) => e.disabled = false);
+</script>
+
+</html>
