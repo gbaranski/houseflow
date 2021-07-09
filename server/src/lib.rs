@@ -15,8 +15,6 @@ use {
 };
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
-const AUTHORIZATION_TMPL: &str = include_str!("templates/authorization.html");
-
 pub(crate) fn get_password_salt() -> [u8; 16] {
     rand::random()
 }
@@ -28,14 +26,6 @@ pub fn configure(
     config: web::Data<Config>,
     sessions: web::Data<Sessions>,
 ) {
-    use tinytemplate::TinyTemplate;
-
-    log::debug!("adding template");
-    let mut tt = TinyTemplate::new();
-    tt.add_template("authorization.html", AUTHORIZATION_TMPL)
-        .expect("invalid authorization tmpl");
-    let tt = web::Data::new(tt);
-
     cfg.app_data(config)
         .app_data(token_store)
         .app_data(sessions)
@@ -49,12 +39,16 @@ pub fn configure(
         )
         .service(
             web::scope("/auth")
-                .app_data(tt)
                 .service(auth::on_login)
                 .service(auth::on_logout)
                 .service(auth::on_register)
                 .service(auth::on_whoami)
-                .service(auth::on_authorize)
+                .service(auth::oauth::on_authorize)
+                .service(
+                    web::scope("/oauth")
+                        .service(auth::oauth::on_authorize)
+                        .service(auth::oauth::on_login),
+                )
                 .service(
                     web::scope("/")
                         .app_data(auth::on_exchange_refresh_token_form_config())
