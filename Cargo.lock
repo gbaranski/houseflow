@@ -1045,6 +1045,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
+ "env_logger",
  "futures",
  "houseflow-config",
  "houseflow-db",

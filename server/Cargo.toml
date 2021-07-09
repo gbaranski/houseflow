@@ -49,5 +49,11 @@ tinytemplate = "1.2.1"
 chrono = "0.4.19"
 sled = "0.34.6"
 
+[[example]]
+name = "run"
+
 [dev-dependencies]
+env_logger = "0.8.4"
 futures = "0.3.15"
+houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
+tokio = { version="1.5", features=["sync", "macros", "rt-multi-thread"] }
