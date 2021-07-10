@@ -2,6 +2,7 @@ mod admin;
 mod auth;
 mod fulfillment;
 mod lighthouse;
+mod oauth;
 mod token_store;
 
 pub use token_store::{sled::TokenStore as SledTokenStore, TokenStore};
@@ -38,17 +39,16 @@ pub fn configure(
                 .service(admin::user_structure::on_add),
         )
         .service(
+            web::scope("/oauth")
+                .service(oauth::on_authorize)
+                .service(oauth::on_login),
+        )
+        .service(
             web::scope("/auth")
                 .service(auth::on_login)
                 .service(auth::on_logout)
                 .service(auth::on_register)
                 .service(auth::on_whoami)
-                .service(auth::oauth::on_authorize)
-                .service(
-                    web::scope("/oauth")
-                        .service(auth::oauth::on_authorize)
-                        .service(auth::oauth::on_login),
-                )
                 .service(
                     web::scope("/")
                         .app_data(auth::on_exchange_refresh_token_form_config())

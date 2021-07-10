@@ -61,6 +61,9 @@ pub struct Secrets {
 
     /// Key used to sign access tokens. Must be secret and should be farily random.
     pub access_key: String,
+
+    /// Key used to sign authorization codes. Must be secret and should be farily random.
+    pub authorization_code_key: String,
 }
 
 impl rand::distributions::Distribution<Secrets> for rand::distributions::Standard {
@@ -73,6 +76,7 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
         Secrets {
             refresh_key: gen_secret(),
             access_key: gen_secret(),
+            authorization_code_key: gen_secret(),
         }
     }
 }

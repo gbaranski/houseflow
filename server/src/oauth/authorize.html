@@ -23,16 +23,13 @@
     </form>
 </div>
 <script>
-    const state = "{state}";
-    const redirect_uri = "{redirect_uri}";
-    const loginForm = document.getElementById("login-form")
-    loginForm.action = () => {
-        console.log("hello");
-    };
-    const registerForm = document.getElementById("register-form")
-    loginForm.action = window.location.pathname + "/login" + window.location.search
-    registerForm.action = window.location.pathname + "/register" + window.location.search
-    document.querySelectorAll('input[type="submit"]').forEach((e) => e.disabled = false);
+    (() => {
+        const loginForm = document.getElementById("login-form")
+        const registerForm = document.getElementById("register-form")
+        loginForm.action = window.location.pathname + "/login" + window.location.search
+        registerForm.action = window.location.pathname + "/register" + window.location.search
+        document.querySelectorAll('input[type="submit"]').forEach((e) => e.disabled = false);
+    })();
 </script>
 
 </html>

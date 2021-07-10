@@ -1,12 +1,11 @@
-use actix_web::{
-    get,
-    web::{self, Data},
-    HttpResponse,
-};
+mod authorize;
+mod login;
 
-use serde::{Deserialize, Serialize};
-use tinytemplate::TinyTemplate;
+pub use authorize::on_authorize;
+pub use login::on_login;
+
 use url::Url;
+use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -16,19 +15,19 @@ pub enum AuthorizationResponseType {
 
 #[derive(Deserialize)]
 pub struct AuthorizationRequestQuery {
-    client_id: String,
-    redirect_uri: Url,
-    state: String,
+    pub client_id: String,
+    pub redirect_uri: Url,
+    pub state: String,
 
     // TODO: remove dead_code permission
     #[allow(dead_code)]
-    scope: Option<String>,
+    pub scope: Option<String>,
 
     #[allow(dead_code)]
-    response_type: AuthorizationResponseType,
+    pub response_type: AuthorizationResponseType,
 
     #[allow(dead_code)]
-    user_locale: String,
+    pub user_locale: String,
 }
 
 #[derive(Serialize, Debug, thiserror::Error)]
@@ -38,6 +37,17 @@ pub enum AuthorizationResponseError {
 
     #[error("invalid redirect URI")]
     InvalidRedirectURI(#[from] InvalidRedirectURIError),
+}
+
+impl actix_web::ResponseError for AuthorizationResponseError {
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        use actix_web::http::StatusCode;
+
+        match self {
+            Self::InvalidClientID => StatusCode::BAD_REQUEST,
+            Self::InvalidRedirectURI(_) => StatusCode::BAD_REQUEST,
+        }
+    }
 }
 
 #[derive(Serialize, Debug, thiserror::Error)]
@@ -53,42 +63,7 @@ pub enum InvalidRedirectURIError {
 
     #[error("invalid project id")]
     InvalidProjectID,
-}
 
-impl actix_web::ResponseError for AuthorizationResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InvalidClientID => StatusCode::BAD_REQUEST,
-            Self::InvalidRedirectURI(_) => StatusCode::BAD_REQUEST,
-        }
-    }
-}
-
-#[get("/authorize")]
-pub async fn on_authorize(
-    request: web::Query<AuthorizationRequestQuery>,
-    server_config: Data<houseflow_config::server::Config>,
-    tt: Data<TinyTemplate<'_>>,
-) -> Result<HttpResponse, AuthorizationResponseError> {
-    let google_config = server_config.google.clone().unwrap();
-    if request.client_id != google_config.client_id {
-        return Err(AuthorizationResponseError::InvalidClientID);
-    }
-    verify_redirect_uri(&request.redirect_uri, &google_config.project_id)?;
-
-    let mut context = std::collections::HashMap::new();
-    let redirect_uri = request.redirect_uri.to_string();
-    context.insert("state", request.state.as_str());
-    context.insert("redirect_uri", redirect_uri.as_str());
-
-    let body = tt.render("authorization.html", &context).unwrap();
-    let response = HttpResponse::build(actix_web::http::StatusCode::OK)
-        .content_type("text/html")
-        .body(body);
-
-    Ok(response)
 }
 
 const GOOGLE_OAUTH_REDIRECT_URL: &str = "oauth-redirect.googleusercontent.com";
