@@ -25,7 +25,7 @@ strum          = { version = "0.21.0", features = ["derive"] }
 serde          = { version = "1.0", features = ["derive"] }
 serde_json     = { version = "1.0.64" }
 
-rusqlite = { version = "< 0.25", optional = true } 
+rusqlite = { version = "0.25", optional = true } 
 
 validator = { version = "0.13.0", features = ["derive"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"], optional = true }
