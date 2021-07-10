@@ -83,7 +83,10 @@ pub async fn on_login(
         authorization_code_payload,
     );
     let mut redirect_uri = query.redirect_uri;
-    redirect_uri.set_query(Some(&format!("code={}&state={}", authorization_code, query.state)));
+    redirect_uri.set_query(Some(&format!(
+        "code={}&state={}",
+        authorization_code, query.state
+    )));
 
     Ok(HttpResponse::SeeOther()
         .append_header(("Location", redirect_uri.to_string()))

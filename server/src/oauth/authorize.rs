@@ -1,9 +1,9 @@
+use super::{verify_redirect_uri, AuthorizationRequestQuery, AuthorizationResponseError};
 use actix_web::{
     get,
     web::{self, Data},
     HttpResponse,
 };
-use super::{verify_redirect_uri, AuthorizationRequestQuery, AuthorizationResponseError};
 
 const AUTHORIZE_PAGE: &str = include_str!("authorize.html");
 

@@ -4,8 +4,8 @@ mod login;
 pub use authorize::on_authorize;
 pub use login::on_login;
 
+use serde::{Deserialize, Serialize};
 use url::Url;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -63,7 +63,6 @@ pub enum InvalidRedirectURIError {
 
     #[error("invalid project id")]
     InvalidProjectID,
-
 }
 
 const GOOGLE_OAUTH_REDIRECT_URL: &str = "oauth-redirect.googleusercontent.com";
