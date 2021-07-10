@@ -7,4 +7,4 @@
 [secrets]
 refresh_key = "{}"
 access_key = "{}"
-password_salt = "{}"
+authorization_code_key = "{}"
