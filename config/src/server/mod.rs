@@ -9,12 +9,6 @@ pub struct Config {
     #[serde(default = "defaults::server_address")]
     pub address: std::net::SocketAddr,
 
-    /// Secret data
-    pub secrets: Secrets,
-
-    /// Configuration of the Google 3rd party service
-    pub google: Option<google::Config>,
-
     /// Path to the SQLite database
     #[serde(default = "defaults::database_path")]
     pub database_path: std::path::PathBuf,
@@ -22,6 +16,15 @@ pub struct Config {
     /// Path to the token store
     #[serde(default = "defaults::token_store_path")]
     pub tokens_path: std::path::PathBuf,
+
+    /// Path to the TLS certificate
+    pub certificate_path: Option<std::path::PathBuf>,
+
+    /// Secret data
+    pub secrets: Secrets,
+
+    /// Configuration of the Google 3rd party service
+    pub google: Option<google::Config>,
 }
 
 impl Config {

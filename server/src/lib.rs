@@ -61,15 +61,38 @@ pub fn configure(
                 .route("/whoami", web::get().to(auth::on_whoami)),
         )
         .service(
-            web::scope("/fulfillment").service(
-                web::scope("/internal")
-                    .route(
-                        "/execute",
-                        web::post().to(fulfillment::internal::on_execute),
-                    )
-                    .route("/query", web::get().to(fulfillment::internal::on_query))
-                    .route("/sync", web::get().to(fulfillment::internal::on_sync)),
-            ),
+            web::scope("/fulfillment")
+                .service(
+                    web::scope("/internal")
+                        .route(
+                            "/execute",
+                            web::post().to(fulfillment::internal::on_execute),
+                        )
+                        .route("/query", web::get().to(fulfillment::internal::on_query))
+                        .route("/sync", web::get().to(fulfillment::internal::on_sync)),
+                )
+                .service(
+                    web::scope("/ghome")
+                        .wrap_fn(|req, srv| {
+                            use actix_service::Service;
+
+                            let config = req
+                                .app_data::<web::Data<Config>>()
+                                .expect("config app_data is not configured");
+                            if config.google.is_some() {
+                                srv.call(req)
+                            } else {
+                                let fut = async {
+                                    Ok(actix_web::dev::ServiceResponse::new(
+                                        req.into_parts().0,
+                                        actix_web::HttpResponse::NotAcceptable()
+                                            .body("`config.home` is set to None, google home webhook is disabled")))
+                                };
+                                Box::pin(fut)
+                            }
+                        })
+                        .route("/webhook", web::post().to(fulfillment::ghome::on_webhook)),
+                ),
         )
         .service(web::scope("/lighthouse").route("/ws", web::get().to(lighthouse::on_websocket)));
 }
@@ -115,6 +138,7 @@ mod test_utils {
             }),
             database_path: std::path::PathBuf::new(),
             tokens_path: std::path::PathBuf::new(),
+            certificate_path: None,
         }))
     }
 

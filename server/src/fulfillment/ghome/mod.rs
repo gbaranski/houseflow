@@ -1,5 +1,4 @@
 use actix_web::{
-    post,
     web::{self, Data, Json},
     HttpRequest,
 };
@@ -14,7 +13,6 @@ use houseflow_types::{
 
 use crate::Sessions;
 
-#[post("/webhook")]
 pub async fn on_webhook(
     Json(request): Json<IntentRequest>,
     http_request: HttpRequest,
