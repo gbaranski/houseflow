@@ -2,12 +2,22 @@ use actix_web::{web, HttpServer};
 use houseflow_config::server::Config;
 use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
 use houseflow_server::{Sessions, SledTokenStore, TokenStore};
+use std::str::FromStr;
 use std::sync::Arc;
+use tracing::Level;
+
+const LOG_ENV: &str = "HOUSEFLOW_LOG";
 
 #[actix_web::main]
 async fn main() {
-    env_logger::init_from_env(env_logger::Env::default().filter_or("HOUSEFLOW_LOG", "info"));
-
+    let level = std::env::var(LOG_ENV)
+        .map(|env| {
+            Level::from_str(env.to_uppercase().as_str())
+                .expect(&format!("invalid `{}` environment variable", LOG_ENV))
+        })
+        .unwrap_or(Level::INFO);
+        
+    tracing_subscriber::fmt().with_max_level(level).init();
     let config = Config::get(Config::default_path())
         .await
         .expect("cannot load server config");
@@ -21,7 +31,6 @@ async fn main() {
     let sessions = web::Data::new(Sessions::default());
     let server = HttpServer::new(move || {
         actix_web::App::new()
-            .wrap(actix_web::middleware::Logger::default())
             .configure(|cfg| {
                 houseflow_server::configure(
                     cfg,
