@@ -46,7 +46,10 @@ mod tests {
             username: String::from("John Smith"),
             password: PASSWORD.into(),
         };
-        let response = on_register(Json(request.clone()), state.database.clone()).await.unwrap().into_inner();
+        let response = on_register(Json(request.clone()), state.database.clone())
+            .await
+            .unwrap()
+            .into_inner();
 
         let db_user = state
             .database

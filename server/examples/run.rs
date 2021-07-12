@@ -16,7 +16,7 @@ async fn main() {
                 .expect(&format!("invalid `{}` environment variable", LOG_ENV))
         })
         .unwrap_or(Level::INFO);
-        
+
     tracing_subscriber::fmt().with_max_level(level).init();
     let config = Config::get(Config::default_path())
         .await
@@ -30,16 +30,15 @@ async fn main() {
     let address = config.address;
     let sessions = web::Data::new(Sessions::default());
     let server = HttpServer::new(move || {
-        actix_web::App::new()
-            .configure(|cfg| {
-                houseflow_server::configure(
-                    cfg,
-                    token_store.clone(),
-                    database.clone(),
-                    config.clone(),
-                    sessions.clone(),
-                )
-            })
+        actix_web::App::new().configure(|cfg| {
+            houseflow_server::configure(
+                cfg,
+                token_store.clone(),
+                database.clone(),
+                config.clone(),
+                sessions.clone(),
+            )
+        })
     })
     .bind(address)
     .expect("bind address fail");
