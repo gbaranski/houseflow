@@ -57,3 +57,5 @@ futures = "0.3.15"
 houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
 tokio = { version="1.5", features=["sync", "macros", "rt-multi-thread"] }
 tracing-subscriber = "0.2.19"
+actix-web = { version = "4.0.0-beta.8", features = ["rustls"]}
+rustls = "0.19.1"

@@ -2,10 +2,11 @@ use crate::defaults;
 use serde::{Deserialize, Serialize};
 
 pub mod google;
+pub mod tls;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    /// Host, e.g 127.0.0.1
+    /// Server address, e.g 127.0.0.1:6001
     #[serde(default = "defaults::server_address")]
     pub address: std::net::SocketAddr,
 
@@ -17,8 +18,8 @@ pub struct Config {
     #[serde(default = "defaults::token_store_path")]
     pub tokens_path: std::path::PathBuf,
 
-    /// Path to the TLS certificate
-    pub certificate_path: Option<std::path::PathBuf>,
+    /// Path to the TLS configuration
+    pub tls: Option<tls::Config>,
 
     /// Secret data
     pub secrets: Secrets,
