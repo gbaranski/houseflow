@@ -20,6 +20,10 @@ pub(crate) fn get_password_salt() -> [u8; 16] {
     rand::random()
 }
 
+fn health_check() -> actix_web::HttpResponse {
+    actix_web::HttpResponse::Ok().body("I'm alive!")
+}
+
 pub fn configure(
     cfg: &mut web::ServiceConfig,
     token_store: web::Data<dyn TokenStore>,
@@ -31,6 +35,7 @@ pub fn configure(
         .app_data(token_store)
         .app_data(sessions)
         .app_data(database)
+        .route("/health_check", web::get().to(health_check))
         .service(
             web::scope("/admin")
                 .service(web::scope("/device").route("/add", web::put().to(admin::device::on_add)))
@@ -126,19 +131,19 @@ mod test_utils {
     }
 
     pub fn get_config() -> Data<Config> {
-        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+        use houseflow_config::defaults;
 
         Data::from(Arc::new(Config {
-            address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
+            address: defaults::server_address(),
+            database_path: std::path::PathBuf::new(),
+            tokens_path: std::path::PathBuf::new(),
+            tls: None,
             secrets: rand::random(),
             google: Some(houseflow_config::server::google::Config {
                 client_id: "some-client-id".to_string(),
                 client_secret: "some-client-secret".to_string(),
                 project_id: "some-project-id".to_string(),
             }),
-            database_path: std::path::PathBuf::new(),
-            tokens_path: std::path::PathBuf::new(),
-            certificate_path: None,
         }))
     }
 
