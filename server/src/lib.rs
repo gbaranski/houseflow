@@ -33,37 +33,45 @@ pub fn configure(
         .app_data(database)
         .service(
             web::scope("/admin")
-                .service(admin::device::on_add)
-                .service(admin::room::on_add)
-                .service(admin::structure::on_add)
-                .service(admin::user_structure::on_add),
+                .service(web::scope("/device").route("/add", web::put().to(admin::device::on_add)))
+                .service(web::scope("/room").route("/add", web::put().to(admin::room::on_add)))
+                .service(
+                    web::scope("/structure").route("/add", web::put().to(admin::structure::on_add)),
+                )
+                .service(
+                    web::scope("/user_structure")
+                        .route("/add", web::put().to(admin::user_structure::on_add)),
+                ),
         )
         .service(
             web::scope("/oauth")
-                .service(oauth::on_authorize)
-                .service(oauth::on_login),
+                .route("/authorize", web::get().to(oauth::on_authorize))
+                .route("/login", web::post().to(oauth::on_login))
+                .service(
+                    web::scope("/")
+                        .app_data(oauth::on_exchange_refresh_token_form_config())
+                        .route("/token", web::post().to(oauth::on_exchange_refresh_token)),
+                ),
         )
         .service(
             web::scope("/auth")
-                .service(auth::on_login)
-                .service(auth::on_logout)
-                .service(auth::on_register)
-                .service(auth::on_whoami)
-                .service(
-                    web::scope("/")
-                        .app_data(auth::on_exchange_refresh_token_form_config())
-                        .service(auth::on_exchange_refresh_token),
-                ),
+                .route("/login", web::post().to(auth::on_login))
+                .route("/logout", web::post().to(auth::on_logout))
+                .route("/register", web::post().to(auth::on_register))
+                .route("/whoami", web::get().to(auth::on_whoami)),
         )
         .service(
             web::scope("/fulfillment").service(
                 web::scope("/internal")
-                    .service(fulfillment::internal::on_execute)
-                    .service(fulfillment::internal::on_query)
-                    .service(fulfillment::internal::on_sync),
+                    .route(
+                        "/execute",
+                        web::post().to(fulfillment::internal::on_execute),
+                    )
+                    .route("/query", web::get().to(fulfillment::internal::on_query))
+                    .route("/sync", web::get().to(fulfillment::internal::on_sync)),
             ),
         )
-        .service(web::scope("/lighthouse").service(lighthouse::on_websocket));
+        .service(web::scope("/lighthouse").route("/ws", web::get().to(lighthouse::on_websocket)));
 }
 
 #[cfg(test)]
@@ -73,7 +81,7 @@ mod test_utils {
     use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
 
-    use actix_web::{test, web::Data, App};
+    use actix_web::web::Data;
     use std::sync::Arc;
 
     pub const PASSWORD: &str = "SomePassword";
@@ -84,41 +92,6 @@ mod test_utils {
         pub database: Data<dyn Database>,
         pub token_store: Data<dyn TokenStore>,
         pub config: Data<Config>,
-    }
-
-    pub async fn send_request<T: serde::de::DeserializeOwned>(
-        request: test::TestRequest,
-    ) -> (T, State) {
-        let database = get_database();
-        let token_store = get_token_store();
-        let config = get_config();
-        let state = State {
-            database,
-            token_store,
-            config,
-        };
-
-        let response = send_request_with_state(request, &state).await;
-        (response, state)
-    }
-
-    pub async fn send_request_with_state<T: serde::de::DeserializeOwned>(
-        request: test::TestRequest,
-        state: &State,
-    ) -> T {
-        let mut app = test::init_service(App::new().configure(|cfg| {
-            crate::configure(
-                cfg,
-                state.token_store.clone(),
-                state.database.clone(),
-                state.config.clone(),
-                Data::new(Default::default()),
-            )
-        }))
-        .await;
-        let response = test::call_service(&mut app, request.to_request()).await;
-
-        test::read_body_json(response).await
     }
 
     pub fn get_state() -> State {

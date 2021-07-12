@@ -1,13 +1,9 @@
-use actix_web::{
-    post,
-    web::{Data, Json},
-};
+use actix_web::web::{Data, Json};
 use houseflow_db::Database;
 use houseflow_types::auth::register::{Request, ResponseBody, ResponseError};
 use houseflow_types::User;
 use rand::random;
 
-#[post("/register")]
 pub async fn on_register(
     Json(request): Json<Request>,
     db: Data<dyn Database>,
@@ -41,29 +37,26 @@ pub async fn on_register(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::test;
 
     #[actix_rt::test]
     async fn test_register() {
-        let request_body = Request {
-            password: PASSWORD.into(),
-            username: String::from("John Smith"),
+        let state = get_state();
+        let request = Request {
             email: String::from("john_smith@example.com"),
+            username: String::from("John Smith"),
+            password: PASSWORD.into(),
         };
-        let request = test::TestRequest::post()
-            .uri("/auth/register")
-            .set_json(&request_body);
-        let (response, state) = send_request::<ResponseBody>(request).await;
+        let response = on_register(Json(request.clone()), state.database.clone()).await.unwrap().into_inner();
 
         let db_user = state
             .database
-            .get_user_by_email(&request_body.email)
+            .get_user_by_email(&request.email)
             .unwrap()
             .expect("user not found in database");
 
         assert_eq!(db_user.id, response.user_id);
-        assert_eq!(db_user.username, request_body.username);
-        assert_eq!(db_user.email, request_body.email);
+        assert_eq!(db_user.username, request.username);
+        assert_eq!(db_user.email, request.email);
         assert!(argon2::verify_encoded(&db_user.password_hash, PASSWORD.as_bytes()).unwrap());
     }
 }

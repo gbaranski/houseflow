@@ -1,5 +1,4 @@
 use actix_web::{
-    post,
     web::{Data, Form, Query},
     HttpResponse,
 };
@@ -52,7 +51,6 @@ impl actix_web::ResponseError for ResponseError {
     }
 }
 
-#[post("/login")]
 pub async fn on_login(
     Form(request): Form<Request>,
     Query(query): Query<AuthorizationRequestQuery>,

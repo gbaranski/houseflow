@@ -1,5 +1,4 @@
 use actix_web::{
-    get,
     web::{Data, Json},
     HttpRequest,
 };
@@ -10,7 +9,6 @@ use houseflow_types::{
     token::AccessToken,
 };
 
-#[get("/sync")]
 pub async fn on_sync(
     _sync_request: Json<Request>,
     http_request: HttpRequest,
@@ -80,16 +78,16 @@ mod tests {
         };
         state.database.add_user_structure(&user_structure).unwrap();
 
-        let request_body = Request {};
-        let request = test::TestRequest::get()
-            .uri("/fulfillment/internal/sync")
+        let request = test::TestRequest::default()
             .insert_header((
                 http::header::AUTHORIZATION,
                 format!("Bearer {}", access_token.to_string()),
             ))
-            .set_json(&request_body);
-        let response = send_request_with_state::<ResponseBody>(request, &state).await;
-
+            .to_http_request();
+        let response = on_sync(Json(Request {}), request, state.config, state.database)
+            .await
+            .unwrap()
+            .into_inner();
         let sort_devices = |devices: Vec<Device>| {
             devices.clone().sort_by(|a, b| a.id.cmp(&b.id));
             devices

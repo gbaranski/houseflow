@@ -1,13 +1,11 @@
 use super::{verify_redirect_uri, AuthorizationRequestQuery, AuthorizationResponseError};
 use actix_web::{
-    get,
     web::{self, Data},
     HttpResponse,
 };
 
 const AUTHORIZE_PAGE: &str = include_str!("authorize.html");
 
-#[get("/authorize")]
 pub async fn on_authorize(
     request: web::Query<AuthorizationRequestQuery>,
     server_config: Data<houseflow_config::server::Config>,

@@ -1,6 +1,5 @@
 use crate::TokenStore;
 use actix_web::{
-    post,
     web::{Data, Json},
     HttpRequest,
 };
@@ -10,7 +9,6 @@ use houseflow_types::{
     token::RefreshToken,
 };
 
-#[post("/logout")]
 pub async fn on_logout(
     token_store: Data<dyn TokenStore>,
     config: Data<Config>,

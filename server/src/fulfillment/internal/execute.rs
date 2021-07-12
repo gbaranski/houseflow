@@ -1,5 +1,4 @@
 use actix_web::{
-    post,
     web::{Data, Json},
     HttpRequest,
 };
@@ -12,7 +11,6 @@ use houseflow_types::{
 
 use crate::Sessions;
 
-#[post("/execute")]
 pub async fn on_execute(
     execute_request: Json<Request>,
     http_request: HttpRequest,

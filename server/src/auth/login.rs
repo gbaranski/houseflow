@@ -1,8 +1,5 @@
 use crate::{token_store::Error as TokenStoreError, TokenStore};
-use actix_web::{
-    post,
-    web::{Data, Json},
-};
+use actix_web::web::{Data, Json};
 use chrono::{Duration, Utc};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
@@ -18,7 +15,13 @@ fn verify_password(hash: &str, password: &str) -> Result<(), ResponseError> {
     }
 }
 
-#[post("/login")]
+#[tracing::instrument(
+    name = "Login",
+    skip(request, token_store, config, db),
+    fields(
+        email = %request.email,
+    ),
+)]
 pub async fn on_login(
     Json(request): Json<Request>,
     token_store: Data<dyn TokenStore>,
@@ -62,30 +65,25 @@ pub async fn on_login(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::test;
-    use houseflow_types::User;
-
-    use rand::random;
 
     #[actix_rt::test]
-    async fn test_login() {
+    async fn valid() {
         let state = get_state();
-        let user = User {
-            id: random(),
-            username: String::from("John Smith"),
-            email: String::from("john_smith@example.com"),
-            password_hash: PASSWORD_HASH.into(),
-        };
+        let user = get_user();
         state.database.add_user(&user).unwrap();
+        let response = on_login(
+            Json(Request {
+                email: user.email,
+                password: PASSWORD.into(),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+            state.database,
+        )
+        .await
+        .unwrap()
+        .into_inner();
 
-        let request_body = Request {
-            email: user.email,
-            password: PASSWORD.into(),
-        };
-        let request = test::TestRequest::post()
-            .uri("/auth/login")
-            .set_json(&request_body);
-        let response = send_request_with_state::<ResponseBody>(request, &state).await;
         let (at, rt) = (response.access_token, response.refresh_token);
         let (at, rt) = (
             AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
@@ -99,39 +97,41 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_login_invalid_password() {
+    async fn invalid_password() {
         let state = get_state();
-        let user = User {
-            id: random(),
-            username: String::from("John Smith"),
-            email: String::from("john_smith@example.com"),
-            password_hash: PASSWORD_HASH.into(),
-        };
+        let user = get_user();
         state.database.add_user(&user).unwrap();
+        let response = on_login(
+            Json(Request {
+                email: user.email,
+                password: PASSWORD_INVALID.into(),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+            state.database,
+        )
+        .await
+        .unwrap_err();
 
-        let request_body = Request {
-            email: user.email,
-            password: PASSWORD_INVALID.into(),
-        };
-        let request = test::TestRequest::post()
-            .uri("/auth/login")
-            .set_json(&request_body);
-        let response = send_request_with_state::<ResponseError>(request, &state).await;
         assert_eq!(response, ResponseError::InvalidPassword);
     }
 
     #[actix_rt::test]
-    async fn test_login_not_existing_user() {
-        let request_body = Request {
-            email: String::from("jhon_smith@example.com"),
-            password: PASSWORD.into(),
-        };
+    async fn not_existing_user() {
+        let state = get_state();
+        let user = get_user();
+        let response = on_login(
+            Json(Request {
+                email: user.email,
+                password: PASSWORD.into(),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+            state.database,
+        )
+        .await
+        .unwrap_err();
 
-        let request = test::TestRequest::post()
-            .uri("/auth/login")
-            .set_json(&request_body);
-
-        let (response, _) = send_request::<ResponseError>(request).await;
         assert_eq!(response, ResponseError::UserNotFound);
     }
 }

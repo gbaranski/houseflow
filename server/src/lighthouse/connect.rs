@@ -1,6 +1,6 @@
 use super::Session;
 use crate::Sessions;
-use actix_web::{get, http, web, HttpRequest, HttpResponse};
+use actix_web::{http, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use houseflow_db::Database;
 use houseflow_types::{lighthouse::ConnectResponseError, DeviceID, DevicePassword};
@@ -38,7 +38,6 @@ fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePass
     ))
 }
 
-#[get("/ws")]
 pub async fn on_websocket(
     req: HttpRequest,
     stream: web::Payload,

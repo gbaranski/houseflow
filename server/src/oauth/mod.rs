@@ -1,6 +1,8 @@
 mod authorize;
 mod login;
+mod token;
 
+pub use token::{on_exchange_refresh_token, on_exchange_refresh_token_form_config};
 pub use authorize::on_authorize;
 pub use login::on_login;
 

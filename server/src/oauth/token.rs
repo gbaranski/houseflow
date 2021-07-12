@@ -1,8 +1,5 @@
 use crate::TokenStore;
-use actix_web::{
-    post,
-    web::{self, Data, Form, FormConfig, Json},
-};
+use actix_web::web::{self, Data, Form, FormConfig, Json};
 use chrono::{Duration, Utc};
 use houseflow_config::server::Config;
 use houseflow_types::{
@@ -16,7 +13,6 @@ pub fn on_exchange_refresh_token_form_config() -> FormConfig {
     })
 }
 
-#[post("/token")]
 pub async fn on_exchange_refresh_token(
     Form(request): Form<Request>,
     token_store: Data<dyn TokenStore>,
@@ -60,7 +56,6 @@ pub async fn on_exchange_refresh_token(
 mod tests {
     use super::*;
     use crate::test_utils::*;
-    use actix_web::test;
     use houseflow_types::{auth::token::GrantType, token::RefreshTokenPayload};
 
     #[actix_rt::test]
@@ -79,14 +74,18 @@ mod tests {
             .add(&refresh_token.tid, refresh_token.exp.as_ref())
             .await
             .unwrap();
-        let request_body = Request {
-            grant_type: GrantType::RefreshToken,
-            refresh_token: refresh_token.to_string(),
-        };
-        let request = test::TestRequest::post()
-            .uri("/auth/token")
-            .set_form(&request_body);
-        let response = send_request_with_state::<ResponseBody>(request, &state).await;
+        let response = on_exchange_refresh_token(
+            Form(Request {
+                grant_type: GrantType::RefreshToken,
+                refresh_token: refresh_token.to_string(),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+        )
+        .await
+        .unwrap()
+        .into_inner();
+
         let access_token = AccessToken::decode(
             state.config.secrets.access_key.as_bytes(),
             &response.access_token,
@@ -106,14 +105,16 @@ mod tests {
                 exp: Some(Utc::now() + Duration::days(7)),
             },
         );
-        let request_body = Request {
-            grant_type: GrantType::RefreshToken,
-            refresh_token: refresh_token.to_string(),
-        };
-        let request = test::TestRequest::post()
-            .uri("/auth/token")
-            .set_form(&request_body);
-        let response = send_request_with_state::<ResponseError>(request, &state).await;
+        let response = on_exchange_refresh_token(
+            Form(Request {
+                grant_type: GrantType::RefreshToken,
+                refresh_token: refresh_token.to_string(),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+        )
+        .await
+        .unwrap_err();
 
         assert!(matches!(response, ResponseError::InvalidGrant(..)));
     }
@@ -129,19 +130,17 @@ mod tests {
                 exp: Some(Utc::now() - Duration::hours(1)),
             },
         );
-        state
-            .token_store
-            .add(&refresh_token.tid, refresh_token.exp.as_ref())
-            .await
-            .unwrap();
-        let request_body = Request {
-            grant_type: GrantType::RefreshToken,
-            refresh_token: refresh_token.to_string(),
-        };
-        let request = test::TestRequest::post()
-            .uri("/auth/token")
-            .set_form(&request_body);
-        let response = send_request_with_state::<ResponseError>(request, &state).await;
+        let response = on_exchange_refresh_token(
+            Form(Request {
+                grant_type: GrantType::RefreshToken,
+                refresh_token: refresh_token.to_string(),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+        )
+        .await
+        .unwrap_err();
+
         assert!(matches!(response, ResponseError::InvalidGrant(..)));
     }
 }

@@ -1,7 +1,4 @@
-use actix_web::{
-    get,
-    web::{Data, HttpRequest, Json},
-};
+use actix_web::web::{Data, HttpRequest, Json};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
@@ -9,7 +6,6 @@ use houseflow_types::{
     token::AccessToken,
 };
 
-#[get("/whoami")]
 pub async fn on_whoami(
     config: Data<Config>,
     db: Data<dyn Database>,
@@ -58,32 +54,35 @@ mod tests {
 
         state.database.add_user(&user).unwrap();
 
-        let request = test::TestRequest::get().uri("/auth/whoami").append_header((
-            http::header::AUTHORIZATION,
-            format!("Bearer {}", access_token.to_string()),
-        ));
+        let request = test::TestRequest::default()
+            .append_header((
+                http::header::AUTHORIZATION,
+                format!("Bearer {}", access_token.to_string()),
+            ))
+            .to_http_request();
+        let response = on_whoami(state.config, state.database.clone(), request)
+            .await
+            .unwrap()
+            .into_inner();
 
-        let response = send_request_with_state::<ResponseBody>(request, &state).await;
         assert_eq!(user.email, response.email);
         assert_eq!(user.username, response.username);
     }
 
     #[actix_rt::test]
     async fn missing_token() {
-        let request = test::TestRequest::get().uri("/auth/whoami");
-        let (response, _) = send_request::<ResponseError>(request).await;
+        let state = get_state();
+        let request = test::TestRequest::default().to_http_request();
+        let response = on_whoami(state.config, state.database, request)
+            .await
+            .unwrap_err();
         assert!(matches!(response, ResponseError::TokenError(_)));
     }
 
     #[actix_rt::test]
     async fn invalid_token_signature() {
         let state = get_state();
-        let user = User {
-            id: random(),
-            username: String::from("John Smith"),
-            email: String::from("john_smith@example.com"),
-            password_hash: PASSWORD_HASH.into(),
-        };
+        let user = get_user();
         let access_token = AccessToken::new(
             &Vec::from("other key"),
             AccessTokenPayload {
@@ -93,13 +92,16 @@ mod tests {
         );
 
         state.database.add_user(&user).unwrap();
+        let request = test::TestRequest::default()
+            .append_header((
+                http::header::AUTHORIZATION,
+                format!("Bearer {}", access_token.to_string()),
+            ))
+            .to_http_request();
+        let response = on_whoami(state.config, state.database, request)
+            .await
+            .unwrap_err();
 
-        let request = test::TestRequest::get().uri("/auth/whoami").append_header((
-            http::header::AUTHORIZATION,
-            format!("Bearer {}", access_token.to_string()),
-        ));
-
-        let response = send_request_with_state::<ResponseError>(request, &state).await;
         assert!(matches!(response, ResponseError::TokenError(_)));
     }
 }

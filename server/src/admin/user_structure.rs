@@ -1,5 +1,4 @@
 use actix_web::{
-    put,
     web::{Data, Json},
     HttpRequest,
 };
@@ -11,7 +10,6 @@ use houseflow_types::{
     UserStructure,
 };
 
-#[put("/user_structure")]
 pub async fn on_add(
     Json(request): Json<Request>,
     http_request: HttpRequest,

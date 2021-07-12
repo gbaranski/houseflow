@@ -1,5 +1,4 @@
 use actix_web::{
-    get,
     web::{Data, Json},
     HttpRequest,
 };
@@ -12,7 +11,6 @@ use houseflow_types::{
 
 use crate::Sessions;
 
-#[get("/query")]
 pub async fn on_query(
     request: Json<Request>,
     http_request: HttpRequest,
