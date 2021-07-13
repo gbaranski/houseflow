@@ -153,7 +153,7 @@ mod serde_device_type {
                 E: serde::de::Error,
             {
                 let without_prefix = v.replace(&format!("{}.", PREFIX), "");
-                T::from_str(without_prefix.as_str()).map_err(|err| E::custom(err))
+                T::from_str(without_prefix.as_str()).map_err(E::custom)
             }
         }
 
@@ -167,7 +167,7 @@ mod serde_device_traits {
     const PREFIX: &str = "action.devices.traits";
 
     pub fn serialize<S: serde::Serializer, T: std::fmt::Display>(
-        val: &Vec<T>,
+        val: &[T],
         serializer: S,
     ) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
@@ -212,7 +212,7 @@ mod serde_device_traits {
                 while let Some(e) = seq.next_element::<&str>()? {
                     let without_prefix = e.replace(&format!("{}.", PREFIX), "");
                     let t = T::from_str(&without_prefix)
-                        .map_err(|err| serde::de::Error::custom(err))?;
+                        .map_err(serde::de::Error::custom)?;
                     vec.push(t);
                 }
                 Ok(vec)
