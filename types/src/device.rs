@@ -70,8 +70,6 @@ use strum::EnumString;
 
 /// Traits defines what functionality device supports
 #[derive(Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, Serialize, Deserialize)]
-#[strum(serialize_all = "snake_case")]
-#[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceTrait {
     OnOff,
@@ -91,7 +89,6 @@ impl DeviceTrait {
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-#[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceType {
     Gate,
