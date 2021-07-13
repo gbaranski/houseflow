@@ -1,13 +1,11 @@
 use crate::{token_store::Error as TokenStoreError, TokenStore};
-use actix_web::web::{self, Data, Form, FormConfig, Json};
+use actix_web::web::{Data, Form, FormConfig, Json};
 use chrono::{Duration, Utc};
 use houseflow_config::server::Config;
 use houseflow_types::token::{
     AccessToken, AccessTokenPayload, AuthorizationCode, RefreshToken, RefreshTokenPayload,
 };
 use serde::{Deserialize, Serialize};
-
-use url::Url;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "grant_type", rename_all = "snake_case")]
@@ -22,9 +20,6 @@ pub enum Request {
 
         /// The refresh token previously issued to the client.
         refresh_token: String,
-
-        /// The requested scope
-        scope: Option<String>,
     },
 
     AuthorizationCode {
@@ -34,18 +29,15 @@ pub enum Request {
         /// The client secret
         client_secret: String,
 
-        /// The URL used in initial authorization request.
-        redirect_uri: Url,
-
         /// This parameter is the authorization code that the client previously received from the authorization server.
         code: String,
     },
 }
 
-type Response = Result<ResponseBody, ResponseError>;
+pub type Response = Result<ResponseBody, ResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-struct ResponseBody {
+pub struct ResponseBody {
     /// The access token string as issued by the authorization server.
     pub access_token: String,
 
@@ -247,34 +239,29 @@ pub async fn on_token_grant(
 
 #[cfg(test)]
 mod tests {
+    use houseflow_types::token::AuthorizationCodePayload;
+
     use super::*;
     use crate::test_utils::*;
-    use houseflow_types::token::RefreshTokenPayload;
-
 
     #[actix_rt::test]
-    async fn test_exchange_refresh_token() {
+    async fn valid() {
         let state = get_state();
-        let refresh_token = RefreshToken::new(
-            state.config.secrets.refresh_key.as_bytes(),
-            RefreshTokenPayload {
-                tid: rand::random(),
-                sub: rand::random(),
-                exp: Some(Utc::now() + Duration::days(7)),
-            },
-        );
-        state
-            .token_store
-            .add(&refresh_token.tid, refresh_token.exp.as_ref())
-            .await
-            .unwrap();
         let google_config = state.config.google.as_ref().unwrap();
+
+        let code_payload = AuthorizationCodePayload {
+            sub: rand::random(),
+            exp: Utc::now() + Duration::minutes(10),
+        };
+        let code = AuthorizationCode::new(
+            state.config.secrets.authorization_code_key.as_bytes(),
+            code_payload.clone(),
+        );
         let response = on_token_grant(
-            Form(Request::RefreshToken {
-                refresh_token: refresh_token.to_string(),
+            Form(Request::AuthorizationCode {
                 client_id: google_config.client_id.clone(),
                 client_secret: google_config.client_secret.clone(),
-                scope: None,
+                code: code.to_string(),
             }),
             state.token_store.clone(),
             state.config.clone(),
@@ -283,67 +270,147 @@ mod tests {
         .unwrap()
         .into_inner();
 
-        let access_token = AccessToken::decode(
+        let response = on_token_grant(
+            Form(Request::RefreshToken {
+                client_id: google_config.client_id.clone(),
+                client_secret: google_config.client_secret.clone(),
+                refresh_token: response
+                    .refresh_token
+                    .expect("authorization grant did not return refresh token"),
+            }),
+            state.token_store.clone(),
+            state.config.clone(),
+        )
+        .await
+        .unwrap()
+        .into_inner();
+
+        let at = AccessToken::decode(
             state.config.secrets.access_key.as_bytes(),
             &response.access_token,
         )
         .unwrap();
-        assert_eq!(access_token.sub, refresh_token.sub);
+        assert_eq!(at.sub, code_payload.sub);
     }
 
-    #[actix_rt::test]
-    async fn test_exchange_refresh_token_not_existing_token() {
-        let state = get_state();
-        let refresh_token = RefreshToken::new(
-            state.config.secrets.refresh_key.as_bytes(),
-            RefreshTokenPayload {
-                tid: rand::random(),
-                sub: rand::random(),
-                exp: Some(Utc::now() + Duration::days(7)),
-            },
-        );
-        let google_config = state.config.google.as_ref().unwrap();
-        let response = on_token_grant(
-            Form(Request::RefreshToken {
-                refresh_token: refresh_token.to_string(),
-                client_id: google_config.client_id.clone(),
-                client_secret: google_config.client_secret.clone(),
-                scope: None,
-            }),
-            state.token_store.clone(),
-            state.config.clone(),
-        )
-        .await
-        .unwrap_err();
+    mod refresh_token_grant {
+        use super::*;
 
-        assert!(matches!(response, ResponseError::InvalidGrant(..)));
+        #[actix_rt::test]
+        async fn valid() {
+            let state = get_state();
+            let google_config = state.config.google.as_ref().unwrap();
+            let refresh_token_payload = RefreshTokenPayload {
+                sub: rand::random(),
+                exp: Some(Utc::now() + Duration::minutes(10)),
+                tid: rand::random(),
+            };
+            let refresh_token = RefreshToken::new(
+                state.config.secrets.refresh_key.as_bytes(),
+                refresh_token_payload.clone(),
+            );
+            state
+                .token_store
+                .add(&refresh_token.tid, refresh_token.exp.as_ref())
+                .await
+                .unwrap();
+            let response = on_token_grant(
+                Form(Request::RefreshToken {
+                    client_id: google_config.client_id.clone(),
+                    client_secret: google_config.client_secret.clone(),
+                    refresh_token: refresh_token.to_string(),
+                }),
+                state.token_store.clone(),
+                state.config.clone(),
+            )
+            .await
+            .unwrap()
+            .into_inner();
+
+            let at = AccessToken::decode(
+                state.config.secrets.access_key.as_bytes(),
+                &response.access_token,
+            )
+            .unwrap();
+            assert_eq!(at.sub, refresh_token_payload.sub);
+        }
+
+        #[actix_rt::test]
+        async fn invalid_client() {
+            let state = get_state();
+            let response = on_token_grant(
+                Form(Request::RefreshToken {
+                    client_id: String::from("invalid-client-id"),
+                    client_secret: String::from("invalid-client-secret"),
+                    refresh_token: String::from("some-invalid-token"),
+                }),
+                state.token_store,
+                state.config,
+            )
+            .await
+            .unwrap_err();
+            assert!(matches!(response, ResponseError::InvalidClient(..)))
+        }
     }
 
-    #[actix_rt::test]
-    async fn test_exchange_refresh_token_expired_token() {
-        let state = get_state();
-        let refresh_token = RefreshToken::new(
-            state.config.secrets.refresh_key.as_bytes(),
-            RefreshTokenPayload {
-                tid: rand::random(),
-                sub: rand::random(),
-                exp: Some(Utc::now() - Duration::hours(1)),
-            },
-        );
-        let google_config = state.config.google.as_ref().unwrap();
-        let response = on_token_grant(
-            Form(Request::RefreshToken {
-                refresh_token: refresh_token.to_string(),
-                client_id: google_config.client_id.clone(),
-                client_secret: google_config.client_secret.clone(),
-                scope: None,
-            }),
-            state.token_store.clone(),
-            state.config.clone(),
-        )
-        .await
-        .unwrap_err();
+    mod authorization_code_grant {
+        use houseflow_types::token::AuthorizationCodePayload;
 
-        assert!(matches!(response, ResponseError::InvalidGrant(..)));
+        use super::*;
+
+        #[actix_rt::test]
+        async fn valid() {
+            let state = get_state();
+            let google_config = state.config.google.as_ref().unwrap();
+            let code_payload = AuthorizationCodePayload {
+                sub: rand::random(),
+                exp: Utc::now() + Duration::minutes(10),
+            };
+            let code = AuthorizationCode::new(
+                state.config.secrets.authorization_code_key.as_bytes(),
+                code_payload.clone(),
+            );
+            let response = on_token_grant(
+                Form(Request::AuthorizationCode {
+                    client_id: google_config.client_id.clone(),
+                    client_secret: google_config.client_secret.clone(),
+                    code: code.to_string(),
+                }),
+                state.token_store.clone(),
+                state.config.clone(),
+            )
+            .await
+            .unwrap()
+            .into_inner();
+
+            let (at, rt) = (response.access_token, response.refresh_token.unwrap());
+            let (at, rt) = (
+                AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
+                RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &rt).unwrap(),
+            );
+            assert_eq!(at.sub, code_payload.sub);
+            assert_eq!(rt.sub, code_payload.sub);
+            assert!(
+                state.token_store.exists(&rt.tid).await.unwrap(),
+                "returned refresh token not found in store"
+            );
+        }
+
+        #[actix_rt::test]
+        async fn invalid_client() {
+            let state = get_state();
+            let response = on_token_grant(
+                Form(Request::AuthorizationCode {
+                    client_id: String::from("invalid-client-id"),
+                    client_secret: String::from("invalid-client-secret"),
+                    code: String::from("some-invalid-token"),
+                }),
+                state.token_store,
+                state.config,
+            )
+            .await
+            .unwrap_err();
+            assert!(matches!(response, ResponseError::InvalidClient(..)))
+        }
     }
 }
