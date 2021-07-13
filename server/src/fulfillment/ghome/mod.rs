@@ -139,10 +139,66 @@ pub async fn on_webhook(
                 payload,
             })
         }
-        IntentRequestInput::Execute(_) => {
-            log::info!("Received execute");
-            todo!()
-        },
+        IntentRequestInput::Execute(payload) => {
+            use ghome::execute;
+
+            let requests = payload
+                .commands
+                .iter()
+                .flat_map(|cmd| cmd.execution.iter().zip(cmd.devices.iter()));
+
+            let db = &db;
+            let sessions = &sessions;
+            let access_token = &access_token;
+            let responses = requests.map(|(exec, device)| async move {
+                if !db
+                    .check_user_device_access(&access_token.sub, &device.id)
+                    .map_err(houseflow_db::Error::into_internal_server_error)?
+                {
+                    return Err::<_, IntentResponseError>(IntentResponseError::NoDevicePermission);
+                }
+                match sessions.lock().await.get(&device.id) {
+                    Some(session) => {
+                        let execute_frame = houseflow_types::lighthouse::proto::execute::Frame {
+                            id: rand::random(),
+                            command: exec.command.clone(),
+                            params: exec.params.clone(),
+                        };
+
+                        let response = session
+                            .send(crate::lighthouse::aliases::ActorExecuteFrame::from(
+                                execute_frame,
+                            ))
+                            .await
+                            .unwrap()?;
+                        let response: houseflow_types::lighthouse::proto::execute_response::Frame =
+                            response.into();
+
+                        Ok(execute::response::PayloadCommand {
+                            ids: vec![device.id.clone()],
+                            status: response.status.into(),
+                            states: response.state,
+                            error_code: response.error.map(|err| err.to_string()),
+                        })
+                    }
+                    None => Ok(execute::response::PayloadCommand {
+                        ids: vec![device.id.clone()],
+                        status: ghome::DeviceStatus::Offline,
+                        states: Default::default(),
+                        error_code: None,
+                    }),
+                }
+            });
+            let payload = execute::response::Payload {
+                error_code: None,
+                debug_string: None,
+                commands: futures::future::try_join_all(responses).await?,
+            };
+            Ok(IntentResponseBody::Execute {
+                request_id: request.request_id,
+                payload,
+            })
+        }
         IntentRequestInput::Disconnect => todo!(),
     };
     let body = body?;

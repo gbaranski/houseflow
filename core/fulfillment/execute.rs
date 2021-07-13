@@ -67,7 +67,7 @@ impl Command<ClientCommandState> for ExecuteCommand {
             DeviceStatus::Success => println!("✔ Device responded with success!"),
             DeviceStatus::Error => println!(
                 "❌ Device responded with error! Error: {}",
-                response.frame.error
+                response.frame.error.unwrap()
             ),
         }
 

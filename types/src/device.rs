@@ -121,9 +121,6 @@ pub enum DeviceCommand {
 #[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceError {
-    /// No error occurred
-    None = 0x0000,
-
     /// Actually, <device(s)> <doesn't/don't> support that functionality.
     FunctionNotSupported = 0x0001,
 

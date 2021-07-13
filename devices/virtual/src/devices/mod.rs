@@ -16,7 +16,7 @@ where
         &mut self,
         command: DeviceCommand,
         params: EP,
-    ) -> anyhow::Result<(DeviceStatus, DeviceError)>;
+    ) -> anyhow::Result<(DeviceStatus, Option<DeviceError>)>;
 
     fn state(&self) -> serde_json::Map<String, serde_json::Value>;
 }

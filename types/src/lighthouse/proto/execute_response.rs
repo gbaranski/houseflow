@@ -6,6 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct Frame {
     pub id: FrameID,
     pub status: DeviceStatus,
-    pub error: DeviceError,
+    pub error: Option<DeviceError>,
     pub state: serde_json::Map<String, serde_json::Value>,
 }

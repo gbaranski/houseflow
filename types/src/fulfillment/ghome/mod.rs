@@ -25,6 +25,15 @@ pub enum DeviceStatus {
     Error,
 }
 
+impl From<crate::DeviceStatus> for DeviceStatus {
+    fn from(v: crate::DeviceStatus) -> Self {
+        match v {
+            crate::DeviceStatus::Success => Self::Success,
+            crate::DeviceStatus::Error => Self::Error,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IntentRequest {
