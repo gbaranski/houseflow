@@ -1062,6 +1062,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "tracing-actix-web",
  "tracing-subscriber",
  "url",
  "validator",
@@ -1084,6 +1085,7 @@ dependencies = [
  "serde_json",
  "strum",
  "thiserror",
+ "url",
  "validator",
 ]
 
@@ -2437,8 +2439,12 @@ dependencies = [
  "futures-util",
  "log",
  "pin-project",
+ "rustls",
  "tokio",
+ "tokio-rustls",
  "tungstenite",
+ "webpki",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -2483,6 +2489,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-actix-web"
+version = "0.4.0-beta.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c794ee03ca18c0d149e6928db480700644ab405f553f55dc0650f541e73dc180"
+dependencies = [
+ "actix-web",
+ "futures",
+ "tracing",
+ "tracing-futures",
+ "uuid",
+]
+
+[[package]]
 name = "tracing-attributes"
 version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2500,6 +2519,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9ff14f98b1a4b289c6248a023c1c2fa1491062964e9fed67ab29c4e4da4a052"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "tracing-futures"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
+dependencies = [
+ "pin-project",
+ "tracing",
 ]
 
 [[package]]
@@ -2566,10 +2595,13 @@ dependencies = [
  "log",
  "native-tls",
  "rand",
+ "rustls",
  "sha-1",
  "thiserror",
  "url",
  "utf-8",
+ "webpki",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -2644,6 +2676,15 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
+
+[[package]]
+name = "uuid"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom",
+]
 
 [[package]]
 name = "validator"
