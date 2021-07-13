@@ -31,7 +31,7 @@ async fn main() {
     let config_cloned = config.clone();
     let server = HttpServer::new(move || {
         actix_web::App::new()
-            .wrap(actix_web::middleware::Logger::default())
+            .wrap(tracing_actix_web::TracingLogger::default())
             .configure(|cfg| {
                 houseflow_server::configure(
                     cfg,
