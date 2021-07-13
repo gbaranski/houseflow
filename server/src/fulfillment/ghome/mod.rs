@@ -25,7 +25,7 @@ pub async fn on_webhook(
     let input = request.inputs.first().unwrap();
 
     let body: Result<IntentResponseBody, IntentResponseError> = match input {
-        IntentRequestInput::Sync(_) => {
+        IntentRequestInput::Sync => {
             use ghome::sync;
 
             let user_devices = db
