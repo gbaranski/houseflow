@@ -20,7 +20,7 @@ pub mod request {
         pub devices: Vec<PayloadCommandDevice>,
 
         /// List of commands to execute on target devices.
-        pub execution: Vec<PayloadCommandDevice>,
+        pub execution: Vec<PayloadCommandExecution>,
     }
 
     /// Target device
