@@ -32,7 +32,8 @@ impl Session {
         device: D,
     ) -> Result<(), anyhow::Error> {
         let url = Url::parse(&format!(
-            "wss://home.gbaranski.com:6001/lighthouse/ws",
+            "wss://{}/lighthouse/ws",
+            self.config.server_address
         ))
         .unwrap();
 
