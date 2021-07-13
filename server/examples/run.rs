@@ -42,7 +42,10 @@ async fn main() {
                 )
             })
     });
-    let address = (config.hostname.to_string(), houseflow_config::defaults::server_port());
+    let address = (
+        config.hostname.to_string(),
+        houseflow_config::defaults::server_port(),
+    );
 
     let server = if let Some(tls) = &config.tls {
         tracing::info!("Starting server with TLS");
