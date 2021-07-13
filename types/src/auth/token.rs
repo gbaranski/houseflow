@@ -24,6 +24,9 @@ pub struct ResponseBody {
     /// The access token string as issued by the authorization server.
     pub access_token: String,
 
+    /// The refresh token string as issued by the authorization server.
+    pub refresh_token: Option<String>,
+
     /// The type of token this is, typically just the string “Bearer”.
     pub token_type: TokenType,
 
