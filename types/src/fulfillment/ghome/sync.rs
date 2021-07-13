@@ -46,10 +46,11 @@ pub mod response {
         pub id: DeviceID,
 
         /// The hardware type of device.
-        #[serde(rename = "type")]
+        #[serde(rename = "type", with = "super::super::serde_device_type")]
         pub device_type: DeviceType,
 
         /// List of traits this device has. This defines the commands, attributes, and states that the device supports.
+        #[serde(with = "super::super::serde_device_traits")]
         pub traits: Vec<DeviceTrait>,
 
         /// Names of this device.

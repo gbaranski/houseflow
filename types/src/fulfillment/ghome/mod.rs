@@ -35,16 +35,16 @@ pub struct IntentRequest {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "intent", content = "payload")]
 pub enum IntentRequestInput {
-    #[serde(rename = "actions.devices.SYNC")]
-    Sync(sync::request::Payload),
+    #[serde(rename = "action.devices.SYNC")]
+    Sync,
 
-    #[serde(rename = "actions.devices.QUERY")]
+    #[serde(rename = "action.devices.QUERY")]
     Query(query::request::Payload),
 
-    #[serde(rename = "actions.devices.EXECUTE")]
+    #[serde(rename = "action.devices.EXECUTE")]
     Execute(execute::request::Payload),
 
-    #[serde(rename = "actions.devices.DISCONNECT")]
+    #[serde(rename = "action.devices.DISCONNECT")]
     Disconnect,
 }
 
@@ -105,5 +105,113 @@ impl actix_web::ResponseError for IntentResponseError {
 
     fn error_response(&self) -> actix_web::HttpResponse {
         crate::json_error_response(self.status_code(), self)
+    }
+}
+
+mod serde_device_type {
+    const PREFIX: &str = "action.devices.types";
+
+    pub fn serialize<S: serde::Serializer, T: std::fmt::Display>(
+        val: T,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&format!("{}.{}", PREFIX, val.to_string().to_uppercase()))
+    }
+
+    pub fn deserialize<
+        'de,
+        D: serde::Deserializer<'de>,
+        TE: std::fmt::Display,
+        T: std::str::FromStr<Err = TE>,
+    >(
+        deserializer: D,
+    ) -> Result<T, D::Error> {
+        struct TVisitor<TE: std::fmt::Display, T: std::str::FromStr<Err = TE>> {
+            phantom: std::marker::PhantomData<T>,
+        }
+
+        impl<'de, TE: std::fmt::Display, T: std::str::FromStr<Err = TE>> serde::de::Visitor<'de>
+            for TVisitor<TE, T>
+        {
+            type Value = T;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_fmt(format_args!("value prefixed with {}", PREFIX))
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                let without_prefix = v.replace(&format!("{}.", PREFIX), "");
+                T::from_str(without_prefix.as_str()).map_err(|err| E::custom(err))
+            }
+        }
+
+        deserializer.deserialize_str(TVisitor {
+            phantom: std::marker::PhantomData::default(),
+        })
+    }
+}
+
+mod serde_device_traits {
+    const PREFIX: &str = "action.devices.traits";
+
+    pub fn serialize<S: serde::Serializer, T: std::fmt::Display>(
+        val: &Vec<T>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut seq = serializer.serialize_seq(Some(val.len()))?;
+        for val in val {
+            seq.serialize_element(&format!("{}.{}", PREFIX, val.to_string()))?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<
+        'de,
+        D: serde::Deserializer<'de>,
+        TE: std::fmt::Display,
+        T: std::str::FromStr<Err = TE>,
+    >(
+        deserializer: D,
+    ) -> Result<Vec<T>, D::Error> {
+        struct TVisitor<TE: std::fmt::Display, T: std::str::FromStr<Err = TE>> {
+            phantom: std::marker::PhantomData<T>,
+        }
+
+        impl<'de, TE: std::fmt::Display, T: std::str::FromStr<Err = TE>> serde::de::Visitor<'de>
+            for TVisitor<TE, T>
+        {
+            type Value = Vec<T>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_fmt(format_args!("device traits prefixed with {}", PREFIX))
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let mut vec: Vec<T> = if let Some(size) = seq.size_hint() {
+                    Vec::with_capacity(size)
+                } else {
+                    Vec::new()
+                };
+
+                while let Some(e) = seq.next_element::<&str>()? {
+                    let without_prefix = e.replace(&format!("{}.", PREFIX), "");
+                    let t = T::from_str(&without_prefix)
+                        .map_err(|err| serde::de::Error::custom(err))?;
+                    vec.push(t);
+                }
+                Ok(vec)
+            }
+        }
+
+        deserializer.deserialize_seq(TVisitor {
+            phantom: std::marker::PhantomData::default(),
+        })
     }
 }
