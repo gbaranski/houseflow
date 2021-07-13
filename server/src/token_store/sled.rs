@@ -117,6 +117,16 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn add_exists_remove_unexpirable() {
+        let token_store = get_token_store();
+        let token_id = random();
+        token_store.add(&token_id, None).await.unwrap();
+        assert_eq!(token_store.exists(&token_id).await.unwrap(), true);
+        token_store.remove(&token_id).await.unwrap();
+        assert_eq!(token_store.exists(&token_id).await.unwrap(), false);
+    }
+
+    #[tokio::test]
     async fn add_expired() {
         let token_store = get_token_store();
         let token_id = random();
