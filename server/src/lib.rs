@@ -54,8 +54,8 @@ pub fn configure(
                 .route("/login", web::post().to(oauth::on_login))
                 .service(
                     web::scope("/")
-                        .app_data(oauth::on_exchange_refresh_token_form_config())
-                        .route("/token", web::post().to(oauth::on_exchange_refresh_token)),
+                        .app_data(oauth::on_token_grant_form_config())
+                        .route("/token", web::post().to(oauth::on_token_grant)),
                 ),
         )
         .service(

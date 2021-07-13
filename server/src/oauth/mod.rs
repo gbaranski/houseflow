@@ -4,7 +4,7 @@ mod token;
 
 pub use authorize::on_authorize;
 pub use login::on_login;
-pub use token::{on_exchange_refresh_token, on_exchange_refresh_token_form_config};
+pub use token::{on_token_grant, on_token_grant_form_config};
 
 use serde::{Deserialize, Serialize};
 use url::Url;
