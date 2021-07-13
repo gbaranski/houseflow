@@ -27,8 +27,8 @@
     (() => {
         const loginForm = document.getElementById("login-form")
         const registerForm = document.getElementById("register-form")
-        loginForm.action = window.location.pathname + "/login" + window.location.search
-        registerForm.action = window.location.pathname + "/register" + window.location.search
+        loginForm.action = window.location.origin + "/oauth/login" + window.location.search
+        registerForm.action = window.location.origin + "/oauth/register" + window.location.search
         document.querySelectorAll('input[type="submit"]').forEach((e) => e.disabled = false);
     })();
 </script>
