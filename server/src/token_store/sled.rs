@@ -51,7 +51,7 @@ impl crate::TokenStore for TokenStore {
                         Ok(true)
                     }
                 } else {
-                    Ok(false)
+                    Ok(true)
                 }
             }
             None => Ok(false),
