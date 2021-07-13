@@ -29,7 +29,12 @@ pub struct AuthorizationRequestQuery {
     pub response_type: AuthorizationResponseType,
 
     #[allow(dead_code)]
+    #[serde(default = "default_user_locale")]
     pub user_locale: String,
+}
+
+fn default_user_locale() -> String {
+    String::from("en_US")
 }
 
 #[derive(Serialize, Debug, thiserror::Error)]
