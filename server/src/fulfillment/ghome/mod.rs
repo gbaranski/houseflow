@@ -139,7 +139,10 @@ pub async fn on_webhook(
                 payload,
             })
         }
-        IntentRequestInput::Execute(_) => todo!(),
+        IntentRequestInput::Execute(_) => {
+            log::info!("Received execute");
+            todo!()
+        },
         IntentRequestInput::Disconnect => todo!(),
     };
     let body = body?;
