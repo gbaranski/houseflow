@@ -3,15 +3,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    /// Address of the server
-    #[serde(default = "defaults::server_address")]
-    #[serde(with = "crate::resolve_socket_address")]
-    pub server_address: std::net::SocketAddr,
+    /// Host of the server
+    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
+    pub server_hostname: url::Host,
 }
 
 impl Config {
     pub fn default_toml() -> String {
-        format!(include_str!("default.toml"), defaults::server_address(),)
+        format!(include_str!("default.toml"), defaults::server_hostname(),)
     }
 }
 

@@ -28,7 +28,7 @@ impl Device<ExecuteParams> for Light {
             DeviceCommand::NoOperation => (DeviceStatus::Success, None),
             DeviceCommand::OnOff => match params {
                 ExecuteParams::OnOff { on } => {
-                    log::info!("setting light state to {}", on);
+                    tracing::info!("setting light state to {}", on);
                     self.on = on;
                     (DeviceStatus::Success, None)
                 }

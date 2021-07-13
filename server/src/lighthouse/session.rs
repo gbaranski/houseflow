@@ -47,7 +47,7 @@ impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, _ctx: &mut Self::Context) {
-        log::info!(
+        tracing::info!(
             "New device connected from {} as {}.",
             self.address,
             self.device_id
@@ -55,7 +55,7 @@ impl Actor for Session {
     }
 
     fn stopped(&mut self, _ctx: &mut Self::Context) {
-        log::info!("Device {} disconnected.", self.device_id);
+        tracing::info!("Device {} disconnected.", self.device_id);
     }
 }
 
@@ -132,30 +132,27 @@ impl Handler<ActorExecuteFrame> for Session {
 
 impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        log::debug!("Handling msg");
         let msg = match msg {
             Ok(msg) => msg,
             Err(err) => {
+                tracing::error!("message error: {}", err);
                 ctx.stop();
-                log::error!("Error occured: {}", err);
                 return;
             }
         };
 
         match msg {
             ws::Message::Text(text) => {
-                log::info!("Received text: {}", text);
-
                 // FIXME: handle it properly to avoid mutex poisoning by panicking
                 let frame = serde_json::from_str(&text).expect("client sent invalid JSON");
                 match frame {
                     Frame::State(frame) => {
                         self.state_channel.send(frame).expect("failed sending");
                     }
-                    Frame::Query(_frame) => panic!("Unexpected state check received"),
-                    Frame::Execute(_) => panic!("Unexpected command received"),
+                    Frame::Query(_frame) => panic!("Unexpected query received"),
+                    Frame::Execute(_) => panic!("Unexpected execute received"),
                     Frame::ExecuteResponse(frame) => {
-                        log::debug!("Received CommandResponse, ID: {:?}", frame.id);
+                        tracing::debug!("Received Execute Response, ID: {:?}", frame.id);
                         self.execute_channels
                             .remove(&frame.id)
                             .expect("no one was waiting for response")
@@ -167,23 +164,23 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                 }
             }
             ws::Message::Binary(bytes) => {
-                log::info!("Received binary: {:?}", bytes);
+                tracing::info!("Received binary: {:?}", bytes);
             }
             ws::Message::Continuation(item) => {
-                log::info!("Received continuation: {:?}", item);
+                tracing::info!("Received continuation: {:?}", item);
             }
             ws::Message::Ping(bytes) => {
-                log::info!("Received ping: {:?}", bytes);
+                tracing::info!("Received ping: {:?}", bytes);
                 ctx.pong(b"");
             }
             ws::Message::Pong(bytes) => {
-                log::info!("Received pong: {:?}", bytes);
+                tracing::info!("Received pong: {:?}", bytes);
             }
             ws::Message::Close(bytes) => {
-                log::info!("Connection closed, reason: {:?}", bytes);
+                tracing::info!("Connection closed, reason: {:?}", bytes);
             }
             ws::Message::Nop => {
-                log::info!("Received no operation");
+                tracing::info!("Received no operation");
             }
         };
     }

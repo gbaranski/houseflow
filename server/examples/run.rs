@@ -42,9 +42,10 @@ async fn main() {
                 )
             })
     });
+    let address = (config.hostname.to_string(), houseflow_config::defaults::server_port());
 
     let server = if let Some(tls) = &config.tls {
-        log::info!("Starting server with TLS");
+        tracing::info!("Starting server with TLS");
         let mut rustls_config = rustls::ServerConfig::new(rustls::NoClientAuth::new());
 
         let certificate = &mut std::io::BufReader::new(
@@ -58,10 +59,10 @@ async fn main() {
         rustls_config
             .set_single_cert(certificate_chain, keys.into_iter().next().unwrap())
             .unwrap();
-        server.bind_rustls(config.address, rustls_config)
+        server.bind_rustls(address, rustls_config)
     } else {
-        log::info!("Starting server without TLS");
-        server.bind(config.address)
+        tracing::info!("Starting server without TLS");
+        server.bind(address)
     };
     server
         .expect("bind server fail")

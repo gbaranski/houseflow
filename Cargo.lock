@@ -987,6 +987,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "url",
  "xdg",
 ]
 
@@ -1024,12 +1025,13 @@ dependencies = [
  "houseflow-config",
  "houseflow-types",
  "http",
- "log",
  "serde",
  "serde_json",
  "strum",
  "tokio",
  "tokio-tungstenite",
+ "tracing",
+ "tracing-subscriber",
  "tungstenite",
  "url",
 ]
@@ -1051,7 +1053,6 @@ dependencies = [
  "houseflow-db",
  "houseflow-types",
  "itertools",
- "log",
  "rand",
  "rust-argon2",
  "rustls",

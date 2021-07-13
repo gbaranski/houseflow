@@ -134,7 +134,7 @@ mod test_utils {
         use houseflow_config::defaults;
 
         Data::from(Arc::new(Config {
-            address: defaults::server_address(),
+            hostname: defaults::server_hostname(),
             database_path: std::path::PathBuf::new(),
             tokens_path: std::path::PathBuf::new(),
             tls: None,

@@ -6,9 +6,9 @@ pub mod tls;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
-    /// Server address, e.g 127.0.0.1:6001
-    #[serde(default = "defaults::server_address")]
-    pub address: std::net::SocketAddr,
+    /// Server host
+    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
+    pub hostname: url::Host,
 
     /// Path to the SQLite database
     #[serde(default = "defaults::database_path")]
@@ -38,8 +38,7 @@ impl Config {
         format!(
             include_str!("default.toml"),
             defaults::server_port(),
-            defaults::server_address(),
-            rand.next().unwrap(),
+            defaults::server_hostname(),
             rand.next().unwrap(),
             rand.next().unwrap(),
         )

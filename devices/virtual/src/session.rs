@@ -31,13 +31,15 @@ impl Session {
         self,
         device: D,
     ) -> Result<(), anyhow::Error> {
-        let url = Url::parse(&format!(
-            "wss://{}/lighthouse/ws",
-            self.config.server_address
-        ))
-        .unwrap();
+        let url = format!(
+            "wss://{}:{}/lighthouse/ws",
+            self.config.server_hostname,
+            houseflow_config::defaults::server_port(),
+        );
+        tracing::info!("`{}` will be used as Server URL", url);
+        let url = Url::parse(&url).unwrap();
 
-        log::debug!("will use {} as websocket endpoint", url);
+        tracing::debug!("will use {} as websocket endpoint", url);
         let http_request = http::Request::builder()
             .uri(url.to_string())
             .header(
@@ -73,9 +75,9 @@ impl Session {
             let message = message?;
             match message {
                 WebsocketMessage::Text(text) => {
-                    log::debug!("received frame: `{}`", text);
+                    tracing::debug!("received frame: `{}`", text);
                     let frame: Frame = serde_json::from_str(&text)?;
-                    log::debug!("Received frame: {:?}", frame);
+                    tracing::debug!("Received frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
                             let params: EP =
@@ -111,20 +113,20 @@ impl Session {
                     }
                 }
                 WebsocketMessage::Binary(bytes) => {
-                    log::debug!("received binary: {:?}", bytes);
+                    tracing::debug!("received binary: {:?}", bytes);
                 }
                 WebsocketMessage::Ping(payload) => {
                     events
                         .send(Event::Pong)
                         .await
                         .expect("message receiver half is down");
-                    log::info!("Received ping, payload: {:?}", payload);
+                    tracing::info!("Received ping, payload: {:?}", payload);
                 }
                 WebsocketMessage::Pong(payload) => {
-                    log::info!("Received ping, payload: {:?}", payload);
+                    tracing::info!("Received ping, payload: {:?}", payload);
                 }
                 WebsocketMessage::Close(frame) => {
-                    log::info!("Received close frame: {:?}", frame);
+                    tracing::info!("Received close frame: {:?}", frame);
                     return Ok(());
                 }
             }
@@ -143,11 +145,11 @@ impl Session {
         while let Some(event) = events.recv().await {
             match event {
                 Event::Ping => {
-                    log::info!("Sending Ping");
+                    tracing::info!("Sending Ping");
                     stream.send(WebsocketMessage::Ping(Vec::new())).await?;
                 }
                 Event::Pong => {
-                    log::info!("Sending Pong");
+                    tracing::info!("Sending Pong");
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
                 }
                 Event::LighthouseFrame(frame) => {

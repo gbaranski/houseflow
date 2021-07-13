@@ -57,15 +57,9 @@ pub async fn on_websocket(
         return Err(ConnectResponseError::InvalidCredentials);
     }
 
-    log::debug!(
-        "DeviceID: {}, DevicePassword: {}",
-        device_id,
-        device_password
-    );
     let session = Session::new(device_id.clone(), address);
     let (address, response) = ws::start_with_addr(session, &req, stream).unwrap();
     sessions.lock().await.insert(device_id, address);
-    log::debug!("Response: {:?}", response);
 
     Ok(response)
 }

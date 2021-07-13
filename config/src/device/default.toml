@@ -5,5 +5,5 @@ device_id = "{}"
 device_password = "{}"
 
 # Address 
-# server_address = "{}"
+# server_hostname = "{}"
 
