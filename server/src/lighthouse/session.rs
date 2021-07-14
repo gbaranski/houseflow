@@ -163,7 +163,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
         };
 
         let result = (|| {
-            Ok::<(), SessionError>(match msg {
+            match msg {
                 ws::Message::Text(text) => {
                     let frame = serde_json::from_str(&text)?;
                     match frame {
@@ -206,7 +206,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                 ws::Message::Nop => {
                     tracing::info!("Received no operation");
                 }
-            })
+            };
+            Ok(())
         })();
         match result {
             Ok(_) => {}
