@@ -32,11 +32,12 @@ impl Session {
         device: D,
     ) -> Result<(), anyhow::Error> {
         let url = format!(
-            "wss://{}:{}/lighthouse/ws",
+            "ws{}://{}:{}/lighthouse/ws",
+            if self.config.use_tls { "s"} else {""},
             self.config.server_hostname,
             houseflow_config::defaults::server_port(),
         );
-        tracing::info!("`{}` will be used as Server URL", url);
+        tracing::info!("`{}` will be used the as Server URL", url);
         let url = Url::parse(&url).unwrap();
 
         tracing::debug!("will use {} as websocket endpoint", url);
