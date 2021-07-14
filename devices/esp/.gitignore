@@ -3,3 +3,4 @@
 .cache
 .pio
 include/config.hpp
+.vscode
