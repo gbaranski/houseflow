@@ -128,6 +128,8 @@ pub enum DeviceError {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "status", content = "description")]
 #[repr(u8)]
 pub enum DeviceStatus {
     /// Confirm that the command succeeded.
