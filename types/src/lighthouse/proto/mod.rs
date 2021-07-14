@@ -13,22 +13,25 @@ use serde::{Deserialize, Serialize};
 #[repr(u8)]
 pub enum Frame {
     /// Packet which will received from device to share its state
-    ///
-    /// Opcode: 0x01
     State(state::Frame),
 
     /// Packet which will be send to get current state from device
-    ///
-    /// Opcode: 0x02
     Query(query::Frame),
 
     /// Packet which will be send to execute some action on client side
-    ///
-    /// Opcode: 0x03
     Execute(execute::Frame),
 
     /// Packet which will be send as a response to Execute request from server
-    ///
-    /// Opcode: 0x04
     ExecuteResponse(execute_response::Frame),
+}
+
+impl Frame {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::State(_) => "STATE",
+            Self::Query(_) => "QUERY",
+            Self::Execute(_) => "EXECUTE",
+            Self::ExecuteResponse(_) => "EXECUTE_RESPONSE",
+        }
+    }
 }

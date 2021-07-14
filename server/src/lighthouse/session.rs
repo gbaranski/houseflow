@@ -19,8 +19,20 @@ const STATE_CHANNEL_SIZE: usize = 4;
 
 #[derive(Debug, Error)]
 pub enum SessionError {
-    // #[error("websocket error: {0}")]
-// WebsocketError(#[from] warp::Error),
+    #[error("client sent invalid json {0}")]
+    JsonError(#[from] serde_json::Error),
+
+    #[error("send state over channel failed {0}")]
+    SendStateError(#[from] tokio::sync::broadcast::error::SendError<state::Frame>),
+
+    #[error("send execute response over channel failed")]
+    SendExecuteResponseError,
+
+    #[error("received {frame_name} frame, it was not expected in this conected")]
+    UnexpectedFrame { frame_name: &'static str },
+
+    #[error("response has been received without corresponding request")]
+    ResponseWithoutRequest,
 }
 
 pub struct Session {
@@ -81,7 +93,7 @@ impl Handler<ActorQueryFrame> for Session {
             let resp = tokio::time::timeout(QUERY_TIMEOUT, rx.recv())
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
-                .unwrap();
+                .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
 
             Ok::<ActorStateFrame, DeviceCommunicationError>(resp.into())
         }
@@ -116,7 +128,7 @@ impl Handler<ActorExecuteFrame> for Session {
             let resp = tokio::time::timeout(EXECUTE_TIMEOUT, rx)
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
-                .expect("Sender is dropped when receiving response");
+                .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
 
             Ok::<ActorExecuteResponseFrame, DeviceCommunicationError>(resp.into())
         }
@@ -141,47 +153,61 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
             }
         };
 
-        match msg {
-            ws::Message::Text(text) => {
-                // FIXME: handle it properly to avoid mutex poisoning by panicking
-                let frame = serde_json::from_str(&text).expect("client sent invalid JSON");
-                match frame {
-                    Frame::State(frame) => {
-                        self.state_channel.send(frame).expect("failed sending");
+        let result = (|| {
+            Ok::<(), SessionError>(match msg {
+                ws::Message::Text(text) => {
+                    let frame = serde_json::from_str(&text)?;
+                    match frame {
+                        Frame::State(frame) => {
+                            self.state_channel.send(frame)?;
+                        }
+                        Frame::ExecuteResponse(frame) => {
+                            tracing::debug!("Received Execute Response, ID: {:?}", frame.id);
+                            self.execute_channels
+                                .remove(&frame.id)
+                                .ok_or(SessionError::ResponseWithoutRequest)?
+                                .send(frame)
+                                .map_err(|_| SessionError::SendExecuteResponseError)?;
+                        }
+                        frame => {
+                            return Err(SessionError::UnexpectedFrame {
+                                frame_name: frame.name(),
+                            })
+                        }
                     }
-                    Frame::Query(_frame) => panic!("Unexpected query received"),
-                    Frame::Execute(_) => panic!("Unexpected execute received"),
-                    Frame::ExecuteResponse(frame) => {
-                        tracing::debug!("Received Execute Response, ID: {:?}", frame.id);
-                        self.execute_channels
-                            .remove(&frame.id)
-                            .expect("no one was waiting for response")
-                            .send(frame)
-                            .expect("failed sending response");
-                    }
-                    // FIXME: handle that by returning some kind of response, or at least logging
-                    _ => unimplemented!(),
                 }
+                ws::Message::Binary(bytes) => {
+                    tracing::info!("Received binary: {:?}", bytes);
+                }
+                ws::Message::Continuation(item) => {
+                    tracing::info!("Received continuation: {:?}", item);
+                }
+                ws::Message::Ping(bytes) => {
+                    tracing::info!("Received ping: {:?}", bytes);
+                    ctx.pong(b"");
+                }
+                ws::Message::Pong(bytes) => {
+                    tracing::info!("Received pong: {:?}", bytes);
+                }
+                ws::Message::Close(reason) => {
+                    tracing::info!("Connection closed, reason: {:?}", reason);
+                    ctx.close(reason);
+                    ctx.stop();
+                }
+                ws::Message::Nop => {
+                    tracing::info!("Received no operation");
+                }
+            })
+        })();
+        match result {
+            Ok(_) => {}
+            Err(err) => {
+                ctx.close(Some(ws::CloseReason {
+                    code: ws::CloseCode::Other(4000),
+                    description: Some(err.to_string()),
+                }));
+                ctx.stop();
             }
-            ws::Message::Binary(bytes) => {
-                tracing::info!("Received binary: {:?}", bytes);
-            }
-            ws::Message::Continuation(item) => {
-                tracing::info!("Received continuation: {:?}", item);
-            }
-            ws::Message::Ping(bytes) => {
-                tracing::info!("Received ping: {:?}", bytes);
-                ctx.pong(b"");
-            }
-            ws::Message::Pong(bytes) => {
-                tracing::info!("Received pong: {:?}", bytes);
-            }
-            ws::Message::Close(bytes) => {
-                tracing::info!("Connection closed, reason: {:?}", bytes);
-            }
-            ws::Message::Nop => {
-                tracing::info!("Received no operation");
-            }
-        };
+        }
     }
 }

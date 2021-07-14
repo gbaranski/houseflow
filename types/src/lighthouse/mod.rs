@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
     rename_all = "snake_case"
 )]
 pub enum DeviceCommunicationError {
+    #[error("internal error: {0}")]
+    InternalError(String),
+
     #[error("Timeout when sending request to device")]
     Timeout,
 
@@ -32,11 +35,17 @@ pub enum ConnectResponseError {
     #[error("internal error: {0}")]
     InternalError(String),
 
+    #[error("handshake error: {0}")]
+    HandshakeError(String),
+
     #[error("invalid authorization header: {0}")]
     InvalidAuthorizationHeader(String),
 
     #[error("invalid credentials")]
     InvalidCredentials,
+
+    #[error("there is an existing connection with device with the specified ID")]
+    AlreadyConnected,
 }
 
 #[cfg(feature = "actix")]
@@ -46,8 +55,10 @@ impl actix_web::ResponseError for ConnectResponseError {
 
         match self {
             Self::InvalidAuthorizationHeader(_) => StatusCode::BAD_REQUEST,
+            Self::HandshakeError(_) => StatusCode::BAD_REQUEST,
             Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
         }
     }
 
