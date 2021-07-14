@@ -40,20 +40,26 @@ pub struct HouseflowAPI {
 }
 
 impl HouseflowAPI {
-    pub fn new(#[allow(unused_variables)] server_address: std::net::SocketAddr) -> Self {
+    pub fn new(config: &houseflow_config::client::Config) -> Self {
+        let base_url = Url::parse(&format!(
+            "http{}://{}:{}",
+            if config.use_tls { "s" } else { "" },
+            config.server_hostname,
+            houseflow_config::defaults::server_port()
+        ))
+        .unwrap();
+
+        tracing::debug!("{} will be used as base server URL", base_url);
+
         Self {
             #[cfg(feature = "auth")]
-            auth_url: Url::parse(&format!("http://{}/auth/", server_address)).unwrap(),
+            auth_url: base_url.join("auth/").unwrap(),
 
             #[cfg(feature = "fulfillment")]
-            fulfillment_url: Url::parse(&format!(
-                "http://{}/fulfillment/internal/",
-                server_address
-            ))
-            .unwrap(),
+            fulfillment_url: base_url.join("fulfillment/internal/").unwrap(),
 
             #[cfg(feature = "admin")]
-            admin_url: Url::parse(&format!("http://{}/admin/", server_address)).unwrap(),
+            admin_url: base_url.join("fulfillment/admin/").unwrap(),
         }
     }
 }

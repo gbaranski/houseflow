@@ -20,6 +20,8 @@ thiserror  = "1.0"
 url        = "2.2"
 
 houseflow-types = { path = "../types", version = "0.1.1", features = ["token"] }
+houseflow-config = { path = "../config", version = "0.1.1", features = ["client"] }
+tracing = "0.1.26"
 
 [features]
 auth = ["houseflow-types/auth"]
