@@ -25,7 +25,6 @@ impl Device<ExecuteParams> for Light {
         params: ExecuteParams,
     ) -> anyhow::Result<DeviceStatus> {
         let result = match command {
-            DeviceCommand::NoOperation => DeviceStatus::Success,
             DeviceCommand::OnOff => match params {
                 ExecuteParams::OnOff { on } => {
                     tracing::info!("setting light state to {}", on);

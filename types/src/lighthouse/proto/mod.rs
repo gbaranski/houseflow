@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
+#[serde(tag = "type")]
 #[repr(u8)]
 pub enum Frame {
     /// Packet which will received from device to share its state

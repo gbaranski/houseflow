@@ -79,16 +79,14 @@ pub enum DeviceTrait {
 impl DeviceTrait {
     pub fn commands(&self) -> Vec<DeviceCommand> {
         match *self {
-            Self::OnOff => vec![DeviceCommand::NoOperation, DeviceCommand::OnOff],
-            Self::OpenClose => vec![DeviceCommand::NoOperation, DeviceCommand::OpenClose],
+            Self::OnOff => vec![DeviceCommand::OnOff],
+            Self::OpenClose => vec![DeviceCommand::OpenClose],
         }
     }
 }
 
 /// Type of the device
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum DeviceType {
     Gate,
@@ -109,12 +107,10 @@ impl DeviceType {
 #[derive(
     Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString, Serialize, Deserialize,
 )]
-#[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceCommand {
-    NoOperation = 0x0000,
-    OnOff = 0x0001,
-    OpenClose = 0x0002,
+    OnOff,
+    OpenClose,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
@@ -128,7 +124,6 @@ pub enum DeviceError {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
-#[serde(rename_all = "snake_case")]
 #[serde(tag = "status", content = "description")]
 #[repr(u8)]
 pub enum DeviceStatus {
@@ -144,14 +139,6 @@ impl rand::distributions::Distribution<DeviceError> for rand::distributions::Sta
         DeviceError::iter()
             .nth(rng.gen_range(0..DeviceError::iter().len()))
             .unwrap()
-    }
-}
-
-impl std::convert::TryFrom<u16> for DeviceCommand {
-    type Error = ();
-
-    fn try_from(v: u16) -> Result<Self, Self::Error> {
-        Self::iter().find(|e| e.clone() as u16 == v).ok_or(())
     }
 }
 
