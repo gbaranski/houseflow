@@ -41,6 +41,23 @@ pub async fn read_file<T: serde::de::DeserializeOwned>(
     Ok(config)
 }
 
+
+pub fn init_logging() {
+    const LOG_ENV: &str = "HOUSEFLOW_LOG";
+    use tracing::Level;
+    use std::str::FromStr;
+
+
+    let level = std::env::var(LOG_ENV)
+        .map(|env| {
+            Level::from_str(env.to_uppercase().as_str())
+                .expect(&format!("invalid `{}` environment variable", LOG_ENV))
+        })
+        .unwrap_or(Level::INFO);
+
+    tracing_subscriber::fmt().with_max_level(level).init();
+}
+
 #[allow(dead_code)]
 pub(crate) mod serde_hostname {
     use serde::{
