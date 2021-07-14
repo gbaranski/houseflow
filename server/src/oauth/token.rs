@@ -132,7 +132,7 @@ async fn on_refresh_token_grant(
     if !token_store
         .exists(&refresh_token.tid)
         .await
-        .map_err(|err| err.into_internal_server_error())?
+        .map_err(TokenStoreError::into_internal_server_error)?
     {
         return Err(ResponseError::InvalidGrant(Some(
             "refresh token is not present in store".into(),
