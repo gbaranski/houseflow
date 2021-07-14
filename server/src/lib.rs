@@ -12,7 +12,7 @@ use houseflow_config::server::Config;
 use houseflow_db::Database;
 
 use {
-    houseflow_types::DeviceID, lighthouse::Session, std::collections::HashMap, tokio::sync::Mutex,
+    houseflow_types::DeviceID, lighthouse::Session, std::collections::HashMap, std::sync::Mutex,
 };
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 

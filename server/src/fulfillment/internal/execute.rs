@@ -27,7 +27,7 @@ pub async fn on_execute(
         return Err(ResponseError::NoDevicePermission);
     }
 
-    let sessions = sessions.lock().await;
+    let sessions = sessions.lock().unwrap();
     let session = sessions
         .get(&execute_request.device_id)
         .ok_or(ResponseError::DeviceNotConnected)?;

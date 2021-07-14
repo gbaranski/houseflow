@@ -1,3 +1,4 @@
+use actix::prelude::*;
 use actix::{Actor, ActorContext, Handler, StreamHandler};
 use actix_web_actors::ws;
 use houseflow_types::lighthouse::{
@@ -35,7 +36,10 @@ pub enum SessionError {
     ResponseWithoutRequest,
 }
 
+use std::sync::Arc;
+
 pub struct Session {
+    sessions: Arc<crate::Sessions>,
     device_id: DeviceID,
     address: SocketAddr,
     pub execute_channels: HashMap<FrameID, oneshot::Sender<execute_response::Frame>>,
@@ -43,10 +47,11 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(device_id: DeviceID, address: SocketAddr) -> Self {
+    pub fn new(device_id: DeviceID, address: SocketAddr, sessions: Arc<crate::Sessions>) -> Self {
         let (state_channel, _) = broadcast::channel(STATE_CHANNEL_SIZE);
 
         Self {
+            sessions,
             device_id,
             address,
             state_channel,
@@ -65,9 +70,9 @@ impl Actor for Session {
             self.device_id
         );
     }
-
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         tracing::info!("Device {} disconnected.", self.device_id);
+        assert!(self.sessions.lock().unwrap().remove(&self.device_id).is_some());
     }
 }
 
@@ -78,7 +83,6 @@ impl Handler<ActorQueryFrame> for Session {
     >;
 
     fn handle(&mut self, frame: ActorQueryFrame, ctx: &mut Self::Context) -> Self::Result {
-        use actix::prelude::*;
         let frame: query::Frame = frame.into();
         let frame = Frame::Query(frame);
 

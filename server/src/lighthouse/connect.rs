@@ -57,15 +57,14 @@ pub async fn on_websocket(
         return Err(ConnectResponseError::InvalidCredentials);
     }
 
-    let mut sessions = sessions.lock().await;
-    if sessions.contains_key(&device_id) {
+    if sessions.lock().unwrap().contains_key(&device_id) {
         return Err(ConnectResponseError::AlreadyConnected);
     }
 
-    let session = Session::new(device_id.clone(), address);
+    let session = Session::new(device_id.clone(), address, sessions.clone().into_inner());
     let (address, response) = ws::start_with_addr(session, &req, stream)
         .map_err(|err| ConnectResponseError::HandshakeError(err.to_string()))?;
-    sessions.insert(device_id, address);
+    sessions.lock().unwrap().insert(device_id, address);
 
     Ok(response)
 }

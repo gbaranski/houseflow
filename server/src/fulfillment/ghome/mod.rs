@@ -100,7 +100,7 @@ pub async fn on_webhook(
                     );
                 }
 
-                let sessions = sessions.lock().await;
+                let sessions = sessions.lock().unwrap();
                 match sessions.get(&device.id) {
                     Some(session) => {
                         let query_frame = houseflow_types::lighthouse::proto::query::Frame {};
@@ -157,7 +157,7 @@ pub async fn on_webhook(
                 {
                     return Err::<_, IntentResponseError>(IntentResponseError::NoDevicePermission);
                 }
-                match sessions.lock().await.get(&device.id) {
+                match sessions.lock().unwrap().get(&device.id) {
                     Some(session) => {
                         let execute_frame = houseflow_types::lighthouse::proto::execute::Frame {
                             id: rand::random(),
