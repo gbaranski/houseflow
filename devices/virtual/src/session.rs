@@ -31,11 +31,17 @@ impl Session {
         self,
         device: D,
     ) -> Result<(), anyhow::Error> {
+        use houseflow_config::defaults;
+
         let url = format!(
             "ws{}://{}:{}/lighthouse/ws",
             if self.config.use_tls { "s" } else { "" },
             self.config.server_hostname,
-            houseflow_config::defaults::server_port(),
+            if self.config.use_tls {
+                defaults::server_port_tls()
+            } else {
+                defaults::server_port()
+            },
         );
         tracing::info!("`{}` will be used the as Server URL", url);
         let url = Url::parse(&url).unwrap();

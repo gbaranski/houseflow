@@ -41,11 +41,16 @@ pub struct HouseflowAPI {
 
 impl HouseflowAPI {
     pub fn new(config: &houseflow_config::client::Config) -> Self {
+        use houseflow_config::defaults;
         let base_url = Url::parse(&format!(
             "http{}://{}:{}",
             if config.use_tls { "s" } else { "" },
             config.server_hostname,
-            houseflow_config::defaults::server_port()
+            if config.use_tls {
+                defaults::server_port_tls()
+            } else {
+                defaults::server_port()
+            }
         ))
         .unwrap();
 

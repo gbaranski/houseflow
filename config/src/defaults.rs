@@ -12,6 +12,10 @@ pub const fn server_port() -> u16 {
     6001
 }
 
+pub const fn server_port_tls() -> u16 {
+    6002
+}
+
 pub fn base_directories() -> xdg::BaseDirectories {
     xdg::BaseDirectories::with_prefix("houseflow").unwrap()
 }
