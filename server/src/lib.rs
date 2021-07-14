@@ -11,9 +11,7 @@ use actix_web::web;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 
-use {
-    houseflow_types::DeviceID, lighthouse::Session, std::collections::HashMap, std::sync::Mutex,
-};
+use {houseflow_types::DeviceID, lighthouse::Session, std::collections::HashMap, std::sync::Mutex};
 pub type Sessions = Mutex<HashMap<DeviceID, actix::Addr<Session>>>;
 
 pub(crate) fn get_password_salt() -> [u8; 16] {

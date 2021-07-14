@@ -72,7 +72,12 @@ impl Actor for Session {
     }
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         tracing::info!("Device {} disconnected.", self.device_id);
-        assert!(self.sessions.lock().unwrap().remove(&self.device_id).is_some());
+        assert!(self
+            .sessions
+            .lock()
+            .unwrap()
+            .remove(&self.device_id)
+            .is_some());
     }
 }
 
