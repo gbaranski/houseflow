@@ -49,7 +49,7 @@ sled = "0.34.6"
 tracing = "0.1.26"
 
 [[example]]
-name = "run"
+name = "run-server"
 
 [dev-dependencies]
 futures = "0.3.15"

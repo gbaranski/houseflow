@@ -37,4 +37,4 @@ tracing-subscriber = "0.2.19"
 
 
 [[example]]
-name = "run"
+name = "run-device"
