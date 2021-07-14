@@ -6,6 +6,9 @@ pub struct Config {
     /// Host of the server
     #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
     pub server_hostname: url::Host,
+
+    #[serde(default)]
+    pub use_tls: bool,
 }
 
 impl Config {
