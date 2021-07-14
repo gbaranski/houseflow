@@ -33,7 +33,7 @@ impl Session {
     ) -> Result<(), anyhow::Error> {
         let url = format!(
             "ws{}://{}:{}/lighthouse/ws",
-            if self.config.use_tls { "s"} else {""},
+            if self.config.use_tls { "s" } else { "" },
             self.config.server_hostname,
             houseflow_config::defaults::server_port(),
         );

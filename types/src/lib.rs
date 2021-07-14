@@ -147,4 +147,3 @@ pub mod serde_token_expiration {
         d.deserialize_option(TokenExpirationVisitor)
     }
 }
-

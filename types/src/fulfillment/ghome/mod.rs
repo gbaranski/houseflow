@@ -211,8 +211,7 @@ mod serde_device_traits {
 
                 while let Some(e) = seq.next_element::<&str>()? {
                     let without_prefix = e.replace(&format!("{}.", PREFIX), "");
-                    let t = T::from_str(&without_prefix)
-                        .map_err(serde::de::Error::custom)?;
+                    let t = T::from_str(&without_prefix).map_err(serde::de::Error::custom)?;
                     vec.push(t);
                 }
                 Ok(vec)
