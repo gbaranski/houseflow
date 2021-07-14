@@ -63,7 +63,9 @@ pub fn configure(
                 .route("/login", web::post().to(auth::on_login))
                 .route("/logout", web::post().to(auth::on_logout))
                 .route("/register", web::post().to(auth::on_register))
-                .route("/whoami", web::get().to(auth::on_whoami)),
+                .route("/whoami", web::get().to(auth::on_whoami))
+                .route("/refresh_token", web::post().to(auth::on_refresh_token))
+                ,
         )
         .service(
             web::scope("/fulfillment")
