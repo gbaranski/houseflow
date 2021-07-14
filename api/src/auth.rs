@@ -30,17 +30,16 @@ impl HouseflowAPI {
         post_with_token(url, &auth::logout::Request {}, refresh_token).await
     }
 
-    pub async fn fetch_access_token(
+    pub async fn refresh_token(
         &self,
         refresh_token: &RefreshToken,
     ) -> Result<auth::token::Response, Error> {
         let request = auth::token::Request {
-            grant_type: auth::token::GrantType::RefreshToken,
             refresh_token: refresh_token.to_string(),
         };
         let client = reqwest::Client::new();
-        let url = self.auth_url.join("token").unwrap();
-        let request = client.post(url).form(&request);
+        let url = self.auth_url.join("refresh_token").unwrap();
+        let request = client.post(url).json(&request);
         send_request(request).await
     }
 
