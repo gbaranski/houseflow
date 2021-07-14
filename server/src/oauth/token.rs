@@ -234,7 +234,7 @@ pub async fn on_token_grant(
             on_authorization_code_grant(token_store, config, code).await
         }
     }
-    .map(|body| Json(body))
+    .map(Json)
 }
 
 #[cfg(test)]
