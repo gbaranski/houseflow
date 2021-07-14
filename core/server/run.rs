@@ -19,7 +19,10 @@ impl Command<ServerCommandState> for RunServerCommand {
         let database = SqliteDatabase::new(&state.config.database_path)?;
         let database = Data::from(Arc::new(database) as Arc<dyn Database>);
 
-        let address = state.config.address;
+        let address = (
+            state.config.hostname.to_string(),
+            houseflow_config::defaults::server_port(),
+        );
         let config = Data::new(state.config);
         let sessions = Data::new(houseflow_server::Sessions::default());
         let server = HttpServer::new(move || {
