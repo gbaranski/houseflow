@@ -23,18 +23,18 @@ impl Device<ExecuteParams> for Light {
         &mut self,
         command: DeviceCommand,
         params: ExecuteParams,
-    ) -> anyhow::Result<(DeviceStatus, Option<DeviceError>)> {
+    ) -> anyhow::Result<DeviceStatus> {
         let result = match command {
-            DeviceCommand::NoOperation => (DeviceStatus::Success, None),
+            DeviceCommand::NoOperation => DeviceStatus::Success,
             DeviceCommand::OnOff => match params {
                 ExecuteParams::OnOff { on } => {
                     tracing::info!("setting light state to {}", on);
                     self.on = on;
-                    (DeviceStatus::Success, None)
+                    DeviceStatus::Success
                 }
-                _ => (DeviceStatus::Error, Some(DeviceError::InvalidParameters)),
+                _ => DeviceStatus::Error(DeviceError::InvalidParameters),
             },
-            _ => (DeviceStatus::Error, Some(DeviceError::FunctionNotSupported)),
+            _ => DeviceStatus::Error(DeviceError::FunctionNotSupported),
         };
         Ok(result)
     }

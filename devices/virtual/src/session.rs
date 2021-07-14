@@ -83,11 +83,10 @@ impl Session {
                         Frame::Execute(frame) => {
                             let params: EP =
                                 serde_json::from_value(serde_json::Value::Object(frame.params))?;
-                            let (status, error) = device.on_execute(frame.command, params).await?;
+                            let status = device.on_execute(frame.command, params).await?;
                             let response_frame = execute_response::Frame {
                                 id: frame.id,
                                 status,
-                                error,
                                 state: device.state(),
                             };
                             let response_frame = Frame::ExecuteResponse(response_frame);

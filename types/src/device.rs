@@ -118,48 +118,23 @@ pub enum DeviceCommand {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
-#[repr(u16)]
 #[non_exhaustive]
 pub enum DeviceError {
     /// Actually, <device(s)> <doesn't/don't> support that functionality.
-    FunctionNotSupported = 0x0001,
+    FunctionNotSupported,
 
     /// Device does not support sent parameters
-    InvalidParameters = 0x0002,
+    InvalidParameters,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumIter, strum::Display)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
 #[repr(u8)]
 pub enum DeviceStatus {
     /// Confirm that the command succeeded.
     Success,
 
     /// Target device is unable to perform the command.
-    Error,
-}
-
-impl std::convert::TryFrom<u8> for DeviceStatus {
-    type Error = ();
-
-    fn try_from(v: u8) -> Result<Self, ()> {
-        Self::iter().find(|e| e.clone() as u8 == v).ok_or(())
-    }
-}
-
-impl rand::distributions::Distribution<DeviceStatus> for rand::distributions::Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> DeviceStatus {
-        DeviceStatus::iter()
-            .nth(rng.gen_range(0..DeviceStatus::iter().len()))
-            .unwrap()
-    }
-}
-
-impl std::convert::TryFrom<u16> for DeviceError {
-    type Error = ();
-
-    fn try_from(v: u16) -> Result<Self, Self::Error> {
-        Self::iter().find(|e| e.clone() as u16 == v).ok_or(())
-    }
+    Error(DeviceError),
 }
 
 impl rand::distributions::Distribution<DeviceError> for rand::distributions::Standard {

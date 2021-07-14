@@ -9,6 +9,7 @@ use houseflow_types::{
         self, IntentRequest, IntentRequestInput, IntentResponseBody, IntentResponseError,
     },
     token::AccessToken,
+    DeviceStatus,
 };
 
 use crate::Sessions;
@@ -174,11 +175,19 @@ pub async fn on_webhook(
                         let response: houseflow_types::lighthouse::proto::execute_response::Frame =
                             response.into();
 
-                        Ok(execute::response::PayloadCommand {
-                            ids: vec![device.id.clone()],
-                            status: response.status.into(),
-                            states: response.state,
-                            error_code: response.error.map(|err| err.to_string()),
+                        Ok(match response.status {
+                            DeviceStatus::Success => execute::response::PayloadCommand {
+                                ids: vec![device.id.clone()],
+                                status: ghome::DeviceStatus::Success,
+                                states: response.state,
+                                error_code: None,
+                            },
+                            DeviceStatus::Error(err) => execute::response::PayloadCommand {
+                                ids: vec![device.id.clone()],
+                                status: ghome::DeviceStatus::Error,
+                                states: response.state,
+                                error_code: Some(err.to_string()),
+                            },
                         })
                     }
                     None => Ok(execute::response::PayloadCommand {

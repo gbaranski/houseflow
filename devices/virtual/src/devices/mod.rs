@@ -3,7 +3,7 @@ mod light;
 pub use light::Light;
 
 use async_trait::async_trait;
-use houseflow_types::{DeviceCommand, DeviceError, DeviceStatus};
+use houseflow_types::{DeviceCommand, DeviceStatus};
 
 pub trait ExecuteParams: serde::de::DeserializeOwned {}
 
@@ -16,7 +16,7 @@ where
         &mut self,
         command: DeviceCommand,
         params: EP,
-    ) -> anyhow::Result<(DeviceStatus, Option<DeviceError>)>;
+    ) -> anyhow::Result<DeviceStatus>;
 
     fn state(&self) -> serde_json::Map<String, serde_json::Value>;
 }

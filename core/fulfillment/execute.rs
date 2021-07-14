@@ -6,7 +6,9 @@ use houseflow_types::{
 
 use clap::Clap;
 
-fn object_from_str(s: &str) -> Result<serde_json::Map<String, serde_json::Value>, serde_json::Error> {
+fn object_from_str(
+    s: &str,
+) -> Result<serde_json::Map<String, serde_json::Value>, serde_json::Error> {
     serde_json::from_str(s)
 }
 
@@ -65,10 +67,7 @@ impl Command<ClientCommandState> for ExecuteCommand {
             .await??;
         match response.frame.status {
             DeviceStatus::Success => println!("✔ Device responded with success!"),
-            DeviceStatus::Error => println!(
-                "❌ Device responded with error! Error: {}",
-                response.frame.error.unwrap()
-            ),
+            DeviceStatus::Error(err) => println!("❌ Device responded with error! Error: {}", err,),
         }
 
         Ok(())
