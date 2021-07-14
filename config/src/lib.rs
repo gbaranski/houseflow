@@ -41,17 +41,15 @@ pub async fn read_file<T: serde::de::DeserializeOwned>(
     Ok(config)
 }
 
-
 pub fn init_logging() {
     const LOG_ENV: &str = "HOUSEFLOW_LOG";
-    use tracing::Level;
     use std::str::FromStr;
-
+    use tracing::Level;
 
     let level = std::env::var(LOG_ENV)
         .map(|env| {
             Level::from_str(env.to_uppercase().as_str())
-                .expect(&format!("invalid `{}` environment variable", LOG_ENV))
+                .unwrap_or_else(|err| panic!("invalid `{}` environment variable {}", LOG_ENV, err))
         })
         .unwrap_or(Level::INFO);
 
