@@ -426,9 +426,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.68"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a72c244c1ff497a746a7e1fb3d14bd08420ecda70c8f25c7112f2781652d787"
+checksum = "e70cc2f62c6ce1868963827bd677764c62d07c3d9a3e1fb1177ee1a9ab199eb2"
 dependencies = [
  "jobserver",
 ]
@@ -664,19 +664,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "80df024fbc5ac80f87dfef0d9f5209a252f2a497f7f42944cff24d8253cac065"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a19187fea3ac7e84da7dacf48de0c45d63c6a76f9490dae389aead16c243fce3"
-dependencies = [
- "atty",
- "humantime",
- "log",
- "regex",
- "termcolor",
 ]
 
 [[package]]
@@ -941,7 +928,6 @@ dependencies = [
  "clap",
  "clap_generate",
  "dialoguer",
- "env_logger",
  "futures",
  "hex",
  "houseflow-api",
@@ -950,7 +936,6 @@ dependencies = [
  "houseflow-device",
  "houseflow-server",
  "houseflow-types",
- "log",
  "rand",
  "semver 1.0.3",
  "serde",
@@ -959,6 +944,8 @@ dependencies = [
  "szafka",
  "tokio",
  "toml",
+ "tracing",
+ "tracing-subscriber",
  "url",
  "xdg",
 ]
@@ -967,12 +954,14 @@ dependencies = [
 name = "houseflow-api"
 version = "0.1.1"
 dependencies = [
+ "houseflow-config",
  "houseflow-types",
  "reqwest",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
+ "tracing",
  "url",
 ]
 
@@ -987,6 +976,8 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
+ "tracing",
+ "tracing-subscriber",
  "url",
  "xdg",
 ]
@@ -1125,12 +1116,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6456b8a6c8f33fee7d958fcd1b60d55b11940a79e63ae87013e6d22e26034440"
 
 [[package]]
-name = "humantime"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
-
-[[package]]
 name = "hyper"
 version = "0.14.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1205,9 +1190,9 @@ dependencies = [
 
 [[package]]
 name = "instant"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61124eeebbd69b8190558df225adf7e4caafce0d743919e5d6b19652314ec5ec"
+checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
 dependencies = [
  "cfg-if",
 ]
