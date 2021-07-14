@@ -76,9 +76,9 @@ impl Session {
             let message = message?;
             match message {
                 WebsocketMessage::Text(text) => {
-                    tracing::debug!("received frame: `{}`", text);
+                    tracing::debug!("Raw frame: `{}`", text);
                     let frame: Frame = serde_json::from_str(&text)?;
-                    tracing::debug!("Received frame: {:?}", frame);
+                    tracing::debug!("Parsed frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
                             let params: EP =
@@ -154,6 +154,7 @@ impl Session {
                 }
                 Event::LighthouseFrame(frame) => {
                     let json = serde_json::to_string(&frame).unwrap();
+                    tracing::debug!("sending text message: {}", json);
                     stream.send(WebsocketMessage::Text(json)).await?;
                 }
             }
