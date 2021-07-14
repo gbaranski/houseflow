@@ -53,7 +53,7 @@ impl Command<ClientCommandState> for RegisterCommand {
             .houseflow_api
             .register(&register_request)
             .await??;
-        log::info!("✔ Created new account");
+        tracing::info!("✔ Created new account");
 
         Ok(())
     }

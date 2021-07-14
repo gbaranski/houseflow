@@ -17,7 +17,7 @@ impl Command<ClientCommandState> for LogoutCommand {
             .await??;
 
         state.tokens.remove().await?;
-        log::info!("✔ Succesfully logged out");
+        tracing::info!("✔ Succesfully logged out");
 
         Ok(())
     }

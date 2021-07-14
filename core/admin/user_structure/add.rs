@@ -33,7 +33,7 @@ impl Command<ClientCommandState> for AddUserStructureCommand {
             .admin_add_user_structure(&access_token, &request)
             .await??;
 
-        log::info!("✔ Succesfully added user structure");
+        tracing::info!("✔ Succesfully added user structure");
 
         Ok(())
     }

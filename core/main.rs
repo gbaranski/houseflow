@@ -97,10 +97,10 @@ cfg_if! {
                 .await
                 .with_context(|| "read client config file")?;
 
-            log::trace!("config loaded: {:#?}", config);
+            tracing::trace!("config loaded: {:#?}", config);
             let state = ClientCommandState {
                 config: config.clone(),
-                houseflow_api: HouseflowAPI::new(config.server_address),
+                houseflow_api: HouseflowAPI::new(&config),
                 tokens: Szafka::new(houseflow_config::defaults::data_home().join("tokens")),
                 devices: Szafka::new(houseflow_config::defaults::data_home().join("devices")),
             };
@@ -117,15 +117,15 @@ cfg_if! {
             let access_token = AccessToken::decode_unsafe(&tokens.access);
             match access_token {
                 Ok(token) => {
-                    log::debug!("cached access token is valid");
+                    tracing::debug!("cached access token is valid");
                     Ok(token)
                 }
                 Err(err) => {
-                    log::debug!("token verify returned error: {}", err);
-                    log::debug!("cached access token is expired, fetching new one");
+                    tracing::debug!("token verify returned error: {}", err);
+                    tracing::debug!("cached access token is expired, fetching new one");
                     let raw_fetched_access_token = self
                         .houseflow_api
-                        .fetch_access_token(&refresh_token)
+                        .refresh_token(&refresh_token)
                         .await??.access_token;
                     let fetched_access_token = AccessToken::decode_unsafe(&raw_fetched_access_token)?;
                     let tokens = Tokens {
@@ -167,7 +167,7 @@ cfg_if! {
                 .await
                 .with_context(|| "read server config file")?;
 
-            log::trace!("config loaded: {:#?}", config);
+            tracing::trace!("config loaded: {:#?}", config);
             let state = ServerCommandState { config };
             Ok::<_, anyhow::Error>(state)
         }
@@ -191,7 +191,7 @@ cfg_if! {
                 .await
                 .with_context(|| "read server config file")?;
 
-            log::trace!("config loaded: {:#?}", config);
+            tracing::trace!("config loaded: {:#?}", config);
             let state = DeviceCommandState { config };
             Ok::<_, anyhow::Error>(state)
         }
@@ -208,7 +208,7 @@ pub trait Command<T: CommandState> {
 fn main() -> anyhow::Result<()> {
     use clap::Clap;
 
-    env_logger::init_from_env(env_logger::Env::default().filter_or("HOUSEFLOW_LOG", "info"));
+    houseflow_config::init_logging();
 
     let cli_config = CliConfig::parse();
     actix_rt::System::with_tokio_rt(|| {

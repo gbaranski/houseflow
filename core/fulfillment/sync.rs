@@ -29,7 +29,7 @@ impl Command<ClientCommandState> for SyncCommand {
             .save(&response.devices)
             .await
             .with_context(|| "save devices")?;
-        log::debug!("saved devices to {:#?}", state.devices.path);
+        tracing::debug!("saved devices to {:#?}", state.devices.path);
 
         Ok(())
     }

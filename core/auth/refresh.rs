@@ -12,14 +12,14 @@ impl Command<ClientCommandState> for RefreshCommand {
         let tokens = state.tokens.get().await?;
         let response = state
             .houseflow_api
-            .fetch_access_token(&state.refresh_token().await?)
+            .refresh_token(&state.refresh_token().await?)
             .await??;
         let tokens = Tokens {
             refresh: tokens.refresh,
             access: response.access_token,
         };
         state.tokens.save(&tokens).await?;
-        log::info!("✔ Succesfully refreshed token and saved to keystore");
+        tracing::info!("✔ Succesfully refreshed token and saved to keystore");
 
         Ok(())
     }

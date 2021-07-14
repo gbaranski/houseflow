@@ -96,7 +96,7 @@ impl Command<ClientCommandState> for AddDeviceCommand {
             .admin_add_device(&access_token, &request)
             .await??;
 
-        log::info!("✔ Succesfully added device with ID: {}", response.device_id);
+        tracing::info!("✔ Succesfully added device with ID: {}", response.device_id);
 
         Ok(())
     }

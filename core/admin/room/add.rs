@@ -28,7 +28,7 @@ impl Command<ClientCommandState> for AddRoomCommand {
             .admin_add_room(&access_token, &request)
             .await??;
 
-        log::info!("✔ Succesfully added room with ID: {}", response.room_id);
+        tracing::info!("✔ Succesfully added room with ID: {}", response.room_id);
 
         Ok(())
     }

@@ -24,7 +24,7 @@ impl Command<ClientCommandState> for AddStructureCommand {
             .admin_add_structure(&access_token, &request)
             .await??;
 
-        log::info!("✔ Succesfully added structure with ID: {}", response.structure_id);
+        tracing::info!("✔ Succesfully added structure with ID: {}", response.structure_id);
 
         Ok(())
     }

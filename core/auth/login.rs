@@ -44,13 +44,13 @@ impl Command<ClientCommandState> for LoginCommand {
             .login(&login_request)
             .await??;
 
-        log::info!("✔ Logged in as {}", login_request.email);
+        tracing::info!("✔ Logged in as {}", login_request.email);
         let tokens = Tokens {
             refresh: login_response.refresh_token,
             access: login_response.access_token,
         };
         state.tokens.save(&tokens).await?;
-        log::debug!("Saved refresh token at {:#?}", state.tokens.path);
+        tracing::debug!("Saved refresh token at {:#?}", state.tokens.path);
 
         Ok(())
     }
