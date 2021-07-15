@@ -1035,6 +1035,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "houseflow-device-rpi"
+version = "0.1.0"
+dependencies = [
+ "houseflow-config",
+ "houseflow-device",
+ "houseflow-types",
+ "rppal",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "houseflow-server"
 version = "0.1.2"
 dependencies = [
@@ -1826,12 +1838,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "rpi"
-version = "0.1.0"
+name = "rppal"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb26758c881b4837b2f4aef569e4251f75388e36b37204e1804ef429c220121c"
 dependencies = [
- "houseflow-device",
- "tokio",
- "tracing",
+ "lazy_static",
+ "libc",
 ]
 
 [[package]]

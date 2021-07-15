@@ -1,6 +1,4 @@
-mod light;
-
-pub use light::Light;
+pub mod light;
 
 use async_trait::async_trait;
 use houseflow_types::{DeviceCommand, DeviceStatus};

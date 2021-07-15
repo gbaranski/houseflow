@@ -1,5 +1,5 @@
 [package]
-name = "rpi"
+name = "houseflow-device-rpi"
 version = "0.1.0"
 edition = "2018"
 
@@ -9,3 +9,6 @@ edition = "2018"
 tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync" ] }
 tracing = "0.1.26"
 houseflow-device = { path = "../virtual", version = "0.1.1" }
+houseflow-types = { path = "../../types", version = "0.1.1", features = ["lighthouse"] }
+houseflow-config = { path = "../../config", version = "0.1.1", features = [ "device" ] }
+rppal = "0.12.0"

@@ -27,7 +27,7 @@ impl Command<DeviceCommandState> for RunDeviceCommand {
         }
 
         match self.device_type {
-            DeviceType::Light => run_device(state, devices::Light::default()),
+            DeviceType::Light => run_device(state, devices::light::Device::default()),
             _ => unimplemented!(),
         }
         .await
