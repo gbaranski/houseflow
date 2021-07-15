@@ -12,7 +12,16 @@ LighthouseClient::LighthouseClient() {
   websocketClient = WebSocketsClient();
 }
 
-void LighthouseClient::loop() { websocketClient.loop(); }
+void LighthouseClient::loop() {
+  websocketClient.loop();
+
+  auto now = millis();
+  for (auto task : gpioQueue) {
+    if (now >= task.millis) {
+      digitalWrite(task.pin, task.val);
+    }
+  }
+}
 
 void LighthouseClient::setup_websocket_client() {
   static auto *this_ptr = this;
@@ -33,6 +42,8 @@ void LighthouseClient::onText(char *text, size_t length) {
   static StaticJsonDocument<1024> reqdoc;
   static StaticJsonDocument<1024> resdoc;
 
+  auto pre_process = millis();
+
   DeserializationError error = deserializeJson(reqdoc, text);
   if (error) {
     Serial.print(F("deserializeJson() failed: "));
@@ -42,17 +53,18 @@ void LighthouseClient::onText(char *text, size_t length) {
 
   resdoc["id"] = reqdoc["id"];
 
-  const char* frame_type = reqdoc["type"];
+  const char *frame_type = reqdoc["type"];
   if (strcmp(frame_type, "Execute") == 0) {
     resdoc["type"] = "ExecuteResponse";
     Serial.println("[Lighthouse] received Execute frame");
-    const char* command = reqdoc["command"];
+    const char *command = reqdoc["command"];
     if (strcmp(command, "OnOff") == 0) {
       bool on = reqdoc["params"]["on"];
       Serial.printf("[Lighthouse] setting `on` to `%d`\n", on);
+
       digitalWrite(LED_PIN, HIGH);
-      delay(100);
-      digitalWrite(LED_PIN, LOW);
+      auto gpioTask = GpioTask(millis() + 1000, LED_PIN, LOW);
+      gpioQueue.push_back(gpioTask);
 
       resdoc["status"] = "Success";
       resdoc["state"]["on"] = on;
@@ -65,14 +77,18 @@ void LighthouseClient::onText(char *text, size_t length) {
     Serial.println("[Lighthouse] received Query frame");
     return;
   } else {
-    Serial.printf("[Lighthouse] received unrecognized frame type: %s\n", frame_type);
+    Serial.printf("[Lighthouse] received unrecognized frame type: %s\n",
+                  frame_type);
     return;
   }
 
-  
   String buf; // TODO: Optimize this by using raw buffers
   serializeJson(resdoc, buf);
+  resdoc.clear();
   this->websocketClient.sendTXT(buf);
+
+  auto post_process = millis();
+  Serial.printf("Processing message took %lu ms\n", post_process - pre_process);
 
   // Serial.printf("[Lighthouse] received binary, len: %zu\n", length);
   // Iterable iter(payload, length);
@@ -115,7 +131,7 @@ void LighthouseClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {
     break;
   case WStype_TEXT:
     Serial.printf("[Lighthouse] received text: %s\n", payload);
-    this->onText((char*)payload, length);
+    this->onText((char *)payload, length);
     break;
   case WStype_BIN:
     Serial.printf("[Lighthouse] received binary\n");
