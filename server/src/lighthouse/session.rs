@@ -14,8 +14,8 @@ use tokio::sync::{broadcast, oneshot};
 
 use super::aliases::*;
 
-const EXECUTE_TIMEOUT: Duration = Duration::from_secs(5);
-const QUERY_TIMEOUT: Duration = Duration::from_secs(5);
+const EXECUTE_TIMEOUT: Duration = Duration::from_secs(10);
+const QUERY_TIMEOUT: Duration = Duration::from_secs(10);
 const STATE_CHANNEL_SIZE: usize = 4;
 
 #[derive(Debug, Error)]
