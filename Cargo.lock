@@ -1826,6 +1826,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rpi"
+version = "0.1.0"
+dependencies = [
+ "houseflow-device",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.25.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

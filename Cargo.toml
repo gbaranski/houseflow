@@ -18,6 +18,7 @@ name = "houseflow"
 members = [
   "config",
   "devices/virtual",
+  "devices/rpi",
   "server",
   "types",
   "db",
