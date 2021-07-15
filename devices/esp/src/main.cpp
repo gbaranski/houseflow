@@ -28,7 +28,12 @@ void setupSerial()
 
 void setupGPIO() 
 {
-    pinMode(LED_PIN, OUTPUT);
+#ifdef ON_OFF
+    pinMode(ON_OFF_PIN, OUTPUT);
+#endif
+#ifdef OPEN_CLOSE
+    pinMode(OPEN_CLOSE_PIN, OUTPUT);
+#endif
 }
 
 void setup() 

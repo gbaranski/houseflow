@@ -16,9 +16,11 @@ void LighthouseClient::loop() {
   websocketClient.loop();
 
   auto now = millis();
-  for (auto task : gpioQueue) {
-    if (now >= task.millis) {
-      digitalWrite(task.pin, task.val);
+  for (auto it = begin(gpioQueue); it != end(gpioQueue); ++it) {
+    if (now >= it->millis) {
+      digitalWrite(it->pin, it->val);
+      gpioQueue.erase(it);
+      break;
     }
   }
 }
@@ -29,53 +31,101 @@ void LighthouseClient::setup_websocket_client() {
     this_ptr->onEvent(type, payload, length);
   };
 
-  websocketClient.begin(LIGHTHOUSE_HOST, LIGHTHOUSE_PORT, LIGHTHOUSE_PATH);
+  websocketClient.begin(SERVER_HOST, SERVER_PORT, "/lighthouse/ws");
   websocketClient.setExtraHeaders(AUTHORIZATION_HEADER);
   websocketClient.onEvent(handler);
-  websocketClient.setReconnectInterval(LIGHTHOUSE_RECONNECT_INTERVAL);
-  websocketClient.enableHeartbeat(LIGHTHOUSE_PING_INTERVAL,
-                                  LIGHTHOUSE_PONG_INTERVAL,
-                                  LIGHTHOUSE_DISCONNECT_TIMEOUT_COUNT);
+  websocketClient.setReconnectInterval(RECONNECT_INTERVAL);
+  websocketClient.enableHeartbeat(PING_INTERVAL, PONG_INTERVAL,
+                                  DISCONNECT_TIMEOUT_COUNT);
+}
+
+template <size_t requestDocCapacity, size_t responseDocCapacity>
+void LighthouseClient::onExecute(
+    const StaticJsonDocument<requestDocCapacity> &requestDoc,
+    StaticJsonDocument<responseDocCapacity> &responseDoc) {
+
+  responseDoc["type"] = "ExecuteResponse";
+  Serial.println("[Lighthouse] received Execute frame");
+  const char *command_str = requestDoc["command"];
+
+  DeviceCommand command;
+
+  if (strcmp(command_str, "OnOff") == 0) {
+    command = DeviceCommand::OnOff;
+  } else if (strcmp(command_str, "OpenClose") == 0) {
+    command = DeviceCommand::OpenClose;
+  } else {
+    Serial.printf("[Lighthouse] received invalid command: %s\n", command_str);
+    return;
+  }
+
+  switch (command) {
+#ifdef ON_OFF
+  case OnOff: {
+    bool on = requestDoc["params"]["on"];
+    Serial.printf("[Lighthouse] setting `on` to `%d`\n", on);
+
+    digitalWrite(ON_OFF_PIN, on);
+
+    responseDoc["status"] = "Success";
+    responseDoc["state"]["on"] = on;
+    break;
+  }
+#endif
+#ifdef OPEN_CLOSE
+  case OpenClose: {
+
+    bool open = requestDoc["params"]["open"];
+    Serial.printf("[Lighthouse] setting `open` to `%d`\n", open);
+
+    digitalWrite(OPEN_CLOSE_PIN, open);
+    auto gpioTask =
+        GpioTask(millis() + OPEN_CLOSE_TOGGLE_DURATION, OPEN_CLOSE_PIN, !open);
+    gpioQueue.push_back(gpioTask);
+
+    responseDoc["status"] = "Success";
+    break;
+  }
+#endif
+  default:
+    Serial.printf("[Lighthouse] received unknown command: %s\n", command_str);
+    responseDoc["status"] = "Error";
+    responseDoc["error"] = "FunctionNotSupported";
+  }
+}
+
+template <size_t requestDocCapacity, size_t responseDocCapacity>
+void LighthouseClient::onQuery(
+    const StaticJsonDocument<requestDocCapacity> &requestDoc,
+    StaticJsonDocument<responseDocCapacity> &responseDoc) {
+  Serial.println("[Lighthouse] received Query frame");
+
+  responseDoc["type"] = "State";
+#ifdef ON_OFF
+  responseDoc["state"]["on"] = digitalRead(ON_OFF_PIN);
+#endif
 }
 
 void LighthouseClient::onText(char *text, size_t length) {
-  static StaticJsonDocument<1024> reqdoc;
-  static StaticJsonDocument<1024> resdoc;
+  static StaticJsonDocument<1024> requestDoc;
+  static StaticJsonDocument<1024> responseDoc;
 
   auto pre_process = millis();
 
-  DeserializationError error = deserializeJson(reqdoc, text);
+  DeserializationError error = deserializeJson(requestDoc, text);
   if (error) {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.f_str());
     return;
   }
 
-  resdoc["id"] = reqdoc["id"];
+  responseDoc["id"] = requestDoc["id"];
 
-  const char *frame_type = reqdoc["type"];
+  const char *frame_type = requestDoc["type"];
   if (strcmp(frame_type, "Execute") == 0) {
-    resdoc["type"] = "ExecuteResponse";
-    Serial.println("[Lighthouse] received Execute frame");
-    const char *command = reqdoc["command"];
-    if (strcmp(command, "OnOff") == 0) {
-      bool on = reqdoc["params"]["on"];
-      Serial.printf("[Lighthouse] setting `on` to `%d`\n", on);
-
-      digitalWrite(LED_PIN, HIGH);
-      auto gpioTask = GpioTask(millis() + 1000, LED_PIN, LOW);
-      gpioQueue.push_back(gpioTask);
-
-      resdoc["status"] = "Success";
-      resdoc["state"]["on"] = on;
-    } else {
-      Serial.printf("[Lighthouse] received unknown command: %s\n", command);
-      resdoc["status"] = "Error";
-      resdoc["error"] = "FunctionNotSupported";
-    }
+    onExecute(requestDoc, responseDoc);
   } else if (strcmp(frame_type, "Query") == 0) {
-    Serial.println("[Lighthouse] received Query frame");
-    return;
+    onQuery(requestDoc, responseDoc);
   } else {
     Serial.printf("[Lighthouse] received unrecognized frame type: %s\n",
                   frame_type);
@@ -83,42 +133,12 @@ void LighthouseClient::onText(char *text, size_t length) {
   }
 
   String buf; // TODO: Optimize this by using raw buffers
-  serializeJson(resdoc, buf);
-  resdoc.clear();
+  serializeJson(responseDoc, buf);
+  responseDoc.clear();
   this->websocketClient.sendTXT(buf);
 
   auto post_process = millis();
   Serial.printf("Processing message took %lu ms\n", post_process - pre_process);
-
-  // Serial.printf("[Lighthouse] received binary, len: %zu\n", length);
-  // Iterable iter(payload, length);
-  // uint8_t opcode = iter.get_u8();
-  // switch (opcode) {
-  // case Frame::Opcode::NoOperation:
-  //   break;
-  // case Frame::Opcode::Execute: {
-  //   auto executeFrame = ExecuteFrame::decode(&iter);
-  //   Serial.printf("execute frame ID: %u, command: %x\n", executeFrame.id,
-  //                 executeFrame.command);
-
-  //   ExecuteResponseFrame executeResponseFrame(
-  //       executeFrame.id, ExecuteResponseFrame::Status::Success,
-  //       ExecuteResponseFrame::FunctionNotSupported, (char *)"{}");
-
-  //   Iterable iter(buf, sizeof(buf) / sizeof(buf[0]));
-  //   iter.put_u8(Frame::Opcode::ExecuteResponse);
-  //   executeResponseFrame.encode(&iter);
-  //   websocketClient.sendBIN(buf, iter.position - iter.begin);
-  //   digitalWrite(LED_PIN, HIGH);
-  //   delay(100);
-  //   digitalWrite(LED_PIN, LOW);
-
-  //   break;
-  // }
-  // default:
-  //   Serial.printf("unsupported opcode: %x\n", opcode);
-  //   break;
-  // }
 }
 
 void LighthouseClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {

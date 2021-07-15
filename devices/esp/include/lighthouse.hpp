@@ -2,6 +2,7 @@
 #define LIGHTHOUSE_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <WebSocketsClient.h>
 
 struct GpioTask {
@@ -16,8 +17,6 @@ struct GpioTask {
   }
 };
 
-const size_t GPIO_QUEUE_SIZE = 16;
-
 class LighthouseClient {
 public:
   LighthouseClient();
@@ -30,6 +29,19 @@ private:
 
   void onEvent(WStype_t type, uint8_t *payload, size_t length);
   void onText(char *payload, size_t length);
+
+  template <size_t requestDocCapacity, size_t responseDocCapacity>
+  void onExecute(const StaticJsonDocument<requestDocCapacity> &requestDoc,
+                 StaticJsonDocument<responseDocCapacity> &responseDoc);
+
+  template <size_t requestDocCapacity, size_t responseDocCapacity>
+  void onQuery(const StaticJsonDocument<requestDocCapacity> &requestDoc,
+                 StaticJsonDocument<responseDocCapacity> &responseDoc);
+};
+
+enum DeviceCommand {
+  OnOff,
+  OpenClose,
 };
 
 #endif
