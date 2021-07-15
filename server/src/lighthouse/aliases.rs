@@ -5,7 +5,7 @@ use houseflow_types::lighthouse::{
 };
 
 pub struct ActorExecuteFrame {
-    inner: execute::Frame,
+    pub inner: execute::Frame,
 }
 
 impl From<execute::Frame> for ActorExecuteFrame {
@@ -22,7 +22,7 @@ impl From<ActorExecuteFrame> for execute::Frame {
 
 #[derive(MessageResponse)]
 pub struct ActorExecuteResponseFrame {
-    inner: execute_response::Frame,
+    pub inner: execute_response::Frame,
 }
 
 impl From<execute_response::Frame> for ActorExecuteResponseFrame {
@@ -42,7 +42,7 @@ impl Message for ActorExecuteFrame {
 }
 
 pub struct ActorQueryFrame {
-    inner: query::Frame,
+    pub inner: query::Frame,
 }
 
 impl From<query::Frame> for ActorQueryFrame {
@@ -60,7 +60,7 @@ impl From<ActorQueryFrame> for query::Frame {
 #[derive(MessageResponse)]
 pub struct ActorStateFrame {
     #[allow(dead_code)]
-    inner: state::Frame,
+    pub inner: state::Frame,
 }
 
 impl From<state::Frame> for ActorStateFrame {

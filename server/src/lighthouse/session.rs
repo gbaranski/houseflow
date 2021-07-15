@@ -5,12 +5,13 @@ use houseflow_types::lighthouse::{
     proto::{execute, execute_response, query, state, Frame, FrameID},
     DeviceCommunicationError,
 };
-use houseflow_types::DeviceID;
+use houseflow_types::{DeviceID, DeviceStatus};
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::sync::{broadcast, oneshot};
+use tracing::Level;
 
 use super::aliases::*;
 
@@ -87,7 +88,15 @@ impl Handler<ActorQueryFrame> for Session {
         std::result::Result<ActorStateFrame, DeviceCommunicationError>,
     >;
 
+    #[tracing::instrument(
+        name = "Query",
+        skip(self, frame, ctx),
+        fields(
+            device = self.device_id.to_string().as_str(),
+        )
+    )]
     fn handle(&mut self, frame: ActorQueryFrame, ctx: &mut Self::Context) -> Self::Result {
+        let device_id = self.device_id.clone();
         let frame: query::Frame = frame.into();
         let frame = Frame::Query(frame);
 
@@ -97,12 +106,23 @@ impl Handler<ActorQueryFrame> for Session {
             Err(err) => return Box::pin(async move { Err(err.into()) }.into_actor(self)),
         };
         ctx.text(json);
+        let send_time = Instant::now();
+        tracing::event!(Level::INFO, "Sent Query to the device");
 
         let fut = async move {
             let resp = tokio::time::timeout(QUERY_TIMEOUT, rx.recv())
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
                 .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
+
+            let span = tracing::span!(
+                Level::INFO,
+                "QueryResponse",
+                device = %device_id,
+                time = tracing::field::display(format_args!("{}ms", send_time.elapsed().as_millis())),
+            );
+
+            tracing::event!(parent: &span, Level::INFO, "Device returned succesfully");
 
             Ok::<ActorStateFrame, DeviceCommunicationError>(resp.into())
         }
@@ -118,10 +138,21 @@ impl Handler<ActorExecuteFrame> for Session {
         std::result::Result<ActorExecuteResponseFrame, DeviceCommunicationError>,
     >;
 
+    #[tracing::instrument(
+        name = "Execute",
+        skip(self, frame, ctx),
+        fields(
+            device = %self.device_id,
+            id = frame.inner.id,
+            command = %frame.inner.command,
+            params = ?frame.inner.params,
+        )
+    )]
     fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
         use actix::prelude::*;
         let frame: execute::Frame = frame.into();
-        let request_id = frame.id;
+        let device_id = self.device_id.clone();
+        let frame_id = frame.id;
         let frame = Frame::Execute(frame);
 
         let json = match serde_json::to_string(&frame) {
@@ -130,8 +161,10 @@ impl Handler<ActorExecuteFrame> for Session {
         };
 
         let (tx, rx) = oneshot::channel();
-        self.execute_channels.insert(request_id, tx);
+        self.execute_channels.insert(frame_id, tx);
         ctx.text(json);
+        let send_time = Instant::now();
+        tracing::event!(Level::INFO, "Sent Execute to the device");
 
         let fut = async move {
             let resp = tokio::time::timeout(EXECUTE_TIMEOUT, rx)
@@ -139,11 +172,32 @@ impl Handler<ActorExecuteFrame> for Session {
                 .map_err(|_| DeviceCommunicationError::Timeout)?
                 .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
 
+            let span = tracing::span!(
+                Level::INFO,
+                "ExecuteResponse",
+                device = %device_id,
+                id = frame_id,
+                time = tracing::field::display(format_args!("{}ms", send_time.elapsed().as_millis())),
+                error = tracing::field::Empty,
+                state = tracing::field::Empty,
+            );
+
+            match resp.status {
+                DeviceStatus::Success => {
+                    span.record("state", &tracing::field::debug(&resp.state));
+                    tracing::event!(parent: &span, Level::INFO, "Device returned succesfully");
+                }
+                DeviceStatus::Error(ref err) => {
+                    span.record("error", &tracing::field::display(err));
+                    tracing::event!(parent: &span, Level::ERROR, "Device returned unsucesfully");
+                }
+            }
+
             Ok::<ActorExecuteResponseFrame, DeviceCommunicationError>(resp.into())
         }
         .into_actor(self)
         .map(move |res, session: &mut Self, _| {
-            session.execute_channels.remove(&request_id);
+            session.execute_channels.remove(&frame_id);
             res
         });
 
@@ -168,11 +222,9 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                     let frame = serde_json::from_str(&text)?;
                     match frame {
                         Frame::State(frame) => {
-                            tracing::debug!("Received state");
                             self.state_channel.send(frame)?;
                         }
                         Frame::ExecuteResponse(frame) => {
-                            tracing::debug!("Received Execute Response, ID: {:?}", frame.id);
                             self.execute_channels
                                 .remove(&frame.id)
                                 .ok_or(SessionError::ResponseWithoutRequest)?
