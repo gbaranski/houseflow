@@ -168,6 +168,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                     let frame = serde_json::from_str(&text)?;
                     match frame {
                         Frame::State(frame) => {
+                            tracing::debug!("Received state");
                             self.state_channel.send(frame)?;
                         }
                         Frame::ExecuteResponse(frame) => {
@@ -186,25 +187,25 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                     }
                 }
                 ws::Message::Binary(bytes) => {
-                    tracing::info!("Received binary: {:?}", bytes);
+                    tracing::debug!("Received binary: {:?}", bytes);
                 }
                 ws::Message::Continuation(item) => {
-                    tracing::info!("Received continuation: {:?}", item);
+                    tracing::debug!("Received continuation: {:?}", item);
                 }
                 ws::Message::Ping(bytes) => {
-                    tracing::info!("Received ping: {:?}", bytes);
+                    tracing::debug!("Received ping: {:?}", bytes);
                     ctx.pong(b"");
                 }
                 ws::Message::Pong(bytes) => {
-                    tracing::info!("Received pong: {:?}", bytes);
+                    tracing::debug!("Received pong: {:?}", bytes);
                 }
                 ws::Message::Close(reason) => {
-                    tracing::info!("Connection closed, reason: {:?}", reason);
+                    tracing::debug!("Connection closed, reason: {:?}", reason);
                     ctx.close(reason);
                     ctx.stop();
                 }
                 ws::Message::Nop => {
-                    tracing::info!("Received no operation");
+                    tracing::debug!("Received no operation");
                 }
             };
             Ok(())
