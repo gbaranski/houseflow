@@ -85,8 +85,8 @@ impl Actor for Session {
                 }));
                 ctx.stop();
             } else {
-                tracing::event!(parent: &span, Level::DEBUG, "sending ping");
                 ctx.ping(&[]);
+                tracing::event!(parent: &span, Level::DEBUG, "ping sent");
             }
         });
     }
@@ -267,12 +267,13 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                     let span = tracing::span!(Level::INFO, "Heartbeat", device = %self.device_id);
                     match msg {
                         ws::Message::Ping(bytes) => {
-                            tracing::event!(parent: &span, Level::DEBUG, "received ping");
+                            tracing::event!(parent: &span, Level::DEBUG, "ping received");
                             self.heartbeat = Instant::now();
                             ctx.pong(&bytes);
+                            tracing::event!(parent: &span, Level::DEBUG, "pong sent");
                         }
                         ws::Message::Pong(_bytes) => {
-                            tracing::event!(parent: &span, Level::DEBUG, "received pong");
+                            tracing::event!(parent: &span, Level::DEBUG, "pong received");
                             self.heartbeat = Instant::now();
                         }
                         _ => unreachable!(),
