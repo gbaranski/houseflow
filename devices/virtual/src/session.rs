@@ -1,10 +1,14 @@
 use crate::devices;
+use anyhow::anyhow;
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_config::device::Config;
 use houseflow_types::lighthouse::proto::{execute_response, state, Frame};
-use tokio::sync::mpsc;
+use std::time::{Duration, Instant};
+use tokio::sync::{mpsc, Mutex};
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
+
+const TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -19,12 +23,16 @@ pub type EventSender = mpsc::Sender<Event>;
 pub type EventReceiver = mpsc::Receiver<Event>;
 
 pub struct Session {
+    heartbeat: Mutex<Instant>,
     config: Config,
 }
 
 impl Session {
     pub fn new(config: Config) -> Self {
-        Self { config }
+        Self {
+            config,
+            heartbeat: Mutex::new(Instant::now()),
+        }
     }
 
     pub async fn run<D: devices::Device<EP>, EP: devices::ExecuteParams>(
@@ -64,8 +72,9 @@ impl Session {
         let (stream_sender, stream_receiver) = stream.split();
 
         tokio::select! {
-            v = self.stream_read(stream_receiver, event_sender, device) => { v }
+            v = self.stream_read(stream_receiver, event_sender.clone(), device) => { v }
             v = self.stream_write(stream_sender, event_receiver) => { v }
+            _ = self.heartbeat(event_sender.clone()) => { Err(anyhow::anyhow!("server did not respond to heartbeat")) }
         }
     }
 
@@ -122,14 +131,16 @@ impl Session {
                     tracing::debug!("received binary: {:?}", bytes);
                 }
                 WebsocketMessage::Ping(payload) => {
+                    tracing::info!("Received ping, payload: {:?}", payload);
+                    *self.heartbeat.lock().await = Instant::now();
                     events
                         .send(Event::Pong)
                         .await
                         .expect("message receiver half is down");
-                    tracing::info!("Received ping, payload: {:?}", payload);
                 }
                 WebsocketMessage::Pong(payload) => {
-                    tracing::info!("Received ping, payload: {:?}", payload);
+                    tracing::info!("Received pong, payload: {:?}", payload);
+                    *self.heartbeat.lock().await = Instant::now();
                 }
                 WebsocketMessage::Close(frame) => {
                     tracing::info!("Received close frame: {:?}", frame);
@@ -166,5 +177,17 @@ impl Session {
             }
         }
         Ok(())
+    }
+
+    async fn heartbeat(&self, events: EventSender) -> anyhow::Result<()> {
+        let mut interval = tokio::time::interval(TIMEOUT);
+        loop {
+            interval.tick().await;
+            if Instant::now().duration_since(*self.heartbeat.lock().await) > TIMEOUT {
+                return Err(anyhow!("server heartbeat failed"));
+            } else {
+                events.send(Event::Ping).await?;
+            }
+        }
     }
 }

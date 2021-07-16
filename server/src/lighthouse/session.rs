@@ -15,8 +15,7 @@ use tracing::Level;
 
 use super::aliases::*;
 
-const EXECUTE_TIMEOUT: Duration = Duration::from_secs(10);
-const QUERY_TIMEOUT: Duration = Duration::from_secs(10);
+const TIMEOUT: Duration = Duration::from_secs(5);
 const STATE_CHANNEL_SIZE: usize = 4;
 
 #[derive(Debug, Error)]
@@ -43,6 +42,7 @@ pub struct Session {
     sessions: Arc<crate::Sessions>,
     device_id: DeviceID,
     address: SocketAddr,
+    heartbeat: Instant,
     pub execute_channels: HashMap<FrameID, oneshot::Sender<execute_response::Frame>>,
     pub state_channel: broadcast::Sender<state::Frame>,
 }
@@ -57,6 +57,7 @@ impl Session {
             address,
             state_channel,
             execute_channels: Default::default(),
+            heartbeat: Instant::now(),
         }
     }
 }
@@ -64,12 +65,30 @@ impl Session {
 impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
 
-    fn started(&mut self, _ctx: &mut Self::Context) {
+    fn started(&mut self, ctx: &mut Self::Context) {
         tracing::info!(
             "New device connected from {} as {}.",
             self.address,
             self.device_id
         );
+        ctx.run_interval(TIMEOUT, |act, ctx| {
+            let span = tracing::span!(
+                Level::INFO,
+                "Heartbeat",
+                device = %act.device_id,
+            );
+            if Instant::now().duration_since(act.heartbeat) > TIMEOUT {
+                tracing::event!(parent: &span, Level::INFO, "Device heartbeat failed");
+                ctx.close(Some(ws::CloseReason {
+                    code: ws::CloseCode::Other(4000),
+                    description: Some(String::from("hearbeat failed")),
+                }));
+                ctx.stop();
+            } else {
+                tracing::event!(parent: &span, Level::DEBUG, "sending ping");
+                ctx.ping(&[]);
+            }
+        });
     }
     fn stopped(&mut self, _ctx: &mut Self::Context) {
         tracing::info!("Device {} disconnected.", self.device_id);
@@ -110,7 +129,7 @@ impl Handler<ActorQueryFrame> for Session {
         tracing::event!(Level::INFO, "Sent Query to the device");
 
         let fut = async move {
-            let resp = tokio::time::timeout(QUERY_TIMEOUT, rx.recv())
+            let resp = tokio::time::timeout(TIMEOUT, rx.recv())
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
                 .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
@@ -167,7 +186,7 @@ impl Handler<ActorExecuteFrame> for Session {
         tracing::event!(Level::INFO, "Sent Execute to the device");
 
         let fut = async move {
-            let resp = tokio::time::timeout(EXECUTE_TIMEOUT, rx)
+            let resp = tokio::time::timeout(TIMEOUT, rx)
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
                 .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
@@ -244,12 +263,20 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                 ws::Message::Continuation(item) => {
                     tracing::debug!("Received continuation: {:?}", item);
                 }
-                ws::Message::Ping(bytes) => {
-                    tracing::debug!("Received ping: {:?}", bytes);
-                    ctx.pong(b"");
-                }
-                ws::Message::Pong(bytes) => {
-                    tracing::debug!("Received pong: {:?}", bytes);
+                msg @ (ws::Message::Ping(_) | ws::Message::Pong(_)) => {
+                    let span = tracing::span!(Level::INFO, "Heartbeat", device = %self.device_id);
+                    match msg {
+                        ws::Message::Ping(bytes) => {
+                            tracing::event!(parent: &span, Level::DEBUG, "received ping");
+                            self.heartbeat = Instant::now();
+                            ctx.pong(&bytes);
+                        }
+                        ws::Message::Pong(_bytes) => {
+                            tracing::event!(parent: &span, Level::DEBUG, "received pong");
+                            self.heartbeat = Instant::now();
+                        }
+                        _ => unreachable!(),
+                    }
                 }
                 ws::Message::Close(reason) => {
                     tracing::debug!("Connection closed, reason: {:?}", reason);

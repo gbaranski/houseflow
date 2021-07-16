@@ -15,7 +15,7 @@ resolver = "2"
 houseflow-types   = { path = "../../types", version = "0.1.1", features = ["lighthouse"] }
 houseflow-config  = { path = "../../config", version = "0.1.1", features = [ "device" ] }
 
-tokio             = { version = "1.5", features = [ "macros", "sync" ] }
+tokio             = { version = "1.5", features = [ "macros", "sync", "time" ] }
 bytes             = "1.0"
 futures-util      = "0.3"
 tokio-tungstenite = { version = "0.14", features = ["rustls-tls"] }
@@ -31,7 +31,7 @@ strum = { version = "0.21.0", features = ["derive"] }
 tracing = "0.1.26"
 
 [dev-dependencies]
-tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync" ] }
+tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync", "time" ] }
 houseflow-config = { path="../../config", version="0.1.1", features=["device", "fs"] }
 tracing-subscriber = "0.2.19"
 
