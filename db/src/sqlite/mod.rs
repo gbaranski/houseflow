@@ -263,7 +263,7 @@ impl crate::Database for Database {
         const SELECT_USER_DEVICES_SQL: &str = "
             SELECT * 
             FROM devices 
-            WHERE room_id = (
+            WHERE room_id in (
                 SELECT id
                 FROM rooms
                 WHERE structure_id = (
