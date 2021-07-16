@@ -64,7 +64,7 @@ impl HouseflowAPI {
             fulfillment_url: base_url.join("fulfillment/internal/").unwrap(),
 
             #[cfg(feature = "admin")]
-            admin_url: base_url.join("fulfillment/admin/").unwrap(),
+            admin_url: base_url.join("admin/").unwrap(),
         }
     }
 }
