@@ -294,6 +294,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
         match result {
             Ok(_) => {}
             Err(err) => {
+                tracing::error!("stream handler error: {}", err);
                 ctx.close(Some(ws::CloseReason {
                     code: ws::CloseCode::Other(4000),
                     description: Some(err.to_string()),
