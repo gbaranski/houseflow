@@ -8,5 +8,7 @@ pub struct Frame {
 
     #[serde(flatten)]
     pub status: DeviceStatus,
+
+    #[serde(default)]
     pub state: serde_json::Map<String, serde_json::Value>,
 }
