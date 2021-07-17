@@ -74,7 +74,6 @@ void LighthouseClient::onExecute(
 #endif
 #ifdef OPEN_CLOSE
   case OpenClose: {
-    u8 open_percent = requestDoc["params"]["open_percent"];
     Serial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
                   OPEN_CLOSE_TOGGLE_DURATION);
 
@@ -84,7 +83,6 @@ void LighthouseClient::onExecute(
     gpioQueue.push_back(gpioTask);
 
     responseDoc["status"] = "Success";
-    responseDoc["state"]["open_percent"] = open_percent;
     break;
   }
 #endif
@@ -104,6 +102,8 @@ void LighthouseClient::onQuery(
   responseDoc["type"] = "State";
 #ifdef ON_OFF
   responseDoc["state"]["on"] = digitalRead(ON_OFF_PIN);
+#endif
+#ifdef OPEN_CLOSE
 #endif
 }
 
