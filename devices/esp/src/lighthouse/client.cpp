@@ -74,16 +74,17 @@ void LighthouseClient::onExecute(
 #endif
 #ifdef OPEN_CLOSE
   case OpenClose: {
+    u8 open_percent = requestDoc["params"]["open_percent"];
+    Serial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
+                  OPEN_CLOSE_TOGGLE_DURATION);
 
-    bool open = requestDoc["params"]["open"];
-    Serial.printf("[Lighthouse] setting `open` to `%d`\n", open);
-
-    digitalWrite(OPEN_CLOSE_PIN, open);
+    digitalWrite(OPEN_CLOSE_PIN, HIGH);
     auto gpioTask =
-        GpioTask(millis() + OPEN_CLOSE_TOGGLE_DURATION, OPEN_CLOSE_PIN, !open);
+        GpioTask(millis() + OPEN_CLOSE_TOGGLE_DURATION, OPEN_CLOSE_PIN, LOW);
     gpioQueue.push_back(gpioTask);
 
     responseDoc["status"] = "Success";
+    responseDoc["state"]["open_percent"] = open_percent;
     break;
   }
 #endif
