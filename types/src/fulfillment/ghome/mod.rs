@@ -32,7 +32,7 @@ pub struct IntentRequest {
     pub inputs: Vec<IntentRequestInput>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, strum::Display)]
 #[serde(tag = "intent", content = "payload")]
 pub enum IntentRequestInput {
     #[serde(rename = "action.devices.SYNC")]
@@ -51,17 +51,20 @@ pub enum IntentRequestInput {
 pub type IntentResponse = Result<IntentResponseBody, IntentResponseError>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(untagged)]
+#[serde(untagged, rename_all = "camelCase")]
 pub enum IntentResponseBody {
     Sync {
+        #[serde(rename = "requestId")]
         request_id: String,
         payload: sync::response::Payload,
     },
     Query {
+        #[serde(rename = "requestId")]
         request_id: String,
         payload: query::response::Payload,
     },
     Execute {
+        #[serde(rename = "requestId")]
         request_id: String,
         payload: execute::response::Payload,
     },
