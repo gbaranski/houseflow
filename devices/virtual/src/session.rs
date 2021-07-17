@@ -1,8 +1,11 @@
-use crate::devices;
+use crate::Device;
 use anyhow::anyhow;
 use futures_util::{Sink, SinkExt, StreamExt};
 use houseflow_config::device::Config;
-use houseflow_types::lighthouse::proto::{execute_response, state, Frame};
+use houseflow_types::{
+    lighthouse::proto::{execute_response, state, Frame},
+    DeviceCommand,
+};
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, Mutex};
 use tungstenite::Message as WebsocketMessage;
@@ -35,10 +38,7 @@ impl Session {
         }
     }
 
-    pub async fn run<D: devices::Device<EP>, EP: devices::ExecuteParams>(
-        self,
-        device: D,
-    ) -> Result<(), anyhow::Error> {
+    pub async fn run(self, device: impl Device) -> Result<(), anyhow::Error> {
         use houseflow_config::defaults;
 
         let url = format!(
@@ -78,7 +78,7 @@ impl Session {
         }
     }
 
-    async fn stream_read<S, D: devices::Device<EP>, EP: devices::ExecuteParams>(
+    async fn stream_read<S, D>(
         &self,
         mut stream: S,
         events: EventSender,
@@ -86,6 +86,7 @@ impl Session {
     ) -> anyhow::Result<()>
     where
         S: futures_util::Stream<Item = Result<WebsocketMessage, tungstenite::Error>> + Unpin,
+        D: Device,
     {
         while let Some(message) = stream.next().await {
             let message = message?;
@@ -96,13 +97,28 @@ impl Session {
                     tracing::debug!("Parsed frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
-                            let params: EP =
-                                serde_json::from_value(serde_json::Value::Object(frame.params))?;
-                            let status = device.on_execute(frame.command, params).await?;
+                            use houseflow_types::commands;
+                            let status = match frame.command {
+                                DeviceCommand::OnOff => {
+                                    let params: commands::OnOff =
+                                        serde_json::from_value(frame.params.into())?;
+                                    device.on_off(params.on).await
+                                }
+                                DeviceCommand::OpenClose => {
+                                    let params: commands::OpenClose =
+                                        serde_json::from_value(frame.params.into())?;
+                                    device.open_close(params.open_percent).await
+                                }
+                                _ => unreachable!(),
+                            }?;
+                            let state = serde_json::to_value(device.state()?)?
+                                .as_object()
+                                .unwrap()
+                                .to_owned();
                             let response_frame = execute_response::Frame {
                                 id: frame.id,
                                 status,
-                                state: device.state(),
+                                state,
                             };
                             let response_frame = Frame::ExecuteResponse(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);
@@ -112,9 +128,11 @@ impl Session {
                                 .expect("failed sending event");
                         }
                         Frame::Query(_) => {
-                            let response_frame = state::Frame {
-                                state: device.state(),
-                            };
+                            let state = serde_json::to_value(device.state()?)?
+                                .as_object()
+                                .unwrap()
+                                .to_owned();
+                            let response_frame = state::Frame { state };
                             let response_frame = Frame::State(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);
                             events

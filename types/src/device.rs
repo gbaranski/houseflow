@@ -113,6 +113,21 @@ pub enum DeviceCommand {
     OpenClose,
 }
 
+pub mod commands {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    pub struct OnOff {
+        pub on: bool,
+    }
+
+    #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    pub struct OpenClose {
+        #[serde(alias = "openPercent")]
+        pub open_percent: u8,
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
 #[non_exhaustive]
 pub enum DeviceError {
