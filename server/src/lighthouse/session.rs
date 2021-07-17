@@ -73,7 +73,7 @@ impl Actor for Session {
         );
         ctx.run_interval(TIMEOUT, |act, ctx| {
             let span = tracing::span!(
-                Level::INFO,
+                Level::TRACE,
                 "Heartbeat",
                 device = %act.device_id,
             );
@@ -86,7 +86,7 @@ impl Actor for Session {
                 ctx.stop();
             } else {
                 ctx.ping(&[]);
-                tracing::event!(parent: &span, Level::DEBUG, "ping sent");
+                tracing::event!(parent: &span, Level::TRACE, "ping sent");
             }
         });
     }
@@ -139,6 +139,7 @@ impl Handler<ActorQueryFrame> for Session {
                 "QueryResponse",
                 device = %device_id,
                 time = tracing::field::display(format_args!("{}ms", send_time.elapsed().as_millis())),
+                state = ?resp.state,
             );
 
             tracing::event!(parent: &span, Level::INFO, "Device returned succesfully");
@@ -264,16 +265,16 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                     tracing::debug!("Received continuation: {:?}", item);
                 }
                 msg @ (ws::Message::Ping(_) | ws::Message::Pong(_)) => {
-                    let span = tracing::span!(Level::INFO, "Heartbeat", device = %self.device_id);
+                    let span = tracing::span!(Level::TRACE, "Heartbeat", device = %self.device_id);
                     match msg {
                         ws::Message::Ping(bytes) => {
-                            tracing::event!(parent: &span, Level::DEBUG, "ping received");
+                            tracing::event!(parent: &span, Level::TRACE, "ping received");
                             self.heartbeat = Instant::now();
                             ctx.pong(&bytes);
-                            tracing::event!(parent: &span, Level::DEBUG, "pong sent");
+                            tracing::event!(parent: &span, Level::TRACE, "pong sent");
                         }
                         ws::Message::Pong(_bytes) => {
-                            tracing::event!(parent: &span, Level::DEBUG, "pong received");
+                            tracing::event!(parent: &span, Level::TRACE, "pong received");
                             self.heartbeat = Instant::now();
                         }
                         _ => unreachable!(),
