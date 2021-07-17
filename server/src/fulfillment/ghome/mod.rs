@@ -9,11 +9,13 @@ use houseflow_types::{
         self, IntentRequest, IntentRequestInput, IntentResponseBody, IntentResponseError,
     },
     token::AccessToken,
-    DeviceStatus,
+    DeviceID, DeviceStatus,
 };
+use tracing::Level;
 
 use crate::Sessions;
 
+#[tracing::instrument(skip(http_request, config, db, sessions), fields(request = ?request))]
 pub async fn on_webhook(
     Json(request): Json<IntentRequest>,
     http_request: HttpRequest,
@@ -24,6 +26,7 @@ pub async fn on_webhook(
     let access_token =
         AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     let input = request.inputs.first().unwrap();
+    tracing::event!(Level::INFO, "{} intent received", input);
 
     let body: Result<IntentResponseBody, IntentResponseError> = match input {
         IntentRequestInput::Sync => {
@@ -96,7 +99,7 @@ pub async fn on_webhook(
                     .check_user_device_access(&access_token.sub, &device.id)
                     .map_err(houseflow_db::Error::into_internal_server_error)?
                 {
-                    return Err::<query::response::PayloadDevice, IntentResponseError>(
+                    return Err::<(DeviceID, query::response::PayloadDevice), IntentResponseError>(
                         IntentResponseError::NoDevicePermission,
                     );
                 }
@@ -113,26 +116,37 @@ pub async fn on_webhook(
                             .unwrap()?;
                         let response_frame: houseflow_types::lighthouse::proto::state::Frame =
                             response_frame.into();
-                        Ok(query::response::PayloadDevice {
-                            online: true,
-                            status: ghome::DeviceStatus::Success,
-                            error_code: None,
-                            state: Some(response_frame.state),
-                        })
+                        Ok((
+                            device.id.clone(),
+                            query::response::PayloadDevice {
+                                online: true,
+                                status: ghome::DeviceStatus::Success,
+                                error_code: None,
+                                state: Some(response_frame.state),
+                            },
+                        ))
                     }
-                    None => Ok(query::response::PayloadDevice {
-                        online: false,
-                        status: ghome::DeviceStatus::Offline,
-                        error_code: None,
-                        state: None,
-                    }),
+                    None => Ok((
+                        device.id.clone(),
+                        query::response::PayloadDevice {
+                            online: false,
+                            status: ghome::DeviceStatus::Offline,
+                            error_code: None,
+                            state: None,
+                        },
+                    )),
                 }
             });
             let device_responses = futures::future::try_join_all(device_responses).await?;
+            let mut map = std::collections::HashMap::new();
+            for (device_id, response) in device_responses {
+                map.insert(device_id, response);
+            }
+
             let payload = query::response::Payload {
                 error_code: None,
                 debug_string: None,
-                devices: device_responses,
+                devices: map,
             };
 
             Ok(IntentResponseBody::Query {
