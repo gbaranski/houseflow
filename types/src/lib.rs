@@ -75,6 +75,7 @@ impl std::fmt::Display for ValidationError {
 #[cfg(feature = "validator")]
 impl std::error::Error for ValidationError {}
 
+#[cfg(feature = "token")]
 pub mod serde_token_expiration {
     use chrono::Duration;
     use serde::{
