@@ -1064,7 +1064,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-actix-web",
- "tracing-subscriber",
  "url",
  "validator",
 ]

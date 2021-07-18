@@ -21,13 +21,15 @@ houseflow-types = { path="../types", version="0.1.1", features=[
     "lighthouse",
     "admin",
 ] }
-houseflow-config = { path="../config", version="0.1.1", features=["server"] }
+houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
 
 actix = "0.12.0"
 actix-rt = "2.2.0"
-actix-web = "4.0.0-beta.8"
+actix-web = { version = "4.0.0-beta.8", features = ["rustls"]}
 actix-web-actors = "4.0.0-beta.6"
 actix-service = "2.0.0"
+rustls = "0.19.1"
+
 tokio = { version="1.5", features=["sync"] }
 
 validator = "0.13.0"
@@ -48,14 +50,4 @@ chrono = "0.4.19"
 sled = "0.34.6"
 tracing = "0.1.26"
 
-[[example]]
-name = "run-server"
-
-[dev-dependencies]
-futures = "0.3.15"
-houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
-tokio = { version="1.5", features=["sync", "macros", "rt-multi-thread"] }
-tracing-subscriber = "0.2.19"
-actix-web = { version = "4.0.0-beta.8", features = ["rustls"]}
-rustls = "0.19.1"
 tracing-actix-web = "0.4.0-beta.9"
