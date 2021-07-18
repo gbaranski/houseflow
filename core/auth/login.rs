@@ -1,56 +1,30 @@
-use crate::{ClientCommandState, Command, Tokens};
+use crate::{CommandContext, Tokens};
 use async_trait::async_trait;
 
-use clap::Clap;
-
-#[derive(Clap)]
-pub struct LoginCommand {
-    /// Email used to log in, if not defined it will ask at runtime
-    pub email: Option<String>,
-
-    /// Password used to log in, if not defined it will ask at runtime
-    pub password: Option<String>,
+pub struct Command {
+    pub email: String,
+    pub password: String,
 }
 
-#[async_trait(?Send)]
-impl Command<ClientCommandState> for LoginCommand {
-    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
+#[async_trait]
+impl crate::Command for Command {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
         use houseflow_types::auth::login;
 
-        use dialoguer::{Input, Password};
-
-        let theme = crate::cli::get_dialoguer_theme();
-        let email = match self.email {
-            Some(ref email) => email.clone(),
-            None => Input::with_theme(&theme)
-                .with_prompt("Email")
-                .interact_text()?,
-        };
-
-        let password = match self.password {
-            Some(ref password) => password.clone(),
-            None => Password::with_theme(&theme)
-                .with_prompt("Password")
-                .interact()?,
-        };
-
         let login_request = login::Request {
-            email,
-            password,
+            email: self.email,
+            password: self.password,
         };
 
-        let login_response = state
-            .houseflow_api
-            .login(&login_request)
-            .await??;
+        let login_response = ctx.houseflow_api.login(&login_request).await??;
 
         tracing::info!("✔ Logged in as {}", login_request.email);
         let tokens = Tokens {
             refresh: login_response.refresh_token,
             access: login_response.access_token,
         };
-        state.tokens.save(&tokens).await?;
-        tracing::debug!("Saved refresh token at {:#?}", state.tokens.path);
+        ctx.tokens.save(&tokens).await?;
+        tracing::debug!("Saved refresh token at {:#?}", ctx.tokens.path);
 
         Ok(())
     }

@@ -9,21 +9,11 @@ pub mod device;
 #[cfg(any(test, feature = "client"))]
 pub mod client;
 
-pub struct Config {
-    #[cfg(feature = "server")]
-    pub server: server::Config,
-
-    #[cfg(feature = "client")]
-    pub client: client::Config,
-
-    #[cfg(feature = "device")]
-    pub device: device::Config,
-}
-
 #[cfg(feature = "fs")]
 pub async fn read_file<T: serde::de::DeserializeOwned>(
-    path: std::path::PathBuf,
+    path: impl AsRef<std::path::Path>,
 ) -> Result<T, std::io::Error> {
+    let path = path.as_ref();
     if !path.exists() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,

@@ -5,10 +5,7 @@ use session::Session;
 
 mod session;
 
-pub async fn run(
-    cfg: Config,
-    device: impl Device,
-) -> anyhow::Result<()> {
+pub async fn run(cfg: Config, device: impl Device) -> anyhow::Result<()> {
     let session = Session::new(cfg);
     session.run(device).await?;
 

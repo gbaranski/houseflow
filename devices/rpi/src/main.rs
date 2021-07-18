@@ -1,11 +1,11 @@
 // use houseflow_config::device::Config;
 // use houseflow_device::devices::light::{Device, State};
 // use houseflow_types::DeviceStatus;
-// 
+//
 // fn on_off_hook(state: &mut State, on: bool) -> DeviceStatus {
 //     tracing::info!("Changing `on` to {0}", on);
 //     state.on = on;
-// 
+//
 //     DeviceStatus::Success
 // }
 

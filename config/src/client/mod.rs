@@ -19,7 +19,8 @@ impl Config {
 
 #[cfg(feature = "fs")]
 impl Config {
-    pub async fn get(path: std::path::PathBuf) -> Result<Self, std::io::Error> {
+    pub async fn get(path: impl AsRef<std::path::Path>) -> Result<Self, std::io::Error> {
+        let path = path.as_ref();
         let config = crate::read_file(path).await?;
         Ok(config)
     }

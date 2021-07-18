@@ -1,27 +1,19 @@
-use crate::{ClientCommandState, Command};
+use crate::CommandContext;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use houseflow_types::{
-    auth::whoami,
-    token::{AccessToken, RefreshToken},
-};
+use houseflow_types::token::{AccessToken, RefreshToken};
 
-use clap::Clap;
-
-#[derive(Clap)]
-pub struct StatusCommand {
-    /// Display the auth token
-    #[clap(long = "--show-token")]
+pub struct Command {
     pub show_token: bool,
 }
 
-impl StatusCommand {
-    async fn logged_in(
-        &self,
-        state: &ClientCommandState,
-        whoami_response: whoami::ResponseBody,
-    ) -> anyhow::Result<()> {
-        let tokens = state.tokens.get().await?;
+#[async_trait]
+impl crate::Command for Command {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+        let access_token = ctx.access_token().await?;
+
+        let response = ctx.houseflow_api.whoami(&access_token).await??;
+        let tokens = ctx.tokens.get().await?;
         let (access_token, refresh_token) = (
             AccessToken::decode_unsafe_novalidate(&tokens.access)?,
             RefreshToken::decode_unsafe_novalidate(&tokens.refresh)?,
@@ -55,9 +47,9 @@ impl StatusCommand {
         };
 
         println!("✔ Logged in");
-        println!("  Username: {}", whoami_response.username);
-        println!("  Email: {}", whoami_response.email);
-        println!("  Keystore: {:#?}", state.tokens.path);
+        println!("  Username: {}", response.username);
+        println!("  Email: {}", response.email);
+        println!("  Keystore: {:#?}", ctx.tokens.path);
         println!(
             "  Access token({}): {}",
             access_token_expiration, access_token
@@ -67,17 +59,6 @@ impl StatusCommand {
             refresh_token_expiration, refresh_token
         );
 
-        Ok(())
-    }
-}
-
-#[async_trait(?Send)]
-impl Command<ClientCommandState> for StatusCommand {
-    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let access_token = state.access_token().await?;
-
-        let response = state.houseflow_api.whoami(&access_token).await??;
-        self.logged_in(&state, response).await?;
         Ok(())
     }
 }

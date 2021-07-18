@@ -1,22 +1,16 @@
-use crate::{ClientCommandState, Command};
+use crate::CommandContext;
 use async_trait::async_trait;
 
-use clap::Clap;
+pub struct Command {}
 
-#[derive(Clap)]
-pub struct LogoutCommand {}
+#[async_trait]
+impl crate::Command for Command {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+        let refresh_token = ctx.refresh_token().await?;
 
-#[async_trait(?Send)]
-impl Command<ClientCommandState> for LogoutCommand {
-    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let refresh_token = state.refresh_token().await?;
+        ctx.houseflow_api.logout(&refresh_token).await??;
 
-        state
-            .houseflow_api
-            .logout(&refresh_token)
-            .await??;
-
-        state.tokens.remove().await?;
+        ctx.tokens.remove().await?;
         tracing::info!("✔ Succesfully logged out");
 
         Ok(())

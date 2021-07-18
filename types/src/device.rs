@@ -69,7 +69,9 @@ pub struct UserStructure {
 use strum::EnumString;
 
 /// Traits defines what functionality device supports
-#[derive(Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, EnumIter, Serialize, Deserialize,
+)]
 #[non_exhaustive]
 pub enum DeviceTrait {
     OnOff,
@@ -83,10 +85,16 @@ impl DeviceTrait {
             Self::OpenClose => vec![DeviceCommand::OpenClose],
         }
     }
+
+    pub fn variants_string() -> Vec<String> {
+        Self::iter().map(|e| e.to_string()).collect()
+    }
 }
 
 /// Type of the device
-#[derive(Debug, Clone, PartialEq, Eq, strum::Display, EnumString, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, strum::Display, EnumString, EnumIter, Serialize, Deserialize,
+)]
 #[non_exhaustive]
 pub enum DeviceType {
     Gate,
@@ -101,6 +109,10 @@ impl DeviceType {
             Self::Garage => vec![DeviceTrait::OpenClose],
             Self::Light => vec![DeviceTrait::OnOff],
         }
+    }
+
+    pub fn variants_string() -> Vec<String> {
+        Self::iter().map(|e| e.to_string()).collect()
     }
 }
 

@@ -1,24 +1,21 @@
-use crate::{ClientCommandState, Command, Tokens};
+use crate::{CommandContext, Tokens};
 use async_trait::async_trait;
 
-use clap::Clap;
+pub struct Command {}
 
-#[derive(Clap)]
-pub struct RefreshCommand {}
-
-#[async_trait(?Send)]
-impl Command<ClientCommandState> for RefreshCommand {
-    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let tokens = state.tokens.get().await?;
-        let response = state
+#[async_trait]
+impl crate::Command for Command {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+        let tokens = ctx.tokens.get().await?;
+        let response = ctx
             .houseflow_api
-            .refresh_token(&state.refresh_token().await?)
+            .refresh_token(&ctx.refresh_token().await?)
             .await??;
         let tokens = Tokens {
             refresh: tokens.refresh,
             access: response.access_token,
         };
-        state.tokens.save(&tokens).await?;
+        ctx.tokens.save(&tokens).await?;
         tracing::info!("✔ Succesfully refreshed token and saved to keystore");
 
         Ok(())

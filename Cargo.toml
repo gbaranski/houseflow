@@ -27,25 +27,13 @@ members = [
 
 
 [dependencies]
-houseflow-server = { version="0.1.2", path="server", optional=true }
-houseflow-db = { version="0.1.1", path="db/", optional=true }
-actix-web = { version="4.0.0-beta.8", optional=true }
+houseflow-api = { version="0.1.1", path="api", features=["auth", "fulfillment", "admin"] }
+houseflow-config = { version="0.1.1", path="config", features=["client", "fs"] }
+houseflow-types = { version="0.1.1", path="types", features=["token"] }
 
-houseflow-api = { version="0.1.1", path="api", features=["auth", "fulfillment", "admin"], optional=true }
-szafka = { version="0.2.0", optional=true }
-dialoguer = { version="0.8.0", optional=true }
-
-houseflow-device = { version="0.1.0", path="devices/virtual", optional=true }
-
-houseflow-config = { version="0.1.1", path="config", features=[
-  "server",
-  "device",
-  "client",
-  "fs",
-] }
-houseflow-types = { version="0.1.1", path="types/", features=["token"] }
-
+szafka = { version="0.2.0" }
 tokio = { version="1.6.1", features=["sync", "rt-multi-thread", "macros", "fs"] }
+dialoguer = { version="0.8.0" }
 url = { version="2.2.2", features=["serde"] }
 strum = { version="0.21.0", features=["derive"] }
 actix-rt = "2.2.0"
@@ -54,23 +42,18 @@ xdg = "2.2.0"
 async-trait = "0.1.50"
 serde = "1.0"
 toml = "0.5.8"
-clap = "3.0.0-beta.2"
-clap_generate = "3.0.0-beta.2"
+clap = "2.33.3"
+# clap_generate = "3.0.0-beta.2"
 futures = "0.3.15"
 rand = "0.8.3"
 hex = "0.4.3"
 serde_json = "1.0.64"
-semver = { version = "1.0.3", optional = true }
+semver = { version = "1.0.3" }
 chrono = "0.4.19"
 tracing = "0.1.26"
 tracing-subscriber = "0.2.19"
 ron = "0.6.4"
+Inflector = "0.11.4"
 
 [dev-dependencies]
 cargo-husky = { version = "1", default-features = false, features = ["prepush-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt", "run-for-all" ] }
-
-[features]
-default = ["server", "client", "device"]
-server = ["houseflow-server", "houseflow-db", "actix-web"]
-client = ["houseflow-api", "szafka", "dialoguer", "semver"]
-device = ["houseflow-device"]
