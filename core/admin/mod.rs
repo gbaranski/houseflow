@@ -19,7 +19,8 @@ macro_rules! add_command {
                         let access_token = ctx.access_token().await?;
                         let response =
                             $add_method(&ctx.houseflow_api, &access_token, &self).await??;
-                        $callback(response);
+
+                        ($callback)(response);
 
                         Ok(())
                     }
