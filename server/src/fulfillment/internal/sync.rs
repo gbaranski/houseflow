@@ -109,6 +109,17 @@ mod tests {
             devices.clone().sort_by(|a, b| a.id.cmp(&b.id));
             devices
         };
-        assert_eq!(sort_devices(response.devices), sort_devices(devices_allow));
+        assert_eq!(
+            sort_devices(response.devices),
+            sort_devices(
+                devices_allow
+                    .into_iter()
+                    .map(|device| Device {
+                        password_hash: None,
+                        ..device
+                    })
+                    .collect()
+            )
+        );
     }
 }
