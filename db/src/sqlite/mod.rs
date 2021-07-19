@@ -445,7 +445,7 @@ mod tests {
                 id: random(),
                 name: "SomeRoom".to_string(),
                 room_id: room_id.clone(),
-                password_hash: "SomePasswordHash".to_string(),
+                password_hash: Some("SomePasswordHash".to_string()),
                 device_type: DeviceType::Garage,
                 traits: vec![DeviceTrait::OnOff, DeviceTrait::OpenClose],
                 will_push_state: true,
