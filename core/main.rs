@@ -34,7 +34,7 @@ pub(crate) fn dialoguer_theme() -> impl dialoguer::theme::Theme {
 
 #[async_trait]
 pub trait Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()>;
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()>;
 }
 
 use houseflow_config::client::Config;
@@ -259,108 +259,10 @@ async fn main_async() -> anyhow::Result<()> {
         .subcommand(fulfillment_command)
         .get_matches();
 
-    fn unwrap_subcommand<'a>(
-        (name, matches): (&'a str, Option<&'a clap::ArgMatches>),
-    ) -> (&'a str, &'a clap::ArgMatches<'a>) {
-        (name, matches.unwrap())
-    }
-
-    fn get_input(prompt: impl Into<String>) -> String {
-        dialoguer::Input::with_theme(&dialoguer_theme())
-            .with_prompt(prompt)
-            .interact_text()
-            .unwrap()
-    }
-
-    fn get_inputs_with_variants(prompt: impl Into<String>, variants: &[&str]) -> Vec<String> {
-        let prompt: String = prompt.into();
-        std::iter::repeat_with(|| {
-            dialoguer::Input::<String>::with_theme(&dialoguer_theme())
-                .with_prompt(prompt.clone() + " (press ENTER to skip)")
-                .allow_empty(true)
-                .validate_with(|input: &String| {
-                    if variants.contains(&input.as_str()) {
-                        Ok(())
-                    } else {
-                        Err("Matching variant not found")
-                    }
-                })
-                .interact_text()
-                .unwrap()
-        })
-        .take_while(|s| s.trim() != "")
-        .collect()
-    }
-
-    fn get_input_with_variants(prompt: impl Into<String>, variants: &[&str]) -> String {
-        dialoguer::Input::with_theme(&dialoguer_theme())
-            .with_prompt(prompt)
-            .validate_with(|input: &String| {
-                if variants.contains(&input.as_str()) {
-                    Ok(())
-                } else {
-                    Err("Matching variant not found")
-                }
-            })
-            .interact_text()
-            .unwrap()
-    }
-
-    fn get_password(prompt: impl Into<String>) -> String {
-        dialoguer::Password::with_theme(&dialoguer_theme())
-            .with_prompt(prompt)
-            .interact()
-            .unwrap()
-    }
-
     let subcommand = unwrap_subcommand(matches.subcommand());
+
     let config_path = Path::new(matches.value_of("config").unwrap());
-    let ctx = CommandContext::new(config_path).await?;
-
-    fn get_value<T, TE, AF>(
-        matches: &clap::ArgMatches,
-        alt: AF,
-        name: &'static str,
-    ) -> anyhow::Result<T>
-    where
-        AF: FnOnce(String) -> String,
-        T: FromStr<Err = TE>,
-        TE: Into<anyhow::Error>,
-    {
-        use inflector::Inflector;
-        let str = matches
-            .value_of(name)
-            .map(std::string::ToString::to_string)
-            .unwrap_or_else(|| alt(name.to_title_case()));
-
-        T::from_str(&str)
-            .map_err(|err| -> anyhow::Error { err.into() })
-            .with_context(|| name.to_title_case())
-    }
-
-    fn get_values<T, TE, AF>(
-        matches: &clap::ArgMatches,
-        alt: AF,
-        name: &'static str,
-    ) -> anyhow::Result<Vec<T>>
-    where
-        AF: FnOnce(String) -> Vec<String>,
-        T: FromStr<Err = TE>,
-        TE: Into<anyhow::Error>,
-    {
-        use inflector::Inflector;
-        matches
-            .values_of(name)
-            .map(|e| e.map(std::string::ToString::to_string).collect::<Vec<_>>())
-            .unwrap_or_else(|| alt(name.to_title_case()))
-            .iter()
-            .map(|v| {
-                T::from_str(v)
-                    .map_err(|err| -> anyhow::Error { err.into() })
-                    .with_context(|| name.to_title_case())
-            })
-            .collect::<Result<Vec<_>, _>>()
-    }
+    let ctx = CommandContext::new(config_path.to_path_buf()).await?;
 
     match subcommand {
         ("admin", matches) => match unwrap_subcommand(matches.subcommand()) {
@@ -471,4 +373,103 @@ fn main() -> anyhow::Result<()> {
             .unwrap()
     })
     .block_on(async move { main_async().await })
+}
+
+fn get_value<T, TE, AF>(
+    matches: &clap::ArgMatches,
+    alt: AF,
+    name: &'static str,
+) -> anyhow::Result<T>
+where
+    AF: FnOnce(String) -> String,
+    T: FromStr<Err = TE>,
+    TE: Into<anyhow::Error>,
+{
+    use inflector::Inflector;
+    let str = matches
+        .value_of(name)
+        .map(std::string::ToString::to_string)
+        .unwrap_or_else(|| alt(name.to_title_case()));
+
+    T::from_str(&str)
+        .map_err(|err| -> anyhow::Error { err.into() })
+        .with_context(|| name.to_title_case())
+}
+
+fn get_values<T, TE, AF>(
+    matches: &clap::ArgMatches,
+    alt: AF,
+    name: &'static str,
+) -> anyhow::Result<Vec<T>>
+where
+    AF: FnOnce(String) -> Vec<String>,
+    T: FromStr<Err = TE>,
+    TE: Into<anyhow::Error>,
+{
+    use inflector::Inflector;
+    matches
+        .values_of(name)
+        .map(|e| e.map(std::string::ToString::to_string).collect::<Vec<_>>())
+        .unwrap_or_else(|| alt(name.to_title_case()))
+        .iter()
+        .map(|v| {
+            T::from_str(v)
+                .map_err(|err| -> anyhow::Error { err.into() })
+                .with_context(|| name.to_title_case())
+        })
+        .collect::<Result<Vec<_>, _>>()
+}
+
+fn unwrap_subcommand<'a>(
+    (name, matches): (&'a str, Option<&'a clap::ArgMatches>),
+) -> (&'a str, &'a clap::ArgMatches<'a>) {
+    (name, matches.unwrap())
+}
+
+fn get_input(prompt: impl Into<String>) -> String {
+    dialoguer::Input::with_theme(&dialoguer_theme())
+        .with_prompt(prompt)
+        .interact_text()
+        .unwrap()
+}
+
+fn get_inputs_with_variants(prompt: impl Into<String>, variants: &[&str]) -> Vec<String> {
+    let prompt: String = prompt.into();
+    std::iter::repeat_with(|| {
+        dialoguer::Input::<String>::with_theme(&dialoguer_theme())
+            .with_prompt(prompt.clone() + " (press ENTER to skip)")
+            .allow_empty(true)
+            .validate_with(|input: &String| {
+                if variants.contains(&input.as_str()) {
+                    Ok(())
+                } else {
+                    Err("Matching variant not found")
+                }
+            })
+            .interact_text()
+            .unwrap()
+    })
+    .take_while(|s| s.trim() != "")
+    .collect()
+}
+
+fn get_input_with_variants(prompt: impl Into<String>, variants: &[&str]) -> String {
+    dialoguer::Input::with_theme(&dialoguer_theme())
+        .with_prompt(prompt)
+        .validate_with(|input: &String| {
+            if variants.contains(&input.as_str()) {
+                Ok(())
+            } else {
+                Err("Matching variant not found")
+            }
+        })
+        .interact_text()
+        .unwrap()
+}
+
+fn get_password(prompt: impl Into<String>) -> String {
+    dialoguer::Password::with_theme(&dialoguer_theme())
+        .with_prompt(prompt)
+        .interact()
+        .unwrap()
 }
