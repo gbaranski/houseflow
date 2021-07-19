@@ -6,6 +6,7 @@ use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
     fulfillment::execute::{Request, ResponseBody, ResponseError},
+    lighthouse::DeviceCommunicationError,
     token::AccessToken,
 };
 
@@ -31,16 +32,19 @@ pub async fn on_execute(
 
     tracing::event!(Level::INFO, user_id = %access_token.sub);
 
-    let sessions = sessions.lock().unwrap();
-    let session = sessions
-        .get(&execute_request.device_id)
-        .ok_or(ResponseError::DeviceNotConnected)?;
+    let session = {
+        let sessions = sessions.lock().unwrap();
+        sessions
+            .get(&execute_request.device_id)
+            .ok_or(ResponseError::DeviceNotConnected)?
+            .clone()
+    };
     let response_frame = session
         .send(crate::lighthouse::aliases::ActorExecuteFrame::from(
             execute_request.frame.clone(),
         ))
         .await
-        .unwrap()?;
+        .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))??;
 
     Ok(Json(ResponseBody {
         frame: response_frame.into(),

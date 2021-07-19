@@ -43,7 +43,7 @@ pub struct Session {
     device_id: DeviceID,
     address: SocketAddr,
     heartbeat: Instant,
-    pub execute_channels: HashMap<FrameID, oneshot::Sender<execute_response::Frame>>,
+    pub execute_channels: HashMap<FrameID, oneshot::Sender<Option<execute_response::Frame>>>,
     pub state_channel: broadcast::Sender<state::Frame>,
 }
 
@@ -91,13 +91,13 @@ impl Actor for Session {
         });
     }
     fn stopped(&mut self, _ctx: &mut Self::Context) {
-        tracing::info!("Device {} disconnected.", self.device_id);
         assert!(self
             .sessions
             .lock()
             .unwrap()
             .remove(&self.device_id)
             .is_some());
+        tracing::info!("Device {} disconnected.", self.device_id);
     }
 }
 
@@ -190,7 +190,8 @@ impl Handler<ActorExecuteFrame> for Session {
             let resp = tokio::time::timeout(TIMEOUT, rx)
                 .await
                 .map_err(|_| DeviceCommunicationError::Timeout)?
-                .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
+                .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?
+                .ok_or_else(|| DeviceCommunicationError::InternalError(String::from("device might have crashed when sending request")))?;
 
             let span = tracing::span!(
                 Level::INFO,
@@ -248,7 +249,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
                             self.execute_channels
                                 .remove(&frame.id)
                                 .ok_or(SessionError::ResponseWithoutRequest)?
-                                .send(frame)
+                                .send(Some(frame))
                                 .map_err(|_| SessionError::SendExecuteResponseError)?;
                         }
                         frame => {
