@@ -126,6 +126,12 @@ pub enum DeviceCommand {
     OpenClose,
 }
 
+impl DeviceCommand {
+    pub fn variants_string() -> Vec<String> {
+        Self::iter().map(|e| e.to_string()).collect()
+    }
+}
+
 pub mod commands {
     use serde::{Deserialize, Serialize};
 
