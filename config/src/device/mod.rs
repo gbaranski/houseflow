@@ -37,8 +37,7 @@ impl Config {
 #[cfg(feature = "fs")]
 impl Config {
     pub async fn get(path: std::path::PathBuf) -> Result<Self, std::io::Error> {
-        let config = crate::read_file(path).await?;
-        Ok(config)
+        crate::read_file(path, Self::default_toml).await
     }
 
     pub fn default_path() -> std::path::PathBuf {

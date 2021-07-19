@@ -12,21 +12,25 @@ pub mod client;
 #[cfg(feature = "fs")]
 pub async fn read_file<T: serde::de::DeserializeOwned>(
     path: impl AsRef<std::path::Path>,
+    defaults: impl FnOnce() -> String,
 ) -> Result<T, std::io::Error> {
     let path = path.as_ref();
-    if !path.exists() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            format!(
-                "config file not found at {}",
-                path.to_str().unwrap_or("INVALID_PATH")
-            ),
-        ));
-    }
+    use tokio::io::AsyncWriteExt;
+    let content = if path.exists() {
+        tokio::fs::read_to_string(path).await?
+    } else {
+        let defaults = defaults();
+        if path.parent().is_none() || !path.parent().unwrap().exists() {
+            let mut comps = path.components();
+            comps.next_back();
+            tokio::fs::create_dir_all(comps.as_path()).await?;
+        }
+        let mut file = tokio::fs::File::create(path).await?;
+        file.write_all(defaults.as_bytes()).await?;
+        defaults
+    };
 
-    let content = tokio::fs::read_to_string(path).await?;
-    let content = content.as_str();
-    let config: T = toml::from_str(content)?;
+    let config: T = toml::from_str(&content)?;
 
     Ok(config)
 }
