@@ -1,7 +1,7 @@
 use crate::common::Credential;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use strum::{EnumIter, IntoEnumIterator};
+use strum::{EnumIter, IntoEnumIterator, EnumVariantNames};
 
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
@@ -71,7 +71,7 @@ use strum::EnumString;
 
 /// Traits defines what functionality device supports
 #[derive(
-    Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, EnumIter, Serialize, Deserialize,
+    Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, EnumVariantNames, Serialize, Deserialize,
 )]
 #[non_exhaustive]
 pub enum DeviceTrait {
@@ -86,15 +86,11 @@ impl DeviceTrait {
             Self::OpenClose => vec![DeviceCommand::OpenClose],
         }
     }
-
-    pub fn variants_string() -> Vec<String> {
-        Self::iter().map(|e| e.to_string()).collect()
-    }
 }
 
 /// Type of the device
 #[derive(
-    Debug, Clone, PartialEq, Eq, strum::Display, EnumString, EnumIter, Serialize, Deserialize,
+    Debug, Clone, PartialEq, Eq, strum::Display, EnumString, EnumVariantNames, Serialize, Deserialize,
 )]
 #[non_exhaustive]
 pub enum DeviceType {
@@ -111,25 +107,15 @@ impl DeviceType {
             Self::Light => vec![DeviceTrait::OnOff],
         }
     }
-
-    pub fn variants_string() -> Vec<String> {
-        Self::iter().map(|e| e.to_string()).collect()
-    }
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString, Serialize, Deserialize,
+    Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString, EnumVariantNames, Serialize, Deserialize,
 )]
 #[non_exhaustive]
 pub enum DeviceCommand {
     OnOff,
     OpenClose,
-}
-
-impl DeviceCommand {
-    pub fn variants_string() -> Vec<String> {
-        Self::iter().map(|e| e.to_string()).collect()
-    }
 }
 
 pub mod commands {
