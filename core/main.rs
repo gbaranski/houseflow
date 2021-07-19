@@ -18,6 +18,7 @@ mod context;
 
 mod admin;
 mod auth;
+mod fulfillment;
 
 use anyhow::Context;
 use context::{CommandContext, Tokens};
@@ -53,6 +54,12 @@ async fn main_async() -> anyhow::Result<()> {
 
     let device_trait_variants = houseflow_types::DeviceTrait::variants_string();
     let device_trait_variants = device_trait_variants
+        .iter()
+        .map(|e| e.as_ref())
+        .collect::<Vec<&str>>();
+
+    let device_commands_variants = houseflow_types::DeviceCommand::variants_string();
+    let device_commands_variants = device_commands_variants
         .iter()
         .map(|e| e.as_ref())
         .collect::<Vec<&str>>();
@@ -194,6 +201,48 @@ async fn main_async() -> anyhow::Result<()> {
                 ),
         );
 
+    let fulfillment_command = SubCommand::with_name("fulfillment")
+        .about("Send Sync, Query, Execute intents to fulfillment service")
+        .setting(AppSettings::SubcommandRequiredElseHelp)
+        .subcommand(SubCommand::with_name("sync").about("Sync devices"))
+        .subcommand(
+            SubCommand::with_name("query")
+                .about("Query device state")
+                .arg(
+                    Arg::with_name("device-id")
+                        .help("ID of the device to be queried")
+                        .required(true)
+                        .takes_value(true),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("execute")
+                .about("Execute command on device")
+                .arg(
+                    Arg::with_name("device-id")
+                        .help("ID of the device to be queried")
+                        .required(true)
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("command")
+                        .help("Command to be executed on the device")
+                        .required(true)
+                        .takes_value(true)
+                        .possible_values(&device_commands_variants),
+                )
+                .arg(
+                    Arg::with_name("params")
+                        .help("Parameters of the execute request in JSON format")
+                        .default_value("{}")
+                        .takes_value(true)
+                        .validator(|s| match serde_json::from_str::<serde_json::Value>(&s) {
+                            Ok(_) => Ok(()),
+                            Err(err) => Err(err.to_string()),
+                        }),
+                ),
+        );
+
     let matches = App::new("Houseflow")
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
@@ -207,6 +256,7 @@ async fn main_async() -> anyhow::Result<()> {
         )
         .subcommand(admin_subcommand)
         .subcommand(auth_subcommand)
+        .subcommand(fulfillment_command)
         .get_matches();
 
     fn unwrap_subcommand<'a>(
@@ -383,6 +433,29 @@ async fn main_async() -> anyhow::Result<()> {
             }
             .run(ctx),
             _ => unreachable!(),
+        },
+        ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
+            ("execute", matches) => fulfillment::execute::Command {
+                device_id: get_value(matches, get_input, "device-id")?,
+                command: get_value(
+                    matches,
+                    |s| get_input_with_variants(s, &device_commands_variants),
+                    "command",
+                )?,
+                params: serde_json::from_str(
+                    &matches
+                        .value_of("params")
+                        .map(std::string::ToString::to_string)
+                        .unwrap_or_else(|| get_input("Attributes(in JSON)")),
+                )?,
+            }
+            .run(ctx),
+            ("query", matches) => fulfillment::query::Command {
+                device_id: get_value(matches, get_input, "device-id")?,
+            }
+            .run(ctx),
+            ("sync", _) => fulfillment::sync::Command {}.run(ctx),
+            _ => todo!(),
         },
         _ => unreachable!(),
     }

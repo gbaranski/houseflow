@@ -1,31 +1,20 @@
-use crate::{ClientCommandState, Command};
+use crate::CommandContext;
 use async_trait::async_trait;
 use houseflow_types::{
     fulfillment::execute, lighthouse::proto, DeviceCommand, DeviceID, DeviceStatus,
 };
 
-use clap::Clap;
-
-fn object_from_str(
-    s: &str,
-) -> Result<serde_json::Map<String, serde_json::Value>, serde_json::Error> {
-    serde_json::from_str(s)
-}
-
-#[derive(Clap)]
-pub struct ExecuteCommand {
+pub struct Command {
     pub device_id: DeviceID,
     pub command: DeviceCommand,
-
-    #[clap(default_value = "{}", parse(try_from_str = object_from_str))]
     pub params: serde_json::Map<String, serde_json::Value>,
 }
 
-#[async_trait(?Send)]
-impl Command<ClientCommandState> for ExecuteCommand {
-    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let access_token = state.access_token().await?;
-        let devices = state.devices.get().await?;
+#[async_trait]
+impl crate::Command for Command {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+        let access_token = ctx.access_token().await?;
+        let devices = ctx.devices.get().await?;
         let device = devices
             .iter()
             .find(|device| device.id == self.device_id)
@@ -61,7 +50,7 @@ impl Command<ClientCommandState> for ExecuteCommand {
             device_id: self.device_id.clone(),
             frame: execute_frame,
         };
-        let response = state
+        let response = ctx
             .houseflow_api
             .execute(&access_token, &request)
             .await??;

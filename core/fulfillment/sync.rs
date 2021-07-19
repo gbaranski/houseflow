@@ -1,20 +1,14 @@
-use crate::{ClientCommandState, Command};
+use crate::CommandContext;
 use anyhow::Context;
 use async_trait::async_trait;
 
-use clap::Clap;
+pub struct Command {}
 
-#[derive(Clap)]
-pub struct SyncCommand {}
-
-#[async_trait(?Send)]
-impl Command<ClientCommandState> for SyncCommand {
-    async fn run(self, state: ClientCommandState) -> anyhow::Result<()> {
-        let access_token = state.access_token().await?;
-        let response = state
-            .houseflow_api
-            .sync(&access_token)
-            .await??;
+#[async_trait]
+impl crate::Command for Command {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+        let access_token = ctx.access_token().await?;
+        let response = ctx.houseflow_api.sync(&access_token).await??;
 
         println!("Synced {} devices", response.devices.len());
         response.devices.iter().for_each(|device| {
@@ -24,12 +18,11 @@ impl Command<ClientCommandState> for SyncCommand {
                 device.name
             )
         });
-        state
-            .devices
+        ctx.devices
             .save(&response.devices)
             .await
             .with_context(|| "save devices")?;
-        tracing::debug!("saved devices to {:#?}", state.devices.path);
+        tracing::debug!("saved devices to {:#?}", ctx.devices.path);
 
         Ok(())
     }
