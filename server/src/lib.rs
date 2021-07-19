@@ -191,7 +191,7 @@ mod test_utils {
         Device {
             id: rand::random(),
             room_id: room.id.clone(),
-            password_hash: PASSWORD_HASH.into(),
+            password_hash: Some(PASSWORD_HASH.into()),
             device_type: DeviceType::Gate,
             traits: vec![],
             name: String::from("SuperTestingGate"),

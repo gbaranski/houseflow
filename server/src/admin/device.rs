@@ -29,12 +29,14 @@ pub async fn on_add(
     let device = Device {
         id: rand::random(),
         room_id: request.room_id,
-        password_hash: argon2::hash_encoded(
-            request.password.as_bytes(),
-            &crate::get_password_salt(),
-            &argon2::Config::default(),
-        )
-        .unwrap(),
+        password_hash: Some(
+            argon2::hash_encoded(
+                request.password.as_bytes(),
+                &crate::get_password_salt(),
+                &argon2::Config::default(),
+            )
+            .unwrap(),
+        ),
         device_type: request.device_type,
         traits: request.traits,
         name: request.name,

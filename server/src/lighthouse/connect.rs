@@ -53,7 +53,14 @@ pub async fn on_websocket(
         .map_err(|err| ConnectResponseError::InternalError(err.to_string()))?
         .ok_or(ConnectResponseError::InvalidCredentials)?;
 
-    if !argon2::verify_encoded(&device.password_hash, device_password.as_bytes()).unwrap() {
+    if !argon2::verify_encoded(
+        &device
+            .password_hash
+            .expect("missing password hash in device from database"),
+        device_password.as_bytes(),
+    )
+    .unwrap()
+    {
         return Err(ConnectResponseError::InvalidCredentials);
     }
 

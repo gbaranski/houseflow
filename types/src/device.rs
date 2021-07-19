@@ -15,7 +15,8 @@ pub struct Device {
     pub room_id: RoomID,
 
     /// Hashed password for device
-    pub password_hash: String,
+    #[serde(skip)]
+    pub password_hash: Option<String>,
 
     /// Type of the device
     pub device_type: DeviceType,
