@@ -50,7 +50,11 @@ impl tracing_actix_web::RootSpanBuilder for RootSpanBuilder {
 #[actix_web::main]
 async fn main() {
     houseflow_config::init_logging();
-    let config = Config::get(Config::default_path())
+    let config_path = std::env::var("HOUSEFLOW_SERVER_CONFIG")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| Config::default_path());
+
+    let config = Config::get(config_path)
         .await
         .expect("cannot load server config");
     let config = web::Data::new(config);
