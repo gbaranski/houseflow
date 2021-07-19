@@ -4,6 +4,49 @@ use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
 use houseflow_server::{Sessions, SledTokenStore, TokenStore};
 use std::sync::Arc;
 
+pub struct RootSpanBuilder;
+
+impl tracing_actix_web::RootSpanBuilder for RootSpanBuilder {
+    fn on_request_start(request: &actix_web::dev::ServiceRequest) -> tracing::Span {
+        let connection_info = request.connection_info();
+
+        tracing::info_span!(
+            "HttpRequest",
+            method = %request.method(),
+            path = %request.path(),
+            client_address = %connection_info.remote_addr().unwrap_or("unknown"),
+            host = %connection_info.host(),
+        )
+    }
+
+    fn on_request_end<B>(
+        span: tracing::Span,
+        outcome: &Result<actix_web::dev::ServiceResponse<B>, actix_web::Error>,
+    ) {
+        let handle_error = |error: &actix_web::Error| {
+            let response_error = error.as_response_error();
+            span.record(
+                "exception.message",
+                &tracing::field::display(response_error),
+            );
+            span.record("exception.details", &tracing::field::debug(response_error));
+            let status_code = response_error.status_code();
+            span.record("http.status_code", &status_code.as_u16());
+        };
+
+        match &outcome {
+            Ok(response) => {
+                if let Some(error) = response.response().error() {
+                    handle_error(error);
+                } else {
+                    span.record("status_code", &response.response().status().as_u16());
+                }
+            }
+            Err(error) => handle_error(error),
+        };
+    }
+}
+
 #[actix_web::main]
 async fn main() {
     houseflow_config::init_logging();
@@ -20,7 +63,7 @@ async fn main() {
     let config_cloned = config.clone();
     let server = HttpServer::new(move || {
         actix_web::App::new()
-            .wrap(tracing_actix_web::TracingLogger::default())
+            .wrap(tracing_actix_web::TracingLogger::<RootSpanBuilder>::new())
             .configure(|cfg| {
                 houseflow_server::configure(
                     cfg,
