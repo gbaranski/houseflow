@@ -7,10 +7,13 @@ use houseflow_db::Database;
 use houseflow_types::{
     fulfillment::sync::{Request, ResponseBody, ResponseError},
     token::AccessToken,
+    Device,
 };
+use tracing::Level;
 
+#[tracing::instrument(skip(_request, http_request, config, db))]
 pub async fn on_sync(
-    _sync_request: Json<Request>,
+    _request: Json<Request>,
     http_request: HttpRequest,
     config: Data<Config>,
     db: Data<dyn Database>,
@@ -20,7 +23,21 @@ pub async fn on_sync(
 
     let devices = db
         .get_user_devices(&access_token.sub)
-        .map_err(houseflow_db::Error::into_internal_server_error)?;
+        .map_err(houseflow_db::Error::into_internal_server_error)?
+        .into_iter()
+        .map(|device| Device {
+            password_hash: None,
+            ..device
+        })
+        .collect::<Vec<_>>();
+
+    let device_ids = devices
+        .iter()
+        .map(|device| device.id.to_string())
+        .collect::<Vec<_>>();
+
+    tracing::event!(Level::INFO, user_id = %access_token.sub, synced_devices = ?device_ids);
+
     let response = ResponseBody { devices };
 
     Ok(Json(response))

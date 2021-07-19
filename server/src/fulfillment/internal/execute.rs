@@ -10,7 +10,9 @@ use houseflow_types::{
 };
 
 use crate::Sessions;
+use tracing::Level;
 
+#[tracing::instrument(skip(http_request, config, db, sessions))]
 pub async fn on_execute(
     execute_request: Json<Request>,
     http_request: HttpRequest,
@@ -26,6 +28,8 @@ pub async fn on_execute(
     {
         return Err(ResponseError::NoDevicePermission);
     }
+
+    tracing::event!(Level::INFO, user_id = %access_token.sub);
 
     let sessions = sessions.lock().unwrap();
     let session = sessions
