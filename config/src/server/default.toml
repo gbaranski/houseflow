@@ -19,7 +19,7 @@ authorization_code_key = "{}"
 
 # Optional. Uncomment and adjust to enable TLS support
 # [tls]
-# certificate_path = "/etc/letsencrypt/live/example.com/cert.pem"
+# certificate_path = "/etc/letsencrypt/live/example.com/fullchain.pem"
 # private_key_path = "/etc/letsencrypt/live/example.com/privkey.pem"
 
 # Optional. Uncomment and adjust to enable Google Home support
