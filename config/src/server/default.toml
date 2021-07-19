@@ -1,10 +1,31 @@
 # Houseflow server configuration
+# Some values like secrets are randomly generated at runtime, just to save you some time generating them
 
 # Change to "0.0.0.0" to allow clients from outside network to connect
 # hostname = "{}"
+
+# Path to the SQLite3 database
+# database_path = "{}"
+
+# Path to the Token store
+# tokens_path = "{}"
 
 # Randomly generated secrets, keep them safe, don't share with anyone
 [secrets]
 refresh_key = "{}"
 access_key = "{}"
 authorization_code_key = "{}"
+
+
+# Optional. Uncomment and adjust to enable TLS support
+# [tls]
+# certificate_path = "/etc/letsencrypt/live/example.com/cert.pem"
+# private_key_path = "/etc/letsencrypt/live/example.com/privkey.pem"
+
+# Optional. Uncomment and adjust to enable Google Home support
+# Must match with ClientID in Actions console -> Account Linking
+client_id = "{}"
+client_secret = "{}"
+
+# ProjectID used when creating project on Google Cloud
+project_id = "your-project-id"

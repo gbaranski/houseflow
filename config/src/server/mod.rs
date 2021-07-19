@@ -18,11 +18,11 @@ pub struct Config {
     #[serde(default = "defaults::token_store_path")]
     pub tokens_path: std::path::PathBuf,
 
-    /// Path to the TLS configuration
-    pub tls: Option<tls::Config>,
-
     /// Secret data
     pub secrets: Secrets,
+
+    /// Path to the TLS configuration
+    pub tls: Option<tls::Config>,
 
     /// Configuration of the Google 3rd party service
     pub google: Option<google::Config>,
@@ -37,10 +37,14 @@ impl Config {
 
         format!(
             include_str!("default.toml"),
-            defaults::server_port(),
             defaults::server_hostname(),
-            rand.next().unwrap(),
-            rand.next().unwrap(),
+            defaults::database_path().to_str().unwrap(),
+            defaults::token_store_path().to_str().unwrap(),
+            rand.next().unwrap(), // refresh key
+            rand.next().unwrap(), // access key
+            rand.next().unwrap(), // authorization code key
+            rand.next().unwrap(), // google client id
+            rand.next().unwrap(), // google client secret
         )
     }
 }
