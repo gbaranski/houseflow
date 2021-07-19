@@ -77,9 +77,9 @@ void LighthouseClient::onExecute(
     Serial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
                   OPEN_CLOSE_TOGGLE_DURATION);
 
-    digitalWrite(OPEN_CLOSE_PIN, HIGH);
+    digitalWrite(OPEN_CLOSE_PIN, LOW);
     auto gpioTask =
-        GpioTask(millis() + OPEN_CLOSE_TOGGLE_DURATION, OPEN_CLOSE_PIN, LOW);
+        GpioTask(millis() + OPEN_CLOSE_TOGGLE_DURATION, OPEN_CLOSE_PIN, HIGH);
     gpioQueue.push_back(gpioTask);
 
     responseDoc["status"] = "Success";

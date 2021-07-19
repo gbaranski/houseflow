@@ -53,6 +53,7 @@ void setupGPIO() {
 #endif
 #ifdef OPEN_CLOSE
   pinMode(OPEN_CLOSE_PIN, OUTPUT);
+  digitalWrite(OPEN_CLOSE_PIN, HIGH);
 #endif
 }
 
