@@ -12,7 +12,7 @@ pub struct Command {
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         let access_token = ctx.access_token().await?;
         let devices = ctx.devices.get().await?;
         let device = devices
@@ -50,7 +50,7 @@ impl crate::Command for Command {
             device_id: self.device_id.clone(),
             frame: execute_frame,
         };
-        let response = ctx.houseflow_api.execute(&access_token, &request).await??;
+        let response = ctx.houseflow_api().await?.execute(&access_token, &request).await??;
         match response.frame.status {
             DeviceStatus::Success => println!("✔ Device responded with success!"),
             DeviceStatus::Error(err) => println!("❌ Device responded with error! Error: {}", err,),

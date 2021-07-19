@@ -5,11 +5,12 @@ pub struct Command {}
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         let tokens = ctx.tokens.get().await?;
+        let refresh_token = ctx.refresh_token().await?;
         let response = ctx
-            .houseflow_api
-            .refresh_token(&ctx.refresh_token().await?)
+            .houseflow_api().await?
+            .refresh_token(&refresh_token)
             .await??;
         let tokens = Tokens {
             refresh: tokens.refresh,

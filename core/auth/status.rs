@@ -9,10 +9,10 @@ pub struct Command {
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         let access_token = ctx.access_token().await?;
 
-        let response = ctx.houseflow_api.whoami(&access_token).await??;
+        let response = ctx.houseflow_api().await?.whoami(&access_token).await??;
         let tokens = ctx.tokens.get().await?;
         let (access_token, refresh_token) = (
             AccessToken::decode_unsafe_novalidate(&tokens.access)?,

@@ -14,7 +14,7 @@ pub struct Command {
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         use dialoguer::{Input, Password};
         use houseflow_types::auth::register;
 
@@ -46,7 +46,7 @@ impl crate::Command for Command {
             password,
         };
 
-        ctx.houseflow_api.register(&register_request).await??;
+        ctx.houseflow_api().await?.register(&register_request).await??;
         tracing::info!("✔ Created new account");
 
         Ok(())

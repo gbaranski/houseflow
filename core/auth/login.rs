@@ -8,7 +8,7 @@ pub struct Command {
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         use houseflow_types::auth::login;
 
         let login_request = login::Request {
@@ -16,7 +16,7 @@ impl crate::Command for Command {
             password: self.password,
         };
 
-        let login_response = ctx.houseflow_api.login(&login_request).await??;
+        let login_response = ctx.houseflow_api().await?.login(&login_request).await??;
 
         tracing::info!("✔ Logged in as {}", login_request.email);
         let tokens = Tokens {

@@ -6,9 +6,9 @@ pub struct Command {}
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         let access_token = ctx.access_token().await?;
-        let response = ctx.houseflow_api.sync(&access_token).await??;
+        let response = ctx.houseflow_api().await?.sync(&access_token).await??;
 
         println!("Synced {} devices", response.devices.len());
         response.devices.iter().for_each(|device| {
