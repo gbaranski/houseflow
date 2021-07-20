@@ -171,7 +171,8 @@ pub fn app(default_config_path: &str) -> clap::App<'_, '_> {
                 )
                 .arg(
                     Arg::with_name("command")
-                        .help("Command to be executed on the device")
+                        .help("Name of command to be executed on the device")
+                        .long("command")
                         .required(true)
                         .takes_value(true)
                         .possible_values(DeviceCommand::VARIANTS),
@@ -179,6 +180,7 @@ pub fn app(default_config_path: &str) -> clap::App<'_, '_> {
                 .arg(
                     Arg::with_name("params")
                         .help("Parameters of the execute request in JSON format")
+                        .long("params")
                         .default_value("{}")
                         .takes_value(true)
                         .validator(|s| match serde_json::from_str::<serde_json::Value>(&s) {
