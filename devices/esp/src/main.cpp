@@ -3,21 +3,25 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
 #include <Hash.h>
 #include <WebSocketsClient.h>
 
 static LighthouseClient lighthouseClient;
 
 void setupWifi() {
-  ESP8266WiFiMulti WiFiMulti;
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  WiFiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
-  Serial.printf("Starting WiFi with SSID: %s\n", WIFI_SSID);
-  while (WiFiMulti.run() != WL_CONNECTED) {
-    Serial.println("Waiting for WiFi to connect");
-    delay(100);
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+    delay(1000);
+    Serial.print(++i);
+    Serial.print(' ');
   }
+  Serial.println('\n');
+  Serial.println("Connection established!");
+  Serial.print("IP address:\t");
+  Serial.println(
+      WiFi.localIP()); // Send the IP address of the ESP8266 to the computer
 }
 
 void setupSerial() {
