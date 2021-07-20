@@ -18,8 +18,7 @@ macro_rules! add_command {
                     async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
                         let access_token = ctx.access_token().await?;
                         let response =
-                            $add_method(ctx.houseflow_api().await?, &access_token, &self)
-                                .await??;
+                            $add_method(ctx.houseflow_api().await?, &access_token, &self).await??;
 
                         ($callback)(response);
 

@@ -25,7 +25,11 @@ impl crate::Command for Command {
             device_id: self.device_id.clone(),
             frame: query_frame,
         };
-        let response = ctx.houseflow_api().await?.query(&access_token, &request).await??;
+        let response = ctx
+            .houseflow_api()
+            .await?
+            .query(&access_token, &request)
+            .await??;
 
         println!("Device responded with state: {:#?}", response.frame.state);
 

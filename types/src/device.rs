@@ -1,7 +1,7 @@
 use crate::common::Credential;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use strum::{EnumIter, IntoEnumIterator, EnumVariantNames};
+use strum::{EnumIter, EnumVariantNames, IntoEnumIterator};
 
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
@@ -71,7 +71,16 @@ use strum::EnumString;
 
 /// Traits defines what functionality device supports
 #[derive(
-    Debug, Clone, Hash, Eq, PartialEq, strum::Display, EnumString, EnumVariantNames, Serialize, Deserialize,
+    Debug,
+    Clone,
+    Hash,
+    Eq,
+    PartialEq,
+    strum::Display,
+    EnumString,
+    EnumVariantNames,
+    Serialize,
+    Deserialize,
 )]
 #[non_exhaustive]
 pub enum DeviceTrait {
@@ -90,7 +99,15 @@ impl DeviceTrait {
 
 /// Type of the device
 #[derive(
-    Debug, Clone, PartialEq, Eq, strum::Display, EnumString, EnumVariantNames, Serialize, Deserialize,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    strum::Display,
+    EnumString,
+    EnumVariantNames,
+    Serialize,
+    Deserialize,
 )]
 #[non_exhaustive]
 pub enum DeviceType {
@@ -110,7 +127,16 @@ impl DeviceType {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, EnumIter, strum::Display, EnumString, EnumVariantNames, Serialize, Deserialize,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    EnumIter,
+    strum::Display,
+    EnumString,
+    EnumVariantNames,
+    Serialize,
+    Deserialize,
 )]
 #[non_exhaustive]
 pub enum DeviceCommand {

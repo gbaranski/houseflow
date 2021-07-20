@@ -50,7 +50,11 @@ impl crate::Command for Command {
             device_id: self.device_id.clone(),
             frame: execute_frame,
         };
-        let response = ctx.houseflow_api().await?.execute(&access_token, &request).await??;
+        let response = ctx
+            .houseflow_api()
+            .await?
+            .execute(&access_token, &request)
+            .await??;
         match response.frame.status {
             DeviceStatus::Success => println!("✔ Device responded with success!"),
             DeviceStatus::Error(err) => println!("❌ Device responded with error! Error: {}", err,),

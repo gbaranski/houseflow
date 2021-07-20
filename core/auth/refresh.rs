@@ -9,7 +9,8 @@ impl crate::Command for Command {
         let tokens = ctx.tokens.get().await?;
         let refresh_token = ctx.refresh_token().await?;
         let response = ctx
-            .houseflow_api().await?
+            .houseflow_api()
+            .await?
             .refresh_token(&refresh_token)
             .await??;
         let tokens = Tokens {
