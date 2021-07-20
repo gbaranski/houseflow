@@ -44,7 +44,7 @@ impl crate::Command for Command {
         let execute_frame = proto::execute::Frame {
             id: rand::random(),
             command: self.command.clone(),
-            params: self.params.clone(),
+            params: self.params,
         };
         let request = execute::Request {
             device_id: self.device_id.clone(),

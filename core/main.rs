@@ -96,7 +96,7 @@ async fn main_async() -> anyhow::Result<()> {
                             &matches
                                 .value_of("attributes")
                                 .map(std::string::ToString::to_string)
-                                .unwrap_or_else(|| get_input("Attributes(in JSON)")),
+                                .unwrap(),
                         )?,
                     }
                     .run(ctx)
@@ -160,7 +160,7 @@ async fn main_async() -> anyhow::Result<()> {
                         &matches
                             .value_of("params")
                             .map(std::string::ToString::to_string)
-                            .unwrap_or_else(|| get_input("Attributes(in JSON)")),
+                            .unwrap(),
                     )?,
                 }
                 .run(ctx)
