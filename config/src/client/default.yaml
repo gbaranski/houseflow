@@ -1,0 +1,6 @@
+# Houseflow client configuration
+
+server:
+  hostname: {}
+  use_tls: {}
+

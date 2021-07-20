@@ -37,7 +37,7 @@ pub trait Command {
     async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()>;
 }
 
-use houseflow_config::client::Config;
+use houseflow_config::{client::Config, Config as _};
 use std::path::Path;
 
 async fn main_async() -> anyhow::Result<()> {

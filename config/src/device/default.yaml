@@ -1,0 +1,18 @@
+# Houseflow device configuration
+# Some values like secrets were randomly generated, just to save you some time generating them
+
+server:
+  hostname: {}
+  use_tls: {}
+
+# ID and Password(in plain-text) of your device, must match with the entry in database
+# light:
+#   credentials:
+#     device_id: {}
+#     device_password: {}
+# 
+# gate:
+#   credentials:
+#     device_id: {}
+#     device_password: {}
+# 

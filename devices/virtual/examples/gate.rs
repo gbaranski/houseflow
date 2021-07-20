@@ -1,5 +1,8 @@
 use async_trait::async_trait;
-use houseflow_config::device::Config;
+use houseflow_config::{
+    device::{Config, Gate},
+    Config as _,
+};
 use houseflow_types::DeviceStatus;
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +14,7 @@ struct State {
 
 struct Device {
     state: State,
+    config: Gate,
 }
 
 #[async_trait]
@@ -20,6 +24,10 @@ impl houseflow_device::Device for Device {
             .as_object()
             .unwrap()
             .to_owned())
+    }
+
+    fn credentials(&self) -> &houseflow_config::device::Credentials {
+        &self.config.credentials
     }
 
     async fn open_close(&mut self, open_percent: u8) -> anyhow::Result<DeviceStatus> {
@@ -33,11 +41,11 @@ impl houseflow_device::Device for Device {
 #[tokio::main]
 async fn main() {
     houseflow_config::init_logging();
-    let config = Config::get(Config::default_path())
-        .await
-        .expect("cannot load device config");
+    let config = Config::read(Config::default_path()).expect("cannot load device config");
+    let device_config = config.gate.expect("gate is not configured");
     let device = Device {
         state: State { open_percent: 0 },
+        config: device_config,
     };
-    houseflow_device::run(config, device).await.unwrap();
+    houseflow_device::run(config.server, device).await.unwrap();
 }

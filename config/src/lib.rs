@@ -9,28 +9,50 @@ pub mod device;
 #[cfg(any(test, feature = "client"))]
 pub mod client;
 
+pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
+    #[cfg(feature = "fs")]
+    fn read(path: impl AsRef<std::path::Path>) -> Result<Self, ReadFileError> {
+        read_file(path, Self::default_yaml)
+    }
+
+    fn default_path() -> std::path::PathBuf;
+
+    fn default_yaml() -> String;
+}
+
 #[cfg(feature = "fs")]
-pub async fn read_file<T: serde::de::DeserializeOwned>(
+#[derive(Debug, thiserror::Error)]
+pub enum ReadFileError {
+    #[error("io error: {0}")]
+    IOError(#[from] std::io::Error),
+
+    #[error("yaml error: {0}")]
+    YamlError(#[from] serde_yaml::Error),
+}
+
+#[cfg(feature = "fs")]
+pub fn read_file<T: serde::de::DeserializeOwned>(
     path: impl AsRef<std::path::Path>,
     defaults: impl FnOnce() -> String,
-) -> Result<T, std::io::Error> {
+) -> Result<T, ReadFileError> {
+    use std::io::Write;
+
     let path = path.as_ref();
-    use tokio::io::AsyncWriteExt;
     let content = if path.exists() {
-        tokio::fs::read_to_string(path).await?
+        std::fs::read_to_string(path)?
     } else {
         let defaults = defaults();
         if path.parent().is_none() || !path.parent().unwrap().exists() {
             let mut comps = path.components();
             comps.next_back();
-            tokio::fs::create_dir_all(comps.as_path()).await?;
+            std::fs::create_dir_all(comps.as_path())?;
         }
-        let mut file = tokio::fs::File::create(path).await?;
-        file.write_all(defaults.as_bytes()).await?;
+        let mut file = std::fs::File::create(path)?;
+        file.write_all(defaults.as_bytes())?;
         defaults
     };
 
-    let config: T = toml::from_str(&content)?;
+    let config: T = serde_yaml::from_str(&content)?;
 
     Ok(config)
 }

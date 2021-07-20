@@ -1,5 +1,5 @@
 use actix_web::{web, HttpServer};
-use houseflow_config::server::Config;
+use houseflow_config::{server::Config, Config as _};
 use houseflow_db::{sqlite::Database as SqliteDatabase, Database};
 use houseflow_server::{Sessions, SledTokenStore, TokenStore};
 use std::sync::Arc;
@@ -54,9 +54,7 @@ async fn main() {
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| Config::default_path());
 
-    let config = Config::get(config_path)
-        .await
-        .expect("cannot load server config");
+    let config = Config::read(config_path).expect("cannot load server config");
     let config = web::Data::new(config);
     let token_store = SledTokenStore::new(&config.tokens_path).expect("cannot open token store");
     let token_store = web::Data::from(Arc::new(token_store) as Arc<dyn TokenStore>);

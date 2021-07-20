@@ -1,12 +1,12 @@
 use async_trait::async_trait;
-use houseflow_config::device::Config;
+use houseflow_config::device::{Credentials, Server};
 use houseflow_types::{DeviceError, DeviceStatus};
 use session::Session;
 
 mod session;
 
-pub async fn run(cfg: Config, device: impl Device) -> anyhow::Result<()> {
-    let session = Session::new(cfg);
+pub async fn run(server_config: Server, device: impl Device) -> anyhow::Result<()> {
+    let session = Session::new(server_config);
     session.run(device).await?;
 
     Ok(())
@@ -18,6 +18,7 @@ where
     Self: Send,
 {
     fn state(&self) -> anyhow::Result<serde_json::Map<String, serde_json::Value>>;
+    fn credentials(&self) -> &Credentials;
 
     #[allow(unused_variables)]
     async fn on_off(&mut self, on: bool) -> anyhow::Result<DeviceStatus> {

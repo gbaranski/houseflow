@@ -44,9 +44,9 @@ impl HouseflowAPI {
         use houseflow_config::defaults;
         let base_url = Url::parse(&format!(
             "http{}://{}:{}",
-            if config.use_tls { "s" } else { "" },
-            config.server_hostname,
-            if config.use_tls {
+            if config.server.use_tls { "s" } else { "" },
+            config.server.hostname,
+            if config.server.use_tls {
                 defaults::server_port_tls()
             } else {
                 defaults::server_port()

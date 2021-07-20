@@ -28,15 +28,19 @@ pub struct Config {
     pub google: Option<google::Config>,
 }
 
-impl Config {
-    pub fn default_toml() -> String {
+impl crate::Config for Config {
+    fn default_path() -> std::path::PathBuf {
+        defaults::config_home().join("server.yaml")
+    }
+
+    fn default_yaml() -> String {
         let mut rand = std::iter::repeat_with(|| {
             let random: [u8; 16] = rand::random();
             hex::encode(random)
         });
 
         format!(
-            include_str!("default.toml"),
+            include_str!("default.yaml"),
             defaults::server_hostname(),
             defaults::database_path().to_str().unwrap(),
             defaults::token_store_path().to_str().unwrap(),
@@ -46,17 +50,6 @@ impl Config {
             rand.next().unwrap(), // google client id
             rand.next().unwrap(), // google client secret
         )
-    }
-}
-
-#[cfg(feature = "fs")]
-impl Config {
-    pub async fn get(path: impl AsRef<std::path::Path>) -> Result<Self, std::io::Error> {
-        crate::read_file(path, Self::default_toml).await
-    }
-
-    pub fn default_path() -> std::path::PathBuf {
-        defaults::config_home().join("server.toml")
     }
 }
 
@@ -92,9 +85,9 @@ mod tests {
     use super::Config;
 
     #[test]
-    fn default_toml() {
-        let config = Config::default_toml();
+    fn default_yaml() {
+        let config = <Config as crate::Config>::default_yaml();
         dbg!(&config);
-        let _: Config = toml::from_str(&config).unwrap();
+        let _: Config = serde_yaml::from_str(&config).unwrap();
     }
 }

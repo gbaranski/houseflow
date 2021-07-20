@@ -1,6 +1,6 @@
 use anyhow::Context;
 use houseflow_api::HouseflowAPI;
-use houseflow_config::client::Config;
+use houseflow_config::{client::Config, Config as _};
 use houseflow_types::{
     token::{AccessToken, RefreshToken},
     Device,
@@ -39,9 +39,7 @@ impl CommandContext {
         match self.config {
             Some(ref config) => Ok(config),
             None => {
-                let config = Config::get(&self.config_path)
-                    .await
-                    .context("read configuration")?;
+                let config = Config::read(&self.config_path).context("read configuration")?;
                 tracing::trace!("config loaded: {:#?}", config);
                 self.config = Some(config);
                 Ok(self.config.as_ref().unwrap())

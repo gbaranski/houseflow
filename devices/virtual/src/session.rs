@@ -1,7 +1,7 @@
 use crate::Device;
 use anyhow::anyhow;
 use futures_util::{Sink, SinkExt, StreamExt};
-use houseflow_config::device::Config;
+use houseflow_config::device::Server;
 use houseflow_types::{
     lighthouse::proto::{execute_response, state, Frame},
     DeviceCommand,
@@ -27,13 +27,13 @@ pub type EventReceiver = mpsc::Receiver<Event>;
 
 pub struct Session {
     heartbeat: Mutex<Instant>,
-    config: Config,
+    server_config: Server,
 }
 
 impl Session {
-    pub fn new(config: Config) -> Self {
+    pub fn new(server_config: Server) -> Self {
         Self {
-            config,
+            server_config,
             heartbeat: Mutex::new(Instant::now()),
         }
     }
@@ -43,9 +43,9 @@ impl Session {
 
         let url = format!(
             "ws{}://{}:{}/lighthouse/ws",
-            if self.config.use_tls { "s" } else { "" },
-            self.config.server_hostname,
-            if self.config.use_tls {
+            if self.server_config.use_tls { "s" } else { "" },
+            self.server_config.hostname,
+            if self.server_config.use_tls {
                 defaults::server_port_tls()
             } else {
                 defaults::server_port()
@@ -55,13 +55,14 @@ impl Session {
         let url = Url::parse(&url).unwrap();
 
         tracing::debug!("will use {} as websocket endpoint", url);
+        let credentials = device.credentials();
         let http_request = http::Request::builder()
             .uri(url.to_string())
             .header(
                 http::header::AUTHORIZATION,
                 format!(
                     "Basic {}:{}",
-                    self.config.device_id, self.config.device_password
+                    credentials.device_id, credentials.device_password
                 ),
             )
             .body(())
