@@ -66,11 +66,9 @@ impl Actor for Session {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        tracing::info!(
-            "New device connected from {} as {}.",
-            self.address,
-            self.device_id
-        );
+        let span = tracing::span!(Level::INFO, "Session", address = %self.address, device = %self.device_id);
+        tracing::event!(parent: &span, Level::INFO, "New device connected",);
+
         ctx.run_interval(TIMEOUT, |act, ctx| {
             let span = tracing::span!(
                 Level::TRACE,
@@ -97,7 +95,8 @@ impl Actor for Session {
             .unwrap()
             .remove(&self.device_id)
             .is_some());
-        tracing::info!("Device {} disconnected.", self.device_id);
+        let span = tracing::span!(Level::INFO, "Session", device = %self.device_id);
+        tracing::event!(parent: &span, Level::INFO, "Device disconnected",);
     }
 }
 
