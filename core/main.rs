@@ -1,19 +1,3 @@
-// mod cli;
-// mod config;
-//
-// mod admin;
-// mod auth;
-// mod fulfillment;
-//
-// mod context;
-//
-// use context::CommandContext;
-//
-// use async_trait::async_trait;
-// use cli::{CliConfig, Subcommand};
-//
-//
-
 mod cli;
 mod context;
 
