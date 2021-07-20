@@ -161,7 +161,7 @@ void LighthouseClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {
     Serial.printf("[Lighthouse] received ping\n");
     break;
   case WStype_PONG:
-    Serial.printf("[Lighthouse] received ping\n");
+    Serial.printf("[Lighthouse] received pong\n");
     break;
   case WStype_ERROR:
     Serial.printf("[Lighthouse] received error: %s\n", payload);
