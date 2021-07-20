@@ -8,7 +8,7 @@ pub(crate) fn dialoguer_theme() -> impl dialoguer::theme::Theme {
     }
 }
 
-pub fn app<'a>(default_config_path: &'a str) -> clap::App<'a, 'a> {
+pub fn app(default_config_path: &str) -> clap::App<'_, '_> {
     let admin_subcommand = SubCommand::with_name("admin")
         .about("Administrate the server, works only when user is admin")
         .setting(AppSettings::SubcommandRequiredElseHelp)
