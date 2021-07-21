@@ -47,8 +47,8 @@ void setupOTA() {
     else if (error == OTA_END_ERROR)
       Serial.println("[OTA] End Failed");
   });
-  ArduinoOTA.begin();
   ArduinoOTA.onEnd([]() { Serial.printf("[OTA] End\n"); });
+  ArduinoOTA.begin();
 }
 
 void setupGPIO() {
