@@ -44,6 +44,34 @@ impl Database {
 use rusqlite::{params, OptionalExtension};
 
 impl crate::Database for Database {
+    fn add_user(&self, user: &User) -> Result<(), Error> {
+        const SQL: &str =
+            "INSERT INTO users(id, username, email, password_hash) VALUES(?, ?, ?, ?)";
+        let connection = self.pool.get()?;
+        let n = connection.execute(
+            SQL,
+            params![&user.id, &user.username, &user.email, &user.password_hash],
+        )?;
+
+        match n {
+            0 => Err(Error::NotModified),
+            1 => Ok(()),
+            _ => unreachable!(),
+        }
+    }
+
+    fn add_admin(&self, user_id: &UserID) -> Result<(), Error> {
+        const SQL: &str = "INSERT INTO admins(user_id) VALUES(?)";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![user_id])?;
+
+        match n {
+            0 => Err(Error::NotModified),
+            1 => Ok(()),
+            _ => unreachable!(),
+        }
+    }
+
     fn add_structure(&self, structure: &Structure) -> Result<(), Error> {
         const SQL: &str = "INSERT INTO structures(id,name) VALUES(?, ?)";
         let connection = self.pool.get()?;
@@ -101,34 +129,6 @@ impl crate::Database for Database {
         }
         tx.commit()?;
         Ok(())
-    }
-
-    fn add_user(&self, user: &User) -> Result<(), Error> {
-        const SQL: &str =
-            "INSERT INTO users(id, username, email, password_hash) VALUES(?, ?, ?, ?)";
-        let connection = self.pool.get()?;
-        let n = connection.execute(
-            SQL,
-            params![&user.id, &user.username, &user.email, &user.password_hash],
-        )?;
-
-        match n {
-            0 => Err(Error::NotModified),
-            1 => Ok(()),
-            _ => unreachable!(),
-        }
-    }
-
-    fn add_admin(&self, user_id: &UserID) -> Result<(), Error> {
-        const SQL: &str = "INSERT INTO admins(user_id) VALUES(?)";
-        let connection = self.pool.get()?;
-        let n = connection.execute(SQL, params![user_id])?;
-
-        match n {
-            0 => Err(Error::NotModified),
-            1 => Ok(()),
-            _ => unreachable!(),
-        }
     }
 
     fn add_user_structure(
@@ -193,6 +193,40 @@ impl crate::Database for Database {
         let connection = self.pool.get()?;
         let n = connection.execute(SQL, params![structure_id, user_id])?;
         Ok(n > 0)
+    }
+
+    fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error> {
+        const SQL: &str = "SELECT * FROM users WHERE id = ?";
+        let connection = self.pool.get()?;
+        let user = connection
+            .query_row(SQL, params![user_id], |row| {
+                Ok(User {
+                    id: row.get("id")?,
+                    username: row.get("username")?,
+                    email: row.get("email")?,
+                    password_hash: row.get("password_hash")?,
+                })
+            })
+            .optional()?;
+
+        Ok(user)
+    }
+
+    fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error> {
+        const SQL: &str = "SELECT * FROM users WHERE email = ?";
+        let connection = self.pool.get()?;
+        let user = connection
+            .query_row(SQL, params![email], |row| {
+                Ok(User {
+                    id: row.get("id")?,
+                    username: row.get("username")?,
+                    email: row.get("email")?,
+                    password_hash: row.get("password_hash")?,
+                })
+            })
+            .optional()?;
+
+        Ok(user)
     }
 
     fn get_structure(&self, structure_id: &StructureID) -> Result<Option<Structure>, Error> {
@@ -264,40 +298,6 @@ impl crate::Database for Database {
             .optional()?;
 
         Ok(device)
-    }
-
-    fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error> {
-        const SQL: &str = "SELECT * FROM users WHERE id = ?";
-        let connection = self.pool.get()?;
-        let user = connection
-            .query_row(SQL, params![user_id], |row| {
-                Ok(User {
-                    id: row.get("id")?,
-                    username: row.get("username")?,
-                    email: row.get("email")?,
-                    password_hash: row.get("password_hash")?,
-                })
-            })
-            .optional()?;
-
-        Ok(user)
-    }
-
-    fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error> {
-        const SQL: &str = "SELECT * FROM users WHERE email = ?";
-        let connection = self.pool.get()?;
-        let user = connection
-            .query_row(SQL, params![email], |row| {
-                Ok(User {
-                    id: row.get("id")?,
-                    username: row.get("username")?,
-                    email: row.get("email")?,
-                    password_hash: row.get("password_hash")?,
-                })
-            })
-            .optional()?;
-
-        Ok(user)
     }
 
     fn get_user_devices(&self, user_id: &UserID) -> Result<Vec<Device>, Error> {

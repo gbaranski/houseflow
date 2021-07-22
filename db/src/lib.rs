@@ -31,11 +31,11 @@ use houseflow_types::{
 };
 
 pub trait Database: Send + Sync {
+    fn add_user(&self, user: &User) -> Result<(), Error>;
+    fn add_admin(&self, user_id: &UserID) -> Result<(), Error>;
     fn add_structure(&self, structure: &Structure) -> Result<(), Error>;
     fn add_room(&self, room: &Room) -> Result<(), Error>;
     fn add_device(&self, device: &Device) -> Result<(), Error>;
-    fn add_user(&self, user: &User) -> Result<(), Error>;
-    fn add_admin(&self, user_id: &UserID) -> Result<(), Error>;
     fn add_user_structure(&self, user_structure: &UserStructure) -> Result<(), Error>;
 
     fn delete_user(&self, user_id: &UserID) -> Result<bool, Error>;
@@ -45,11 +45,11 @@ pub trait Database: Send + Sync {
     fn delete_device(&self, device_id: &DeviceID) -> Result<bool, Error>;
     fn delete_user_structure(&self, structure_id: &StructureID, user_id: &UserID) -> Result<bool, Error>;
 
+    fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
+    fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;
     fn get_structure(&self, structure_id: &StructureID) -> Result<Option<Structure>, Error>;
     fn get_room(&self, room_id: &RoomID) -> Result<Option<Room>, Error>;
     fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
-    fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
-    fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;
     fn get_user_devices(&self, user_id: &UserID) -> Result<Vec<Device>, Error>;
 
     fn check_user_device_access(
