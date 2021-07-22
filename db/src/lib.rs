@@ -38,6 +38,13 @@ pub trait Database: Send + Sync {
     fn add_admin(&self, user_id: &UserID) -> Result<(), Error>;
     fn add_user_structure(&self, user_structure: &UserStructure) -> Result<(), Error>;
 
+    fn delete_user(&self, user_id: &UserID) -> Result<bool, Error>;
+    fn delete_admin(&self, user_id: &UserID) -> Result<bool, Error>;
+    fn delete_structure(&self, structure_id: &StructureID) -> Result<bool, Error>;
+    fn delete_room(&self, room_id: &RoomID) -> Result<bool, Error>;
+    fn delete_device(&self, device_id: &DeviceID) -> Result<bool, Error>;
+    fn delete_user_structure(&self, structure_id: &StructureID, user_id: &UserID) -> Result<bool, Error>;
+
     fn get_structure(&self, structure_id: &StructureID) -> Result<Option<Structure>, Error>;
     fn get_room(&self, room_id: &RoomID) -> Result<Option<Room>, Error>;
     fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;

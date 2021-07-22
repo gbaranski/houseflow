@@ -153,6 +153,48 @@ impl crate::Database for Database {
         }
     }
 
+    fn delete_user(&self, user_id: &UserID) -> Result<bool, Error> {
+        const SQL: &str = "DELETE FROM users WHERE id = ?";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![user_id])?;
+        Ok(n > 0)
+    }
+
+    fn delete_admin(&self, user_id: &UserID) -> Result<bool, Error> {
+        const SQL: &str = "DELETE FROM admins WHERE user_id = ?";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![user_id])?;
+        Ok(n > 0)
+    }
+
+    fn delete_structure(&self, structure_id: &StructureID) -> Result<bool, Error> {
+        const SQL: &str = "DELETE FROM structures WHERE id = ?";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![structure_id])?;
+        Ok(n > 0)
+    }
+
+    fn delete_room(&self, room_id: &RoomID) -> Result<bool, Error> {
+        const SQL: &str = "DELETE FROM rooms WHERE id = ?";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![room_id])?;
+        Ok(n > 0)
+    }
+
+    fn delete_device(&self, device_id: &DeviceID) -> Result<bool, Error> {
+        const SQL: &str = "DELETE FROM devices WHERE id = ?";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![device_id])?;
+        Ok(n > 0)
+    }
+
+    fn delete_user_structure(&self, structure_id: &StructureID, user_id: &UserID) -> Result<bool, Error> {
+        const SQL: &str = "DELETE FROM user_structures WHERE structure_id = ? AND user_id = ?";
+        let connection = self.pool.get()?;
+        let n = connection.execute(SQL, params![structure_id, user_id])?;
+        Ok(n > 0)
+    }
+
     fn get_structure(&self, structure_id: &StructureID) -> Result<Option<Structure>, Error> {
         const SQL: &str = "SELECT * FROM structures WHERE id = ?";
         let connection = self.pool.get()?;
