@@ -423,11 +423,14 @@ mod tests {
         }
 
         #[test]
-        fn add() {
+        fn add_get_delete() {
             let db = get_database();
             let structure = gen();
             db.add_structure(&structure).unwrap();
-            assert_eq!(db.get_structure(&structure.id).unwrap().unwrap(), structure)
+            assert_eq!(db.get_structure(&structure.id).unwrap().unwrap(), structure);
+            assert_eq!(db.delete_structure(&structure.id).unwrap(), true);
+            assert_eq!(db.get_structure(&structure.id).unwrap(), None);
+            assert_eq!(db.delete_structure(&structure.id).unwrap(), false);
         }
 
         #[test]
@@ -451,13 +454,16 @@ mod tests {
         }
 
         #[test]
-        fn add_get() {
+        fn add_get_delete() {
             let db = get_database();
             let structure = super::structure::gen();
             let room = gen(structure.id.clone());
             db.add_structure(&structure).unwrap();
             db.add_room(&room).unwrap();
-            assert_eq!(db.get_room(&room.id).unwrap().unwrap(), room)
+            assert_eq!(db.get_room(&room.id).unwrap().unwrap(), room);
+            assert_eq!(db.delete_room(&room.id).unwrap(), true);
+            assert_eq!(db.get_room(&room.id).unwrap(), None);
+            assert_eq!(db.delete_room(&room.id).unwrap(), false);
         }
 
         #[test]
@@ -499,7 +505,7 @@ mod tests {
         }
 
         #[test]
-        fn add_get() {
+        fn add_get_delete() {
             let db = get_database();
             let structure = super::structure::gen();
             let room = super::room::gen(structure.id.clone());
@@ -507,7 +513,10 @@ mod tests {
             db.add_structure(&structure).unwrap();
             db.add_room(&room).unwrap();
             db.add_device(&device).unwrap();
-            assert_eq!(db.get_device(&device.id).unwrap().unwrap(), device)
+            assert_eq!(db.get_device(&device.id).unwrap().unwrap(), device);
+            assert_eq!(db.delete_device(&device.id).unwrap(), true);
+            assert_eq!(db.get_device(&device.id).unwrap(), None);
+            assert_eq!(db.delete_device(&device.id).unwrap(), false);
         }
 
         #[test]
@@ -543,7 +552,7 @@ mod tests {
         }
 
         #[test]
-        fn add_get() {
+        fn add_get_delete() {
             let db = get_database();
             let user = gen();
             db.add_user(&user).unwrap();
@@ -552,6 +561,12 @@ mod tests {
             assert_eq!(db.check_user_admin(&user.id).unwrap(), false);
             db.add_admin(&user.id).unwrap();
             assert_eq!(db.check_user_admin(&user.id).unwrap(), true);
+            assert_eq!(db.delete_admin(&user.id).unwrap(), true);
+            assert_eq!(db.check_user_admin(&user.id).unwrap(), false);
+            assert_eq!(db.delete_admin(&user.id).unwrap(), false);
+            assert_eq!(db.delete_user(&user.id).unwrap(), true);
+            assert_eq!(db.get_user(&user.id).unwrap(), None);
+            assert_eq!(db.check_user_admin(&user.id).unwrap(), false);
         }
 
         #[test]
@@ -575,7 +590,7 @@ mod tests {
         }
 
         #[test]
-        fn add_get() {
+        fn add_get_delete() {
             let db = get_database();
             let structure_allow = super::structure::gen();
             let structure_deny = super::structure::gen();
@@ -622,8 +637,10 @@ mod tests {
             };
             assert_eq!(
                 sort_devices(db.get_user_devices(&user.id).unwrap()),
-                sort_devices(devices_allow)
+                sort_devices(devices_allow.clone())
             );
+            assert_eq!(db.delete_user_structure(&structure_allow.id, &user.id).unwrap(), true);
+            assert_eq!(db.check_user_device_access(&user.id, &devices_allow[0].id).unwrap(), false);
         }
 
         #[test]
