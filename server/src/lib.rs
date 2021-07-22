@@ -36,11 +36,11 @@ pub fn configure(
         .route("/health_check", web::get().to(health_check))
         .service(
             web::scope("/admin")
-                .service(web::scope("/device").route("", web::put().to(admin::device::on_add)))
-                .service(web::scope("/room").route("", web::put().to(admin::room::on_add)))
                 .service(
                     web::scope("/structure").route("", web::put().to(admin::structure::on_add)),
                 )
+                .service(web::scope("/room").route("", web::put().to(admin::room::on_add)))
+                .service(web::scope("/device").route("", web::put().to(admin::device::on_add)))
                 .service(
                     web::scope("/user_structure")
                         .route("/", web::put().to(admin::user_structure::on_add)),
