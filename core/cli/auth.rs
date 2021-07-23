@@ -5,11 +5,15 @@ fn login() -> clap::App<'static, 'static> {
         .about("Log in with a Houseflow account")
         .arg(
             Arg::with_name("email")
-                .help("Email used to log in, if not defined it will ask at runtime"),
+                .help("Email used to log in")
+                .long("email")
+                .takes_value(true),
         )
         .arg(
             Arg::with_name("password")
-                .help("Password used to log in, if not defined it will ask at runtime"),
+                .help("Password used to log in")
+                .long("password")
+                .takes_value(true),
         )
 }
 
