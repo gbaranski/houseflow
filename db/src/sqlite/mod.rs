@@ -188,7 +188,11 @@ impl crate::Database for Database {
         Ok(n > 0)
     }
 
-    fn delete_user_structure(&self, structure_id: &StructureID, user_id: &UserID) -> Result<bool, Error> {
+    fn delete_user_structure(
+        &self,
+        structure_id: &StructureID,
+        user_id: &UserID,
+    ) -> Result<bool, Error> {
         const SQL: &str = "DELETE FROM user_structures WHERE structure_id = ? AND user_id = ?";
         let connection = self.pool.get()?;
         let n = connection.execute(SQL, params![structure_id, user_id])?;
@@ -639,8 +643,16 @@ mod tests {
                 sort_devices(db.get_user_devices(&user.id).unwrap()),
                 sort_devices(devices_allow.clone())
             );
-            assert_eq!(db.delete_user_structure(&structure_allow.id, &user.id).unwrap(), true);
-            assert_eq!(db.check_user_device_access(&user.id, &devices_allow[0].id).unwrap(), false);
+            assert_eq!(
+                db.delete_user_structure(&structure_allow.id, &user.id)
+                    .unwrap(),
+                true
+            );
+            assert_eq!(
+                db.check_user_device_access(&user.id, &devices_allow[0].id)
+                    .unwrap(),
+                false
+            );
         }
 
         #[test]
