@@ -26,7 +26,7 @@ pub async fn on_webhook(
     let access_token =
         AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     let input = request.inputs.first().unwrap();
-    tracing::event!(Level::INFO, "{} intent received", input);
+    tracing::event!(Level::INFO, intent = %input, user_id = %access_token.sub);
 
     let body: Result<IntentResponseBody, IntentResponseError> = match input {
         IntentRequestInput::Sync => {

@@ -8,9 +8,11 @@ use houseflow_types::{
     fulfillment::query::{Request, ResponseBody, ResponseError},
     token::AccessToken,
 };
+use tracing::Level;
 
 use crate::Sessions;
 
+#[tracing::instrument(skip(http_request, config, db, sessions))]
 pub async fn on_query(
     request: Json<Request>,
     http_request: HttpRequest,
@@ -26,6 +28,8 @@ pub async fn on_query(
     {
         return Err(ResponseError::NoDevicePermission);
     }
+
+    tracing::event!(Level::INFO, user_id = %access_token.sub);
 
     let sessions = sessions.lock().unwrap();
     let session = sessions

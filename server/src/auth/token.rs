@@ -6,7 +6,9 @@ use houseflow_types::{
     auth::token::{Request, ResponseBody, ResponseError},
     token::{AccessToken, AccessTokenPayload, RefreshToken},
 };
+use tracing::Level;
 
+#[tracing::instrument(name = "Refresh token", skip(config, token_store, request))]
 pub async fn on_refresh_token(
     config: Data<Config>,
     token_store: Data<dyn TokenStore>,
@@ -29,6 +31,9 @@ pub async fn on_refresh_token(
         exp: Utc::now() + Duration::minutes(10),
     };
     let access_token = AccessToken::new(config.secrets.access_key.as_bytes(), access_token_payload);
+
+    tracing::event!(Level::INFO, user_id = %refresh_token.sub);
+
     Ok(Json(ResponseBody {
         refresh_token: None,
         access_token: access_token.to_string(),

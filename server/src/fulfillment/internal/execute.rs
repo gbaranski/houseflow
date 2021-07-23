@@ -15,7 +15,7 @@ use tracing::Level;
 
 #[tracing::instrument(skip(http_request, config, db, sessions))]
 pub async fn on_execute(
-    execute_request: Json<Request>,
+    request: Json<Request>,
     http_request: HttpRequest,
     config: Data<Config>,
     db: Data<dyn Database>,
@@ -24,7 +24,7 @@ pub async fn on_execute(
     let access_token =
         AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
     if !db
-        .check_user_device_access(&access_token.sub, &execute_request.device_id)
+        .check_user_device_access(&access_token.sub, &request.device_id)
         .map_err(houseflow_db::Error::into_internal_server_error)?
     {
         return Err(ResponseError::NoDevicePermission);
@@ -35,13 +35,13 @@ pub async fn on_execute(
     let session = {
         let sessions = sessions.lock().unwrap();
         sessions
-            .get(&execute_request.device_id)
+            .get(&request.device_id)
             .ok_or(ResponseError::DeviceNotConnected)?
             .clone()
     };
     let response_frame = session
         .send(crate::lighthouse::aliases::ActorExecuteFrame::from(
-            execute_request.frame.clone(),
+            request.frame.clone(),
         ))
         .await
         .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))??;

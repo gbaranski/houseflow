@@ -3,7 +3,13 @@ use houseflow_db::Database;
 use houseflow_types::auth::register::{Request, ResponseBody, ResponseError};
 use houseflow_types::User;
 use rand::random;
+use tracing::Level;
 
+#[tracing::instrument(
+    name = "Register",
+    skip(request, db),
+    fields(email = %request.email, username = %request.username)
+)]
 pub async fn on_register(
     Json(request): Json<Request>,
     db: Data<dyn Database>,
@@ -27,6 +33,8 @@ pub async fn on_register(
         houseflow_db::Error::AlreadyExists => ResponseError::UserAlreadyExists,
         other => other.into_internal_server_error().into(),
     })?;
+
+    tracing::event!(Level::INFO, user_id = %new_user.id);
 
     Ok(Json(ResponseBody {
         user_id: new_user.id,

@@ -1,6 +1,7 @@
 use crate::{token_store::Error as TokenStoreError, TokenStore};
 use actix_web::web::{Data, Json};
 use chrono::{Duration, Utc};
+use tracing::Level;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
@@ -46,7 +47,7 @@ pub async fn on_login(
     let access_token = AccessToken::new(
         config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: user.id,
+            sub: user.id.clone(),
             exp: Utc::now() + Duration::minutes(10),
         },
     );
@@ -54,6 +55,8 @@ pub async fn on_login(
         .add(&refresh_token.tid, refresh_token.exp.as_ref())
         .await
         .map_err(TokenStoreError::into_internal_server_error)?;
+
+    tracing::event!(Level::INFO, user_id = %user.id);
 
     Ok(Json(ResponseBody {
         access_token: access_token.encode(),

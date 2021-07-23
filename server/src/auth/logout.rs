@@ -1,4 +1,5 @@
 use crate::TokenStore;
+use tracing::Level;
 use actix_web::{
     web::{Data, Json},
     HttpRequest,
@@ -9,6 +10,10 @@ use houseflow_types::{
     token::RefreshToken,
 };
 
+#[tracing::instrument(
+    name = "Logout",
+    skip(token_store, config, http_request),
+)]
 pub async fn on_logout(
     token_store: Data<dyn TokenStore>,
     config: Data<Config>,
@@ -17,5 +22,6 @@ pub async fn on_logout(
     let refresh_token =
         RefreshToken::from_request(config.secrets.refresh_key.as_bytes(), &http_request)?;
     token_store.remove(&refresh_token.tid).await.unwrap();
+    tracing::event!(Level::INFO, user_id = %refresh_token.sub);
     Ok(Json(ResponseBody {}))
 }

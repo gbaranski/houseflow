@@ -1,4 +1,5 @@
 use actix_web::web::{Data, HttpRequest, Json};
+use tracing::Level;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
@@ -6,6 +7,7 @@ use houseflow_types::{
     token::AccessToken,
 };
 
+#[tracing::instrument(name = "Whoami", skip(config, db, http_request))]
 pub async fn on_whoami(
     config: Data<Config>,
     db: Data<dyn Database>,
@@ -17,6 +19,8 @@ pub async fn on_whoami(
         .get_user(&access_token.sub)
         .map_err(houseflow_db::Error::into_internal_server_error)?
         .ok_or(ResponseError::UserNotFound)?;
+
+    tracing::event!(Level::INFO, user_id = %user.id);
 
     Ok(Json(ResponseBody {
         username: user.username,
