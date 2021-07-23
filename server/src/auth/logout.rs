@@ -1,5 +1,4 @@
 use crate::TokenStore;
-use tracing::Level;
 use actix_web::{
     web::{Data, Json},
     HttpRequest,
@@ -9,11 +8,9 @@ use houseflow_types::{
     auth::logout::{ResponseBody, ResponseError},
     token::RefreshToken,
 };
+use tracing::Level;
 
-#[tracing::instrument(
-    name = "Logout",
-    skip(token_store, config, http_request),
-)]
+#[tracing::instrument(name = "Logout", skip(token_store, config, http_request))]
 pub async fn on_logout(
     token_store: Data<dyn TokenStore>,
     config: Data<Config>,

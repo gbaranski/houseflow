@@ -1,11 +1,11 @@
 use actix_web::web::{Data, HttpRequest, Json};
-use tracing::Level;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
     auth::whoami::{ResponseBody, ResponseError},
     token::AccessToken,
 };
+use tracing::Level;
 
 #[tracing::instrument(name = "Whoami", skip(config, db, http_request))]
 pub async fn on_whoami(

@@ -1,13 +1,13 @@
 use crate::{token_store::Error as TokenStoreError, TokenStore};
 use actix_web::web::{Data, Json};
 use chrono::{Duration, Utc};
-use tracing::Level;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{
     auth::login::{Request, ResponseBody, ResponseError},
     token::{AccessToken, AccessTokenPayload, RefreshToken, RefreshTokenPayload},
 };
+use tracing::Level;
 
 fn verify_password(hash: &str, password: &str) -> Result<(), ResponseError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
