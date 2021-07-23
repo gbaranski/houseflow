@@ -1,4 +1,3 @@
-mod admin;
 mod auth;
 mod completions;
 mod fulfillment;
@@ -31,7 +30,6 @@ pub fn app(default_config_path: &str) -> clap::App<'_, '_> {
                 .help("Configuration path")
                 .default_value(default_config_path),
         )
-        .subcommand(admin::subcommand())
         .subcommand(auth::subcommand())
         .subcommand(fulfillment::subcommand())
         .subcommand(completions::subcommand())
@@ -50,26 +48,26 @@ pub fn get_input(prompt: impl Into<String>) -> String {
         .unwrap()
 }
 
-pub fn get_inputs_with_variants(prompt: impl Into<String>, variants: &[&str]) -> Vec<String> {
-    let prompt: String = prompt.into();
-    std::iter::repeat_with(|| {
-        dialoguer::Input::<String>::with_theme(&dialoguer_theme())
-            .with_prompt(prompt.clone() + " (press ENTER to skip)")
-            .allow_empty(true)
-            .validate_with(|input: &String| {
-                if variants.contains(&input.as_str()) {
-                    Ok(())
-                } else {
-                    Err("Matching variant not found")
-                }
-            })
-            .interact_text()
-            .unwrap()
-    })
-    .take_while(|s| s.trim() != "")
-    .collect()
-}
-
+// pub fn get_inputs_with_variants(prompt: impl Into<String>, variants: &[&str]) -> Vec<String> {
+//     let prompt: String = prompt.into();
+//     std::iter::repeat_with(|| {
+//         dialoguer::Input::<String>::with_theme(&dialoguer_theme())
+//             .with_prompt(prompt.clone() + " (press ENTER to skip)")
+//             .allow_empty(true)
+//             .validate_with(|input: &String| {
+//                 if variants.contains(&input.as_str()) {
+//                     Ok(())
+//                 } else {
+//                     Err("Matching variant not found")
+//                 }
+//             })
+//             .interact_text()
+//             .unwrap()
+//     })
+//     .take_while(|s| s.trim() != "")
+//     .collect()
+// }
+//
 pub fn get_input_with_variants(prompt: impl Into<String>, variants: &[&str]) -> String {
     dialoguer::Input::with_theme(&dialoguer_theme())
         .with_prompt(prompt)

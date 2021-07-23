@@ -36,7 +36,6 @@ url = { version = "2.2.2", features = ["serde"] }
 [features]
 actix          = [ "actix-web" ]
 token          = [ "ring", "chrono", "base64" ]
-admin          = [ "validator" ]
 auth           = [ "token", "validator" ]
 fulfillment    = [ "token", "lighthouse" ]
 lighthouse     = [ ]

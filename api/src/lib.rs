@@ -1,6 +1,3 @@
-#[cfg(feature = "admin")]
-mod admin;
-
 #[cfg(feature = "auth")]
 mod auth;
 
@@ -10,7 +7,7 @@ mod fulfillment;
 #[cfg(feature = "auth")]
 pub use crate::fulfillment::FulfillmentError;
 
-#[cfg(any(feature = "auth", feature = "fulfillment", feature = "admin"))]
+#[cfg(any(feature = "auth", feature = "fulfillment"))]
 use url::Url;
 
 #[derive(Debug, thiserror::Error)]
@@ -34,9 +31,6 @@ pub struct HouseflowAPI {
 
     #[cfg(feature = "fulfillment")]
     fulfillment_url: Url,
-
-    #[cfg(feature = "admin")]
-    admin_url: Url,
 }
 
 impl HouseflowAPI {
@@ -62,14 +56,11 @@ impl HouseflowAPI {
 
             #[cfg(feature = "fulfillment")]
             fulfillment_url: base_url.join("fulfillment/internal/").unwrap(),
-
-            #[cfg(feature = "admin")]
-            admin_url: base_url.join("admin/").unwrap(),
         }
     }
 }
 
-#[cfg(any(feature = "auth", feature = "fulfillment", feature = "admin"))]
+#[cfg(any(feature = "auth", feature = "fulfillment"))]
 mod utils {
     use super::Error;
     use houseflow_types::token::Token;
@@ -140,21 +131,6 @@ mod utils {
         send_request(request).await
     }
 
-    pub(crate) async fn put_with_token<TP, B, E>(
-        url: Url,
-        body: &impl Serialize,
-        token: &Token<TP>,
-    ) -> Result<Result<B, E>, Error>
-    where
-        TP: Serialize + DeserializeOwned,
-        B: DeserializeOwned,
-        E: DeserializeOwned,
-    {
-        let client = Client::new();
-        let request = client.put(url).json(body).bearer_auth(token);
-        send_request(request).await
-    }
-
     pub(crate) async fn get_with_token<TP, B, E>(
         url: Url,
         body: &impl Serialize,
@@ -171,5 +147,5 @@ mod utils {
     }
 }
 
-#[cfg(any(feature = "auth", feature = "fulfillment", feature = "admin"))]
+#[cfg(any(feature = "auth", feature = "fulfillment"))]
 pub(crate) use utils::*;

@@ -27,7 +27,7 @@ members = [
 
 
 [dependencies]
-houseflow-api = { version="0.1.1", path="api", features=["auth", "fulfillment", "admin"] }
+houseflow-api = { version="0.1.1", path="api", features=["auth", "fulfillment"] }
 houseflow-config = { version="0.1.1", path="config", features=["client", "fs"] }
 houseflow-types = { version="0.1.1", path="types", features=["token"] }
 

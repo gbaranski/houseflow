@@ -2,9 +2,6 @@ mod common;
 mod device;
 mod user;
 
-#[cfg(feature = "admin")]
-pub mod admin;
-
 #[cfg(feature = "auth")]
 pub mod auth;
 

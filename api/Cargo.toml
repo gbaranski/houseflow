@@ -26,4 +26,3 @@ tracing = "0.1.26"
 [features]
 auth = ["houseflow-types/auth"]
 fulfillment = ["houseflow-types/fulfillment"]
-admin = ["houseflow-types/admin"]

@@ -1,7 +1,6 @@
 mod cli;
 mod context;
 
-mod admin;
 mod auth;
 mod fulfillment;
 
@@ -9,10 +8,8 @@ use anyhow::Context;
 use context::{CommandContext, Tokens};
 
 use async_trait::async_trait;
-use cli::{
-    get_input, get_input_with_variants, get_inputs_with_variants, get_password, unwrap_subcommand,
-};
-use houseflow_types::{DeviceCommand, DeviceTrait, DeviceType};
+use cli::{get_input, get_input_with_variants, get_password, unwrap_subcommand};
+use houseflow_types::DeviceCommand;
 use std::str::FromStr;
 use strum::VariantNames;
 
@@ -34,74 +31,6 @@ async fn main_async() -> anyhow::Result<()> {
     let ctx = CommandContext::new(config_path.to_path_buf()).await?;
 
     match subcommand {
-        ("admin", matches) => match unwrap_subcommand(matches.subcommand()) {
-            ("structure", matches) => match unwrap_subcommand(matches.subcommand()) {
-                ("add", matches) => {
-                    let structure_name = get_value(matches, get_input, "name")?;
-
-                    admin::structure::add::Command { structure_name }
-                        .run(ctx)
-                        .await
-                }
-                _ => unreachable!(),
-            },
-            ("room", matches) => match unwrap_subcommand(matches.subcommand()) {
-                ("add", matches) => {
-                    admin::room::add::Command {
-                        room_name: get_value(matches, get_input, "name")?,
-                        structure_id: get_value(matches, get_input, "structure-id")?,
-                    }
-                    .run(ctx)
-                    .await
-                }
-                _ => unreachable!(),
-            },
-            ("device", matches) => match unwrap_subcommand(matches.subcommand()) {
-                ("add", matches) => {
-                    admin::device::add::Command {
-                        room_id: get_value(matches, get_input, "room-id")?,
-                        password: get_value(matches, get_password, "password")?,
-                        device_type: get_value(
-                            matches,
-                            |s| get_input_with_variants(s, DeviceType::VARIANTS),
-                            "type",
-                        )?,
-                        traits: get_values(
-                            matches,
-                            |s| get_inputs_with_variants(s, DeviceTrait::VARIANTS),
-                            "trait",
-                        )?,
-                        name: get_value(matches, get_input, "name")?,
-                        will_push_state: matches.is_present("will-push-state"),
-                        model: get_value(matches, get_input, "model")?,
-                        hw_version: get_value(matches, get_input, "hw-version")?,
-                        sw_version: get_value(matches, get_input, "sw-version")?,
-                        attributes: serde_json::from_str(
-                            &matches
-                                .value_of("attributes")
-                                .map(std::string::ToString::to_string)
-                                .unwrap(),
-                        )?,
-                    }
-                    .run(ctx)
-                    .await
-                }
-                _ => unreachable!(),
-            },
-            ("user-structure", matches) => match unwrap_subcommand(matches.subcommand()) {
-                ("add", matches) => {
-                    admin::user_structure::add::Command {
-                        structure_id: get_value(matches, get_input, "structure-id")?,
-                        user_id: get_value(matches, get_input, "user-id")?,
-                        is_manager: matches.is_present("manager"),
-                    }
-                    .run(ctx)
-                    .await
-                }
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        },
         ("auth", matches) => match unwrap_subcommand(matches.subcommand()) {
             ("login", matches) => {
                 auth::login::Command {
@@ -196,26 +125,26 @@ where
         .with_context(|| name.to_title_case())
 }
 
-fn get_values<T, TE, AF>(
-    matches: &clap::ArgMatches,
-    alt: AF,
-    name: &'static str,
-) -> anyhow::Result<Vec<T>>
-where
-    AF: FnOnce(String) -> Vec<String>,
-    T: FromStr<Err = TE>,
-    TE: Into<anyhow::Error>,
-{
-    use inflector::Inflector;
-    matches
-        .values_of(name)
-        .map(|e| e.map(std::string::ToString::to_string).collect::<Vec<_>>())
-        .unwrap_or_else(|| alt(name.to_title_case()))
-        .iter()
-        .map(|v| {
-            T::from_str(v)
-                .map_err(|err| -> anyhow::Error { err.into() })
-                .with_context(|| name.to_title_case())
-        })
-        .collect::<Result<Vec<_>, _>>()
-}
+// fn get_values<T, TE, AF>(
+//     matches: &clap::ArgMatches,
+//     alt: AF,
+//     name: &'static str,
+// ) -> anyhow::Result<Vec<T>>
+// where
+//     AF: FnOnce(String) -> Vec<String>,
+//     T: FromStr<Err = TE>,
+//     TE: Into<anyhow::Error>,
+// {
+//     use inflector::Inflector;
+//     matches
+//         .values_of(name)
+//         .map(|e| e.map(std::string::ToString::to_string).collect::<Vec<_>>())
+//         .unwrap_or_else(|| alt(name.to_title_case()))
+//         .iter()
+//         .map(|v| {
+//             T::from_str(v)
+//                 .map_err(|err| -> anyhow::Error { err.into() })
+//                 .with_context(|| name.to_title_case())
+//         })
+//         .collect::<Result<Vec<_>, _>>()
+// }
