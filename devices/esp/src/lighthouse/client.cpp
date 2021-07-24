@@ -1,14 +1,20 @@
-#include "config.hpp"
 #include "lighthouse.hpp"
+#include "optserial.hpp"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
 
 #define AUTHORIZATION_HEADER                                                   \
-  "Authorization: Basic " DEVICE_ID ":" DEVICE_PASSWORD
+  "Authorization: Basic " DEVICE_ID ":" DEVICE_SECRET
+
+#define SERVER_PORT 6001
+#define RECONNECT_INTERVAL 5000
+#define PING_INTERVAL 5000
+#define PONG_INTERVAL 5000
+#define DISCONNECT_TIMEOUT_COUNT 2
 
 LighthouseClient::LighthouseClient() {
-  Serial.println("Constructor called");
+  OptSerial.println("Constructor called");
   websocketClient = WebSocketsClient();
 }
 
@@ -45,7 +51,7 @@ void LighthouseClient::onExecute(
     StaticJsonDocument<responseDocCapacity> &responseDoc) {
 
   responseDoc["type"] = "ExecuteResponse";
-  Serial.println("[Lighthouse] received Execute frame");
+  OptSerial.println("[Lighthouse] received Execute frame");
   const char *command_str = requestDoc["command"];
 
   DeviceCommand command;
@@ -55,7 +61,7 @@ void LighthouseClient::onExecute(
   } else if (strcmp(command_str, "OpenClose") == 0) {
     command = DeviceCommand::OpenClose;
   } else {
-    Serial.printf("[Lighthouse] received invalid command: %s\n", command_str);
+    OptSerial.printf("[Lighthouse] received invalid command: %s\n", command_str);
     return;
   }
 
@@ -63,7 +69,7 @@ void LighthouseClient::onExecute(
 #ifdef ON_OFF
   case OnOff: {
     bool on = requestDoc["params"]["on"];
-    Serial.printf("[Lighthouse] setting `on` to `%d`\n", on);
+    OptSerial.printf("[Lighthouse] setting `on` to `%d`\n", on);
 
     digitalWrite(ON_OFF_PIN, on);
 
@@ -74,7 +80,7 @@ void LighthouseClient::onExecute(
 #endif
 #ifdef OPEN_CLOSE
   case OpenClose: {
-    Serial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
+    OptSerial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
                   OPEN_CLOSE_TOGGLE_DURATION);
 
     digitalWrite(OPEN_CLOSE_PIN, LOW);
@@ -87,7 +93,7 @@ void LighthouseClient::onExecute(
   }
 #endif
   default:
-    Serial.printf("[Lighthouse] received unknown command: %s\n", command_str);
+    OptSerial.printf("[Lighthouse] received unknown command: %s\n", command_str);
     responseDoc["status"] = "Error";
     responseDoc["error"] = "FunctionNotSupported";
   }
@@ -97,7 +103,7 @@ template <size_t requestDocCapacity, size_t responseDocCapacity>
 void LighthouseClient::onQuery(
     const StaticJsonDocument<requestDocCapacity> &requestDoc,
     StaticJsonDocument<responseDocCapacity> &responseDoc) {
-  Serial.println("[Lighthouse] received Query frame");
+  OptSerial.println("[Lighthouse] received Query frame");
 
   responseDoc["type"] = "State";
 #ifdef ON_OFF
@@ -115,8 +121,8 @@ void LighthouseClient::onText(char *text, size_t length) {
 
   DeserializationError error = deserializeJson(requestDoc, text);
   if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.f_str());
+    OptSerial.print(F("deserializeJson() failed: "));
+    OptSerial.println(error.f_str());
     return;
   }
 
@@ -128,7 +134,7 @@ void LighthouseClient::onText(char *text, size_t length) {
   } else if (strcmp(frame_type, "Query") == 0) {
     onQuery(requestDoc, responseDoc);
   } else {
-    Serial.printf("[Lighthouse] received unrecognized frame type: %s\n",
+    OptSerial.printf("[Lighthouse] received unrecognized frame type: %s\n",
                   frame_type);
     return;
   }
@@ -139,44 +145,44 @@ void LighthouseClient::onText(char *text, size_t length) {
   this->websocketClient.sendTXT(buf);
 
   auto post_process = millis();
-  Serial.printf("Processing message took %lu ms\n", post_process - pre_process);
+  OptSerial.printf("Processing message took %lu ms\n", post_process - pre_process);
 }
 
 void LighthouseClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {
   switch (type) {
   case WStype_DISCONNECTED:
-    Serial.printf("[Lighthouse] disconnected\n");
+    OptSerial.printf("[Lighthouse] disconnected\n");
     break;
   case WStype_CONNECTED:
-    Serial.printf("[Lighthouse] connected to %s\n", payload);
+    OptSerial.printf("[Lighthouse] connected to %s\n", payload);
     break;
   case WStype_TEXT:
-    Serial.printf("[Lighthouse] received text: %s\n", payload);
+    OptSerial.printf("[Lighthouse] received text: %s\n", payload);
     this->onText((char *)payload, length);
     break;
   case WStype_BIN:
-    Serial.printf("[Lighthouse] received binary\n");
+    OptSerial.printf("[Lighthouse] received binary\n");
     break;
   case WStype_PING:
-    Serial.printf("[Lighthouse] received ping\n");
+    OptSerial.printf("[Lighthouse] received ping\n");
     break;
   case WStype_PONG:
-    Serial.printf("[Lighthouse] received pong\n");
+    OptSerial.printf("[Lighthouse] received pong\n");
     break;
   case WStype_ERROR:
-    Serial.printf("[Lighthouse] received error: %s\n", payload);
+    OptSerial.printf("[Lighthouse] received error: %s\n", payload);
     break;
   case WStype_FRAGMENT:
-    Serial.printf("[Lighthouse] received fragment: %s\n", payload);
+    OptSerial.printf("[Lighthouse] received fragment: %s\n", payload);
     break;
   case WStype_FRAGMENT_BIN_START:
-    Serial.printf("[Lighthouse] received bin_start: %s\n", payload);
+    OptSerial.printf("[Lighthouse] received bin_start: %s\n", payload);
     break;
   case WStype_FRAGMENT_TEXT_START:
-    Serial.printf("[Lighthouse] received text_start: %s\n", payload);
+    OptSerial.printf("[Lighthouse] received text_start: %s\n", payload);
     break;
   case WStype_FRAGMENT_FIN:
-    Serial.printf("[Lighthouse] received fin: %s\n", payload);
+    OptSerial.printf("[Lighthouse] received fin: %s\n", payload);
     break;
   }
 }
