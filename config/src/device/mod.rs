@@ -10,8 +10,11 @@ pub struct Config {
     /// Configuration of the Light device
     pub light: Option<Light>,
 
-    /// Configuration of the Light device
+    /// Configuration of the Gate device
     pub gate: Option<Gate>,
+
+    /// Configuration of the Garage device
+    pub garage: Option<Garage>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -41,6 +44,12 @@ pub struct Light {
 pub struct Gate {
     pub credentials: Credentials,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Garage {
+    pub credentials: Credentials,
+}
+
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Credentials {
