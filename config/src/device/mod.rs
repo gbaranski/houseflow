@@ -50,7 +50,6 @@ pub struct Garage {
     pub credentials: Credentials,
 }
 
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Credentials {
     /// ID of the device
