@@ -22,7 +22,7 @@ use houseflow_config::{client::Config, Config as _};
 use std::path::Path;
 
 async fn main_async() -> anyhow::Result<()> {
-    houseflow_config::init_logging();
+    houseflow_config::init_logging(true);
     let config_default_path = Config::default_path();
     let config_default_path = config_default_path.to_str().unwrap();
     let matches = cli::app(&config_default_path).get_matches();

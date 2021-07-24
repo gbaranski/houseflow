@@ -57,7 +57,7 @@ pub fn read_file<T: serde::de::DeserializeOwned>(
     Ok(config)
 }
 
-pub fn init_logging() {
+pub fn init_logging(hide_timestamp: bool) {
     const LOG_ENV: &str = "HOUSEFLOW_LOG";
     use std::str::FromStr;
     use tracing::Level;
@@ -69,7 +69,14 @@ pub fn init_logging() {
         })
         .unwrap_or(Level::INFO);
 
-    tracing_subscriber::fmt().with_max_level(level).init();
+    if hide_timestamp {
+        tracing_subscriber::fmt()
+            .with_max_level(level)
+            .without_time()
+            .init();
+    } else {
+        tracing_subscriber::fmt().with_max_level(level).init();
+    }
 }
 
 #[allow(dead_code)]

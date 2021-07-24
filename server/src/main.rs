@@ -49,7 +49,9 @@ impl tracing_actix_web::RootSpanBuilder for RootSpanBuilder {
 
 #[actix_web::main]
 async fn main() {
-    houseflow_config::init_logging();
+    const HIDE_TIMESTAMP_ENV: &str = "HOUSEFLOW_SERVER_HIDE_TIMESTAMP";
+
+    houseflow_config::init_logging(std::env::var_os(HIDE_TIMESTAMP_ENV).is_some());
     let config_path = std::env::var("HOUSEFLOW_SERVER_CONFIG")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| Config::default_path());
