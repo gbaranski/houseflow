@@ -77,7 +77,8 @@ async fn main() {
                     sessions.clone(),
                 )
             })
-    });
+    })
+    .shutdown_timeout(5);
     let address = (
         config.hostname.to_string(),
         houseflow_config::defaults::server_port(),
