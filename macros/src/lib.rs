@@ -46,6 +46,24 @@ pub fn server_error(_args: TokenStream, item: TokenStream) -> TokenStream {
         })
         .collect::<Vec<_>>();
 
+    let variants = variants
+        .into_iter()
+        .map(|variant| syn::Variant {
+            attrs: variant
+                .attrs
+                .iter()
+                .filter(|attr| attr.path.get_ident().unwrap().to_string() != "response")
+                .cloned()
+                .collect(),
+            ..variant
+        })
+        .collect::<Vec<_>>();
+
+    let variants =
+        <syn::punctuated::Punctuated<syn::Variant, syn::token::Comma> as std::iter::FromIterator<
+            syn::Variant,
+        >>::from_iter(variants);
+
     let output = quote! {
         #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
         #[serde(

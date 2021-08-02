@@ -30,21 +30,3 @@ pub enum ResponseError {
     #[response(status_code = 404)]
     UserNotFound,
 }
-
-// #[cfg(feature = "actix")]
-// impl actix_web::ResponseError for ResponseError {
-//     fn status_code(&self) -> actix_web::http::StatusCode {
-//         use actix_web::http::StatusCode;
-// 
-//         match self {
-//             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-//             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-//             Self::InvalidPassword => StatusCode::UNAUTHORIZED,
-//             Self::UserNotFound => StatusCode::UNAUTHORIZED,
-//         }
-//     }
-// 
-//     fn error_response(&self) -> actix_web::HttpResponse {
-//         crate::json_error_response(self.status_code(), self)
-//     }
-// }
