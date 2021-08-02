@@ -23,6 +23,7 @@ members = [
   "types",
   "db",
   "api",
+  "macros"
 ]
 
 
