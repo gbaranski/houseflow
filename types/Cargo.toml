@@ -27,6 +27,7 @@ serde_json     = { version = "1.0.64" }
 
 rusqlite = { version = "0.25", optional = true } 
 
+houseflow-macros = { path = "../macros" }
 validator = { version = "0.13.0", features = ["derive"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"], optional = true }
 ring = { version = "0.16.20", optional = true }
