@@ -58,6 +58,7 @@ impl actix_web::ResponseError for AuthorizationResponseError {
 }
 
 #[derive(Serialize, Debug, thiserror::Error)]
+#[allow(clippy::enum_variant_names)]
 pub enum InvalidRedirectURIError {
     #[error("invalid scheme: {0}")]
     InvalidScheme(String),

@@ -26,4 +26,3 @@ pub enum ResponseError {
     #[response(status_code = 401)]
     UserNotFound,
 }
-

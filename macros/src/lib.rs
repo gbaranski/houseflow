@@ -61,7 +61,7 @@ pub fn server_error(_args: TokenStream, item: TokenStream) -> TokenStream {
             attrs: variant
                 .attrs
                 .iter()
-                .filter(|attr| attr.path.get_ident().unwrap().to_string() != "response")
+                .filter(|attr| *attr.path.get_ident().unwrap() != "response")
                 .cloned()
                 .collect(),
             ..variant

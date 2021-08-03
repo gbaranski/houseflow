@@ -52,7 +52,7 @@ impl CommandContext {
             Some(ref api) => Ok(api),
             None => {
                 let config = self.config().await?;
-                let api = HouseflowAPI::new(&config);
+                let api = HouseflowAPI::new(config);
                 self.houseflow_api = Some(api);
                 Ok(self.houseflow_api.as_ref().unwrap())
             }

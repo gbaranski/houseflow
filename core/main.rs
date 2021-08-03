@@ -25,7 +25,7 @@ async fn main_async() -> anyhow::Result<()> {
     houseflow_config::init_logging(true);
     let config_default_path = Config::default_path();
     let config_default_path = config_default_path.to_str().unwrap();
-    let matches = cli::app(&config_default_path).get_matches();
+    let matches = cli::app(config_default_path).get_matches();
     let subcommand = unwrap_subcommand(matches.subcommand());
     let config_path = Path::new(matches.value_of("config").unwrap());
     let ctx = CommandContext::new(config_path.to_path_buf()).await?;
