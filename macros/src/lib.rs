@@ -7,6 +7,7 @@ use syn::DeriveInput;
 #[darling(attributes(response))]
 struct ServerErrorVariant {
     ident: syn::Ident,
+    fields: darling::ast::Fields<syn::Type>,
     status_code: u16,
 }
 
@@ -39,9 +40,17 @@ pub fn server_error(_args: TokenStream, item: TokenStream) -> TokenStream {
         .map(|variant| ServerErrorVariant::from_variant(variant).unwrap());
 
     let status_code_match_patterns = variant_attributes
-        .map(|ServerErrorVariant { ident, status_code }: ServerErrorVariant| {
+        .map(|ServerErrorVariant { ident, status_code, fields }: ServerErrorVariant| {
+            let something = if fields.is_empty() {
+                quote! { #ident }
+            } else if fields.is_tuple() {
+                quote! { #ident(_) }
+            } else {
+                unreachable!()
+            };
+
             quote! {
-                Self::#ident => StatusCode::from_u16(#status_code).expect("invalid status code"),
+                Self::#something => StatusCode::from_u16(#status_code).expect("invalid status code"),
             }
         })
         .collect::<Vec<_>>();
@@ -92,7 +101,11 @@ pub fn server_error(_args: TokenStream, item: TokenStream) -> TokenStream {
 
                     #(#status_code_match_patterns)*
                 }
+            }
 
+            fn error_response(&self) -> actix_web::HttpResponse {
+                let json = actix_web::web::Json(self);
+                actix_web::HttpResponse::build(self.status_code()).json(json)
             }
         }
 

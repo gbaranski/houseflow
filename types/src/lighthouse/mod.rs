@@ -2,12 +2,7 @@ pub mod proto;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, thiserror::Error, Deserialize, Serialize, Clone)]
-#[serde(
-    tag = "error",
-    content = "error_description",
-    rename_all = "snake_case"
-)]
+#[derive(Debug, thiserror::Error, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub enum DeviceCommunicationError {
     #[error("internal error: {0}")]
     InternalError(String),

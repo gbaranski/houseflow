@@ -18,15 +18,6 @@ pub use common::*;
 pub use device::*;
 pub use user::*;
 
-#[cfg(feature = "actix")]
-pub(crate) fn json_error_response(
-    status_code: actix_web::http::StatusCode,
-    err: &impl serde::ser::Serialize,
-) -> actix_web::HttpResponse {
-    let json = actix_web::web::Json(err);
-    actix_web::HttpResponse::build(status_code).json(json)
-}
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]

@@ -1,4 +1,3 @@
-use houseflow_macros::server_error;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -20,7 +19,7 @@ pub struct ResponseBody {
     pub access_token: String,
 }
 
-#[server_error]
+#[houseflow_macros::server_error]
 pub enum ResponseError {
     #[error("invalid password")]
     #[response(status_code = 400)]

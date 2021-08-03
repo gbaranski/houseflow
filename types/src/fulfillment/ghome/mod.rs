@@ -73,42 +73,19 @@ pub enum IntentResponseBody {
 
 use crate::{lighthouse, token};
 
-#[derive(Debug, Clone, Deserialize, Serialize, thiserror::Error)]
-#[serde(
-    tag = "error",
-    content = "error_description",
-    rename_all = "snake_case"
-)]
+#[houseflow_macros::server_error]
 pub enum IntentResponseError {
-    #[error("internal error: {0}")]
-    InternalError(#[from] crate::InternalServerError),
-
     #[error("token error: {0}")]
+    #[response(status_code = 401)]
     TokenError(#[from] token::Error),
 
     #[error("no device permission")]
+    #[response(status_code = 401)]
     NoDevicePermission,
 
     #[error("error with device communication: {0}")]
+    #[response(status_code = 501)]
     DeviceCommunicationError(#[from] lighthouse::DeviceCommunicationError),
-}
-
-#[cfg(feature = "actix")]
-impl actix_web::ResponseError for IntentResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::TokenError(_) => StatusCode::UNAUTHORIZED,
-            Self::NoDevicePermission => StatusCode::UNAUTHORIZED,
-            Self::DeviceCommunicationError(_) => StatusCode::BAD_GATEWAY,
-        }
-    }
-
-    fn error_response(&self) -> actix_web::HttpResponse {
-        crate::json_error_response(self.status_code(), self)
-    }
 }
 
 mod serde_device_type {
