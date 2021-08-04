@@ -34,14 +34,9 @@ impl HouseflowAPI {
     pub async fn refresh_token(
         &self,
         refresh_token: &RefreshToken,
-        let request = auth::token::Request {
-            refresh_token: refresh_token.to_string(),
-        };
-        let client = reqwest::Client::new();
     ) -> Result<Result<auth::token::Response, ServerError>, Error> {
         let url = self.auth_url.join("refresh_token").unwrap();
-        let request = client.post(url).json(&request);
-        send_request(request).await
+        post_with_token(url, &auth::token::Request {}, refresh_token).await
     }
 
     pub async fn whoami(
