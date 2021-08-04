@@ -14,7 +14,7 @@ resolver = "2"
 [dependencies]
 houseflow-db = { path="../db", version="0.1.1", features = ["sqlite"] }
 houseflow-types = { path="../types", version="0.1.1", features=[
-    "actix",
+    "axum",
     "token",
     "auth",
     "fulfillment",
@@ -22,14 +22,9 @@ houseflow-types = { path="../types", version="0.1.1", features=[
 ] }
 houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
 
-actix = "0.12.0"
-actix-rt = "2.2.0"
-actix-web = { version = "4.0.0-beta.8", features = ["rustls"]}
-actix-web-actors = "4.0.0-beta.6"
-actix-service = "2.0.0"
 rustls = "0.19.1"
 
-tokio = { version="1.5", features=["sync"] }
+tokio = { version="1.5", features=["sync", "time", "rt-multi-thread"] }
 
 validator = "0.13.0"
 thiserror = "1.0"
@@ -49,4 +44,10 @@ chrono = "0.4.19"
 sled = "0.34.6"
 tracing = "0.1.26"
 
-tracing-actix-web = "0.4.0-beta.9"
+axum = { git = "https://github.com/gbaranski/axum.git", branch = "feat/websocket-message-enum",  version = "0.1.2", features = ["ws", "headers"] }
+http = "0.2.4"
+http-body = "0.4.2"
+hyper = "0.14.11"
+headers = "0.3.4"
+futures-util = { version = "0.3.16", optional = true }
+tower = "0.4.8"

@@ -27,14 +27,14 @@ pub enum DeviceStatus {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct IntentRequest {
+pub struct Request {
     pub request_id: String,
-    pub inputs: Vec<IntentRequestInput>,
+    pub inputs: Vec<RequestInput>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, strum::Display)]
 #[serde(tag = "intent", content = "payload")]
-pub enum IntentRequestInput {
+pub enum RequestInput {
     #[serde(rename = "action.devices.SYNC")]
     Sync,
 
@@ -48,11 +48,9 @@ pub enum IntentRequestInput {
     Disconnect,
 }
 
-pub type IntentResponse = Result<IntentResponseBody, IntentResponseError>;
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "camelCase")]
-pub enum IntentResponseBody {
+pub enum Response {
     Sync {
         #[serde(rename = "requestId")]
         request_id: String,
@@ -69,23 +67,6 @@ pub enum IntentResponseBody {
         payload: execute::response::Payload,
     },
     Disconnect,
-}
-
-use crate::{lighthouse, token};
-
-#[houseflow_macros::server_error]
-pub enum IntentResponseError {
-    #[error("token error: {0}")]
-    #[response(status_code = 401)]
-    TokenError(#[from] token::Error),
-
-    #[error("no device permission")]
-    #[response(status_code = 401)]
-    NoDevicePermission,
-
-    #[error("error with device communication: {0}")]
-    #[response(status_code = 501)]
-    DeviceCommunicationError(#[from] lighthouse::DeviceCommunicationError),
 }
 
 mod serde_device_type {

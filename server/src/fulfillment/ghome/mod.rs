@@ -1,55 +1,32 @@
-use actix_web::{
-    web::{self, Data, Json},
-    HttpRequest,
-};
-use houseflow_config::server::Config;
-use houseflow_db::Database;
+use crate::{extractors::AccessToken, Error, InternalError, State};
+use axum::{extract, response};
 use houseflow_types::{
-    fulfillment::ghome::{
-        self, IntentRequest, IntentRequestInput, IntentResponseBody, IntentResponseError,
-    },
-    token::AccessToken,
-    DeviceID, DeviceStatus,
+    fulfillment::ghome::{self, Request, RequestInput, Response},
+    DeviceID, DeviceStatus, FulfillmentError,
 };
 use tracing::Level;
 
-use crate::Sessions;
-
-#[tracing::instrument(skip(http_request, config, db, sessions), fields(request = ?request))]
+#[tracing::instrument(skip(state), fields(request = ?request))]
 pub async fn on_webhook(
-    Json(request): Json<IntentRequest>,
-    http_request: HttpRequest,
-    config: Data<Config>,
-    db: web::Data<dyn Database>,
-    sessions: web::Data<Sessions>,
-) -> Result<web::Json<IntentResponseBody>, IntentResponseError> {
-    let access_token =
-        AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
+    extract::Extension(state): extract::Extension<State>,
+    extract::Json(request): extract::Json<Request>,
+    AccessToken(access_token): AccessToken,
+) -> Result<response::Json<Response>, Error> {
     let input = request.inputs.first().unwrap();
     tracing::event!(Level::INFO, intent = %input, user_id = %access_token.sub);
 
-    let body: Result<IntentResponseBody, IntentResponseError> = match input {
-        IntentRequestInput::Sync => {
+    let body: Result<Response, Error> = match input {
+        RequestInput::Sync => {
             use ghome::sync;
 
-            let user_devices = db
-                .get_user_devices(&access_token.sub)
-                .map_err(houseflow_db::Error::into_internal_server_error)?;
+            let user_devices = state.database.get_user_devices(&access_token.sub)?;
 
             let user_devices = user_devices
                 .into_iter()
                 .map(|device| {
-                    let room = db
-                        .get_room(&device.room_id)
-                        .map_err(houseflow_db::Error::into_internal_server_error)?
-                        .ok_or_else(|| {
-                            IntentResponseError::InternalError(
-                                houseflow_types::InternalServerError::Other(
-                                    "couldn't find matching room".to_string(),
-                                ),
-                            )
-                        })?;
-
+                    let room = state.database.get_room(&device.room_id)?.ok_or_else(|| {
+                        InternalError::Other("couldn't find matching room".to_string())
+                    })?;
                     let payload = sync::response::PayloadDevice {
                         id: device.id,
                         device_type: device.device_type,
@@ -73,7 +50,7 @@ pub async fn on_webhook(
                         other_device_ids: None,
                     };
 
-                    Ok::<_, IntentResponseError>(payload)
+                    Ok::<_, Error>(payload)
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             let payload = sync::response::Payload {
@@ -82,25 +59,23 @@ pub async fn on_webhook(
                 debug_string: None,
                 devices: user_devices,
             };
-            Ok(IntentResponseBody::Sync {
+            Ok(Response::Sync {
                 request_id: request.request_id.clone(),
                 payload,
             })
         }
-        IntentRequestInput::Query(payload) => {
+        RequestInput::Query(payload) => {
             use ghome::query;
 
-            let db = &db;
+            // TODO: remove that as soon as Rust 2021 edition will be ther
+            let database = &state.database;
             let access_token = &access_token;
-            let sessions = &sessions;
+            let sessions = &state.sessions;
 
             let device_responses = payload.devices.iter().map(|device| async move {
-                if !db
-                    .check_user_device_access(&access_token.sub, &device.id)
-                    .map_err(houseflow_db::Error::into_internal_server_error)?
-                {
-                    return Err::<(DeviceID, query::response::PayloadDevice), IntentResponseError>(
-                        IntentResponseError::NoDevicePermission,
+                if !database.check_user_device_access(&access_token.sub, &device.id)? {
+                    return Err::<(DeviceID, query::response::PayloadDevice), Error>(
+                        FulfillmentError::NoDevicePermission.into(),
                     );
                 }
 
@@ -108,21 +83,14 @@ pub async fn on_webhook(
                 match sessions.get(&device.id) {
                     Some(session) => {
                         let query_frame = houseflow_types::lighthouse::proto::query::Frame {};
-                        let response_frame = session
-                            .send(crate::lighthouse::aliases::ActorQueryFrame::from(
-                                query_frame,
-                            ))
-                            .await
-                            .unwrap()?;
-                        let response_frame: houseflow_types::lighthouse::proto::state::Frame =
-                            response_frame.into();
+                        let response = session.query(query_frame).await?;
                         Ok((
                             device.id.clone(),
                             query::response::PayloadDevice {
                                 online: true,
                                 status: ghome::DeviceStatus::Success,
                                 error_code: None,
-                                state: Some(response_frame.state),
+                                state: Some(response.state),
                             },
                         ))
                     }
@@ -149,12 +117,12 @@ pub async fn on_webhook(
                 devices: map,
             };
 
-            Ok(IntentResponseBody::Query {
+            Ok(Response::Query {
                 request_id: request.request_id.clone(),
                 payload,
             })
         }
-        IntentRequestInput::Execute(payload) => {
+        RequestInput::Execute(payload) => {
             use ghome::execute;
 
             let requests = payload
@@ -162,15 +130,12 @@ pub async fn on_webhook(
                 .iter()
                 .flat_map(|cmd| cmd.execution.iter().zip(cmd.devices.iter()));
 
-            let db = &db;
-            let sessions = &sessions;
+            let database = &state.database;
+            let sessions = &state.sessions;
             let access_token = &access_token;
             let responses = requests.map(|(exec, device)| async move {
-                if !db
-                    .check_user_device_access(&access_token.sub, &device.id)
-                    .map_err(houseflow_db::Error::into_internal_server_error)?
-                {
-                    return Err::<_, IntentResponseError>(IntentResponseError::NoDevicePermission);
+                if !database.check_user_device_access(&access_token.sub, &device.id)? {
+                    return Err::<_, Error>(FulfillmentError::NoDevicePermission.into());
                 }
                 match sessions.lock().unwrap().get(&device.id) {
                     Some(session) => {
@@ -180,14 +145,7 @@ pub async fn on_webhook(
                             params: exec.params.clone(),
                         };
 
-                        let response = session
-                            .send(crate::lighthouse::aliases::ActorExecuteFrame::from(
-                                execute_frame,
-                            ))
-                            .await
-                            .unwrap()?;
-                        let response: houseflow_types::lighthouse::proto::execute_response::Frame =
-                            response.into();
+                        let response = session.execute(execute_frame).await?;
 
                         Ok(match response.status {
                             DeviceStatus::Success => execute::response::PayloadCommand {
@@ -217,14 +175,14 @@ pub async fn on_webhook(
                 debug_string: None,
                 commands: futures::future::try_join_all(responses).await?,
             };
-            Ok(IntentResponseBody::Execute {
+            Ok(Response::Execute {
                 request_id: request.request_id,
                 payload,
             })
         }
-        IntentRequestInput::Disconnect => todo!(),
+        RequestInput::Disconnect => todo!(),
     };
     let body = body?;
 
-    Ok(web::Json(body))
+    Ok(response::Json(body))
 }

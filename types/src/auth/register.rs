@@ -13,16 +13,11 @@ pub struct Request {
     pub password: String,
 }
 
-pub type Response = Result<ResponseBody, ResponseError>;
-
-#[derive(Debug, Clone, Deserialize, Serialize, Validate)]
-pub struct ResponseBody {
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Response{
     pub user_id: UserID,
 }
 
-#[houseflow_macros::server_error]
-pub enum ResponseError {
-    #[error("user already exists")]
-    #[response(status_code = 400)]
-    UserAlreadyExists,
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
+pub enum Error {
 }

@@ -18,7 +18,6 @@ thiserror      = "1.0"
 bytes          = "1"
 semver         = { version = "1.0.3", features = ["serde"] }
 
-actix-web  	= { version = "4.0.0-beta.7", optional = true, default-features = false }
 
 strum          = { version = "0.21.0", features = ["derive"] }
 
@@ -27,15 +26,17 @@ serde_json     = { version = "1.0.64" }
 
 rusqlite = { version = "0.25", optional = true } 
 
-houseflow-macros = { path = "../macros" }
 validator = { version = "0.13.0", features = ["derive"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"], optional = true }
 ring = { version = "0.16.20", optional = true }
 base64 = { version = "0.13.0", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 
+axum_crate = { git = "https://github.com/gbaranski/axum.git", branch = "feat/websocket-message-enum", package = "axum", version = "0.1.2", optional = true }
+http = { version = "0.2.4", optional = true }
+
 [features]
-actix          = [ "actix-web" ]
+axum = ["axum_crate", "http"]
 token          = [ "ring", "chrono", "base64" ]
 auth           = [ "token", "validator" ]
 fulfillment    = [ "token", "lighthouse" ]

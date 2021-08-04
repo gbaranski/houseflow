@@ -1,306 +1,209 @@
-use actix::prelude::*;
-use actix::{Actor, ActorContext, Handler, StreamHandler};
-use actix_web_actors::ws;
+use crate::{Error, InternalError};
+use axum::ws::Message;
 use houseflow_types::lighthouse::{
-    proto::{execute, execute_response, query, state, Frame, FrameID},
+    proto::{execute, execute_response, query, state, Frame},
     DeviceCommunicationError,
 };
-use houseflow_types::{DeviceID, DeviceStatus};
-use std::collections::HashMap;
-use std::net::SocketAddr;
-use std::time::{Duration, Instant};
-use thiserror::Error;
-use tokio::sync::{broadcast, oneshot};
-use tracing::Level;
+use std::time::Duration;
+use tokio::sync::{broadcast, mpsc};
 
-use super::aliases::*;
-
-const TIMEOUT: Duration = Duration::from_secs(5);
-const STATE_CHANNEL_SIZE: usize = 4;
-
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum SessionError {
-    #[error("client sent invalid json {0}")]
+    #[error("websocket error: {0}")]
+    WebsocketError(Box<dyn std::error::Error + Send + Sync>),
+
+    #[error("json error: {0}")]
     JsonError(#[from] serde_json::Error),
 
-    #[error("send state over channel failed {0}")]
-    SendStateError(#[from] tokio::sync::broadcast::error::SendError<state::Frame>),
-
-    #[error("send execute response over channel failed")]
-    SendExecuteResponseError,
-
-    #[error("received {frame_name} frame, it was not expected in this conected")]
+    #[error("frame `{frame_name}` was not expected in this context")]
     UnexpectedFrame { frame_name: &'static str },
 
-    #[error("response has been received without corresponding request")]
-    ResponseWithoutRequest,
+    #[error("send message over channel failed")]
+    SendOverChannelError(String),
 }
 
-use std::sync::Arc;
+impl<T> From<tokio::sync::broadcast::error::SendError<T>> for SessionError {
+    fn from(val: tokio::sync::broadcast::error::SendError<T>) -> Self {
+        Self::SendOverChannelError(val.to_string())
+    }
+}
 
+impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SessionError {
+    fn from(val: tokio::sync::mpsc::error::SendError<T>) -> Self {
+        Self::SendOverChannelError(val.to_string())
+    }
+}
+
+const EXECUTE_TIMEOUT: Duration = Duration::from_secs(5);
+const QUERY_TIMEOUT: Duration = Duration::from_secs(5);
+
+#[derive(Debug, Clone)]
 pub struct Session {
-    sessions: Arc<crate::Sessions>,
-    device_id: DeviceID,
-    address: SocketAddr,
-    heartbeat: Instant,
-    pub execute_channels: HashMap<FrameID, oneshot::Sender<Option<execute_response::Frame>>>,
-    pub state_channel: broadcast::Sender<state::Frame>,
+    execute: mpsc::Sender<execute::Frame>,
+    execute_response: broadcast::Sender<execute_response::Frame>,
+    query: mpsc::Sender<query::Frame>,
+    state: broadcast::Sender<state::Frame>,
 }
+
+// Non-clonable session internals
+#[derive(Debug)]
+pub struct SessionInternals {
+    execute: (mpsc::Sender<execute::Frame>, mpsc::Receiver<execute::Frame>),
+    execute_respose: (
+        broadcast::Sender<execute_response::Frame>,
+        broadcast::Receiver<execute_response::Frame>,
+    ),
+    query: (mpsc::Sender<query::Frame>, mpsc::Receiver<query::Frame>),
+    state: (
+        broadcast::Sender<state::Frame>,
+        broadcast::Receiver<state::Frame>,
+    ),
+}
+
+impl SessionInternals {
+    pub fn new() -> Self {
+        Self {
+            execute: mpsc::channel(4),
+            execute_respose: broadcast::channel(4),
+            query: mpsc::channel(4),
+            state: broadcast::channel(4),
+        }
+    }
+}
+
+use futures::{SinkExt, StreamExt};
 
 impl Session {
-    pub fn new(device_id: DeviceID, address: SocketAddr, sessions: Arc<crate::Sessions>) -> Self {
-        let (state_channel, _) = broadcast::channel(STATE_CHANNEL_SIZE);
-
+    pub fn new(internals: &SessionInternals) -> Self {
         Self {
-            sessions,
-            device_id,
-            address,
-            state_channel,
-            execute_channels: Default::default(),
-            heartbeat: Instant::now(),
+            execute: internals.execute.0.clone(),
+            execute_response: internals.execute_respose.0.clone(),
+            query: internals.query.0.clone(),
+            state: internals.state.0.clone(),
         }
     }
-}
 
-impl Actor for Session {
-    type Context = ws::WebsocketContext<Self>;
+    pub async fn run(
+        &self,
+        stream: impl futures::Stream<Item = Result<Message, tower::BoxError>>
+            + futures::Sink<Message, Error = tower::BoxError>
+            + Unpin,
+        internals: SessionInternals,
+    ) -> Result<(), tower::BoxError> {
 
-    fn started(&mut self, ctx: &mut Self::Context) {
-        let span = tracing::span!(Level::INFO, "Session", address = %self.address, device = %self.device_id);
-        tracing::event!(parent: &span, Level::INFO, "New device connected",);
-
-        ctx.run_interval(TIMEOUT, |act, ctx| {
-            let span = tracing::span!(
-                Level::TRACE,
-                "Heartbeat",
-                device = %act.device_id,
-            );
-            if Instant::now().duration_since(act.heartbeat) > TIMEOUT {
-                tracing::event!(parent: &span, Level::INFO, "Device heartbeat failed");
-                ctx.close(Some(ws::CloseReason {
-                    code: ws::CloseCode::Other(4000),
-                    description: Some(String::from("hearbeat failed")),
-                }));
-                ctx.stop();
-            } else {
-                ctx.ping(&[]);
-                tracing::event!(parent: &span, Level::TRACE, "ping sent");
-            }
-        });
-    }
-    fn stopped(&mut self, _ctx: &mut Self::Context) {
-        assert!(self
-            .sessions
-            .lock()
-            .unwrap()
-            .remove(&self.device_id)
-            .is_some());
-        let span = tracing::span!(Level::INFO, "Session", device = %self.device_id);
-        tracing::event!(parent: &span, Level::INFO, "Device disconnected",);
-    }
-}
-
-impl Handler<ActorQueryFrame> for Session {
-    type Result = actix::ResponseActFuture<
-        Self,
-        std::result::Result<ActorStateFrame, DeviceCommunicationError>,
-    >;
-
-    #[tracing::instrument(
-        name = "Query",
-        skip(self, frame, ctx),
-        fields(
-            device = self.device_id.to_string().as_str(),
-        )
-    )]
-    fn handle(&mut self, frame: ActorQueryFrame, ctx: &mut Self::Context) -> Self::Result {
-        let device_id = self.device_id.clone();
-        let frame: query::Frame = frame.into();
-        let frame = Frame::Query(frame);
-
-        let mut rx = self.state_channel.subscribe();
-        let json = match serde_json::to_string(&frame) {
-            Ok(json) => json,
-            Err(err) => return Box::pin(async move { Err(err.into()) }.into_actor(self)),
-        };
-        ctx.text(json);
-        let send_time = Instant::now();
-        tracing::event!(Level::INFO, "Sent Query to the device");
-
-        let fut = async move {
-            let resp = tokio::time::timeout(TIMEOUT, rx.recv())
-                .await
-                .map_err(|_| DeviceCommunicationError::Timeout)?
-                .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?;
-
-            let span = tracing::span!(
-                Level::INFO,
-                "QueryResponse",
-                device = %device_id,
-                time = tracing::field::display(format_args!("{}ms", send_time.elapsed().as_millis())),
-                state = ?resp.state,
-            );
-
-            tracing::event!(parent: &span, Level::INFO, "Device returned succesfully");
-
-            Ok::<ActorStateFrame, DeviceCommunicationError>(resp.into())
-        }
-        .into_actor(self);
-
-        Box::pin(fut)
-    }
-}
-
-impl Handler<ActorExecuteFrame> for Session {
-    type Result = actix::ResponseActFuture<
-        Self,
-        std::result::Result<ActorExecuteResponseFrame, DeviceCommunicationError>,
-    >;
-
-    #[tracing::instrument(
-        name = "Execute",
-        skip(self, frame, ctx),
-        fields(
-            device = %self.device_id,
-            id = frame.inner.id,
-            command = %frame.inner.command,
-            params = ?frame.inner.params,
-        )
-    )]
-    fn handle(&mut self, frame: ActorExecuteFrame, ctx: &mut Self::Context) -> Self::Result {
-        use actix::prelude::*;
-        let frame: execute::Frame = frame.into();
-        let device_id = self.device_id.clone();
-        let frame_id = frame.id;
-        let frame = Frame::Execute(frame);
-
-        let json = match serde_json::to_string(&frame) {
-            Ok(json) => json,
-            Err(err) => return Box::pin(async move { Err(err.into()) }.into_actor(self)),
+        let (tx, rx) = stream.split();
+        tokio::select! {
+            _ = self.stream_read(rx) => {},
+            _ = self.stream_write(tx, internals) => {}
         };
 
-        let (tx, rx) = oneshot::channel();
-        self.execute_channels.insert(frame_id, tx);
-        ctx.text(json);
-        let send_time = Instant::now();
-        tracing::event!(Level::INFO, "Sent Execute to the device");
-
-        let fut = async move {
-            let resp = tokio::time::timeout(TIMEOUT, rx)
-                .await
-                .map_err(|_| DeviceCommunicationError::Timeout)?
-                .map_err(|err| DeviceCommunicationError::InternalError(err.to_string()))?
-                .ok_or_else(|| DeviceCommunicationError::InternalError(String::from("device might have crashed when sending request")))?;
-
-            let span = tracing::span!(
-                Level::INFO,
-                "ExecuteResponse",
-                device = %device_id,
-                id = frame_id,
-                time = tracing::field::display(format_args!("{}ms", send_time.elapsed().as_millis())),
-                error = tracing::field::Empty,
-                state = tracing::field::Empty,
-            );
-
-            match resp.status {
-                DeviceStatus::Success => {
-                    span.record("state", &tracing::field::debug(&resp.state));
-                    tracing::event!(parent: &span, Level::INFO, "Device returned succesfully");
-                }
-                DeviceStatus::Error(ref err) => {
-                    span.record("error", &tracing::field::display(err));
-                    tracing::event!(parent: &span, Level::ERROR, "Device returned unsucesfully");
-                }
-            }
-
-            Ok::<ActorExecuteResponseFrame, DeviceCommunicationError>(resp.into())
-        }
-        .into_actor(self)
-        .map(move |res, session: &mut Self, _| {
-            session.execute_channels.remove(&frame_id);
-            res
-        });
-
-        Box::pin(fut)
+        Ok(())
     }
-}
 
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for Session {
-    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
-        let msg = match msg {
-            Ok(msg) => msg,
-            Err(err) => {
-                tracing::error!("message error: {}", err);
-                ctx.stop();
-                return;
-            }
-        };
-
-        let result = (|| {
-            match msg {
-                ws::Message::Text(text) => {
-                    let frame = serde_json::from_str(&text)?;
+    async fn stream_read<S>(&self, mut stream: S) -> Result<(), SessionError>
+    where
+        S: futures::Stream<Item = Result<Message, tower::BoxError>> + Unpin,
+    {
+        while let Some(message) = stream
+            .next()
+            .await
+            .transpose()
+            .map_err(SessionError::WebsocketError)?
+        {
+            match message {
+                Message::Text(text) => {
+                    let frame = serde_json::from_str::<Frame>(&text)?;
                     match frame {
-                        Frame::State(frame) => {
-                            self.state_channel.send(frame)?;
+                        Frame::State(state) => {
+                            self.state.send(state)?;
                         }
-                        Frame::ExecuteResponse(frame) => {
-                            self.execute_channels
-                                .remove(&frame.id)
-                                .ok_or(SessionError::ResponseWithoutRequest)?
-                                .send(Some(frame))
-                                .map_err(|_| SessionError::SendExecuteResponseError)?;
+                        Frame::ExecuteResponse(execute_response) => {
+                            self.execute_response.send(execute_response)?;
                         }
-                        frame => {
+                        Frame::Query(_) | Frame::Execute(_) => {
                             return Err(SessionError::UnexpectedFrame {
                                 frame_name: frame.name(),
                             })
                         }
-                    }
+                        _ => unimplemented!(),
+                    };
                 }
-                ws::Message::Binary(bytes) => {
-                    tracing::debug!("Received binary: {:?}", bytes);
-                }
-                ws::Message::Continuation(item) => {
-                    tracing::debug!("Received continuation: {:?}", item);
-                }
-                msg @ (ws::Message::Ping(_) | ws::Message::Pong(_)) => {
-                    let span = tracing::span!(Level::TRACE, "Heartbeat", device = %self.device_id);
-                    match msg {
-                        ws::Message::Ping(bytes) => {
-                            tracing::event!(parent: &span, Level::TRACE, "ping received");
-                            self.heartbeat = Instant::now();
-                            ctx.pong(&bytes);
-                            tracing::event!(parent: &span, Level::TRACE, "pong sent");
-                        }
-                        ws::Message::Pong(_bytes) => {
-                            tracing::event!(parent: &span, Level::TRACE, "pong received");
-                            self.heartbeat = Instant::now();
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-                ws::Message::Close(reason) => {
-                    tracing::debug!("Connection closed, reason: {:?}", reason);
-                    ctx.close(reason);
-                    ctx.stop();
-                }
-                ws::Message::Nop => {
-                    tracing::debug!("Received no operation");
-                }
-            };
-            Ok(())
-        })();
-        match result {
-            Ok(_) => {}
-            Err(err) => {
-                tracing::error!("stream handler error: {}", err);
-                ctx.close(Some(ws::CloseReason {
-                    code: ws::CloseCode::Other(4000),
-                    description: Some(err.to_string()),
-                }));
-                ctx.stop();
+                Message::Binary(_) => todo!(),
+                Message::Ping(_) => todo!(),
+                Message::Pong(_) => todo!(),
+                Message::Close(_) => todo!(),
             }
         }
+
+        Ok(())
+    }
+
+    async fn stream_write<S>(
+        &self,
+        mut stream: S,
+        mut internals: SessionInternals,
+    ) -> Result<(), SessionError>
+    where
+        S: futures::Sink<Message, Error = tower::BoxError> + Unpin,
+    {
+        async fn send_json<S, T>(stream: &mut S, val: &T) -> Result<(), SessionError>
+        where
+            S: futures::Sink<Message, Error = tower::BoxError> + Unpin,
+            T: serde::Serialize,
+        {
+            let json = serde_json::to_string(val)?;
+            stream
+                .send(Message::Text(json))
+                .await
+                .map_err(SessionError::WebsocketError)
+        }
+
+        loop {
+            tokio::select! {
+                Some(execute) = internals.execute.1.recv() => {
+                    send_json(&mut stream, &execute).await?;
+                }
+                Some(query) = internals.query.1.recv() => {
+                    send_json(&mut stream, &query).await?;
+                }
+            };
+        }
+    }
+
+    pub async fn execute(&self, frame: execute::Frame) -> Result<execute_response::Frame, Error> {
+        let mut execute_response_subscriber = self.execute_response.subscribe();
+        let frame_id = frame.id;
+        self.execute
+            .send(frame)
+            .await
+            .map_err(|err| InternalError::Other(err.to_string()))?;
+
+        tokio::time::timeout(EXECUTE_TIMEOUT, async {
+            loop {
+                let execute_response = execute_response_subscriber
+                    .recv()
+                    .await
+                    .map_err(|err| InternalError::Other(err.to_string()))?;
+                if execute_response.id == frame_id {
+                    break Ok::<_, Error>(execute_response);
+                }
+            }
+        })
+        .await
+        .map_err(|_| DeviceCommunicationError::Timeout)?
+    }
+
+    pub async fn query(&self, frame: query::Frame) -> Result<state::Frame, Error> {
+        let mut state_subscriber = self.state.subscribe();
+        self.query
+            .send(frame)
+            .await
+            .map_err(|err| InternalError::Other(err.to_string()))?;
+
+        tokio::time::timeout(QUERY_TIMEOUT, state_subscriber.recv())
+            .await
+            .map_err(|_| DeviceCommunicationError::Timeout)?
+            .map_err(|err| InternalError::Other(err.to_string()))
+            .map_err(Error::InternalError)
     }
 }

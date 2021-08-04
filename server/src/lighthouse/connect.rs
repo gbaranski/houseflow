@@ -1,77 +1,58 @@
-use super::Session;
-use crate::Sessions;
-use actix_web::{http, web, HttpRequest, HttpResponse};
-use actix_web_actors::ws;
-use houseflow_db::Database;
-use houseflow_types::{lighthouse::ConnectResponseError, DeviceID, DevicePassword};
-use itertools::Itertools;
+use super::{Session, SessionInternals};
+use crate::{Error, State};
+use async_trait::async_trait;
+use axum::extract;
+use houseflow_types::{lighthouse::ConnectError, DeviceID};
 use std::str::FromStr;
 
-fn parse_authorization_header(req: &HttpRequest) -> Result<(DeviceID, DevicePassword), String> {
-    let header = req
-        .headers()
-        .get(http::header::AUTHORIZATION)
-        .ok_or_else(|| String::from("`Authorization` header is missing"))?
-        .to_str()
-        .map_err(|err| format!("Invalid string `Authorization` header, error: `{}`", err))?;
+pub struct WebsocketDevice(pub houseflow_types::Device);
 
-    let mut iter = header.split_whitespace();
-    let auth_type = iter
-        .next()
-        .ok_or("Missing auth type in `Authorization` header")?;
-    if auth_type != "Basic" {
-        return Err(format!("Invalid auth type: {}", auth_type));
+#[async_trait]
+impl axum::extract::FromRequest<axum::body::Body> for WebsocketDevice {
+    type Rejection = Error;
+
+    async fn from_request(
+        req: &mut extract::RequestParts<axum::body::Body>,
+    ) -> Result<Self, Self::Rejection> {
+        let axum::extract::TypedHeader(headers::Authorization(header)) = axum::extract::TypedHeader::<
+            headers::Authorization<headers::authorization::Basic>,
+        >::from_request(req)
+        .await
+        .map_err(|_| ConnectError::InvalidAuthorizationHeader(String::from("bad header")))?;
+        let state: State = req.extensions().unwrap().get::<State>().unwrap().clone();
+        let device_id = DeviceID::from_str(header.username()).map_err(|err| {
+            ConnectError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
+        })?;
+        let device = state
+            .database
+            .get_device(&device_id)?
+            .ok_or(ConnectError::InvalidCredentials)?;
+        crate::verify_password(device.password_hash.as_ref().unwrap(), header.password())?;
+        if state.sessions.lock().unwrap().contains_key(&device.id) {
+            return Err(ConnectError::AlreadyConnected.into());
+        }
+        Ok(Self(device))
     }
-    let credentials = iter
-        .next()
-        .ok_or("Missing credentials in `Authorization` header")?;
-
-    let (device_id, device_password) = credentials
-        .split_terminator(':')
-        .take(2)
-        .next_tuple()
-        .ok_or("Missing ID/Password in `Authorization` header")?;
-
-    Ok((
-        DeviceID::from_str(device_id).map_err(|err| err.to_string())?,
-        DevicePassword::from_str(device_password).map_err(|err| err.to_string())?,
-    ))
 }
 
+#[tracing::instrument(name = "DeviceConnect", skip(state, stream))]
 pub async fn on_websocket(
-    req: HttpRequest,
-    stream: web::Payload,
-    sessions: web::Data<Sessions>,
-    database: web::Data<dyn Database>,
-) -> Result<HttpResponse, ConnectResponseError> {
-    let address = req.peer_addr().unwrap();
-    let (device_id, device_password) = parse_authorization_header(&req)
-        .map_err(ConnectResponseError::InvalidAuthorizationHeader)?;
-
-    let device = database
-        .get_device(&device_id)
-        .map_err(|err| ConnectResponseError::InternalError(err.to_string()))?
-        .ok_or(ConnectResponseError::InvalidCredentials)?;
-
-    if !argon2::verify_encoded(
-        &device
-            .password_hash
-            .expect("missing password hash in device from database"),
-        device_password.as_bytes(),
-    )
-    .unwrap()
-    {
-        return Err(ConnectResponseError::InvalidCredentials);
+    stream: axum::ws::WebSocket,
+    extract::Extension(state): extract::Extension<State>,
+    extract::ConnectInfo(socket_address): extract::ConnectInfo<std::net::SocketAddr>,
+    WebsocketDevice(device): WebsocketDevice,
+) {
+    let session_internals = SessionInternals::new();
+    let session = Session::new(&session_internals);
+    tracing::info!("Device connected");
+    state
+        .sessions
+        .lock()
+        .unwrap()
+        .insert(device.id.clone(), session.clone());
+    match session.run(stream, session_internals).await {
+        Ok(_) => tracing::info!("Connection closed"),
+        Err(err) => tracing::error!("Connection closed with error: {}", err),
     }
-
-    if sessions.lock().unwrap().contains_key(&device_id) {
-        return Err(ConnectResponseError::AlreadyConnected);
-    }
-
-    let session = Session::new(device_id.clone(), address, sessions.clone().into_inner());
-    let (address, response) = ws::start_with_addr(session, &req, stream)
-        .map_err(|err| ConnectResponseError::HandshakeError(err.to_string()))?;
-    sessions.lock().unwrap().insert(device_id, address);
-
-    Ok(response)
+    state.sessions.lock().unwrap().remove(&device.id);
 }

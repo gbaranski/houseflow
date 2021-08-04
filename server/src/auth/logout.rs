@@ -1,24 +1,15 @@
-use crate::TokenStore;
-use actix_web::{
-    web::{Data, Json},
-    HttpRequest,
-};
-use houseflow_config::server::Config;
-use houseflow_types::{
-    auth::logout::{ResponseBody, ResponseError},
-    token::RefreshToken,
-};
+use crate::{extractors::RefreshToken, Error, State};
+use axum::{extract, response};
+use houseflow_types::auth::logout::{Request, Response};
 use tracing::Level;
 
-#[tracing::instrument(name = "Logout", skip(token_store, config, http_request))]
-pub async fn on_logout(
-    token_store: Data<dyn TokenStore>,
-    config: Data<Config>,
-    http_request: HttpRequest,
-) -> Result<Json<ResponseBody>, ResponseError> {
-    let refresh_token =
-        RefreshToken::from_request(config.secrets.refresh_key.as_bytes(), &http_request)?;
-    token_store.remove(&refresh_token.tid).await.unwrap();
+#[tracing::instrument(name = "Logout", skip(state, _request, refresh_token))]
+pub async fn handle(
+    extract::Extension(state): extract::Extension<State>,
+    extract::Json(_request): extract::Json<Request>,
+    RefreshToken(refresh_token): RefreshToken,
+) -> Result<response::Json<Response>, Error> {
+    state.token_store.remove(&refresh_token.tid).await.unwrap();
     tracing::event!(Level::INFO, user_id = %refresh_token.sub);
-    Ok(Json(ResponseBody {}))
+    Ok(response::Json(Response {}))
 }

@@ -1,48 +1,34 @@
-use actix_web::{
-    web::{Data, Json},
-    HttpRequest,
-};
-use houseflow_config::server::Config;
-use houseflow_db::Database;
+use crate::{extractors::AccessToken, Error, State};
+use axum::{extract, response};
 use houseflow_types::{
-    fulfillment::query::{Request, ResponseBody, ResponseError},
-    token::AccessToken,
+    fulfillment::query::{Request, Response},
+    FulfillmentError,
 };
-use tracing::Level;
 
-use crate::Sessions;
-
-#[tracing::instrument(skip(http_request, config, db, sessions))]
-pub async fn on_query(
-    request: Json<Request>,
-    http_request: HttpRequest,
-    config: Data<Config>,
-    db: Data<dyn Database>,
-    sessions: Data<Sessions>,
-) -> Result<Json<ResponseBody>, ResponseError> {
-    let access_token =
-        AccessToken::from_request(config.secrets.access_key.as_bytes(), &http_request)?;
-    if !db
-        .check_user_device_access(&access_token.sub, &request.device_id)
-        .map_err(houseflow_db::Error::into_internal_server_error)?
+#[tracing::instrument(skip(state, access_token))]
+pub async fn handle(
+    extract::Extension(state): extract::Extension<State>,
+    AccessToken(access_token): AccessToken,
+    extract::Json(request): extract::Json<Request>,
+) -> Result<response::Json<Response>, Error> {
+    if !state
+        .database
+        .check_user_device_access(&access_token.sub, &request.device_id)?
     {
-        return Err(ResponseError::NoDevicePermission);
+        return Err(FulfillmentError::NoDevicePermission.into());
     }
 
-    tracing::event!(Level::INFO, user_id = %access_token.sub);
+    let session = {
+        let sessions = state.sessions.lock().unwrap();
+        sessions
+            .get(&request.device_id)
+            .ok_or(FulfillmentError::DeviceNotConnected)?
+            .clone()
+    };
 
-    let sessions = sessions.lock().unwrap();
-    let session = sessions
-        .get(&request.device_id)
-        .ok_or(ResponseError::DeviceNotConnected)?;
-    let response_frame = session
-        .send(crate::lighthouse::aliases::ActorQueryFrame::from(
-            request.frame.clone(),
-        ))
-        .await
-        .unwrap()?;
+    let state_frame = session.query(request.frame).await?;
 
-    Ok(Json(ResponseBody {
-        frame: response_frame.into(),
+    Ok(response::Json(Response {
+        frame: state_frame.into(),
     }))
 }
