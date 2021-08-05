@@ -28,6 +28,6 @@ impl HouseflowAPI {
         request: &fulfillment::internal::query::Request,
     ) -> Result<Result<fulfillment::internal::query::Response, ServerError>, Error> {
         let url = self.fulfillment_url.join("query").unwrap();
-        get_with_token(url, request, access_token).await
+        post_with_token(url, request, access_token).await
     }
 }
