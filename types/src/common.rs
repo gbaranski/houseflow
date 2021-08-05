@@ -105,7 +105,7 @@ impl<const N: usize> std::fmt::Display for Credential<N> {
 
 impl<const N: usize> std::fmt::Debug for Credential<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "Inner: `{}`", hex::encode(self.inner))
+        write!(f, "{}", hex::encode(self.inner))
     }
 }
 
