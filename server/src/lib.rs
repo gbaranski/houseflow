@@ -55,6 +55,7 @@ pub async fn run(address: &std::net::SocketAddr, state: State) {
                 .route("/logout", post(auth::logout::handle))
                 .route("/register", post(auth::register::handle))
                 .route("/token_refresh", post(auth::token_refresh::handle))
+                .route("/refresh", post(auth::refresh::handle))
                 .boxed(),
         )
         .nest(
