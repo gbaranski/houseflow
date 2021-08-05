@@ -1,25 +1,16 @@
+mod auth;
+mod internal;
+mod fulfillment;
+mod lighthouse;
+mod token;
+
+pub use auth::Error as AuthError;
+pub use internal::Error as InternalError;
+pub use fulfillment::Error as FulfillmentError;
+pub use lighthouse::Error as LighthouseError;
+pub use token::Error as TokenError;
+
 use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
-pub enum InternalServerError {
-    #[error("token store error: {0}")]
-    TokenStoreError(String),
-
-    #[error("database error: {0}")]
-    DatabaseError(String),
-
-    #[error("other: {0}")]
-    Other(String),
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
-pub enum FulfillmentError {
-    #[error("device not connected")]
-    DeviceNotConnected,
-
-    #[error("user does not have permission to a specified device")]
-    NoDevicePermission,
-}
 
 
 #[cfg(feature = "validator")]
@@ -34,45 +25,19 @@ pub struct ValidationError(validator::ValidationError);
 )]
 pub enum ServerError {
     #[error("internal error: {0}")]
-    InternalError(#[from] InternalServerError),
+    InternalError(#[from] InternalError),
 
     #[error("validation error: {0}")]
     ValidationError(#[from] ValidationError),
 
+    #[error("auth error: {0}")]
+    AuthError(#[from] AuthError),
+
     #[error("fulfillment error: {0}")]
     FulfillmentError(#[from] FulfillmentError),
 
-    #[error("invalid authorization header {0}")]
-    InvalidAuthorizationHeader(String),
-    
-    #[error("invalid error: {0}")]
-    InvalidToken(#[from] crate::token::Error),
-
-    #[error("connect error: {0}")]
-    DeviceConnectError(#[from] crate::lighthouse::ConnectError),
-
-    #[error("device communication error: {0}")]
-    DeviceCommunicationError(#[from] crate::lighthouse::DeviceCommunicationError),
-
-    /// When password hashes doesn't match with the one from database
-    #[error("invalid password")]
-    InvalidPassword,
-
-    /// When client tries to log in, but user with given credentails have not been found
-    #[error("user not found")]
-    UserNotFound,
-
-    /// Occurs when user tries to register, but user with given credentials already exists
-    #[error("user already exists")]
-    UserAlreadyExists,
-
-    /// Refresh token not found in store, this may occur when refreshing access token
-    #[error("token not found in store")]
-    RefreshTokenNotInStore,
-
-    /// User does not have access to device
-    #[error("no device permission")]
-    NoDevicePermission,
+    #[error("lighthouse error: {0}")]
+    LighthouseError(#[from] LighthouseError),
 }
 
 #[cfg(feature = "axum")]

@@ -1,8 +1,9 @@
-use crate::{extractors::AccessToken, Error, State};
+use crate::{extractors::AccessToken, State};
 use axum::{extract, response};
 use houseflow_types::{
-    fulfillment::sync::{Request, Response},
+    fulfillment::internal::sync::{Request, Response},
     Device,
+    errors::ServerError,
 };
 use tracing::Level;
 
@@ -11,7 +12,7 @@ pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(_request): extract::Json<Request>,
     AccessToken(access_token): AccessToken,
-) -> Result<response::Json<Response>, Error> {
+) -> Result<response::Json<Response>, ServerError> {
     let devices = state.database
         .get_user_devices(&access_token.sub)?
         .into_iter()

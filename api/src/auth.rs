@@ -2,7 +2,7 @@ use crate::{get_with_token, post, post_with_token, Error, HouseflowAPI};
 use houseflow_types::{
     auth,
     token::{AccessToken, RefreshToken},
-    ServerError,
+    errors::ServerError,
 };
 
 #[cfg(feature = "auth")]

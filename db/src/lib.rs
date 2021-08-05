@@ -65,8 +65,8 @@ pub trait Database: Send + Sync {
     fn check_user_admin(&self, user_id: &UserID) -> Result<bool, Error>;
 }
 
-impl From<Error> for houseflow_types::ServerError {
+impl From<Error> for houseflow_types::errors::ServerError {
     fn from(val: Error) -> Self {
-        houseflow_types::ServerError::InternalError(houseflow_types::InternalServerError::DatabaseError(val.to_string()))
+        houseflow_types::errors::InternalError::DatabaseError(val.to_string()).into()
     }
 }

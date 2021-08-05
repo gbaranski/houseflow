@@ -1,0 +1,37 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
+pub enum Error {
+    /// `Authorization` header has invalid syntax
+    #[error("invalid authorization header {0}")]
+    InvalidAuthorizationHeader(String),
+
+    /// Client sent invalid token
+    #[error("invalid error: {0}")]
+    InvalidToken(#[from] super::token::Error),
+
+    /// When password hashes doesn't match with the one from database
+    #[error("invalid password")]
+    InvalidPassword,
+
+    /// When client tries to authenticate, but user with given credentails have not been found
+    #[error("user not found")]
+    UserNotFound,
+
+    /// When device tries to authenticate, but device with given credentails have not been found
+    #[error("device not found")]
+    DeviceNotFound,
+
+    /// Occurs when user tries to register, but user with given credentials already exists
+    #[error("user already exists")]
+    UserAlreadyExists,
+
+    /// Refresh token not found in store, this may occur when refreshing access token
+    #[error("token not found in store")]
+    RefreshTokenNotInStore,
+
+    /// User does not have permission to a device
+    #[error("user does not have permission to a specified device")]
+    NoDevicePermission,
+}
+

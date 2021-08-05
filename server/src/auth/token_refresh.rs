@@ -1,9 +1,10 @@
-use crate::{extractors::RefreshToken, Error, State};
+use crate::{extractors::RefreshToken, State};
 use axum::{extract, response};
 use chrono::{Duration, Utc};
 use houseflow_types::{
     auth::token::{Request, Response},
     token::{AccessToken, AccessTokenPayload},
+    errors::{ServerError, AuthError},
 };
 use tracing::Level;
 
@@ -12,9 +13,9 @@ pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(request): extract::Json<Request>,
     RefreshToken(refresh_token): RefreshToken,
-) -> Result<response::Json<Response>, Error> {
+) -> Result<response::Json<Response>, ServerError> {
     if !state.token_store.exists(&refresh_token.tid).await? {
-        return Err(Error::RefreshTokenNotInStore);
+        return Err(AuthError::RefreshTokenNotInStore.into());
     }
 
     let access_token_payload = AccessTokenPayload {

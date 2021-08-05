@@ -1,7 +1,7 @@
-use crate::{Error, State};
+use crate::State;
 use async_trait::async_trait;
 use houseflow_config::server::Secrets;
-use houseflow_types::token::{AccessTokenPayload, Error as TokenError, RefreshTokenPayload, Token};
+use houseflow_types::{errors::{AuthError, ServerError, TokenError}, token::{AccessTokenPayload, RefreshTokenPayload, Token}};
 
 use serde::{de, ser};
 
@@ -28,7 +28,7 @@ impl std::ops::Deref for AccessToken {
 async fn from_request<B, P>(
     req: &mut axum::extract::RequestParts<B>,
     get_key_fn: impl FnOnce(&Secrets) -> &str,
-) -> Result<Token<P>, Error>
+) -> Result<Token<P>, AuthError>
 where
     B: http_body::Body + Send,
     B::Data: Send,
@@ -41,15 +41,15 @@ where
         .get(http::header::AUTHORIZATION)
         .ok_or(TokenError::MissingHeader)?
         .to_str()
-        .map_err(|err| Error::InvalidAuthorizationHeader(err.to_string()))?;
+        .map_err(|err| AuthError::InvalidAuthorizationHeader(err.to_string()))?;
 
     let (schema, token) = header_str
         .split_once(' ')
-        .ok_or_else(|| Error::InvalidAuthorizationHeader(String::from("invalid syntax")))?;
+        .ok_or_else(|| AuthError::InvalidAuthorizationHeader(String::from("invalid syntax")))?;
 
 
     if schema != "Bearer" {
-        return Err(Error::InvalidAuthorizationHeader(schema.to_string()).into());
+        return Err(AuthError::InvalidAuthorizationHeader(schema.to_string()).into());
     }
 
     let token = Token::<P>::decode(get_key_fn(&state.config.secrets).as_bytes(), token)?;
@@ -62,7 +62,7 @@ where
     B: http_body::Body + Send,
     B::Data: Send,
 {
-    type Rejection = Error;
+    type Rejection = ServerError;
 
     async fn from_request(
         req: &mut axum::extract::RequestParts<B>,
@@ -77,7 +77,7 @@ where
     B: http_body::Body + Send,
     B::Data: Send,
 {
-    type Rejection = Error;
+    type Rejection = ServerError;
 
     async fn from_request(
         req: &mut axum::extract::RequestParts<B>,

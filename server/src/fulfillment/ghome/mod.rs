@@ -1,8 +1,9 @@
-use crate::{extractors::AccessToken, Error, InternalError, State};
+use crate::{extractors::AccessToken, State};
 use axum::{extract, response};
 use houseflow_types::{
+    errors::{AuthError, FulfillmentError, InternalError, ServerError},
     fulfillment::ghome::{self, Request, RequestInput, Response},
-    DeviceID, DeviceStatus, FulfillmentError,
+    DeviceID, DeviceStatus,
 };
 use tracing::Level;
 
@@ -11,11 +12,11 @@ pub async fn on_webhook(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(request): extract::Json<Request>,
     AccessToken(access_token): AccessToken,
-) -> Result<response::Json<Response>, Error> {
+) -> Result<response::Json<Response>, ServerError> {
     let input = request.inputs.first().unwrap();
     tracing::event!(Level::INFO, intent = %input, user_id = %access_token.sub);
 
-    let body: Result<Response, Error> = match input {
+    let body: Result<Response, ServerError> = match input {
         RequestInput::Sync => {
             use ghome::sync;
 
@@ -50,7 +51,7 @@ pub async fn on_webhook(
                         other_device_ids: None,
                     };
 
-                    Ok::<_, Error>(payload)
+                    Ok::<_, ServerError>(payload)
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             let payload = sync::response::Payload {
@@ -74,8 +75,8 @@ pub async fn on_webhook(
 
             let device_responses = payload.devices.iter().map(|device| async move {
                 if !database.check_user_device_access(&access_token.sub, &device.id)? {
-                    return Err::<(DeviceID, query::response::PayloadDevice), Error>(
-                        FulfillmentError::NoDevicePermission.into(),
+                    return Err::<(DeviceID, query::response::PayloadDevice), ServerError>(
+                        AuthError::NoDevicePermission.into(),
                     );
                 }
 
@@ -83,7 +84,13 @@ pub async fn on_webhook(
                 match sessions.get(&device.id) {
                     Some(session) => {
                         let query_frame = houseflow_types::lighthouse::proto::query::Frame {};
-                        let response = session.query(query_frame).await?;
+                        let response = tokio::time::timeout(
+                            crate::fulfillment::QUERY_TIMEOUT,
+                            session.query(query_frame),
+                        )
+                        .await
+                        .map_err(|_| FulfillmentError::Timeout)??;
+
                         Ok((
                             device.id.clone(),
                             query::response::PayloadDevice {
@@ -135,7 +142,7 @@ pub async fn on_webhook(
             let access_token = &access_token;
             let responses = requests.map(|(exec, device)| async move {
                 if !database.check_user_device_access(&access_token.sub, &device.id)? {
-                    return Err::<_, Error>(FulfillmentError::NoDevicePermission.into());
+                    return Err::<_, ServerError>(AuthError::NoDevicePermission.into());
                 }
                 match sessions.lock().unwrap().get(&device.id) {
                     Some(session) => {
@@ -145,7 +152,12 @@ pub async fn on_webhook(
                             params: exec.params.clone(),
                         };
 
-                        let response = session.execute(execute_frame).await?;
+                        let response = tokio::time::timeout(
+                            crate::fulfillment::EXECUTE_TIMEOUT,
+                            session.execute(execute_frame),
+                        )
+                        .await
+                        .map_err(|_| FulfillmentError::Timeout)??;
 
                         Ok(match response.status {
                             DeviceStatus::Success => execute::response::PayloadCommand {

@@ -11,7 +11,7 @@ pub use token_store::{sled::TokenStore as SledTokenStore, TokenStore};
 
 use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::DeviceID;
+use houseflow_types::{DeviceID, errors::AuthError};
 
 use std::{collections::HashMap, sync::Mutex};
 pub type Sessions = HashMap<DeviceID, lighthouse::Session>;
@@ -20,10 +20,10 @@ pub(crate) fn get_password_salt() -> [u8; 16] {
     rand::random()
 }
 
-pub(crate) fn verify_password(hash: &str, password: &str) -> Result<(), Error> {
+pub(crate) fn verify_password(hash: &str, password: &str) -> Result<(), AuthError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
         true => Ok(()),
-        false => Err(Error::InvalidPassword.into()),
+        false => Err(AuthError::InvalidPassword.into()),
     }
 }
 
@@ -32,9 +32,6 @@ async fn health_check() -> &'static str {
 }
 
 use std::sync::Arc;
-
-pub use houseflow_types::InternalServerError as InternalError;
-pub use houseflow_types::ServerError as Error;
 
 #[derive(Clone)]
 pub struct State {

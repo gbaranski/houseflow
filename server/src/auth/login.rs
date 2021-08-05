@@ -1,7 +1,8 @@
-use crate::{Error, State};
+use crate::State;
 use axum::{extract, response};
 use chrono::{Duration, Utc};
 use houseflow_types::{
+    errors::{ServerError, AuthError},
     auth::login::{Request, Response},
     token::{AccessToken, AccessTokenPayload, RefreshToken, RefreshTokenPayload},
 };
@@ -17,12 +18,12 @@ use tracing::Level;
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(request): extract::Json<Request>,
-) -> Result<response::Json<Response>, Error> {
+) -> Result<response::Json<Response>, ServerError> {
     validator::Validate::validate(&request)?;
     let user = state
         .database
         .get_user_by_email(&request.email)?
-        .ok_or(Error::UserNotFound)?;
+        .ok_or(AuthError::UserNotFound)?;
 
     crate::verify_password(&user.password_hash, &request.password)?;
     let refresh_token = RefreshToken::new(

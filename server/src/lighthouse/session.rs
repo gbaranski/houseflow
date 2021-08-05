@@ -1,10 +1,8 @@
-use crate::{Error, InternalError};
 use axum::ws::Message;
-use houseflow_types::lighthouse::{
-    proto::{execute, execute_response, query, state, Frame},
-    DeviceCommunicationError,
+use houseflow_types::{
+    errors::{InternalError, ServerError},
+    lighthouse::proto::{execute, execute_response, query, state, Frame},
 };
-use std::time::Duration;
 use tokio::sync::{broadcast, mpsc};
 
 #[derive(Debug, thiserror::Error)]
@@ -33,9 +31,6 @@ impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SessionError {
         Self::SendOverChannelError(val.to_string())
     }
 }
-
-const EXECUTE_TIMEOUT: Duration = Duration::from_secs(5);
-const QUERY_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Debug, Clone)]
 pub struct Session {
@@ -90,7 +85,6 @@ impl Session {
             + Unpin,
         internals: SessionInternals,
     ) -> Result<(), tower::BoxError> {
-
         let (tx, rx) = stream.split();
         tokio::select! {
             _ = self.stream_read(rx) => {},
@@ -170,7 +164,10 @@ impl Session {
         }
     }
 
-    pub async fn execute(&self, frame: execute::Frame) -> Result<execute_response::Frame, Error> {
+    pub async fn execute(
+        &self,
+        frame: execute::Frame,
+    ) -> Result<execute_response::Frame, ServerError> {
         let mut execute_response_subscriber = self.execute_response.subscribe();
         let frame_id = frame.id;
         self.execute
@@ -178,32 +175,28 @@ impl Session {
             .await
             .map_err(|err| InternalError::Other(err.to_string()))?;
 
-        tokio::time::timeout(EXECUTE_TIMEOUT, async {
-            loop {
-                let execute_response = execute_response_subscriber
-                    .recv()
-                    .await
-                    .map_err(|err| InternalError::Other(err.to_string()))?;
-                if execute_response.id == frame_id {
-                    break Ok::<_, Error>(execute_response);
-                }
+        loop {
+            let execute_response = execute_response_subscriber
+                .recv()
+                .await
+                .map_err(|err| InternalError::Other(err.to_string()))?;
+            if execute_response.id == frame_id {
+                break Ok::<_, ServerError>(execute_response);
             }
-        })
-        .await
-        .map_err(|_| DeviceCommunicationError::Timeout)?
+        }
     }
 
-    pub async fn query(&self, frame: query::Frame) -> Result<state::Frame, Error> {
+    pub async fn query(&self, frame: query::Frame) -> Result<state::Frame, ServerError> {
         let mut state_subscriber = self.state.subscribe();
         self.query
             .send(frame)
             .await
             .map_err(|err| InternalError::Other(err.to_string()))?;
 
-        tokio::time::timeout(QUERY_TIMEOUT, state_subscriber.recv())
+        state_subscriber
+            .recv()
             .await
-            .map_err(|_| DeviceCommunicationError::Timeout)?
             .map_err(|err| InternalError::Other(err.to_string()))
-            .map_err(Error::InternalError)
+            .map_err(ServerError::InternalError)
     }
 }

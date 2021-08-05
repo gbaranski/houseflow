@@ -1,8 +1,8 @@
 use axum::{extract, response};
-use crate::{State, Error};
+use crate::State;
 use houseflow_types::{
     auth::register::{Request, Response},
-    ServerError, User,
+    errors::{ServerError, AuthError}, User,
 };
 use rand::random;
 use tracing::Level;
@@ -15,7 +15,7 @@ use tracing::Level;
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(request): extract::Json<Request>,
-) -> Result<response::Json<Response>, Error> {
+) -> Result<response::Json<Response>, ServerError> {
     validator::Validate::validate(&request)?;
 
     let password_hash = argon2::hash_encoded(
@@ -35,7 +35,7 @@ pub async fn handle(
         .database
         .add_user(&new_user)
         .map_err(|err| match err {
-            houseflow_db::Error::AlreadyExists => ServerError::UserAlreadyExists.into(),
+            houseflow_db::Error::AlreadyExists => AuthError::UserAlreadyExists.into(),
             other => ServerError::from(other),
         })?;
 

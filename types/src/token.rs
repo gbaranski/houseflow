@@ -1,32 +1,8 @@
-use crate::{Credential, UserID};
+use crate::{Credential, UserID, errors::TokenError as Error};
 use chrono::{DateTime, Utc};
 use serde::{de, ser, Deserialize, Serialize};
 
 pub type RefreshTokenID = Credential<16>;
-
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error, Serialize, Deserialize)]
-pub enum Error {
-    #[error("missing header")]
-    MissingHeader,
-
-    #[error("missing payload")]
-    MissingPayload,
-
-    #[error("missing signature")]
-    MissingSignature,
-
-    #[error("invalid json: {0}")]
-    InvalidJSON(String),
-
-    #[error("invalid encoding: `{0}`")]
-    InvalidEncoding(String),
-
-    #[error("invalid signature")]
-    InvalidSignature,
-
-    #[error("token is expired since {seconds} seconds")]
-    Expired { seconds: u64 },
-}
 
 pub type Signature = Vec<u8>;
 

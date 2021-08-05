@@ -26,10 +26,8 @@ pub trait TokenStore: Send + Sync {
     ) -> Result<(), Error>;
 }
 
-impl From<Error> for houseflow_types::ServerError {
+impl From<Error> for houseflow_types::errors::ServerError {
     fn from(val: Error) -> Self {
-        houseflow_types::ServerError::InternalError(
-            houseflow_types::InternalServerError::TokenStoreError(val.to_string()),
-        )
+            houseflow_types::errors::InternalError::TokenStoreError(val.to_string()).into()
     }
 }

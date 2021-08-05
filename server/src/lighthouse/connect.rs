@@ -1,15 +1,15 @@
 use super::{Session, SessionInternals};
-use crate::{Error, State};
+use crate:: State;
 use async_trait::async_trait;
 use axum::extract;
-use houseflow_types::{lighthouse::ConnectError, DeviceID};
+use houseflow_types::{errors::{AuthError, ServerError, LighthouseError}, DeviceID};
 use std::str::FromStr;
 
 pub struct WebsocketDevice(pub houseflow_types::Device);
 
 #[async_trait]
 impl axum::extract::FromRequest<axum::body::Body> for WebsocketDevice {
-    type Rejection = Error;
+    type Rejection = ServerError;
 
     async fn from_request(
         req: &mut extract::RequestParts<axum::body::Body>,
@@ -18,18 +18,18 @@ impl axum::extract::FromRequest<axum::body::Body> for WebsocketDevice {
             headers::Authorization<headers::authorization::Basic>,
         >::from_request(req)
         .await
-        .map_err(|_| ConnectError::InvalidAuthorizationHeader(String::from("bad header")))?;
+        .map_err(|_| AuthError::InvalidAuthorizationHeader(String::from("bad header")))?;
         let state: State = req.extensions().unwrap().get::<State>().unwrap().clone();
         let device_id = DeviceID::from_str(header.username()).map_err(|err| {
-            ConnectError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
+            AuthError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
         })?;
         let device = state
             .database
             .get_device(&device_id)?
-            .ok_or(ConnectError::InvalidCredentials)?;
+            .ok_or(AuthError::DeviceNotFound)?;
         crate::verify_password(device.password_hash.as_ref().unwrap(), header.password())?;
         if state.sessions.lock().unwrap().contains_key(&device.id) {
-            return Err(ConnectError::AlreadyConnected.into());
+            return Err(LighthouseError::AlreadyConnected.into());
         }
         Ok(Self(device))
     }

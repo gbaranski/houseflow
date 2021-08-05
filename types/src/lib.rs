@@ -2,9 +2,7 @@ mod common;
 mod device;
 mod user;
 
-mod server;
-
-pub use server::{ServerError, InternalServerError, FulfillmentError};
+pub mod errors;
 
 #[cfg(feature = "auth")]
 pub mod auth;

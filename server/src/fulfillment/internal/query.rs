@@ -1,8 +1,8 @@
-use crate::{extractors::AccessToken, Error, State};
+use crate::{extractors::AccessToken, State};
 use axum::{extract, response};
 use houseflow_types::{
-    fulfillment::query::{Request, Response},
-    FulfillmentError,
+    errors::{AuthError, FulfillmentError, ServerError},
+    fulfillment::internal::query::{Request, Response},
 };
 
 #[tracing::instrument(skip(state, access_token))]
@@ -10,12 +10,12 @@ pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     AccessToken(access_token): AccessToken,
     extract::Json(request): extract::Json<Request>,
-) -> Result<response::Json<Response>, Error> {
+) -> Result<response::Json<Response>, ServerError> {
     if !state
         .database
         .check_user_device_access(&access_token.sub, &request.device_id)?
     {
-        return Err(FulfillmentError::NoDevicePermission.into());
+        return Err(AuthError::NoDevicePermission.into());
     }
 
     let session = {
@@ -26,9 +26,12 @@ pub async fn handle(
             .clone()
     };
 
-    let state_frame = session.query(request.frame).await?;
+    let frame = tokio::time::timeout(
+        crate::fulfillment::QUERY_TIMEOUT,
+        session.query(request.frame),
+    )
+    .await
+    .map_err(|_| FulfillmentError::Timeout)??;
 
-    Ok(response::Json(Response {
-        frame: state_frame.into(),
-    }))
+    Ok(response::Json(Response { frame }))
 }
