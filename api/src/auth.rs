@@ -35,7 +35,7 @@ impl HouseflowAPI {
         &self,
         refresh_token: &RefreshToken,
     ) -> Result<Result<auth::token::Response, ServerError>, Error> {
-        let url = self.auth_url.join("refresh_token").unwrap();
+        let url = self.auth_url.join("refresh").unwrap();
         post_with_token(url, &auth::token::Request {}, refresh_token).await
     }
 
