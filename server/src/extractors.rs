@@ -1,5 +1,6 @@
 use crate::State;
 use async_trait::async_trait;
+use axum::body::Body;
 use houseflow_config::server::Secrets;
 use houseflow_types::{
     errors::{AuthError, ServerError, TokenError},
@@ -9,32 +10,13 @@ use houseflow_types::{
 use serde::{de, ser};
 
 pub struct RefreshToken(pub Token<RefreshTokenPayload>);
-
-impl std::ops::Deref for RefreshToken {
-    type Target = Token<RefreshTokenPayload>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 pub struct AccessToken(pub Token<AccessTokenPayload>);
 
-impl std::ops::Deref for AccessToken {
-    type Target = Token<AccessTokenPayload>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-async fn from_request<B, P>(
-    req: &mut axum::extract::RequestParts<B>,
+async fn from_request<P>(
+    req: &mut axum::extract::RequestParts<Body>,
     get_key_fn: impl FnOnce(&Secrets) -> &str,
 ) -> Result<Token<P>, AuthError>
 where
-    B: http_body::Body + Send,
-    B::Data: Send,
     P: ser::Serialize + de::DeserializeOwned,
 {
     let state: &State = req.extensions().unwrap().get().unwrap();
@@ -59,15 +41,11 @@ where
 }
 
 #[async_trait]
-impl<B> axum::extract::FromRequest<B> for RefreshToken
-where
-    B: http_body::Body + Send,
-    B::Data: Send,
-{
+impl axum::extract::FromRequest<Body> for RefreshToken {
     type Rejection = ServerError;
 
     async fn from_request(
-        req: &mut axum::extract::RequestParts<B>,
+        req: &mut axum::extract::RequestParts<Body>,
     ) -> Result<Self, Self::Rejection> {
         Ok(Self(
             from_request(req, |secrets| &secrets.refresh_key).await?,
@@ -76,15 +54,12 @@ where
 }
 
 #[async_trait]
-impl<B> axum::extract::FromRequest<B> for AccessToken
-where
-    B: http_body::Body + Send,
-    B::Data: Send,
+impl axum::extract::FromRequest<Body> for AccessToken
 {
     type Rejection = ServerError;
 
     async fn from_request(
-        req: &mut axum::extract::RequestParts<B>,
+        req: &mut axum::extract::RequestParts<Body>,
     ) -> Result<Self, Self::Rejection> {
         Ok(Self(
             from_request(req, |secrets| &secrets.access_key).await?,
