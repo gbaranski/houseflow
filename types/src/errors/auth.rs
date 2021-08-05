@@ -34,4 +34,3 @@ pub enum Error {
     #[error("user does not have permission to a specified device")]
     NoDevicePermission,
 }
-

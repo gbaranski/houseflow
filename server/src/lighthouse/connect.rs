@@ -1,8 +1,11 @@
 use super::{Session, SessionInternals};
-use crate:: State;
+use crate::State;
 use async_trait::async_trait;
 use axum::extract;
-use houseflow_types::{errors::{AuthError, ServerError, LighthouseError}, DeviceID};
+use houseflow_types::{
+    errors::{AuthError, LighthouseError, ServerError},
+    DeviceID,
+};
 use std::str::FromStr;
 
 pub struct WebsocketDevice(pub houseflow_types::Device);

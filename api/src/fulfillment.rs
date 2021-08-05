@@ -1,5 +1,5 @@
 use crate::{get_with_token, post_with_token, Error, HouseflowAPI};
-use houseflow_types::{fulfillment, token::AccessToken, errors::ServerError};
+use houseflow_types::{errors::ServerError, fulfillment, token::AccessToken};
 
 #[derive(Debug, thiserror::Error)]
 pub enum FulfillmentError {}

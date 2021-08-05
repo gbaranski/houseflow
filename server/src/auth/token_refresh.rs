@@ -3,8 +3,8 @@ use axum::{extract, response};
 use chrono::{Duration, Utc};
 use houseflow_types::{
     auth::token::{Request, Response},
+    errors::{AuthError, ServerError},
     token::{AccessToken, AccessTokenPayload},
-    errors::{ServerError, AuthError},
 };
 use tracing::Level;
 

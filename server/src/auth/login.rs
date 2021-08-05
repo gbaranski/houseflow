@@ -2,8 +2,8 @@ use crate::State;
 use axum::{extract, response};
 use chrono::{Duration, Utc};
 use houseflow_types::{
-    errors::{ServerError, AuthError},
     auth::login::{Request, Response},
+    errors::{AuthError, ServerError},
     token::{AccessToken, AccessTokenPayload, RefreshToken, RefreshTokenPayload},
 };
 use tracing::Level;

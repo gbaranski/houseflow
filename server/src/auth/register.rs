@@ -1,8 +1,9 @@
-use axum::{extract, response};
 use crate::State;
+use axum::{extract, response};
 use houseflow_types::{
     auth::register::{Request, Response},
-    errors::{ServerError, AuthError}, User,
+    errors::{AuthError, ServerError},
+    User,
 };
 use rand::random;
 use tracing::Level;

@@ -1,4 +1,4 @@
-use crate::{Credential, UserID, errors::TokenError as Error};
+use crate::{errors::TokenError as Error, Credential, UserID};
 use chrono::{DateTime, Utc};
 use serde::{de, ser, Deserialize, Serialize};
 
@@ -88,10 +88,9 @@ fn encode_part<T: ser::Serialize>(val: &T) -> String {
 }
 
 fn decode_part<T: de::DeserializeOwned>(val: &str) -> Result<T, Error> {
-    let json_bytes =
-        base64_decode(val).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
-    let json = String::from_utf8(json_bytes)
-        .map_err(|err| Error::InvalidEncoding(err.to_string()))?;
+    let json_bytes = base64_decode(val).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
+    let json =
+        String::from_utf8(json_bytes).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
     serde_json::from_str(&json).map_err(|err| Error::InvalidJSON(err.to_string()))
 }
 
@@ -133,8 +132,8 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         let raw_signature = iter.next().ok_or(Error::MissingSignature)?;
 
         let header = decode_part::<Header>(raw_header)?;
-        let signature = base64_decode(raw_signature)
-            .map_err(|err| Error::InvalidEncoding(err.to_string()))?;
+        let signature =
+            base64_decode(raw_signature).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
 
         let payload_base = decode_part::<BasePayload>(raw_payload)?;
         validate(&payload_base)?;
@@ -155,8 +154,8 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         let raw_signature = iter.next().ok_or(Error::MissingSignature)?;
 
         let header = decode_part::<Header>(raw_header)?;
-        let signature = base64_decode(raw_signature)
-            .map_err(|err| Error::InvalidEncoding(err.to_string()))?;
+        let signature =
+            base64_decode(raw_signature).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
 
         let payload = decode_part::<P>(raw_payload)?;
         let token = Token {
@@ -175,8 +174,8 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         let raw_signature = iter.next().ok_or(Error::MissingSignature)?;
 
         let header = decode_part::<Header>(raw_header)?;
-        let signature = base64_decode(raw_signature)
-            .map_err(|err| Error::InvalidEncoding(err.to_string()))?;
+        let signature =
+            base64_decode(raw_signature).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
 
         let is_signature_valid = match header.alg {
             Algorithm::HS256 => {

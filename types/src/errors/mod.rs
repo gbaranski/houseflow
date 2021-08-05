@@ -1,17 +1,16 @@
 mod auth;
-mod internal;
 mod fulfillment;
+mod internal;
 mod lighthouse;
 mod token;
 
 pub use auth::Error as AuthError;
-pub use internal::Error as InternalError;
 pub use fulfillment::Error as FulfillmentError;
+pub use internal::Error as InternalError;
 pub use lighthouse::Error as LighthouseError;
 pub use token::Error as TokenError;
 
 use serde::{Deserialize, Serialize};
-
 
 #[cfg(feature = "validator")]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

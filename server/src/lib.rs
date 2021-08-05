@@ -11,7 +11,7 @@ pub use token_store::{sled::TokenStore as SledTokenStore, TokenStore};
 
 use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::{DeviceID, errors::AuthError};
+use houseflow_types::{errors::AuthError, DeviceID};
 
 use std::{collections::HashMap, sync::Mutex};
 pub type Sessions = HashMap<DeviceID, lighthouse::Session>;
@@ -23,7 +23,7 @@ pub(crate) fn get_password_salt() -> [u8; 16] {
 pub(crate) fn verify_password(hash: &str, password: &str) -> Result<(), AuthError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
         true => Ok(()),
-        false => Err(AuthError::InvalidPassword.into()),
+        false => Err(AuthError::InvalidPassword),
     }
 }
 

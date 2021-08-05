@@ -1,7 +1,10 @@
 use crate::State;
 use async_trait::async_trait;
 use houseflow_config::server::Secrets;
-use houseflow_types::{errors::{AuthError, ServerError, TokenError}, token::{AccessTokenPayload, RefreshTokenPayload, Token}};
+use houseflow_types::{
+    errors::{AuthError, ServerError, TokenError},
+    token::{AccessTokenPayload, RefreshTokenPayload, Token},
+};
 
 use serde::{de, ser};
 
@@ -47,9 +50,8 @@ where
         .split_once(' ')
         .ok_or_else(|| AuthError::InvalidAuthorizationHeader(String::from("invalid syntax")))?;
 
-
     if schema != "Bearer" {
-        return Err(AuthError::InvalidAuthorizationHeader(schema.to_string()).into());
+        return Err(AuthError::InvalidAuthorizationHeader(schema.to_string()));
     }
 
     let token = Token::<P>::decode(get_key_fn(&state.config.secrets).as_bytes(), token)?;
@@ -67,7 +69,9 @@ where
     async fn from_request(
         req: &mut axum::extract::RequestParts<B>,
     ) -> Result<Self, Self::Rejection> {
-        Ok(Self(from_request(req, |secrets| &secrets.refresh_key).await?))
+        Ok(Self(
+            from_request(req, |secrets| &secrets.refresh_key).await?,
+        ))
     }
 }
 
@@ -82,6 +86,8 @@ where
     async fn from_request(
         req: &mut axum::extract::RequestParts<B>,
     ) -> Result<Self, Self::Rejection> {
-        Ok(Self(from_request(req, |secrets| &secrets.access_key).await?))
+        Ok(Self(
+            from_request(req, |secrets| &secrets.access_key).await?,
+        ))
     }
 }

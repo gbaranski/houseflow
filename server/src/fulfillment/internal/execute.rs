@@ -37,6 +37,6 @@ pub async fn handle(
     .map_err(|_| FulfillmentError::Timeout)??;
 
     Ok(response::Json(Response {
-        frame: response_frame.into(),
+        frame: response_frame,
     }))
 }

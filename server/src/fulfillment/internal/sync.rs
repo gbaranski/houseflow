@@ -1,9 +1,9 @@
 use crate::{extractors::AccessToken, State};
 use axum::{extract, response};
 use houseflow_types::{
+    errors::ServerError,
     fulfillment::internal::sync::{Request, Response},
     Device,
-    errors::ServerError,
 };
 use tracing::Level;
 
@@ -13,7 +13,8 @@ pub async fn handle(
     extract::Json(_request): extract::Json<Request>,
     AccessToken(access_token): AccessToken,
 ) -> Result<response::Json<Response>, ServerError> {
-    let devices = state.database
+    let devices = state
+        .database
         .get_user_devices(&access_token.sub)?
         .into_iter()
         .map(|device| Device {
@@ -44,11 +45,11 @@ pub async fn handle(
 //         token::{AccessToken, AccessTokenPayload},
 //         Device, UserStructure,
 //     };
-// 
+//
 //     #[actix_rt::test]
 //     async fn sync() {
 //         let state = get_state();
-// 
+//
 //         let user = get_user();
 //         let access_token = AccessToken::new(
 //             state.config.secrets.access_key.as_bytes(),
@@ -58,7 +59,7 @@ pub async fn handle(
 //             },
 //         );
 //         state.database.add_user(&user).unwrap();
-// 
+//
 //         let structure_allow = get_structure();
 //         let structure_deny = get_structure();
 //         let room_allow = get_room(&structure_allow);
@@ -73,19 +74,19 @@ pub async fn handle(
 //         let devices_deny = std::iter::repeat_with(|| get_device(&room_deny))
 //             .take(5)
 //             .collect::<Vec<_>>();
-// 
+//
 //         devices_allow
 //             .iter()
 //             .chain(devices_deny.iter())
 //             .for_each(|device| state.database.add_device(&device).unwrap());
-// 
+//
 //         let user_structure = UserStructure {
 //             structure_id: structure_allow.id.clone(),
 //             user_id: user.id.clone(),
 //             is_manager: false,
 //         };
 //         state.database.add_user_structure(&user_structure).unwrap();
-// 
+//
 //         let request = test::TestRequest::default()
 //             .insert_header((
 //                 http::header::AUTHORIZATION,

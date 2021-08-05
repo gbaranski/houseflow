@@ -23,4 +23,3 @@ pub enum Error {
     #[error("token is expired since {seconds} seconds")]
     Expired { seconds: u64 },
 }
-

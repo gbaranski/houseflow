@@ -14,10 +14,9 @@ pub struct Request {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Response{
+pub struct Response {
     pub user_id: UserID,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
-pub enum Error {
-}
+pub enum Error {}

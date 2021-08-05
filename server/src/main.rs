@@ -1,6 +1,6 @@
-use houseflow_config::{server::Config, Config as _, defaults};
+use houseflow_config::{defaults, server::Config, Config as _};
 use houseflow_db::sqlite::Database as SqliteDatabase;
-use houseflow_server::{SledTokenStore, Sessions};
+use houseflow_server::{Sessions, SledTokenStore};
 use std::sync::{Arc, Mutex};
 
 #[tokio::main]

@@ -55,14 +55,20 @@ pub struct SessionInternals {
     ),
 }
 
-impl SessionInternals {
-    pub fn new() -> Self {
+impl Default for SessionInternals {
+    fn default() -> Self {
         Self {
             execute: mpsc::channel(4),
             execute_respose: broadcast::channel(4),
             query: mpsc::channel(4),
             state: broadcast::channel(4),
         }
+    }
+}
+
+impl SessionInternals {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

@@ -8,4 +8,3 @@ pub enum Error {
     #[error("request timeout")]
     Timeout,
 }
-

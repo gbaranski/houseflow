@@ -1,6 +1,9 @@
 use crate::{extractors::AccessToken, State};
 use axum::{extract, response};
-use houseflow_types::{auth::whoami::Response, errors::{ServerError, AuthError}};
+use houseflow_types::{
+    auth::whoami::Response,
+    errors::{AuthError, ServerError},
+};
 use tracing::Level;
 
 #[tracing::instrument(name = "Whoami", skip(state, access_token))]
