@@ -2,6 +2,7 @@ use houseflow_config::{defaults, server::Config, Config as _};
 use houseflow_db::sqlite::Database as SqliteDatabase;
 use houseflow_server::{Sessions, SledTokenStore};
 use std::sync::{Arc, Mutex};
+use std::net::ToSocketAddrs;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,8 +26,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let address = format!("{}:{}", state.config.hostname, defaults::server_port());
-    let socket_address: std::net::SocketAddr = address.parse().expect("invalid address");
-    houseflow_server::run(&socket_address, state).await;
+    let address = address.to_socket_addrs().expect("invalid address").next().unwrap();
+    tracing::debug!("{} address will be used", address);
+    houseflow_server::run(&address, state).await;
 
     Ok(())
 }
