@@ -21,7 +21,8 @@ pub trait Command {
 use houseflow_config::{client::Config, Config as _};
 use std::path::Path;
 
-async fn main_async() -> anyhow::Result<()> {
+#[tokio::main]
+fn main() -> anyhow::Result<()> {
     houseflow_config::init_logging(true);
     let config_default_path = Config::default_path();
     let config_default_path = config_default_path.to_str().unwrap();
@@ -92,16 +93,6 @@ async fn main_async() -> anyhow::Result<()> {
         _ => unreachable!(),
     }?;
     Ok::<(), anyhow::Error>(())
-}
-
-fn main() -> anyhow::Result<()> {
-    actix_rt::System::with_tokio_rt(|| {
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-    })
-    .block_on(async move { main_async().await })
 }
 
 fn get_value<T, TE, AF>(
