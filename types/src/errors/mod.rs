@@ -46,7 +46,23 @@ impl axum_crate::response::IntoResponse for ServerError {
         let status = match self {
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
             Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            _ => todo!(),
+            Self::AuthError(ref err) => match err {
+                AuthError::InvalidAuthorizationHeader(_) => StatusCode::UNAUTHORIZED,
+                AuthError::InvalidToken(_) => StatusCode::UNAUTHORIZED,
+                AuthError::InvalidPassword => StatusCode::UNAUTHORIZED,
+                AuthError::UserNotFound => StatusCode::NOT_FOUND,
+                AuthError::DeviceNotFound => StatusCode::NOT_FOUND,
+                AuthError::UserAlreadyExists => StatusCode::NOT_ACCEPTABLE,
+                AuthError::RefreshTokenNotInStore => StatusCode::UNAUTHORIZED,
+                AuthError::NoDevicePermission => StatusCode::UNAUTHORIZED,
+            },
+            Self::FulfillmentError(ref err) => match err {
+                FulfillmentError::DeviceNotConnected => StatusCode::BAD_GATEWAY,
+                FulfillmentError::Timeout => StatusCode::GATEWAY_TIMEOUT,
+            },
+            Self::LighthouseError(ref err) => match err {
+                LighthouseError::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
+            },
         };
         let response = axum_crate::response::Json(serde_json::to_string(&self).unwrap());
         let mut response = axum_crate::response::IntoResponse::into_response(response);
