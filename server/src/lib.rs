@@ -48,14 +48,13 @@ pub async fn run(address: &std::net::SocketAddr, state: State) {
         ws::ws,
     };
     let app = route("/health_check", get(health_check))
-        .layer(axum::AddExtensionLayer::new(state))
         .nest(
             "/auth",
             route("/login", post(auth::login::handle))
                 .route("/logout", post(auth::logout::handle))
                 .route("/register", post(auth::register::handle))
-                .route("/token_refresh", post(auth::token_refresh::handle))
                 .route("/refresh", post(auth::refresh::handle))
+                .route("/whoami", get(auth::whoami::handle))
                 .boxed(),
         )
         .nest(
@@ -67,7 +66,8 @@ pub async fn run(address: &std::net::SocketAddr, state: State) {
                     .route("/sync", get(fulfillment::internal::sync::handle)),
             ),
         )
-        .nest("/lighthouse", route("/ws", ws(lighthouse::on_websocket)));
+        .nest("/lighthouse", route("/ws", ws(lighthouse::on_websocket)))
+        .layer(axum::AddExtensionLayer::new(state));
 
     hyper::Server::bind(address)
         .serve(app.into_make_service())
