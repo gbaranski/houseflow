@@ -10,14 +10,6 @@ pub struct Config {
     #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
     pub hostname: url::Host,
 
-    /// Path to the SQLite database
-    #[serde(default = "defaults::database_path")]
-    pub database_path: std::path::PathBuf,
-
-    /// Path to the token store
-    #[serde(default = "defaults::token_store_path")]
-    pub tokens_path: std::path::PathBuf,
-
     /// Secret data
     pub secrets: Secrets,
 
@@ -42,8 +34,6 @@ impl crate::Config for Config {
         format!(
             include_str!("default.yaml"),
             defaults::server_hostname(),
-            defaults::database_path().to_str().unwrap(),
-            defaults::token_store_path().to_str().unwrap(),
             rand.next().unwrap(), // refresh key
             rand.next().unwrap(), // access key
             rand.next().unwrap(), // authorization code key
