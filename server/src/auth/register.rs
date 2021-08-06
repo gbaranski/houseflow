@@ -27,13 +27,14 @@ pub async fn handle(
         &argon2::Config::default(),
     )
     .unwrap();
-
+    
     let new_user = User {
         id: random(),
         username: request.username.clone(),
         email: request.email,
         password_hash,
     };
+
     state
         .database
         .add_user(&new_user)
@@ -55,33 +56,55 @@ pub async fn handle(
     }))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::test_utils::*;
-//
-//     #[actix_rt::test]
-//     async fn test_register() {
-//         let state = get_state();
-//         let request = Request {
-//             email: String::from("john_smith@example.com"),
-//             username: String::from("John Smith"),
-//             password: PASSWORD.into(),
-//         };
-//         let response = on_register(Json(request.clone()), state.database.clone())
-//             .await
-//             .unwrap()
-//             .into_inner();
-//
-//         let db_user = state
-//             .database
-//             .get_user_by_email(&request.email)
-//             .unwrap()
-//             .expect("user not found in database");
-//
-//         assert_eq!(db_user.id, response.user_id);
-//         assert_eq!(db_user.username, request.username);
-//         assert_eq!(db_user.email, request.email);
-//         assert!(argon2::verify_encoded(&db_user.password_hash, PASSWORD.as_bytes()).unwrap());
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::Request;
+    use crate::test_utils::*;
+    use axum::{extract, response};
+    use houseflow_types::errors::{AuthError, ServerError};
+
+    #[tokio::test]
+    async fn valid() {
+        let state = get_state();
+        let request = Request {
+            email: String::from("root@gbaranski.com"),
+            username: String::from("Grzegorz Baranski"),
+            password: PASSWORD.into(),
+        };
+        let response::Json(response) = super::handle(state.clone(), extract::Json(request.clone()))
+            .await
+            .unwrap();
+
+        let db_user = state
+            .database
+            .get_user_by_email(&request.email)
+            .unwrap()
+            .expect("user not found in database");
+
+        assert_eq!(db_user.id, response.user_id);
+        assert_eq!(db_user.username, request.username);
+        assert_eq!(db_user.email, request.email);
+        assert!(crate::verify_password(&db_user.password_hash, PASSWORD).is_ok());
+    }
+
+    #[tokio::test]
+    async fn already_exists() {
+        let state = get_state();
+        let user = get_user();
+        state.database.add_user(&user).unwrap();
+        let response = super::handle(
+            state.clone(),
+            extract::Json(Request {
+                email: user.email,
+                username: user.username,
+                password: PASSWORD.into(),
+            }),
+        )
+        .await
+        .unwrap_err();
+        assert_eq!(
+            response,
+            ServerError::AuthError(AuthError::UserAlreadyExists)
+        );
+    }
+}
