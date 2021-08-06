@@ -55,77 +55,74 @@ pub async fn handle(
     }))
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::test_utils::*;
-//
-//     #[actix_rt::test]
-//     async fn valid() {
-//         let state = get_state();
-//         let user = get_user();
-//         state.database.add_user(&user).unwrap();
-//         let response = on_login(
-//             Json(Request {
-//                 email: user.email,
-//                 password: PASSWORD.into(),
-//             }),
-//             state.token_store.clone(),
-//             state.config.clone(),
-//             state.database,
-//         )
-//         .await
-//         .unwrap()
-//         .into_inner();
-//
-//         let (at, rt) = (response.access_token, response.refresh_token);
-//         let (at, rt) = (
-//             AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
-//             RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &rt).unwrap(),
-//         );
-//         assert_eq!(at.sub, rt.sub);
-//         assert!(
-//             state.token_store.exists(&rt.tid).await.unwrap(),
-//             "refresh token not found in token store"
-//         );
-//     }
-//
-//     #[actix_rt::test]
-//     async fn invalid_password() {
-//         let state = get_state();
-//         let user = get_user();
-//         state.database.add_user(&user).unwrap();
-//         let response = on_login(
-//             Json(Request {
-//                 email: user.email,
-//                 password: PASSWORD_INVALID.into(),
-//             }),
-//             state.token_store.clone(),
-//             state.config.clone(),
-//             state.database,
-//         )
-//         .await
-//         .unwrap_err();
-//
-//         assert_eq!(response, ResponseError::InvalidPassword);
-//     }
-//
-//     #[actix_rt::test]
-//     async fn not_existing_user() {
-//         let state = get_state();
-//         let user = get_user();
-//         let response = on_login(
-//             Json(Request {
-//                 email: user.email,
-//                 password: PASSWORD.into(),
-//             }),
-//             state.token_store.clone(),
-//             state.config.clone(),
-//             state.database,
-//         )
-//         .await
-//         .unwrap_err();
-//
-//         assert_eq!(response, ResponseError::UserNotFound);
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::Request;
+    use crate::test_utils::*;
+    use axum::{extract, response};
+    use houseflow_types::{
+        errors::{AuthError, ServerError},
+        token::{AccessToken, RefreshToken},
+    };
+
+    #[tokio::test]
+    async fn valid() {
+        let state = get_state();
+        let user = get_user();
+        state.database.add_user(&user).unwrap();
+        let response::Json(response) = super::handle(
+            state.clone(),
+            extract::Json(Request {
+                email: user.email,
+                password: PASSWORD.into(),
+            }),
+        )
+        .await
+        .unwrap();
+        let (at, rt) = (response.access_token, response.refresh_token);
+        let (at, rt) = (
+            AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
+            RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &rt).unwrap(),
+        );
+        assert_eq!(at.sub, rt.sub);
+        assert!(
+            state.token_store.exists(&rt.tid).await.unwrap(),
+            "refresh token not found in token store"
+        );
+    }
+
+    #[tokio::test]
+    async fn invalid_password() {
+        let state = get_state();
+        let user = get_user();
+        state.database.add_user(&user).unwrap();
+        let response = super::handle(
+            state.clone(),
+            extract::Json(Request {
+                email: user.email,
+                password: PASSWORD_INVALID.into(),
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(response, ServerError::AuthError(AuthError::InvalidPassword));
+    }
+
+    #[tokio::test]
+    async fn not_existing_user() {
+        let state = get_state();
+        let user = get_user();
+        let response = super::handle(
+            state.clone(),
+            extract::Json(Request {
+                email: user.email,
+                password: PASSWORD.into(),
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert_eq!(response, ServerError::AuthError(AuthError::UserNotFound));
+    }
+}

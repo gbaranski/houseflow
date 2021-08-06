@@ -14,8 +14,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or_else(|_| Config::default_path());
 
     let config = Config::read(config_path).expect("cannot load server config");
-    let token_store = SledTokenStore::new(&config.tokens_path).expect("cannot open token store");
-    let database = SqliteDatabase::new(&config.database_path).expect("cannot open database");
+    let token_store =
+        SledTokenStore::new(defaults::token_store_path()).expect("cannot open token store");
+    let database = SqliteDatabase::new(defaults::database_path()).expect("cannot open database");
     let sessions = Sessions::new();
 
     let state = houseflow_server::State {
