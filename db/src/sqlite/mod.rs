@@ -45,6 +45,9 @@ use rusqlite::{params, OptionalExtension};
 
 impl crate::Database for Database {
     fn add_user(&self, user: &User) -> Result<(), Error> {
+        if self.get_user_by_email(&user.email)?.is_some() {
+            return Err(Error::AlreadyExists);
+        };
         const SQL: &str =
             "INSERT INTO users(id, username, email, password_hash) VALUES(?, ?, ?, ?)";
         let connection = self.pool.get()?;
