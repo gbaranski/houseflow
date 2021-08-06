@@ -1,3 +1,4 @@
+# Thansk to https://github.com/helix-editor/helix
 name: Continuous integration
 on:
   pull_request:
