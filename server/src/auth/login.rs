@@ -14,6 +14,7 @@ use tracing::Level;
     fields(
         email = %request.email,
     ),
+    err,
 )]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
@@ -46,7 +47,7 @@ pub async fn handle(
         .add(&refresh_token.tid, refresh_token.exp.as_ref())
         .await?;
 
-    tracing::event!(Level::INFO, user_id = %user.id);
+    tracing::event!(Level::INFO, user_id = %user.id, "Logged in");
 
     Ok(response::Json(Response {
         access_token: access_token.encode(),

@@ -38,7 +38,15 @@ impl axum::extract::FromRequest<axum::body::Body> for WebsocketDevice {
     }
 }
 
-#[tracing::instrument(name = "DeviceConnect", skip(state, stream))]
+#[tracing::instrument(
+    name = "DeviceConnect",
+    skip(stream, state, device),
+    fields(
+        device_id = %device.id,
+        device_type = %device.device_type,
+        device_name = %device.name
+    )
+)]
 pub async fn on_websocket(
     stream: axum::ws::WebSocket,
     extract::Extension(state): extract::Extension<State>,

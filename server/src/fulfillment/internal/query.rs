@@ -1,19 +1,22 @@
-use crate::{extractors::AccessToken, State};
+use std::time::Instant;
+
+use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
     errors::{AuthError, FulfillmentError, ServerError},
     fulfillment::internal::query::{Request, Response},
 };
+use tracing::Level;
 
-#[tracing::instrument(skip(state, access_token))]
+#[tracing::instrument(name = "Query", skip(state), err)]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
-    AccessToken(access_token): AccessToken,
+    UserID(user_id): UserID,
     extract::Json(request): extract::Json<Request>,
 ) -> Result<response::Json<Response>, ServerError> {
     if !state
         .database
-        .check_user_device_access(&access_token.sub, &request.device_id)?
+        .check_user_device_access(&user_id, &request.device_id)?
     {
         return Err(AuthError::NoDevicePermission.into());
     }
@@ -26,12 +29,20 @@ pub async fn handle(
             .clone()
     };
 
-    let frame = tokio::time::timeout(
+    let before = Instant::now();
+    let response = tokio::time::timeout(
         crate::fulfillment::QUERY_TIMEOUT,
         session.query(request.frame),
     )
     .await
     .map_err(|_| FulfillmentError::Timeout)??;
 
-    Ok(response::Json(Response { frame }))
+    tracing::event!(
+        Level::INFO,
+        ?response,
+        ms = %Instant::now().duration_since(before).as_millis(),
+        "Queried device state"
+    );
+
+    Ok(response::Json(Response { frame: response }))
 }

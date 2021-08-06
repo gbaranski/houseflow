@@ -1,22 +1,21 @@
-use crate::{extractors::AccessToken, State};
+use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
     auth::whoami::Response,
     errors::{AuthError, ServerError},
 };
-use tracing::Level;
 
-#[tracing::instrument(name = "Whoami", skip(state, access_token))]
+#[tracing::instrument(name = "Whoami", skip(state), err)]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
-    AccessToken(access_token): AccessToken,
+    UserID(user_id): UserID,
 ) -> Result<response::Json<Response>, ServerError> {
     let user = state
         .database
-        .get_user(&access_token.sub)?
+        .get_user(&user_id)?
         .ok_or(AuthError::UserNotFound)?;
 
-    tracing::event!(Level::INFO, user_id = %user.id);
+    tracing::info!(username = %user.username, email = %user.email);
 
     Ok(response::Json(Response {
         username: user.username,

@@ -1,4 +1,4 @@
-use crate::{extractors::AccessToken, State};
+use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
     errors::ServerError,
@@ -7,15 +7,15 @@ use houseflow_types::{
 };
 use tracing::Level;
 
-#[tracing::instrument(skip(state, _request, access_token))]
+#[tracing::instrument(name = "Sync", skip(state, _request), err)]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(_request): extract::Json<Request>,
-    AccessToken(access_token): AccessToken,
+    UserID(user_id): UserID,
 ) -> Result<response::Json<Response>, ServerError> {
     let devices = state
         .database
-        .get_user_devices(&access_token.sub)?
+        .get_user_devices(&user_id)?
         .into_iter()
         .map(|device| Device {
             password_hash: None,
@@ -28,7 +28,7 @@ pub async fn handle(
         .map(|device| device.id.to_string())
         .collect::<Vec<_>>();
 
-    tracing::event!(Level::INFO, user_id = %access_token.sub, synced_devices = ?device_ids);
+    tracing::event!(Level::INFO, devices = ?device_ids, "Synchronized devices");
 
     let response = Response { devices };
 

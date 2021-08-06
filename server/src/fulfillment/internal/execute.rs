@@ -1,25 +1,24 @@
-use crate::{extractors::AccessToken, State};
+use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
     errors::{AuthError, FulfillmentError, ServerError},
     fulfillment::internal::execute::{Request, Response},
 };
+use std::time::Instant;
 use tracing::Level;
 
-#[tracing::instrument(skip(state, request))]
+#[tracing::instrument(name = "Execute", skip(state), err)]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
+    UserID(user_id): UserID,
     extract::Json(request): extract::Json<Request>,
-    AccessToken(access_token): AccessToken,
 ) -> Result<response::Json<Response>, ServerError> {
     if !state
         .database
-        .check_user_device_access(&access_token.sub, &request.device_id)?
+        .check_user_device_access(&user_id, &request.device_id)?
     {
         return Err(AuthError::NoDevicePermission.into());
     }
-
-    tracing::event!(Level::INFO, user_id = %access_token.sub);
 
     let session = {
         let sessions = state.sessions.lock().unwrap();
@@ -29,14 +28,20 @@ pub async fn handle(
             .clone()
     };
 
-    let response_frame = tokio::time::timeout(
+    let before = Instant::now();
+    let response = tokio::time::timeout(
         crate::fulfillment::EXECUTE_TIMEOUT,
         session.execute(request.frame),
     )
     .await
     .map_err(|_| FulfillmentError::Timeout)??;
 
-    Ok(response::Json(Response {
-        frame: response_frame,
-    }))
+    tracing::event!(
+        Level::INFO,
+        response = ?response,
+        ms = %Instant::now().duration_since(before).as_millis(),
+        "Executed command on device"
+    );
+
+    Ok(response::Json(Response { frame: response }))
 }

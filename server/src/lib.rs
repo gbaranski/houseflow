@@ -47,6 +47,13 @@ pub async fn run(address: &std::net::SocketAddr, state: State) {
         routing::nest,
         ws::ws,
     };
+
+    use http::{Request, Response};
+    use hyper::Body;
+    use std::time::Duration;
+    use tower_http::trace::TraceLayer;
+    use tracing::Span;
+
     let app = route("/health_check", get(health_check))
         .nest(
             "/auth",
@@ -67,7 +74,24 @@ pub async fn run(address: &std::net::SocketAddr, state: State) {
             ),
         )
         .nest("/lighthouse", route("/ws", ws(lighthouse::on_websocket)))
-        .layer(axum::AddExtensionLayer::new(state));
+        .layer(axum::AddExtensionLayer::new(state))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|_request: &Request<Body>| {
+                    tracing::debug_span!(
+                        "Request",
+                        status_code = tracing::field::Empty,
+                        latency = tracing::field::Empty,
+                        user_id = tracing::field::Empty
+                    )
+                })
+                .on_response(|response: &Response<_>, latency: Duration, span: &Span| {
+                    span.record("status_code", &tracing::field::display(response.status()));
+                    span.record("ms", &tracing::field::display(latency.as_millis()));
+
+                    tracing::debug!("response processed")
+                }),
+        );
 
     hyper::Server::bind(address)
         .serve(app.into_make_service())

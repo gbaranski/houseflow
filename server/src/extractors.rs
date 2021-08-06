@@ -9,6 +9,20 @@ use houseflow_types::{
 
 use serde::{de, ser};
 
+pub struct UserID(pub houseflow_types::UserID);
+
+#[async_trait]
+impl axum::extract::FromRequest<Body> for UserID {
+    type Rejection = ServerError;
+
+    async fn from_request(
+        req: &mut axum::extract::RequestParts<Body>,
+    ) -> Result<Self, Self::Rejection> {
+        let AccessToken(access_token) = AccessToken::from_request(req).await?;
+        Ok(Self(access_token.sub.clone()))
+    }
+}
+
 pub struct RefreshToken(pub Token<RefreshTokenPayload>);
 pub struct AccessToken(pub Token<AccessTokenPayload>);
 
@@ -54,8 +68,7 @@ impl axum::extract::FromRequest<Body> for RefreshToken {
 }
 
 #[async_trait]
-impl axum::extract::FromRequest<Body> for AccessToken
-{
+impl axum::extract::FromRequest<Body> for AccessToken {
     type Rejection = ServerError;
 
     async fn from_request(

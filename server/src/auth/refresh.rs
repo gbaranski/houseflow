@@ -8,7 +8,7 @@ use houseflow_types::{
 };
 use tracing::Level;
 
-#[tracing::instrument(name = "Refresh token", skip(state))]
+#[tracing::instrument(name = "Refresh token", skip(state), err)]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     extract::Json(request): extract::Json<Request>,
@@ -27,7 +27,7 @@ pub async fn handle(
         access_token_payload,
     );
 
-    tracing::event!(Level::INFO, user_id = %refresh_token.sub);
+    tracing::event!(Level::INFO, user_id = %refresh_token.sub, "Refreshed token");
 
     Ok(response::Json(Response {
         refresh_token: None,

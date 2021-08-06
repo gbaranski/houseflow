@@ -10,8 +10,10 @@ use tracing::Level;
 
 #[tracing::instrument(
     name = "Register",
+    err,
     skip(state, request),
-    fields(email = %request.email, username = %request.username)
+    fields(email = %request.email, username = %request.username),
+    err,
 )]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
@@ -40,7 +42,13 @@ pub async fn handle(
             other => ServerError::from(other),
         })?;
 
-    tracing::event!(Level::INFO, user_id = %new_user.id);
+    tracing::event!(
+        Level::INFO,
+        user_id = %new_user.id,
+        username = %new_user.username,
+        email = %new_user.email,
+        "Registered user"
+    );
 
     Ok(response::Json(Response {
         user_id: new_user.id,
