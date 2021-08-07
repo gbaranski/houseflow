@@ -69,23 +69,23 @@ pub mod response {
         pub state: serde_json::Map<String, serde_json::Value>,
     }
 
-      /// Result of the query operation.
-      #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-      #[repr(u8)]
-      #[serde(rename_all = "UPPERCASE")]
-      pub enum PayloadDeviceStatus {
-          /// Confirm that the query succeeded.
-          Success,
-  
-          /// Target device is in offline state or unreachable.
-          Offline,
-  
-          /// There is an issue or alert associated with a query.
-          /// The query could succeed or fail.
-          /// This status type is typically set when you want to send additional information about another connected device.
-          Exceptions,
-  
-          /// Unable to query the target device.
-          Error,
-      }
+    /// Result of the query operation.
+    #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    #[repr(u8)]
+    #[serde(rename_all = "UPPERCASE")]
+    pub enum PayloadDeviceStatus {
+        /// Confirm that the query succeeded.
+        Success,
+
+        /// Target device is in offline state or unreachable.
+        Offline,
+
+        /// There is an issue or alert associated with a query.
+        /// The query could succeed or fail.
+        /// This status type is typically set when you want to send additional information about another connected device.
+        Exceptions,
+
+        /// Unable to query the target device.
+        Error,
+    }
 }

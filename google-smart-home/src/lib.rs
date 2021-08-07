@@ -4,7 +4,6 @@ pub mod sync;
 
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Request {
@@ -34,5 +33,5 @@ pub enum Response {
     Sync(sync::response::Response),
     Query(query::response::Response),
     Execute(execute::response::Response),
-    Disconnect
+    Disconnect,
 }
