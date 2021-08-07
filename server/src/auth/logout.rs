@@ -1,12 +1,16 @@
 use crate::{extractors::RefreshToken, State};
 use axum::{extract, response};
-use houseflow_types::{auth::logout::Response, errors::ServerError};
+use houseflow_types::{
+    auth::logout::{Request, Response},
+    errors::ServerError,
+};
 use tracing::Level;
 
-#[tracing::instrument(name = "Logout", skip(state, refresh_token), err)]
+#[tracing::instrument(name = "Logout", skip(state, refresh_token, _request), err)]
 pub async fn handle(
     extract::Extension(state): extract::Extension<State>,
     RefreshToken(refresh_token): RefreshToken,
+    extract::Json(_request): extract::Json<Request>,
 ) -> Result<response::Json<Response>, ServerError> {
     state.token_store.remove(&refresh_token.tid).await.unwrap();
     tracing::event!(Level::INFO, user_id = %refresh_token.sub, "Logged out");
@@ -16,6 +20,7 @@ pub async fn handle(
 #[cfg(test)]
 mod tests {
     use crate::test_utils::*;
+    use axum::extract;
 
     #[tokio::test]
     async fn valid() {
@@ -30,10 +35,15 @@ mod tests {
             },
         );
         state.database.add_user(&user).unwrap();
-        state.token_store.add(&refresh_token.tid, refresh_token.exp.as_ref()).await.unwrap();
+        state
+            .token_store
+            .add(&refresh_token.tid, refresh_token.exp.as_ref())
+            .await
+            .unwrap();
         let _ = super::handle(
             state.clone(),
             crate::extractors::RefreshToken(refresh_token.clone()),
+            extract::Json(super::Request {}),
         )
         .await
         .unwrap();
