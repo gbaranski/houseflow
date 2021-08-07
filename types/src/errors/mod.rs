@@ -12,10 +12,6 @@ pub use token::Error as TokenError;
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "validator")]
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ValidationError(validator::ValidationError);
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
     tag = "error",
@@ -27,7 +23,7 @@ pub enum ServerError {
     InternalError(#[from] InternalError),
 
     #[error("validation error: {0}")]
-    ValidationError(#[from] ValidationError),
+    ValidationError(String),
 
     #[error("auth error: {0}")]
     AuthError(#[from] AuthError),
@@ -73,36 +69,8 @@ impl axum_crate::response::IntoResponse for ServerError {
 }
 
 #[cfg(feature = "validator")]
-impl From<validator::ValidationErrors> for ValidationError {
-    fn from(errors: validator::ValidationErrors) -> Self {
-        Self(
-            errors
-                .field_errors()
-                .iter()
-                .next()
-                .unwrap()
-                .1
-                .first()
-                .unwrap()
-                .clone(),
-        )
-    }
-}
-
-#[cfg(feature = "validator")]
 impl From<validator::ValidationErrors> for ServerError {
     fn from(errors: validator::ValidationErrors) -> Self {
-        let validation_error = ValidationError::from(errors);
-        Self::ValidationError(validation_error)
+        Self::ValidationError(errors.to_string())
     }
 }
-
-#[cfg(feature = "validator")]
-impl std::fmt::Display for ValidationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-#[cfg(feature = "validator")]
-impl std::error::Error for ValidationError {}
