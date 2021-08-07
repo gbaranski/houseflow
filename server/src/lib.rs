@@ -42,19 +42,27 @@ pub struct State {
 }
 
 pub async fn run(address: &std::net::SocketAddr, state: State) {
+    use axum::routing::RoutingDsl;
+
+    hyper::Server::bind(address)
+        .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
+        .await
+        .expect("server error");
+}
+
+pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
     use axum::{
         prelude::{get, post, route, RoutingDsl},
         routing::nest,
         ws::ws,
     };
-
     use http::{Request, Response};
     use hyper::Body;
     use std::time::Duration;
     use tower_http::trace::TraceLayer;
     use tracing::Span;
 
-    let app = route("/health_check", get(health_check))
+    route("/health_check", get(health_check))
         .nest(
             "/auth",
             route("/login", post(auth::login::handle))
@@ -91,12 +99,7 @@ pub async fn run(address: &std::net::SocketAddr, state: State) {
 
                     tracing::debug!("response processed")
                 }),
-        );
-
-    hyper::Server::bind(address)
-        .serve(app.into_make_service_with_connect_info::<std::net::SocketAddr, _>())
-        .await
-        .expect("server error");
+        ).boxed()
 }
 
 #[cfg(test)]
