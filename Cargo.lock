@@ -558,6 +558,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "google-smart-home"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "h2"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

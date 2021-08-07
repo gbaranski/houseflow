@@ -23,7 +23,8 @@ members = [
   "types",
   "db",
   "api",
-  "macros"
+  "macros",
+  "google-smart-home"
 ]
 
 
