@@ -65,7 +65,7 @@ impl axum::extract::FromRequest<Body> for RefreshToken {
             from_request(req, |secrets| &secrets.refresh_key).await?;
         let state: &State = req.extensions().unwrap().get().unwrap();
         if !state.token_store.exists(&token.tid).await? {
-            return Err(AuthError::RefreshTokenNotInStore.into())
+            return Err(AuthError::RefreshTokenNotInStore.into());
         }
         Ok(Self(token))
     }

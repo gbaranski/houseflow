@@ -27,7 +27,7 @@ pub async fn handle(
         &argon2::Config::default(),
     )
     .unwrap();
-    
+
     let new_user = User {
         id: random(),
         username: request.username.clone(),

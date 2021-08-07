@@ -99,7 +99,8 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
 
                     tracing::debug!("response processed")
                 }),
-        ).boxed()
+        )
+        .boxed()
 }
 
 #[cfg(test)]

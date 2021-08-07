@@ -1,7 +1,7 @@
 use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
-    auth::whoami::{Response, Request},
+    auth::whoami::{Request, Response},
     errors::{AuthError, ServerError},
 };
 

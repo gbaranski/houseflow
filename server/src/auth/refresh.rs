@@ -68,7 +68,8 @@ mod tests {
         let access_token = houseflow_types::token::AccessToken::decode(
             state.config.secrets.access_key.as_bytes(),
             &response.access_token,
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(access_token.sub, refresh_token.sub);
     }
 }
