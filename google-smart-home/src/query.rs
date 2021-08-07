@@ -8,13 +8,13 @@ pub mod request {
     #[serde(rename_all = "camelCase")]
     pub struct Payload {
         /// List of target devices.
-        pub devices: Vec<Device>,
+        pub devices: Vec<PayloadDevice>,
     }
 
     /// QUERY request payload.
     #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct Device {
+    pub struct PayloadDevice {
         /// Device ID, as per the ID provided in SYNC.
         pub id: String,
 
@@ -48,32 +48,32 @@ pub mod response {
         pub debug_string: Option<String>,
 
         /// Map of devices. Maps developer device ID to object of state properties.
-        pub devices: std::collections::HashMap<String, Device>,
+        pub devices: std::collections::HashMap<String, PayloadDevice>,
     }
 
     /// Device execution result.
     #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct Device {
+    pub struct PayloadDevice {
         /// Indicates if the device is online (that is, reachable) or not.
         pub online: bool,
 
         /// Result of the query operation.
-        pub status: DeviceStatus,
+        pub status: PayloadDeviceStatus,
 
         /// Expanding ERROR state if needed from the preset error codes, which will map to the errors presented to users.
         pub error_code: Option<String>,
 
         /// Device state
-        #[serde(flatten)]
-        pub state: Option<serde_json::Map<String, serde_json::Value>>,
+        #[serde(default, flatten)]
+        pub state: serde_json::Map<String, serde_json::Value>,
     }
 
       /// Result of the query operation.
       #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
       #[repr(u8)]
       #[serde(rename_all = "UPPERCASE")]
-      pub enum DeviceStatus {
+      pub enum PayloadDeviceStatus {
           /// Confirm that the query succeeded.
           Success,
   

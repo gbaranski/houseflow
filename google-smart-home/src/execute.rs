@@ -74,18 +74,18 @@ pub mod response {
         /// Each object contains one or more devices with response details. N.B.
         /// These may not be grouped the same way as in the request.
         /// For example, the request might turn 7 lights on, with 3 lights succeeding and 4 failing, thus with two groups in the response
-        pub commands: Vec<Command>,
+        pub commands: Vec<PayloadCommand>,
     }
 
     /// Device execution result.
     #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct Command {
+    pub struct PayloadCommand {
         /// List of device IDs corresponding to this status.
         pub ids: Vec<String>,
 
         /// Result of the execute operation.
-        pub status: CommandStatus,
+        pub status: PayloadCommandStatus,
 
         /// Aligned with per-trait states described in each trait schema reference.
         /// These are the states after execution, if available.
@@ -100,7 +100,7 @@ pub mod response {
     #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
     #[repr(u8)]
     #[serde(rename_all = "UPPERCASE")]
-    pub enum CommandStatus {
+    pub enum PayloadCommandStatus {
         /// Confirm that the command succeeded.
         Success,
 
@@ -117,127 +117,5 @@ pub mod response {
 
         /// Target device is unable to perform the command.
         Error,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use lazy_static::lazy_static;
-
-    mod request {
-        use super::{
-            super::request::{
-                Payload, PayloadCommand, PayloadCommandDevice, PayloadCommandExecution,
-            },
-            lazy_static,
-        };
-
-        use crate::{Request, RequestInput};
-        use serde_json::json;
-
-        const JSON: &str = include_str!("../samples/execute/request.json");
-        lazy_static! {
-            static ref EXPECTED: Request = Request {
-                request_id: String::from("ff36a3cc-ec34-11e6-b1a0-64510650abcf"),
-                inputs: vec![RequestInput::Execute(Payload {
-                    commands: vec![PayloadCommand {
-                        devices: vec![
-                            PayloadCommandDevice {
-                                id: String::from("123"),
-                                custom_data: Some(
-                                    json!({
-                                        "fooValue": 74,
-                                        "barValue": true,
-                                        "bazValue": "sheepdip"
-                                    })
-                                    .as_object()
-                                    .unwrap()
-                                    .clone(),
-                                ),
-                            },
-                            PayloadCommandDevice {
-                                id: String::from("456"),
-                                custom_data: Some(
-                                    json!({
-                                        "fooValue": 36,
-                                        "barValue": false,
-                                        "bazValue": "moarsheep"
-                                    })
-                                    .as_object()
-                                    .unwrap()
-                                    .clone(),
-                                ),
-                            },
-                        ],
-                        execution: vec![PayloadCommandExecution {
-                            command: String::from("action.devices.commands.OnOff"),
-                            params: json!({
-                                "on": true,
-                            })
-                            .as_object()
-                            .unwrap()
-                            .clone(),
-                        }],
-                    }],
-                })]
-            };
-        }
-
-        #[test]
-        fn valid() {
-            let parsed = serde_json::from_str::<Request>(JSON).unwrap();
-            assert_eq!(parsed, *EXPECTED);
-            let json = serde_json::to_string(&*EXPECTED).unwrap();
-            let parsed = serde_json::from_str::<Request>(&json).unwrap();
-            assert_eq!(parsed, *EXPECTED);
-        }
-    }
-
-    mod response {
-        use super::{
-            super::response::{Command, CommandStatus, Payload, Response},
-            lazy_static,
-        };
-        use serde_json::json;
-
-        const JSON: &str = include_str!("../samples/execute/response.json");
-        lazy_static! {
-            static ref EXPECTED: Response = Response {
-                request_id: String::from("ff36a3cc-ec34-11e6-b1a0-64510650abcf"),
-                payload: Payload {
-                    error_code: None,
-                    debug_string: None,
-                    commands: vec![
-                        Command {
-                            ids: vec![String::from("123")],
-                            status: CommandStatus::Success,
-                            error_code: None,
-                            states: json!({
-                                "on": true,
-                                "online": true,
-                            })
-                            .as_object()
-                            .unwrap()
-                            .clone()
-                        },
-                        Command {
-                            ids: vec![String::from("456")],
-                            status: CommandStatus::Error,
-                            error_code: Some(String::from("deviceTurnedOff")),
-                            states: Default::default(),
-                        }
-                    ]
-                }
-            };
-        }
-
-        #[test]
-        fn valid() {
-            let parsed = serde_json::from_str::<Response>(JSON).unwrap();
-            assert_eq!(parsed, *EXPECTED);
-            let json = serde_json::to_string(&*EXPECTED).unwrap();
-            let parsed = serde_json::from_str::<Response>(&json).unwrap();
-            assert_eq!(parsed, *EXPECTED);
-        }
     }
 }
