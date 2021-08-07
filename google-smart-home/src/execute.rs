@@ -90,9 +90,11 @@ pub mod response {
         /// Aligned with per-trait states described in each trait schema reference.
         /// These are the states after execution, if available.
         #[serde(default)]
+        #[serde(skip_serializing_if = "serde_json::Map::is_empty")]
         pub states: serde_json::Map<String, serde_json::Value>,
 
         /// Expanding ERROR state if needed from the preset error codes, which will map to the errors presented to users.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub error_code: Option<String>,
     }
 

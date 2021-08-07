@@ -156,6 +156,7 @@ mod test_utils {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_structure() -> Structure {
         Structure {
             id: rand::random(),
@@ -163,6 +164,7 @@ mod test_utils {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_room(structure: &Structure) -> Room {
         Room {
             id: rand::random(),
@@ -171,6 +173,7 @@ mod test_utils {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_device(room: &Room) -> Device {
         use semver::Version;
 

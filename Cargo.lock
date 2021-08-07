@@ -789,6 +789,7 @@ dependencies = [
  "chrono",
  "futures",
  "futures-util",
+ "google-smart-home",
  "headers",
  "houseflow-config",
  "houseflow-db",

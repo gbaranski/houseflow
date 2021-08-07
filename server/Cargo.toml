@@ -22,6 +22,8 @@ houseflow-types = { path="../types", version="0.1.1", features=[
 ] }
 houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
 
+google-smart-home = { path = "../google-smart-home" }
+
 rustls = "0.19.1"
 
 tokio = { version="1.5", features=["sync", "time", "rt-multi-thread"] }

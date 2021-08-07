@@ -4,7 +4,7 @@ use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
     errors::{AuthError, FulfillmentError, ServerError},
-    fulfillment::internal::query::{Request, Response},
+    fulfillment::query::{Request, Response},
 };
 use tracing::Level;
 

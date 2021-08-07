@@ -1,2 +1,3 @@
-pub mod ghome;
-pub mod internal;
+pub mod execute;
+pub mod query;
+pub mod sync;

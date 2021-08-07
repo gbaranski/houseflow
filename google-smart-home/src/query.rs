@@ -55,9 +55,6 @@ pub mod response {
     #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadDevice {
-        /// Indicates if the device is online (that is, reachable) or not.
-        pub online: bool,
-
         /// Result of the query operation.
         pub status: PayloadDeviceStatus,
 

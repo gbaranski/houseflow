@@ -1,6 +1,6 @@
 use axum::ws::Message;
 use houseflow_types::{
-    errors::{InternalError, ServerError},
+    errors::InternalError,
     lighthouse::proto::{execute, execute_response, query, state, Frame},
 };
 use tokio::sync::{broadcast, mpsc};
@@ -173,7 +173,7 @@ impl Session {
     pub async fn execute(
         &self,
         frame: execute::Frame,
-    ) -> Result<execute_response::Frame, ServerError> {
+    ) -> Result<execute_response::Frame, InternalError> {
         let mut execute_response_subscriber = self.execute_response.subscribe();
         let frame_id = frame.id;
         self.execute
@@ -187,12 +187,12 @@ impl Session {
                 .await
                 .map_err(|err| InternalError::Other(err.to_string()))?;
             if execute_response.id == frame_id {
-                break Ok::<_, ServerError>(execute_response);
+                break Ok::<_, InternalError>(execute_response);
             }
         }
     }
 
-    pub async fn query(&self, frame: query::Frame) -> Result<state::Frame, ServerError> {
+    pub async fn query(&self, frame: query::Frame) -> Result<state::Frame, InternalError> {
         let mut state_subscriber = self.state.subscribe();
         self.query
             .send(frame)
@@ -203,6 +203,5 @@ impl Session {
             .recv()
             .await
             .map_err(|err| InternalError::Other(err.to_string()))
-            .map_err(ServerError::InternalError)
     }
 }

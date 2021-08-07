@@ -2,7 +2,7 @@ use crate::{extractors::UserID, State};
 use axum::{extract, response};
 use houseflow_types::{
     errors::ServerError,
-    fulfillment::internal::sync::{Request, Response},
+    fulfillment::sync::{Request, Response},
     Device,
 };
 use tracing::Level;
