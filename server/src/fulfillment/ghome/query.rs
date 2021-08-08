@@ -17,7 +17,7 @@ pub async fn handle(
         let response = (|| async {
             let device_id = DeviceID::from_str(&device.id).expect("invalid device ID");
             if !database
-                .check_user_device_access(&user_id, &device_id)
+                .check_user_device_access(user_id, &device_id)
                 .unwrap()
             {
                 return Ok::<_, InternalError>(response::PayloadDevice {
