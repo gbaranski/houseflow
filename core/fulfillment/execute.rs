@@ -72,21 +72,33 @@ impl crate::Command for Command {
                         .await
                         .unwrap()
                         .unwrap();
+                    let latency = Instant::now().duration_since(before).as_millis();
                     match response.frame.status {
-                        DeviceStatus::Success => println!(
-                            "✔ Device responded with success after {}ms!",
-                            Instant::now().duration_since(before).as_millis()
-                        ),
+                        DeviceStatus::Success => {
+                            println!("✔ Device responded with success after {}ms!", latency)
+                        }
                         DeviceStatus::Error(err) => {
                             println!("❌ Device responded with error! Error: {}", err)
                         }
                     };
+                    latency
                 })
             })
             .collect::<Vec<_>>();
 
-        for future in futures.into_iter() {
-            future.await?;
+        let mut latencies = futures::future::try_join_all(futures).await?;
+        latencies.sort();
+        if self.n > 0 {
+            let average = Iterator::sum::<u128>(latencies.iter()) / latencies.len() as u128;
+            let percentile =
+                |val| latencies[(latencies.len() as f32 * (val as f32 * 0.01)) as usize];
+            println!(
+                "{} requests sent. Avg latency: {}ms, 50th percentile: {}ms, 95th percentile: {}ms",
+                latencies.len(),
+                average,
+                percentile(50),
+                percentile(95),
+            );
         }
 
         // let mut futures = (0..self.n)
