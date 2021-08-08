@@ -5,7 +5,7 @@ use houseflow_types::{
     errors::{AuthError, ServerError},
 };
 
-#[tracing::instrument(name = "Whoami", skip(state), err)]
+#[tracing::instrument(name = "Whoami", skip(state, _request), err)]
 pub async fn handle(
     Extension(state): Extension<State>,
     UserID(user_id): UserID,
