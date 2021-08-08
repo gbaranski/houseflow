@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::CommandContext;
 use async_trait::async_trait;
 use houseflow_types::{
@@ -8,6 +10,7 @@ pub struct Command {
     pub device_id: DeviceID,
     pub command: DeviceCommand,
     pub params: serde_json::Map<String, serde_json::Value>,
+    pub n: usize,
 }
 
 #[async_trait]
@@ -50,15 +53,47 @@ impl crate::Command for Command {
             device_id: self.device_id.clone(),
             frame: execute_frame,
         };
-        let response = ctx
-            .houseflow_api()
-            .await?
-            .execute(&access_token, &request)
-            .await??;
-        match response.frame.status {
-            DeviceStatus::Success => println!("✔ Device responded with success!"),
-            DeviceStatus::Error(err) => println!("❌ Device responded with error! Error: {}", err,),
+
+        use std::sync::Arc;
+        let houseflow_api = Arc::new(ctx.houseflow_api().await?.to_owned());
+        let access_token = &access_token;
+        let request = &request;
+
+        let futures = (0..self.n)
+            .map(|i| {
+                let request = request.clone();
+                let access_token = access_token.clone();
+                let houseflow_api = houseflow_api.clone();
+                tokio::spawn(async move {
+                    tracing::debug!("Executing request with index of {}", i);
+                    let before = Instant::now();
+                    let response = houseflow_api
+                        .execute(&access_token, &request)
+                        .await
+                        .unwrap()
+                        .unwrap();
+                    match response.frame.status {
+                        DeviceStatus::Success => println!(
+                            "✔ Device responded with success after {}ms!",
+                            Instant::now().duration_since(before).as_millis()
+                        ),
+                        DeviceStatus::Error(err) => {
+                            println!("❌ Device responded with error! Error: {}", err)
+                        }
+                    };
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for future in futures.into_iter() {
+            future.await?;
         }
+
+        // let mut futures = (0..self.n)
+        //     .map(|i| async move {
+        //     })
+        //     .collect::<futures::stream::FuturesUnordered<_>>();
+        // use futures::StreamExt;
 
         Ok(())
     }

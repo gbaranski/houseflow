@@ -42,6 +42,17 @@ fn execute() -> clap::App<'static, 'static> {
                 .takes_value(true)
                 .validator(super::validate_json),
         )
+        .arg(
+            Arg::with_name("n")
+                .help("How many times to run this command")
+                .short("n")
+                .default_value("1")
+                .takes_value(true)
+                .validator(|s| match s.parse::<usize>() {
+                    Ok(_) => Ok(()),
+                    Err(err) => Err(err.to_string()),
+                }),
+        )
 }
 
 pub(super) fn subcommand() -> clap::App<'static, 'static> {

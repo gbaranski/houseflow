@@ -76,6 +76,7 @@ async fn main() -> anyhow::Result<()> {
                             .map(std::string::ToString::to_string)
                             .unwrap(),
                     )?,
+                    n: get_value(matches, |s| s.parse().unwrap(), "n")?,
                 }
                 .run(ctx)
                 .await
