@@ -1,10 +1,7 @@
 mod common;
 
 use google_smart_home::{
-    sync::{
-        request,
-        response::{self, Response},
-    },
+    sync::response::{self, Response},
     Request, RequestInput,
 };
 use serde_json::json;

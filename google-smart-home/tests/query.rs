@@ -64,11 +64,11 @@ fn query_response() {
                     (
                         String::from("123"),
                         response::PayloadDevice {
-                            online: true,
                             status: response::PayloadDeviceStatus::Success,
                             error_code: None,
                             state: json!({
-                                "on": true
+                                "on": true,
+                                "online": true,
                             })
                             .as_object()
                             .unwrap()
@@ -78,11 +78,11 @@ fn query_response() {
                     (
                         String::from("456"),
                         response::PayloadDevice {
-                            online: true,
                             status: response::PayloadDeviceStatus::Success,
                             error_code: None,
                             state: json!({
                                 "on": true,
+                                "online": true,
                                 "brightness": 80,
                                 "color": {
                                     "name": "cerulean",
