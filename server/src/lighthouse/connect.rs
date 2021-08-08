@@ -17,13 +17,14 @@ pub struct WebsocketDevice(pub houseflow_types::Device);
 impl axum::extract::FromRequest<axum::body::Body> for WebsocketDevice {
     type Rejection = ServerError;
 
+    #[tracing::instrument(err)]
     async fn from_request(
         req: &mut RequestParts<axum::body::Body>,
     ) -> Result<Self, Self::Rejection> {
         let TypedHeader(headers::Authorization(header)) =
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await
-                .map_err(|_| AuthError::InvalidAuthorizationHeader(String::from("bad header")))?;
+                .map_err(|err| AuthError::InvalidAuthorizationHeader(err.to_string()))?;
         let state: State = req.extensions().unwrap().get::<State>().unwrap().clone();
         let device_id = DeviceID::from_str(header.username()).map_err(|err| {
             AuthError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
@@ -55,19 +56,24 @@ pub async fn handle(
     ConnectInfo(socket_address): ConnectInfo<std::net::SocketAddr>,
     WebsocketDevice(device): WebsocketDevice,
 ) -> impl IntoResponse {
-    websocket.on_upgrade(|stream| async move {
-        let session_internals = SessionInternals::new();
-        let session = Session::new(&session_internals);
-        tracing::info!("Device connected");
-        state
-            .sessions
-            .lock()
-            .unwrap()
-            .insert(device.id.clone(), session.clone());
-        match session.run(stream, session_internals).await {
-            Ok(_) => tracing::info!("Connection closed"),
-            Err(err) => tracing::error!("Connection closed with error: {}", err),
+    use tracing::Instrument;
+    let span = tracing::Span::current();
+    websocket.on_upgrade(|stream| {
+        async move {
+            let session_internals = SessionInternals::new();
+            let session = Session::new(&session_internals);
+            tracing::info!("Device connected");
+            state
+                .sessions
+                .lock()
+                .unwrap()
+                .insert(device.id.clone(), session.clone());
+            match session.run(stream, session_internals).await {
+                Ok(_) => tracing::info!("Connection closed"),
+                Err(err) => tracing::error!("Connection closed with error: {}", err),
+            }
+            state.sessions.lock().unwrap().remove(&device.id);
         }
-        state.sessions.lock().unwrap().remove(&device.id);
-    });
+        .instrument(span)
+    })
 }
