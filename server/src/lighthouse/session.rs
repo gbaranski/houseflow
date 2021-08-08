@@ -34,16 +34,21 @@ impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SessionError {
 
 #[derive(Debug, Clone)]
 pub struct Session {
-    execute: mpsc::Sender<execute::Frame>,
+    execute: mpsc::UnboundedSender<execute::Frame>,
     execute_response: broadcast::Sender<execute_response::Frame>,
     query: mpsc::Sender<query::Frame>,
     state: broadcast::Sender<state::Frame>,
+    ping: mpsc::Sender<Vec<u8>>,
+    pong: mpsc::Sender<Vec<u8>>,
 }
 
 // Non-clonable session internals
 #[derive(Debug)]
 pub struct SessionInternals {
-    execute: (mpsc::Sender<execute::Frame>, mpsc::Receiver<execute::Frame>),
+    execute: (
+        mpsc::UnboundedSender<execute::Frame>,
+        mpsc::UnboundedReceiver<execute::Frame>,
+    ),
     execute_respose: (
         broadcast::Sender<execute_response::Frame>,
         broadcast::Receiver<execute_response::Frame>,
@@ -53,15 +58,19 @@ pub struct SessionInternals {
         broadcast::Sender<state::Frame>,
         broadcast::Receiver<state::Frame>,
     ),
+    ping: (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>),
+    pong: (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>),
 }
 
 impl Default for SessionInternals {
     fn default() -> Self {
         Self {
-            execute: mpsc::channel(4),
-            execute_respose: broadcast::channel(4),
+            execute: mpsc::unbounded_channel(),
+            execute_respose: broadcast::channel(1024),
             query: mpsc::channel(4),
             state: broadcast::channel(4),
+            ping: mpsc::channel(4),
+            pong: mpsc::channel(4),
         }
     }
 }
@@ -81,6 +90,8 @@ impl Session {
             execute_response: internals.execute_respose.0.clone(),
             query: internals.query.0.clone(),
             state: internals.state.0.clone(),
+            ping: internals.ping.0.clone(),
+            pong: internals.pong.0.clone(),
         }
     }
 
@@ -129,7 +140,7 @@ impl Session {
                     };
                 }
                 Message::Binary(_) => todo!(),
-                Message::Ping(_) => todo!(),
+                Message::Ping(bytes) => self.pong.send(bytes).await.unwrap(),
                 Message::Pong(_) => todo!(),
                 Message::Close(_) => todo!(),
             }
@@ -161,10 +172,20 @@ impl Session {
         loop {
             tokio::select! {
                 Some(execute) = internals.execute.1.recv() => {
-                    send_json(&mut stream, &execute).await?;
+                    tracing::debug!("Sending EXECUTE");
+                    send_json(&mut stream, &Frame::Execute(execute)).await?;
                 }
                 Some(query) = internals.query.1.recv() => {
-                    send_json(&mut stream, &query).await?;
+                    tracing::debug!("Sending QUERY");
+                    send_json(&mut stream, &Frame::Query(query)).await?;
+                }
+                Some(ping) = internals.ping.1.recv() => {
+                    tracing::debug!("Sending PING");
+                    stream.send(Message::Ping(ping)).await.map_err(SessionError::WebsocketError)?;
+                }
+                Some(pong) = internals.pong.1.recv() => {
+                    tracing::debug!("Sending PONG");
+                    stream.send(Message::Pong(pong)).await.map_err(SessionError::WebsocketError)?;
                 }
             };
         }
@@ -178,7 +199,6 @@ impl Session {
         let frame_id = frame.id;
         self.execute
             .send(frame)
-            .await
             .map_err(|err| InternalError::Other(err.to_string()))?;
 
         loop {
