@@ -51,6 +51,3 @@ chrono = "0.4.19"
 tracing = "0.1.26"
 tracing-subscriber = "0.2.19"
 Inflector = "0.11.4"
-
-[dev-dependencies]
-cargo-husky = { version = "1", default-features = false, features = ["prepush-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-fmt", "run-for-all" ] }
