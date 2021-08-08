@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 pub enum Error {
     /// `Authorization` header has invalid syntax
-    #[error("invalid authorization header {0}")]
+    #[error("invalid authorization header: {0}")]
     InvalidAuthorizationHeader(String),
 
     /// Client sent invalid token
