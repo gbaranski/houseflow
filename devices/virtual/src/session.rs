@@ -55,14 +55,18 @@ impl Session {
         let url = Url::parse(&url).unwrap();
 
         tracing::debug!("will use {} as websocket endpoint", url);
+
         let credentials = device.credentials();
         let http_request = http::Request::builder()
             .uri(url.to_string())
             .header(
                 http::header::AUTHORIZATION,
                 format!(
-                    "Basic {}:{}",
-                    credentials.device_id, credentials.device_password
+                    "Basic {}",
+                    base64::encode(format!(
+                        "{}:{}",
+                        credentials.device_id, credentials.device_password
+                    ))
                 ),
             )
             .body(())
