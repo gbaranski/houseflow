@@ -6,10 +6,7 @@ use houseflow_types::{
 };
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
-pub async fn handle(
-    state: State,
-    user_id: UserID,
-) -> Result<response::Payload, ServerError> {
+pub async fn handle(state: State, user_id: UserID) -> Result<response::Payload, ServerError> {
     let user_devices = state.database.get_user_devices(&user_id)?;
 
     let user_devices = user_devices

@@ -1,5 +1,5 @@
 use crate::State;
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use chrono::{Duration, Utc};
 use houseflow_types::{
     auth::login::{Request, Response},
@@ -17,9 +17,9 @@ use tracing::Level;
     err,
 )]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
-    extract::Json(request): extract::Json<Request>,
-) -> Result<response::Json<Response>, ServerError> {
+    Extension(state): Extension<State>,
+    Json(request): Json<Request>,
+) -> Result<Json<Response>, ServerError> {
     validator::Validate::validate(&request)?;
     let user = state
         .database
@@ -49,7 +49,7 @@ pub async fn handle(
 
     tracing::event!(Level::INFO, user_id = %user.id, "Logged in");
 
-    Ok(response::Json(Response {
+    Ok(Json(Response {
         access_token: access_token.encode(),
         refresh_token: refresh_token.encode(),
     }))
@@ -59,7 +59,7 @@ pub async fn handle(
 mod tests {
     use super::Request;
     use crate::test_utils::*;
-    use axum::{extract, response};
+    use axum::Json;
     use houseflow_types::{
         errors::{AuthError, ServerError},
         token::{AccessToken, RefreshToken},
@@ -70,9 +70,9 @@ mod tests {
         let state = get_state();
         let user = get_user();
         state.database.add_user(&user).unwrap();
-        let response::Json(response) = super::handle(
+        let Json(response) = super::handle(
             state.clone(),
-            extract::Json(Request {
+            Json(Request {
                 email: user.email,
                 password: PASSWORD.into(),
             }),
@@ -98,7 +98,7 @@ mod tests {
         state.database.add_user(&user).unwrap();
         let response = super::handle(
             state.clone(),
-            extract::Json(Request {
+            Json(Request {
                 email: user.email,
                 password: PASSWORD_INVALID.into(),
             }),
@@ -115,7 +115,7 @@ mod tests {
         let user = get_user();
         let response = super::handle(
             state.clone(),
-            extract::Json(Request {
+            Json(Request {
                 email: user.email,
                 password: PASSWORD.into(),
             }),

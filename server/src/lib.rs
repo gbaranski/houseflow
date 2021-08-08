@@ -54,7 +54,6 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
     use axum::{
         prelude::{get, post, route, RoutingDsl},
         routing::nest,
-        ws::ws,
     };
     use http::{Request, Response};
     use hyper::Body;
@@ -81,7 +80,10 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
                     .route("/sync", get(fulfillment::internal::sync::handle)),
             ),
         )
-        .nest("/lighthouse", route("/ws", ws(lighthouse::on_websocket)))
+        .nest(
+            "/lighthouse",
+            route("/ws", get(lighthouse::connect::handle)),
+        )
         .layer(axum::AddExtensionLayer::new(state))
         .layer(
             TraceLayer::new_for_http()

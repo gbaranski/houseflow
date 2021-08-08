@@ -1,4 +1,4 @@
-use axum::ws::Message;
+use axum::extract::ws::Message;
 use houseflow_types::{
     errors::InternalError,
     lighthouse::proto::{execute, execute_response, query, state, Frame},
@@ -8,7 +8,7 @@ use tokio::sync::{broadcast, mpsc};
 #[derive(Debug, thiserror::Error)]
 pub enum SessionError {
     #[error("websocket error: {0}")]
-    WebsocketError(Box<dyn std::error::Error + Send + Sync>),
+    WebsocketError(axum::Error),
 
     #[error("json error: {0}")]
     JsonError(#[from] serde_json::Error),
@@ -86,8 +86,8 @@ impl Session {
 
     pub async fn run(
         &self,
-        stream: impl futures::Stream<Item = Result<Message, tower::BoxError>>
-            + futures::Sink<Message, Error = tower::BoxError>
+        stream: impl futures::Stream<Item = Result<Message, axum::Error>>
+            + futures::Sink<Message, Error = axum::Error>
             + Unpin,
         internals: SessionInternals,
     ) -> Result<(), tower::BoxError> {
@@ -102,7 +102,7 @@ impl Session {
 
     async fn stream_read<S>(&self, mut stream: S) -> Result<(), SessionError>
     where
-        S: futures::Stream<Item = Result<Message, tower::BoxError>> + Unpin,
+        S: futures::Stream<Item = Result<Message, axum::Error>> + Unpin,
     {
         while let Some(message) = stream
             .next()
@@ -144,11 +144,11 @@ impl Session {
         mut internals: SessionInternals,
     ) -> Result<(), SessionError>
     where
-        S: futures::Sink<Message, Error = tower::BoxError> + Unpin,
+        S: futures::Sink<Message, Error = axum::Error> + Unpin,
     {
         async fn send_json<S, T>(stream: &mut S, val: &T) -> Result<(), SessionError>
         where
-            S: futures::Sink<Message, Error = tower::BoxError> + Unpin,
+            S: futures::Sink<Message, Error = axum::Error> + Unpin,
             T: serde::Serialize,
         {
             let json = serde_json::to_string(val)?;

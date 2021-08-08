@@ -1,5 +1,5 @@
 use crate::{extractors::RefreshToken, State};
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use chrono::{Duration, Utc};
 use houseflow_types::{
     auth::token::{Request, Response},
@@ -10,10 +10,10 @@ use tracing::Level;
 
 #[tracing::instrument(name = "Refresh token", skip(state, _request), err)]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
+    Extension(state): Extension<State>,
     RefreshToken(refresh_token): RefreshToken,
-    extract::Json(_request): extract::Json<Request>,
-) -> Result<response::Json<Response>, ServerError> {
+    Json(_request): Json<Request>,
+) -> Result<Json<Response>, ServerError> {
     if !state.token_store.exists(&refresh_token.tid).await? {
         return Err(AuthError::RefreshTokenNotInStore.into());
     }
@@ -29,7 +29,7 @@ pub async fn handle(
 
     tracing::event!(Level::INFO, user_id = %refresh_token.sub, "Refreshed token");
 
-    Ok(response::Json(Response {
+    Ok(Json(Response {
         refresh_token: None,
         access_token: access_token.to_string(),
     }))
@@ -38,7 +38,7 @@ pub async fn handle(
 #[cfg(test)]
 mod tests {
     use crate::test_utils::*;
-    use axum::{extract, response};
+    use axum::Json;
 
     #[tokio::test]
     async fn valid() {
@@ -58,10 +58,10 @@ mod tests {
             .add(&refresh_token.tid, refresh_token.exp.as_ref())
             .await
             .unwrap();
-        let response::Json(response) = super::handle(
+        let Json(response) = super::handle(
             state.clone(),
             crate::extractors::RefreshToken(refresh_token.clone()),
-            extract::Json(super::Request {}),
+            Json(super::Request {}),
         )
         .await
         .unwrap();

@@ -1,5 +1,5 @@
 use crate::State;
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use houseflow_types::{
     auth::register::{Request, Response},
     errors::{AuthError, ServerError},
@@ -16,9 +16,9 @@ use tracing::Level;
     err,
 )]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
-    extract::Json(request): extract::Json<Request>,
-) -> Result<response::Json<Response>, ServerError> {
+    Extension(state): Extension<State>,
+    Json(request): Json<Request>,
+) -> Result<Json<Response>, ServerError> {
     validator::Validate::validate(&request)?;
 
     let password_hash = argon2::hash_encoded(
@@ -51,7 +51,7 @@ pub async fn handle(
         "Registered user"
     );
 
-    Ok(response::Json(Response {
+    Ok(Json(Response {
         user_id: new_user.id,
     }))
 }

@@ -1,5 +1,5 @@
 use crate::{extractors::RefreshToken, State};
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use houseflow_types::{
     auth::logout::{Request, Response},
     errors::ServerError,
@@ -8,19 +8,19 @@ use tracing::Level;
 
 #[tracing::instrument(name = "Logout", skip(state, refresh_token, _request), err)]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
+    Extension(state): Extension<State>,
     RefreshToken(refresh_token): RefreshToken,
-    extract::Json(_request): extract::Json<Request>,
-) -> Result<response::Json<Response>, ServerError> {
+    Json(_request): Json<Request>,
+) -> Result<Json<Response>, ServerError> {
     state.token_store.remove(&refresh_token.tid).await.unwrap();
     tracing::event!(Level::INFO, user_id = %refresh_token.sub, "Logged out");
-    Ok(response::Json(Response {}))
+    Ok(Json(Response {}))
 }
 
 #[cfg(test)]
 mod tests {
     use crate::test_utils::*;
-    use axum::extract;
+    use axum::Json;
 
     #[tokio::test]
     async fn valid() {
@@ -43,7 +43,7 @@ mod tests {
         let _ = super::handle(
             state.clone(),
             crate::extractors::RefreshToken(refresh_token.clone()),
-            extract::Json(super::Request {}),
+            Json(super::Request {}),
         )
         .await
         .unwrap();

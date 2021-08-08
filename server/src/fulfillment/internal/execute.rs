@@ -1,5 +1,5 @@
 use crate::{extractors::UserID, State};
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use houseflow_types::{
     errors::{AuthError, FulfillmentError, ServerError},
     fulfillment::execute::{Request, Response},
@@ -9,10 +9,10 @@ use tracing::Level;
 
 #[tracing::instrument(name = "Execute", skip(state), err)]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
+    Extension(state): Extension<State>,
     UserID(user_id): UserID,
-    extract::Json(request): extract::Json<Request>,
-) -> Result<response::Json<Response>, ServerError> {
+    Json(request): Json<Request>,
+) -> Result<Json<Response>, ServerError> {
     if !state
         .database
         .check_user_device_access(&user_id, &request.device_id)?
@@ -43,5 +43,5 @@ pub async fn handle(
         "Executed command on device"
     );
 
-    Ok(response::Json(Response { frame: response }))
+    Ok(Json(Response { frame: response }))
 }

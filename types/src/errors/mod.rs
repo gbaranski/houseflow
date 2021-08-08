@@ -37,7 +37,11 @@ pub enum ServerError {
 
 #[cfg(feature = "axum")]
 impl axum_crate::response::IntoResponse for ServerError {
-    fn into_response(self) -> http::Response<axum_crate::body::Body> {
+    type Body = http_body::Full<hyper::body::Bytes>;
+
+    type BodyError = <Self::Body as axum_crate::body::HttpBody>::Error;
+
+    fn into_response(self) -> http::Response<Self::Body> {
         use http::StatusCode;
         let status = match self {
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
@@ -60,8 +64,7 @@ impl axum_crate::response::IntoResponse for ServerError {
                 LighthouseError::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
             },
         };
-        let response = axum_crate::response::Json(serde_json::to_string(&self).unwrap());
-        let mut response = axum_crate::response::IntoResponse::into_response(response);
+        let mut response = axum_crate::Json(self).into_response();
         *response.status_mut() = status;
 
         response

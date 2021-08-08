@@ -1,5 +1,5 @@
 use crate::{extractors::UserID, State};
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use houseflow_types::{
     auth::whoami::{Request, Response},
     errors::{AuthError, ServerError},
@@ -7,10 +7,10 @@ use houseflow_types::{
 
 #[tracing::instrument(name = "Whoami", skip(state), err)]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
+    Extension(state): Extension<State>,
     UserID(user_id): UserID,
-    extract::Json(_request): extract::Json<Request>,
-) -> Result<response::Json<Response>, ServerError> {
+    Json(_request): Json<Request>,
+) -> Result<Json<Response>, ServerError> {
     let user = state
         .database
         .get_user(&user_id)?
@@ -18,7 +18,7 @@ pub async fn handle(
 
     tracing::info!(username = %user.username, email = %user.email);
 
-    Ok(response::Json(Response {
+    Ok(Json(Response {
         username: user.username,
         email: user.email,
     }))
@@ -27,17 +27,17 @@ pub async fn handle(
 #[cfg(test)]
 mod tests {
     use crate::test_utils::*;
-    use axum::{extract, response};
+    use axum::Json;
 
     #[tokio::test]
     async fn valid() {
         let state = get_state();
         let user = get_user();
         state.database.add_user(&user).unwrap();
-        let response::Json(response) = super::handle(
+        let Json(response) = super::handle(
             state.clone(),
             crate::extractors::UserID(user.id),
-            extract::Json(super::Request {}),
+            Json(super::Request {}),
         )
         .await
         .unwrap();

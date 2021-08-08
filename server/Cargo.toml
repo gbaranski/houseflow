@@ -46,7 +46,7 @@ chrono = "0.4.19"
 sled = "0.34.6"
 tracing = "0.1.26"
 
-axum = { git = "https://github.com/gbaranski/axum.git", branch = "feat/websocket-message-enum",  version = "0.1.2", features = ["ws", "headers"] }
+axum = { git = "https://github.com/tokio-rs/axum.git", version = "0.1.2", features = ["ws", "headers"] }
 http = "0.2.4"
 http-body = "0.4.2"
 hyper = "0.14.11"

@@ -1,5 +1,5 @@
 use crate::{extractors::UserID, State};
-use axum::{extract, response};
+use axum::{extract::Extension, Json};
 use houseflow_types::{
     errors::ServerError,
     fulfillment::sync::{Request, Response},
@@ -9,10 +9,10 @@ use tracing::Level;
 
 #[tracing::instrument(name = "Sync", skip(state, _request), err)]
 pub async fn handle(
-    extract::Extension(state): extract::Extension<State>,
-    extract::Json(_request): extract::Json<Request>,
+    Extension(state): Extension<State>,
+    Json(_request): Json<Request>,
     UserID(user_id): UserID,
-) -> Result<response::Json<Response>, ServerError> {
+) -> Result<Json<Response>, ServerError> {
     let devices = state
         .database
         .get_user_devices(&user_id)?
@@ -32,7 +32,7 @@ pub async fn handle(
 
     let response = Response { devices };
 
-    Ok(response::Json(response))
+    Ok(Json(response))
 }
 
 // #[cfg(test)]
