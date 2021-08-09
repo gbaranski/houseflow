@@ -1,13 +1,15 @@
 use crate::defaults;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(default)]
     pub server: Server,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Server {
     /// Host of the server
     #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
@@ -27,25 +29,24 @@ impl Default for Server {
 }
 
 impl crate::Config for Config {
-    fn default_path() -> std::path::PathBuf {
-        defaults::config_home().join("client.yaml")
-    }
+    const DEFAULT_TOML: &'static str = include_str!("default.toml");
 
-    fn default_yaml() -> String {
-        let defaults = Self::default();
-        format!(
-            include_str!("default.yaml"),
-            defaults.server.hostname, defaults.server.use_tls
-        )
-    }
+    const DEFAULT_FILE: &'static str = "client.toml";
 }
+
 #[cfg(test)]
 mod tests {
-    use super::Config;
+    use super::{Config, Server};
 
     #[test]
-    fn default_yaml() {
-        let config = <Config as crate::Config>::default_yaml();
-        let _: Config = serde_yaml::from_str(&config).unwrap();
+    fn test_example() {
+        let expected = Config {
+            server: Server {
+                hostname: url::Host::Domain(String::from("example.com")),
+                use_tls: true,
+            },
+        };
+        let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
+        assert_eq!(config, expected);
     }
 }

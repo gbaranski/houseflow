@@ -1,0 +1,5 @@
+# Houseflow client configuration
+
+# [server]
+# hostname = # Hostname of the server, e.g `localhost` 
+# use-tls =  # Whether to use TLS.

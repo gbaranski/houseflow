@@ -1,0 +1,48 @@
+# Houseflow server configuration
+
+# Server network configuration
+# [network]
+# hostname = "localhost" # Change to 0.0.0.0 to allow clients from other networks to connect
+
+# Secret values for server.
+# [secrets]
+# refresh-key =
+# access-key =
+# authorization-code-key =
+
+# TLS/SSL Configuration. If not defined, TLS will be disabled. 
+# [tls]
+# certificate =   # e.g /etc/letsencrypt/live/example.com/fullchain.pem
+# private-key =   # e.g /etc/letsencrypt/live/example.com/privkey.pem
+
+# Google provider configuration. If not defined, Google Home integration will be disabled.
+# [google]
+# client-id =     # Actions Console -> Account Linking -> Client ID.
+# client-secret = # Actions Console -> Account Linking -> Client Secret. 
+# project-id =    # Project ID set during creation.
+
+
+# Define a structure.
+# [[structures]]
+# id =            # Unique 16 byte hex-encoded structure identifier.
+# name =          # Name of the structure. 
+
+# Define a room.
+# [[rooms]]
+# id =            # Unique 16 byte hex-encoded room identifier.
+# structure-id =  # 16 byte hex-encoded room identifier, must reference to an existing structure.
+# name =          # Name of the room.
+
+# Define a device.
+# [[devices]]
+# id =               # Unique 16 byte hex-encoded device identifier.
+# room-id =          # 16 byte hex-encoded room identifier, must reference to an existing room.
+# password-hash =    # A hashed password
+# type =             # Type of the device. Possible values: "garage" | "gate" | "light"
+# traits =           # List of traits that the device implements. Possible values: "on-off" | "open-close"
+# name =             # Name of the device
+# will-push-state =  # True if device will push state by itself, otherwise will use polling
+# model =            # Model name of the device
+# hw-version =       # Hardware version of the device
+# sw-version =       # Software version of the device
+# attributes =       # Aligned with per-trait attributes described in each trait schema reference.

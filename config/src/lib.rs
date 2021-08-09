@@ -10,51 +10,51 @@ pub mod device;
 pub mod client;
 
 pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
+    const DEFAULT_TOML: &'static str;
+    const DEFAULT_FILE: &'static str;
+
     #[cfg(feature = "fs")]
-    fn read(path: impl AsRef<std::path::Path>) -> Result<Self, ReadFileError> {
-        read_file(path, Self::default_yaml)
-    }
+    fn write_defaults(path: impl AsRef<std::path::Path>) -> Result<(), FileError> {
+        use std::io::Write;
 
-    fn default_path() -> std::path::PathBuf;
-
-    fn default_yaml() -> String;
-}
-
-#[cfg(feature = "fs")]
-#[derive(Debug, thiserror::Error)]
-pub enum ReadFileError {
-    #[error("io error: {0}")]
-    IOError(#[from] std::io::Error),
-
-    #[error("yaml error: {0}")]
-    YamlError(#[from] serde_yaml::Error),
-}
-
-#[cfg(feature = "fs")]
-pub fn read_file<T: serde::de::DeserializeOwned>(
-    path: impl AsRef<std::path::Path>,
-    defaults: impl FnOnce() -> String,
-) -> Result<T, ReadFileError> {
-    use std::io::Write;
-
-    let path = path.as_ref();
-    let content = if path.exists() {
-        std::fs::read_to_string(path)?
-    } else {
-        let defaults = defaults();
+        let path = path.as_ref();
         if path.parent().is_none() || !path.parent().unwrap().exists() {
             let mut comps = path.components();
             comps.next_back();
             std::fs::create_dir_all(comps.as_path())?;
         }
         let mut file = std::fs::File::create(path)?;
-        file.write_all(defaults.as_bytes())?;
-        defaults
-    };
+        file.write_all(Self::DEFAULT_TOML.as_bytes())?;
+        Ok(())
+    }
 
-    let config: T = serde_yaml::from_str(&content)?;
+    #[cfg(feature = "fs")]
+    fn read(path: impl AsRef<std::path::Path>) -> Result<Self, FileError> {
+        let content = std::fs::read_to_string(path.as_ref())?;
+        let config: Self = toml::from_str(&content)?;
 
-    Ok(config)
+        Ok(config)
+    }
+
+    fn default_path() -> std::path::PathBuf {
+        xdg::BaseDirectories::with_prefix("houseflow")
+            .unwrap()
+            .get_config_home()
+            .join(Self::DEFAULT_FILE)
+    }
+}
+
+#[cfg(feature = "fs")]
+#[derive(Debug, thiserror::Error)]
+pub enum FileError {
+    #[error("io error: {0}")]
+    IOError(#[from] std::io::Error),
+
+    #[error("toml deserialize error: {0}")]
+    TomlDeserializeError(#[from] toml::de::Error),
+
+    #[error("toml serialize error: {0}")]
+    TomlSerializeError(#[from] toml::ser::Error),
 }
 
 pub fn init_logging(hide_timestamp: bool) {
