@@ -39,7 +39,7 @@ impl houseflow_device::Device for Device {
 
 #[tokio::main]
 async fn main() {
-    houseflow_config::init_logging(true);
+    houseflow_config::init_logging(false);
     let path = Config::default_path();
     tracing::debug!("Config path: {}", path.to_str().unwrap());
     let config = if path.exists() {
