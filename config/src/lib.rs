@@ -14,7 +14,7 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     const DEFAULT_FILE: &'static str;
 
     #[cfg(feature = "fs")]
-    fn write_defaults(path: impl AsRef<std::path::Path>) -> Result<(), FileError> {
+    fn write_defaults(path: impl AsRef<std::path::Path>) -> Result<(), Error> {
         use std::io::Write;
 
         let path = path.as_ref();
@@ -29,8 +29,9 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     }
 
     #[cfg(feature = "fs")]
-    fn read(path: impl AsRef<std::path::Path>) -> Result<Self, FileError> {
-        let content = std::fs::read_to_string(path.as_ref())?;
+    fn read(path: impl AsRef<std::path::Path>) -> Result<Self, Error> {
+        let path = path.as_ref();
+        let content = std::fs::read_to_string(path)?;
         let config: Self = toml::from_str(&content)?;
 
         Ok(config)
@@ -46,7 +47,7 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
 
 #[cfg(feature = "fs")]
 #[derive(Debug, thiserror::Error)]
-pub enum FileError {
+pub enum Error {
     #[error("io error: {0}")]
     IOError(#[from] std::io::Error),
 
