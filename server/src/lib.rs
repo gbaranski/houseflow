@@ -109,7 +109,7 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
 mod test_utils {
     use super::{token_store, Sessions, State};
     use axum::extract;
-    use houseflow_config::server::{Config, Secrets};
+    use houseflow_config::server::{Config, Network, Secrets};
     use houseflow_db::sqlite::Database as SqliteDatabase;
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
     use std::sync::{Arc, Mutex};
@@ -124,18 +124,24 @@ mod test_utils {
             std::env::temp_dir().join(format!("houseflow-server_test-{}", rand::random::<u32>()));
         let token_store = token_store::sled::TokenStore::new_temporary(token_store_path).unwrap();
         let config = Config {
+            network: Network {
             hostname: url::Host::Domain(String::from("localhost")),
+            },
             secrets: Secrets {
                 refresh_key: String::from("refresh-key"),
                 access_key: String::from("access-key"),
                 authorization_code_key: String::from("authorization-code-key"),
             },
             tls: None,
-            google: Some(houseflow_config::server::google::Config {
+            google: Some(houseflow_config::server::Google {
                 client_id: String::from("client-id"),
                 client_secret: String::from("client-secret"),
                 project_id: String::from("project-id"),
             }),
+            structures: vec![],
+            rooms: vec![],
+            devices: vec![],
+            permissions: vec![],
         };
 
         let sessions = Mutex::new(Sessions::new());
