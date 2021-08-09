@@ -16,9 +16,9 @@ pub struct Tokens {
 
 #[derive(Debug, Clone)]
 pub struct CommandContext {
-    pub config_path: std::path::PathBuf,
-    pub config: Option<Config>,
-    pub houseflow_api: Option<HouseflowAPI>,
+    config_path: std::path::PathBuf,
+    config: Option<Config>,
+    houseflow_api: Option<HouseflowAPI>,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Device>>,
 }
