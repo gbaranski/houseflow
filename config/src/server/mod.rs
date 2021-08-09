@@ -6,16 +6,27 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     /// Network configuration
+    #[serde(default)]
     pub network: Network,
     /// Secret data
     pub secrets: Secrets,
     /// Path to the TLS configuration
+    #[serde(default)]
     pub tls: Option<Tls>,
     /// Configuration of the Google 3rd party service
+    #[serde(default)]
     pub google: Option<Google>,
+    /// Structures
+    #[serde(default)]
     pub structures: Vec<Structure>,
+    /// Rooms
+    #[serde(default)]
     pub rooms: Vec<Room>,
+    /// Devices
+    #[serde(default)]
     pub devices: Vec<Device>,
+    /// User -> Structure permission
+    #[serde(default)]
     pub permissions: Vec<Permission>,
 }
 
@@ -92,9 +103,40 @@ impl Default for Network {
     }
 }
 
-use houseflow_types::{DeviceID, UserID};
+use houseflow_types::{DeviceID, RoomID, UserID};
 
 impl Config {
+    pub fn get_device(&self, device_id: &DeviceID) -> Option<Device> {
+        self.devices
+            .iter()
+            .find(|device| device.id == *device_id)
+            .cloned()
+    }
+
+    pub fn get_room(&self, room_id: &RoomID) -> Option<Room> {
+        self.rooms.iter().find(|room| room.id == *room_id).cloned()
+    }
+
+    pub fn get_permission(&self, device_id: &DeviceID, user_id: &UserID) -> Option<Permission> {
+        let device = self
+            .devices
+            .iter()
+            .find(|device| device.id == *device_id)
+            .unwrap();
+        let room = self
+            .rooms
+            .iter()
+            .find(|room| room.id == device.room_id)
+            .unwrap();
+        let permission = self.permissions
+            .iter()
+            .find(|permission| {
+                permission.structure_id == room.structure_id && permission.user_id == *user_id
+            });
+
+        permission.cloned()
+    }
+
     pub fn get_user_devices(&self, user_id: &UserID) -> Vec<DeviceID> {
         let permissions = self
             .permissions
@@ -190,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn get_user_devices() {
+    fn user_permissions() {
         let user_auth = User {
             id: rand::random(),
             username: String::from("gbaranski"),
@@ -326,6 +368,48 @@ mod tests {
         assert_eq!(
             user_unauth_devices,
             vec![device_unauth_one.id.clone(), device_unauth_two.id.clone()]
+        );
+
+        assert_eq!(
+            config.get_permission(&device_auth_one.id, &user_auth.id),
+            Some(Permission {
+                structure_id: structure_auth.id.clone(),
+                user_id: user_auth.id.clone(),
+                is_manager: true,
+            })
+        );
+        assert_eq!(
+            config.get_permission(&device_auth_two.id, &user_auth.id),
+            Some(Permission {
+                structure_id: structure_auth.id.clone(),
+                user_id: user_auth.id.clone(),
+                is_manager: true,
+            })
+        );
+        assert_eq!(
+            config.get_permission(&device_unauth_one.id, &user_unauth.id),
+            Some(Permission {
+                structure_id: structure_unauth.id.clone(),
+                user_id: user_unauth.id.clone(),
+                is_manager: true,
+            })
+        );
+        assert_eq!(
+            config.get_permission(&device_unauth_two.id, &user_unauth.id),
+            Some(Permission {
+                structure_id: structure_unauth.id.clone(),
+                user_id: user_unauth.id.clone(),
+                is_manager: true,
+            })
+        );
+
+        assert_eq!(
+            config.get_permission(&device_unauth_one.id, &user_auth.id),
+            None
+        );
+        assert_eq!(
+            config.get_permission(&device_unauth_two.id, &user_auth.id),
+            None
         );
     }
 }
