@@ -98,7 +98,7 @@ impl crate::Command for Command {
             .collect::<Vec<_>>();
 
         let mut latencies = futures::future::try_join_all(futures).await?;
-        latencies.sort();
+        latencies.sort_unstable();
         if self.n > 0 {
             let average = Iterator::sum::<u128>(latencies.iter()) / latencies.len() as u128;
             let percentile =
