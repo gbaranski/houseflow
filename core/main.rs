@@ -41,6 +41,15 @@ async fn main() -> anyhow::Result<()> {
                 .run(ctx)
                 .await
             }
+            ("register", matches) => {
+                auth::register::Command {
+                    email: get_value(matches, get_input, "email")?,
+                    username: get_value(matches, get_input, "username")?,
+                    password: get_value(matches, get_password, "password")?,
+                }
+                .run(ctx)
+                .await
+            }
             ("logout", _) => auth::logout::Command {}.run(ctx).await,
             ("refresh", _) => auth::refresh::Command {}.run(ctx).await,
             ("status", matches) => {
