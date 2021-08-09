@@ -65,7 +65,7 @@ pub struct Room {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct UserStructure {
+pub struct Permission {
     pub structure_id: StructureID,
     pub user_id: crate::UserID,
     pub is_manager: bool,
