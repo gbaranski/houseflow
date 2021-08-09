@@ -9,8 +9,8 @@ use std::{
 };
 use tokio::sync::{broadcast, mpsc};
 
-const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
-const PING_TIMEOUT: Duration = Duration::from_secs(5);
+const PING_INTERVAL: Duration = Duration::from_secs(5);
+const PING_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, thiserror::Error)]
 pub enum SessionError {
@@ -194,7 +194,7 @@ impl Session {
     }
 
     async fn heartbeat(&self) -> Result<(), SessionError> {
-        let mut interval = tokio::time::interval(HEARTBEAT_INTERVAL);
+        let mut interval = tokio::time::interval(PING_INTERVAL);
         loop {
             interval.tick().await;
             if Instant::now().duration_since(*self.last_heartbeat.lock().unwrap()) > PING_TIMEOUT {

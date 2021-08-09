@@ -11,7 +11,8 @@ use tokio::sync::{mpsc, Mutex};
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
 
-const TIMEOUT: Duration = Duration::from_secs(5);
+const PING_TIMEOUT: Duration = Duration::from_secs(10);
+const PING_INTERVAL: Duration = Duration::from_secs(5);
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -155,7 +156,6 @@ impl Session {
                 }
                 WebsocketMessage::Ping(payload) => {
                     tracing::info!("Received ping, payload: {:?}", payload);
-                    *self.heartbeat.lock().await = Instant::now();
                     events
                         .send(Event::Pong)
                         .await
@@ -203,10 +203,10 @@ impl Session {
     }
 
     async fn heartbeat(&self, events: EventSender) -> anyhow::Result<()> {
-        let mut interval = tokio::time::interval(TIMEOUT);
+        let mut interval = tokio::time::interval(PING_INTERVAL);
         loop {
             interval.tick().await;
-            if Instant::now().duration_since(*self.heartbeat.lock().await) > TIMEOUT {
+            if Instant::now().duration_since(*self.heartbeat.lock().await) > PING_TIMEOUT {
                 return Err(anyhow!("server heartbeat failed"));
             } else {
                 events.send(Event::Ping).await?;
