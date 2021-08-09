@@ -14,7 +14,7 @@ pub async fn handle(
     UserID(user_id): UserID,
     Json(request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
-    if !state
+    if state
         .config
         .get_permission(&request.device_id, &user_id)
         .is_none()
