@@ -17,7 +17,18 @@ pub struct Command {
 impl crate::Command for Command {
     async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         let access_token = ctx.access_token().await?;
-        let devices = ctx.devices.get().await?;
+        let devices = match ctx.devices.get().await {
+            Ok(devices) => devices,
+            Err(szafka::Error::OpenFileError(err)) => match err.kind() {
+                std::io::ErrorKind::NotFound => {
+                    return Err(anyhow::Error::msg(
+                        "no cached devices found, try `houseflow fulfillment sync`",
+                    ))
+                }
+                _ => return Err(err.into())
+            },
+            Err(err) => return Err(err.into()),
+        };
         let device = devices
             .iter()
             .find(|device| device.id == self.device_id)

@@ -39,7 +39,11 @@ impl CommandContext {
         match self.config {
             Some(ref config) => Ok(config),
             None => {
-                let config = Config::read(&self.config_path).context("read configuration")?;
+                let config = if self.config_path.exists() {
+                    Config::read(&self.config_path).context("read configuration")?
+                } else {
+                    Config::default()
+                };
                 tracing::trace!("config loaded: {:#?}", config);
                 self.config = Some(config);
                 Ok(self.config.as_ref().unwrap())
@@ -60,7 +64,18 @@ impl CommandContext {
     }
 
     pub async fn access_token(&mut self) -> anyhow::Result<AccessToken> {
-        let tokens = self.tokens.get().await.with_context(|| "get tokens")?;
+        let tokens = match self.tokens.get().await {
+            Ok(tokens) => tokens,
+            Err(szafka::Error::OpenFileError(err)) => match err.kind() {
+                std::io::ErrorKind::NotFound => {
+                    return Err(anyhow::anyhow!(
+                        "Tokens not found on disk. You need to log in."
+                    ))
+                }
+                _ => return Err(err.into()),
+            },
+            Err(err) => return Err(err).context("Get tokens error"),
+        };
         let refresh_token = RefreshToken::decode_unsafe(&tokens.refresh)
             .with_context(|| "you may need to log in again using `houseflow auth login`")?;
 
