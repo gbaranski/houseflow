@@ -45,3 +45,9 @@ model = "alice"                               # Model name of the device
 hw-version = "0.1.0"                          # Hardware version of the device
 sw-version = "0.1.0"                          # Software version of the device
 attributes = {}                               # Aligned with per-trait attributes described in each trait schema reference.
+
+# Define a new permission.
+[[permissions]]
+structure-id = "bd7feab5033940e296ed7fcdc700ba65" # 16 byte hex-encoded room identifier, must reference to an existing structure.
+user-id = "861ccceaa3e349138ce2498768dbfe09" # 16 byte hex-encoded user identifier, must reference to an existing user.
+is-manager = true # True if user can manage structure(add new devices, invite new home members).

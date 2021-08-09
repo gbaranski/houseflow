@@ -22,18 +22,18 @@
 # project-id =    # Project ID set during creation.
 
 
-# Define a structure.
+# Define a new structure.
 # [[structures]]
 # id =            # Unique 16 byte hex-encoded structure identifier.
 # name =          # Name of the structure. 
 
-# Define a room.
+# Define a new room.
 # [[rooms]]
 # id =            # Unique 16 byte hex-encoded room identifier.
 # structure-id =  # 16 byte hex-encoded room identifier, must reference to an existing structure.
 # name =          # Name of the room.
 
-# Define a device.
+# Define a new device.
 # [[devices]]
 # id =               # Unique 16 byte hex-encoded device identifier.
 # room-id =          # 16 byte hex-encoded room identifier, must reference to an existing room.
@@ -46,3 +46,9 @@
 # hw-version =       # Hardware version of the device
 # sw-version =       # Software version of the device
 # attributes =       # Aligned with per-trait attributes described in each trait schema reference.
+
+# Define a new permission.
+# [[permissions]]
+# structure-id =  # 16 byte hex-encoded room identifier, must reference to an existing structure.
+# user-id =  # 16 byte hex-encoded user identifier, must reference to an existing user.
+# is-manager = # True if user can manage structure(add new devices, invite new home members).

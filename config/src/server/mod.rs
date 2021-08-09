@@ -1,5 +1,5 @@
 use crate::defaults;
-use houseflow_types::{Device, Room, Structure};
+use houseflow_types::{Device, Room, Structure, Permission};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -16,6 +16,7 @@ pub struct Config {
     pub structures: Vec<Structure>,
     pub rooms: Vec<Room>,
     pub devices: Vec<Device>,
+    pub permissions: Vec<Permission>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,9 +87,7 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
 #[cfg(test)]
 mod tests {
     use super::{Config, Google, Network, Secrets, Tls};
-    use houseflow_types::{
-        Device, DeviceID, DeviceTrait, DeviceType, Room, RoomID, Structure, StructureID,
-    };
+    use houseflow_types::{Device, DeviceID, DeviceTrait, DeviceType, Permission, Room, RoomID, Structure, StructureID, UserID};
     use semver::Version;
     use std::str::FromStr;
 
@@ -136,6 +135,13 @@ mod tests {
                     hw_version: Version::new(0, 1, 0),
                     sw_version: Version::new(0, 1, 0),
                     attributes: Default::default(),
+                }
+            ].to_vec(),
+            permissions: [
+                Permission {
+                    structure_id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                    user_id: UserID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
+                    is_manager: true,
                 }
             ].to_vec(),
         };
