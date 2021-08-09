@@ -2,7 +2,7 @@ use crate::defaults;
 use houseflow_types::{DeviceID, DevicePassword};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(default)]
