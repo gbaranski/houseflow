@@ -18,7 +18,7 @@ pub struct Header {
     alg: Algorithm,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Token<P: ser::Serialize + de::DeserializeOwned> {
     header: Header,
     payload: P,
@@ -30,6 +30,13 @@ impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<P> {
         f.write_str(&self.encode())
     }
 }
+
+impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Debug for Token<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.encode())
+    }
+}
+
 
 impl<P: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<P> {
     type Target = P;
