@@ -7,6 +7,7 @@ pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Device {
     /// Identifier of the device
     pub id: DeviceID,
@@ -15,10 +16,10 @@ pub struct Device {
     pub room_id: RoomID,
 
     /// Hashed password for device
-    #[serde(skip)]
     pub password_hash: Option<String>,
 
     /// Type of the device
+    #[serde(rename = "type")]
     pub device_type: DeviceType,
 
     /// Functionatily that the device has
@@ -46,6 +47,7 @@ pub struct Device {
 pub type StructureID = Credential<16>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Structure {
     pub id: StructureID,
     pub name: String,
@@ -54,6 +56,7 @@ pub struct Structure {
 pub type RoomID = Credential<16>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Room {
     pub id: RoomID,
     pub structure_id: StructureID,
@@ -61,6 +64,7 @@ pub struct Room {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct UserStructure {
     pub structure_id: StructureID,
     pub user_id: crate::UserID,
@@ -83,6 +87,7 @@ use strum::EnumString;
     Deserialize,
 )]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case")]
 pub enum DeviceTrait {
     OnOff,
     OpenClose,
@@ -109,10 +114,11 @@ impl DeviceTrait {
     Serialize,
     Deserialize,
 )]
+#[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum DeviceType {
-    Gate,
     Garage,
+    Gate,
     Light,
 }
 
@@ -139,6 +145,7 @@ impl DeviceType {
     Deserialize,
 )]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case")]
 pub enum DeviceCommand {
     OnOff,
     OpenClose,
@@ -161,6 +168,7 @@ pub mod commands {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case")]
 pub enum DeviceError {
     /// Actually, <device(s)> <doesn't/don't> support that functionality.
     FunctionNotSupported,
@@ -172,6 +180,7 @@ pub enum DeviceError {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
 #[serde(tag = "status", content = "description")]
 #[repr(u8)]
+#[serde(rename_all = "kebab-case")]
 pub enum DeviceStatus {
     /// Confirm that the command succeeded.
     Success,
