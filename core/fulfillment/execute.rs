@@ -10,7 +10,6 @@ pub struct Command {
     pub device_id: DeviceID,
     pub command: DeviceCommand,
     pub params: serde_json::Map<String, serde_json::Value>,
-    pub n: usize,
 }
 
 #[async_trait]
@@ -65,58 +64,24 @@ impl crate::Command for Command {
             frame: execute_frame,
         };
 
-        use std::sync::Arc;
-        let houseflow_api = Arc::new(ctx.houseflow_api().await?.to_owned());
-        let access_token = &access_token;
-        let request = &request;
+        let before = Instant::now();
+        let response = ctx
+            .houseflow_api()
+            .await?
+            .execute(&access_token, &request)
+            .await??;
 
-        let futures = (0..self.n)
-            .map(|i| {
-                let request = request.clone();
-                let access_token = access_token.clone();
-                let houseflow_api = houseflow_api.clone();
-                tokio::spawn(async move {
-                    tracing::debug!("Executing request with index of {}", i);
-                    let before = Instant::now();
-                    let response = houseflow_api
-                        .execute(&access_token, &request)
-                        .await
-                        .unwrap()
-                        .unwrap();
-                    let latency = Instant::now().duration_since(before).as_millis();
-                    match response.frame.status {
-                        DeviceStatus::Success => {
-                            println!("✔ Device responded with success after {}ms!", latency)
-                        }
-                        DeviceStatus::Error(err) => {
-                            println!("❌ Device responded with error! Error: {}", err)
-                        }
-                    };
-                    latency
-                })
-            })
-            .collect::<Vec<_>>();
-
-        let mut latencies = futures::future::try_join_all(futures).await?;
-        latencies.sort_unstable();
-        if self.n > 0 {
-            let average = Iterator::sum::<u128>(latencies.iter()) / latencies.len() as u128;
-            let percentile =
-                |val| latencies[(latencies.len() as f32 * (val as f32 * 0.01)) as usize];
-            println!(
-                "{} requests sent. Avg latency: {}ms, 50th percentile: {}ms, 95th percentile: {}ms",
-                latencies.len(),
-                average,
-                percentile(50),
-                percentile(95),
-            );
-        }
-
-        // let mut futures = (0..self.n)
-        //     .map(|i| async move {
-        //     })
-        //     .collect::<futures::stream::FuturesUnordered<_>>();
-        // use futures::StreamExt;
+        match response.frame.status {
+            DeviceStatus::Success => {
+                println!(
+                    "✔ Device responded with success after {}ms!",
+                    Instant::now().duration_since(before).as_millis()
+                )
+            }
+            DeviceStatus::Error(err) => {
+                println!("❌ Device responded with error! Error: {}", err)
+            }
+        };
 
         Ok(())
     }
