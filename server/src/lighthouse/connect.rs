@@ -1,6 +1,8 @@
 use super::{Session, SessionInternals};
 use crate::State;
+use async_trait::async_trait;
 use axum::{
+    body::Body,
     extract::{ws::WebSocketUpgrade, ConnectInfo, Extension, TypedHeader},
     response::IntoResponse,
 };
@@ -10,41 +12,55 @@ use houseflow_types::{
 };
 use std::str::FromStr;
 
-#[tracing::instrument(name = "DeviceWebsocket", skip(websocket, state), err)]
+pub struct DeviceCredentials(DeviceID, String);
+
+#[async_trait]
+impl axum::extract::FromRequest<Body> for DeviceCredentials {
+    type Rejection = ServerError;
+
+    async fn from_request(
+        req: &mut axum::extract::RequestParts<Body>,
+    ) -> Result<Self, Self::Rejection> {
+        let TypedHeader(headers::Authorization(authorization)) =
+            TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
+                .await
+                .map_err(|err| AuthError::InvalidAuthorizationHeader(err.to_string()))?;
+        let device_id = DeviceID::from_str(authorization.username()).map_err(|err| {
+            AuthError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
+        })?;
+
+        Ok(Self(device_id, authorization.password().to_owned()))
+    }
+}
+
+#[tracing::instrument(
+    name = "WebSocket",
+    skip(websocket, state, socket_address, device_password),
+    err
+)]
 pub async fn handle(
     websocket: WebSocketUpgrade,
     Extension(state): Extension<State>,
     ConnectInfo(socket_address): ConnectInfo<std::net::SocketAddr>,
-    TypedHeader(headers::Authorization(authorization)): TypedHeader<
-        headers::Authorization<headers::authorization::Basic>,
-    >,
+    DeviceCredentials(device_id, device_password): DeviceCredentials,
 ) -> Result<impl IntoResponse, ServerError> {
-    let device_id = DeviceID::from_str(authorization.username()).map_err(|err| {
-        AuthError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
-    })?;
     let device = state
         .config
         .get_device(&device_id)
         .ok_or(AuthError::DeviceNotFound)?;
-    crate::verify_password(
-        device.password_hash.as_ref().unwrap(),
-        authorization.password(),
-    )?;
+    crate::verify_password(device.password_hash.as_ref().unwrap(), &device_password)?;
     if state.sessions.lock().unwrap().contains_key(&device.id) {
         return Err(LighthouseError::AlreadyConnected.into());
     }
 
     use tracing::Instrument;
     let span = tracing::Span::current();
-    span.record("device_id", &tracing::field::display(&device.id));
-    span.record("device_type", &tracing::field::display(&device.device_type));
-    span.record("device_name", &tracing::field::display(&device.name));
 
-    Ok(websocket.on_upgrade(|stream| {
+    Ok(websocket.on_upgrade(move |stream| {
         async move {
             let session_internals = SessionInternals::new();
             let session = Session::new(&session_internals);
-            tracing::info!("Device connected");
+            tracing::info!(address = %socket_address, "Device connected");
             state
                 .sessions
                 .lock()
