@@ -7,14 +7,15 @@ use houseflow_types::{
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: UserID) -> Result<response::Payload, ServerError> {
-    let user_devices = state.database.get_user_devices(&user_id)?;
+    let user_devices = state.config.get_user_devices(&user_id);
 
     let user_devices = user_devices
         .into_iter()
+        .map(|device_id| state.config.get_device(&device_id).unwrap())
         .map(|device| {
             let room = state
-                .database
-                .get_room(&device.room_id)?
+                .config
+                .get_room(&device.room_id)
                 .ok_or_else(|| InternalError::Other("couldn't find matching room".to_string()))?;
             let payload = response::PayloadDevice {
                 id: device.id.to_string(),

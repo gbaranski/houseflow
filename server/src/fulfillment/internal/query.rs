@@ -15,8 +15,9 @@ pub async fn handle(
     Json(request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
     if !state
-        .database
-        .check_user_device_access(&user_id, &request.device_id)?
+        .config
+        .get_permission(&request.device_id, &user_id)
+        .is_none()
     {
         return Err(AuthError::NoDevicePermission.into());
     }

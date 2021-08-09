@@ -14,17 +14,14 @@ pub async fn handle(
         .iter()
         .flat_map(|cmd| cmd.execution.iter().zip(cmd.devices.iter()));
 
-    let database = &state.database;
     let sessions = &state.sessions;
+    let config = &state.config;
     let user_id = &user_id;
 
     let responses = requests.map(|(execution, device)| async move {
         let device_id = DeviceID::from_str(&device.id).expect("invalid device ID");
         let ids = [device.id.clone()].to_vec();
-        if !database
-            .check_user_device_access(user_id, &device_id)
-            .unwrap()
-        {
+        if config.get_permission(&device_id, user_id).is_none() {
             return Ok::<_, InternalError>(response::PayloadCommand {
                 ids,
                 status: response::PayloadCommandStatus::Error,

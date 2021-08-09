@@ -14,9 +14,10 @@ pub async fn handle(
     UserID(user_id): UserID,
 ) -> Result<Json<Response>, ServerError> {
     let devices = state
-        .database
-        .get_user_devices(&user_id)?
+        .config
+        .get_user_devices(&user_id)
         .into_iter()
+        .map(|device_id| state.config.get_device(&device_id).unwrap())
         .map(|device| Device {
             password_hash: None,
             ..device

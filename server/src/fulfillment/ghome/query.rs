@@ -9,21 +9,18 @@ pub async fn handle(
     user_id: UserID,
     payload: &request::Payload,
 ) -> Result<response::Payload, InternalError> {
-    let database = &state.database;
     let sessions = &state.sessions;
+    let config = &state.config;
     let user_id = &user_id;
 
     let responses = payload.devices.iter().map(|device| async move {
         let response = (|| async {
             let device_id = DeviceID::from_str(&device.id).expect("invalid device ID");
-            if !database
-                .check_user_device_access(user_id, &device_id)
-                .unwrap()
-            {
+            if config.get_permission(&device_id, user_id).is_none() {
                 return Ok::<_, InternalError>(response::PayloadDevice {
                     status: response::PayloadDeviceStatus::Error,
                     state: Default::default(),
-                    error_code: None,
+                    error_code: Some(String::from("authFailure")),
                 });
             }
             let session = match sessions.lock().unwrap().get(&device_id) {
