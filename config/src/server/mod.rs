@@ -128,11 +128,9 @@ impl Config {
             .iter()
             .find(|room| room.id == device.room_id)
             .unwrap();
-        let permission = self.permissions
-            .iter()
-            .find(|permission| {
-                permission.structure_id == room.structure_id && permission.user_id == *user_id
-            });
+        let permission = self.permissions.iter().find(|permission| {
+            permission.structure_id == room.structure_id && permission.user_id == *user_id
+        });
 
         permission.cloned()
     }

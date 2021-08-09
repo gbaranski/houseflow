@@ -125,7 +125,7 @@ mod test_utils {
         let token_store = token_store::sled::TokenStore::new_temporary(token_store_path).unwrap();
         let config = Config {
             network: Network {
-            hostname: url::Host::Domain(String::from("localhost")),
+                hostname: url::Host::Domain(String::from("localhost")),
             },
             secrets: Secrets {
                 refresh_key: String::from("refresh-key"),

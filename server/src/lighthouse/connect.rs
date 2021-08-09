@@ -10,10 +10,7 @@ use houseflow_types::{
 };
 use std::str::FromStr;
 
-#[tracing::instrument(
-    name = "DeviceConnect",
-    skip(websocket, state),
-)]
+#[tracing::instrument(name = "DeviceConnect", skip(websocket, state))]
 pub async fn handle(
     websocket: WebSocketUpgrade,
     Extension(state): Extension<State>,

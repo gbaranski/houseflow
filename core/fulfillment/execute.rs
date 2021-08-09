@@ -25,7 +25,7 @@ impl crate::Command for Command {
                         "no cached devices found, try `houseflow fulfillment sync`",
                     ))
                 }
-                _ => return Err(err.into())
+                _ => return Err(err.into()),
             },
             Err(err) => return Err(err.into()),
         };

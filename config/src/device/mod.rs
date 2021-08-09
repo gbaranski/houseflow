@@ -16,7 +16,6 @@ pub struct Config {
 
     /// Configuration of the Light device
     pub light: Option<Light>,
-
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
