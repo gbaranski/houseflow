@@ -130,7 +130,7 @@ impl Session {
                     };
                 }
                 Message::Binary(_) => todo!(),
-                Message::Ping(bytes) => todo!(),
+                Message::Ping(_) => todo!(),
                 Message::Pong(_) => todo!(),
                 Message::Close(_) => todo!(),
             }
