@@ -21,13 +21,14 @@ xdg = "2.2.0"
 url = { version = "2.2.2", features = ["serde"] }
 tracing-subscriber = "0.2.19"
 tracing = "0.1.26"
-serde_yaml = { version = "0.8.17", optional = true }
+toml = { version = "0.5.8", optional = true }
 
 [features]
 device = []
 client = []
 server = []
-fs = ["serde_yaml"]
+fs = ["toml"]
 
 [dev-dependencies]
-serde_yaml = { version = "0.8.17" }
+semver = "1.0.4"
+toml = "0.5.8"

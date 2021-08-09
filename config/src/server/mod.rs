@@ -1,49 +1,33 @@
 use crate::defaults;
+use houseflow_types::{Device, Room, Structure};
 use serde::{Deserialize, Serialize};
 
-pub mod google;
-pub mod tls;
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Config {
-    /// Server host
-    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
-    pub hostname: url::Host,
-
+    /// Network configuration
+    pub network: Network,
     /// Secret data
     pub secrets: Secrets,
-
     /// Path to the TLS configuration
-    pub tls: Option<tls::Config>,
-
+    pub tls: Option<Tls>,
     /// Configuration of the Google 3rd party service
-    pub google: Option<google::Config>,
+    pub google: Option<Google>,
+    pub structures: Vec<Structure>,
+    pub rooms: Vec<Room>,
+    pub devices: Vec<Device>,
 }
 
-impl crate::Config for Config {
-    fn default_path() -> std::path::PathBuf {
-        defaults::config_home().join("server.yaml")
-    }
-
-    fn default_yaml() -> String {
-        let mut rand = std::iter::repeat_with(|| {
-            let random: [u8; 16] = rand::random();
-            hex::encode(random)
-        });
-
-        format!(
-            include_str!("default.yaml"),
-            defaults::server_hostname(),
-            rand.next().unwrap(), // refresh key
-            rand.next().unwrap(), // access key
-            rand.next().unwrap(), // authorization code key
-            rand.next().unwrap(), // google client id
-            rand.next().unwrap(), // google client secret
-        )
-    }
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Network {
+    /// Server hostname
+    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
+    pub hostname: url::Host,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Secrets {
     /// Key used to sign refresh tokens. Must be secret and should be farily random.
     pub refresh_key: String,
@@ -53,6 +37,35 @@ pub struct Secrets {
 
     /// Key used to sign authorization codes. Must be secret and should be farily random.
     pub authorization_code_key: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Tls {
+    /// Path to the TLS certificate
+    pub certificate: std::path::PathBuf,
+
+    /// Path to the TLS private key
+    pub private_key: std::path::PathBuf,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Google {
+    ///  OAuth2 Client ID identifying Google to your service
+    pub client_id: String,
+
+    /// OAuth2 Client Secret assigned to the Client ID which identifies Google to you
+    pub client_secret: String,
+
+    /// Google Project ID
+    pub project_id: String,
+}
+
+impl crate::Config for Config {
+    const DEFAULT_TOML: &'static str = include_str!("default.toml");
+
+    const DEFAULT_FILE: &'static str = "server.toml";
 }
 
 impl rand::distributions::Distribution<Secrets> for rand::distributions::Standard {
@@ -72,12 +85,61 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
 
 #[cfg(test)]
 mod tests {
-    use super::Config;
+    use super::{Config, Google, Network, Secrets, Tls};
+    use houseflow_types::{
+        Device, DeviceID, DeviceTrait, DeviceType, Room, RoomID, Structure, StructureID,
+    };
+    use semver::Version;
+    use std::str::FromStr;
 
     #[test]
-    fn default_yaml() {
-        let config = <Config as crate::Config>::default_yaml();
-        dbg!(&config);
-        let _: Config = serde_yaml::from_str(&config).unwrap();
+    fn test_example() {
+        let expected = Config {
+            network: Network {
+                hostname: url::Host::Ipv4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
+            },
+            secrets: Secrets {
+                refresh_key: String::from("some-refresh-key"),
+                access_key: String::from("some-access-key"),
+                authorization_code_key: String::from("some-authorization-code-key"),
+            },
+            tls: Some(Tls {
+                certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
+                private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
+            }),
+            google: Some(Google {
+                client_id: String::from("google-client-id"),
+                client_secret: String::from("google-client-secret"),
+                project_id: String::from("google-project-id"),
+            }),
+            structures: [Structure {
+                id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                name: String::from("Zukago"),
+            }]
+            .to_vec(),
+            rooms: [Room {
+                id: RoomID::from_str("baafebaa0708441782cf17470dd98392").unwrap(),
+                structure_id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                name: String::from("Bedroom"),
+            }]
+            .to_vec(),
+            devices: [
+                Device {
+                    id: DeviceID::from_str("aa9936b052cb4718b77c87961d14c79c").unwrap(),
+                    room_id: RoomID::from_str("baafebaa0708441782cf17470dd98392").unwrap(),
+                    password_hash: Some(String::from("$argon2i$v=19$m=4096,t=3,p=1$oWC2oDYLWUkx46MehdPiuw$3ibEvJypruiJ1kk4IczUPgbgLKiMOJ6nO+OqiA1Ez6U")),
+                    device_type: DeviceType::Light,
+                    traits: [DeviceTrait::OnOff].to_vec(),
+                    name: String::from("Night Lamp"),
+                    will_push_state: true,
+                    model: String::from("alice"),
+                    hw_version: Version::new(0, 1, 0),
+                    sw_version: Version::new(0, 1, 0),
+                    attributes: Default::default(),
+                }
+            ].to_vec(),
+        };
+        let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
+        assert_eq!(config, expected);
     }
 }
