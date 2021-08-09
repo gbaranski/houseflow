@@ -47,15 +47,12 @@ enum ServerMessage {
     Execute(execute::Frame),
     Query(query::Frame),
     Ping(Vec<u8>),
-    Pong(Vec<u8>),
 }
 
 #[derive(Debug, Clone)]
 enum DeviceMessage {
     ExecuteResponse(execute_response::Frame),
     State(state::Frame),
-    // Ping(Vec<u8>),
-    // Pong(Vec<u8>),
 }
 
 #[derive(Debug, Clone)]
@@ -133,6 +130,7 @@ impl Session {
         {
             match message {
                 WebSocketMessage::Text(text) => {
+                    tracing::debug!("Text message received: `{}`", text);
                     let frame = serde_json::from_str::<Frame>(&text)?;
                     match frame {
                         Frame::State(state) => {
@@ -151,10 +149,11 @@ impl Session {
                     };
                 }
                 WebSocketMessage::Binary(_) => todo!(),
-                WebSocketMessage::Ping(bytes) => {
-                    // self.server_messages.send(ServerMessage::Pong(bytes))?;
+                WebSocketMessage::Ping(_) => {
+                    tracing::debug!("Ping received");
                 }
                 WebSocketMessage::Pong(_bytes) => {
+                    tracing::debug!("Pong received");
                     *self.last_heartbeat.lock().unwrap() = Instant::now();
                 }
                 WebSocketMessage::Close(frame) => {
@@ -183,8 +182,9 @@ impl Session {
                     WebSocketMessage::Text(serde_json::to_string(&Frame::Query(frame))?)
                 }
                 ServerMessage::Ping(bytes) => WebSocketMessage::Ping(bytes),
-                ServerMessage::Pong(bytes) => WebSocketMessage::Pong(bytes),
             };
+
+            tracing::debug!("Message `{:?}` sent", message);
             stream
                 .send(message)
                 .await

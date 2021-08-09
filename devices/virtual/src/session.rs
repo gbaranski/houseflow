@@ -155,14 +155,14 @@ impl Session {
                     tracing::debug!("received binary: {:?}", bytes);
                 }
                 WebsocketMessage::Ping(payload) => {
-                    tracing::info!("Received ping, payload: {:?}", payload);
+                    tracing::debug!("Received ping, payload: {:?}", payload);
                     events
                         .send(Event::Pong)
                         .await
                         .expect("message receiver half is down");
                 }
                 WebsocketMessage::Pong(payload) => {
-                    tracing::info!("Received pong, payload: {:?}", payload);
+                    tracing::debug!("Received pong, payload: {:?}", payload);
                     *self.heartbeat.lock().await = Instant::now();
                 }
                 WebsocketMessage::Close(frame) => {
@@ -185,11 +185,11 @@ impl Session {
         while let Some(event) = events.recv().await {
             match event {
                 Event::Ping => {
-                    tracing::info!("Sending Ping");
+                    tracing::debug!("Sending Ping");
                     stream.send(WebsocketMessage::Ping(Vec::new())).await?;
                 }
                 Event::Pong => {
-                    tracing::info!("Sending Pong");
+                    tracing::debug!("Sending Pong");
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
                 }
                 Event::LighthouseFrame(frame) => {
