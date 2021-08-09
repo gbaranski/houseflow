@@ -1,5 +1,5 @@
 use crate::defaults;
-use houseflow_types::{Device, Room, Structure, Permission};
+use houseflow_types::{Device, Permission, Room, Structure};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -84,10 +84,50 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
     }
 }
 
+impl Default for Network {
+    fn default() -> Self {
+        Self {
+            hostname: defaults::server_hostname(),
+        }
+    }
+}
+
+use houseflow_types::{DeviceID, UserID};
+
+impl Config {
+    pub fn get_user_devices(&self, user_id: &UserID) -> Vec<DeviceID> {
+        let permissions = self
+            .permissions
+            .iter()
+            .filter(|permission| permission.user_id == *user_id)
+            .collect::<Vec<_>>(); // TODO: Maybe remove this collect()
+        let rooms = self
+            .rooms
+            .iter()
+            .filter(|room| {
+                permissions
+                    .iter()
+                    .any(|permission| room.structure_id == permission.structure_id)
+            })
+            .collect::<Vec<_>>(); // TODO: Maybe remove this collect()
+
+        let devices = self
+            .devices
+            .iter()
+            .filter(|device| rooms.iter().any(|room| device.room_id == room.id))
+            .map(|device| device.id.to_owned())
+            .collect::<Vec<_>>();
+        devices
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Config, Google, Network, Secrets, Tls};
-    use houseflow_types::{Device, DeviceID, DeviceTrait, DeviceType, Permission, Room, RoomID, Structure, StructureID, UserID};
+    use houseflow_types::{
+        Device, DeviceID, DeviceTrait, DeviceType, Permission, Room, RoomID, Structure,
+        StructureID, User, UserID,
+    };
     use semver::Version;
     use std::str::FromStr;
 
@@ -147,5 +187,145 @@ mod tests {
         };
         let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
+    }
+
+    #[test]
+    fn get_user_devices() {
+        let user_auth = User {
+            id: rand::random(),
+            username: String::from("gbaranski"),
+            email: String::from("root@gbaranski.com"),
+            password_hash: String::from("user-auth-password"),
+        };
+        let user_unauth = User {
+            id: rand::random(),
+            username: String::from("stanbar"),
+            email: String::from("stanbar@gbaranski.com"),
+            password_hash: String::from("user-unauth-password"),
+        };
+        let structure_auth = Structure {
+            id: rand::random(),
+            name: String::from("Zukago"),
+        };
+        let structure_unauth = Structure {
+            id: rand::random(),
+            name: String::from("Gdansk"),
+        };
+        let room_auth_one = Room {
+            id: rand::random(),
+            structure_id: structure_auth.id.clone(),
+            name: String::from("Bedroom"),
+        };
+        let room_auth_two = Room {
+            id: rand::random(),
+            structure_id: structure_auth.id.clone(),
+            name: String::from("Garage"),
+        };
+        let room_unauth_one = Room {
+            id: rand::random(),
+            structure_id: structure_unauth.id.clone(),
+            name: String::from("Bedroom"),
+        };
+        let room_unauth_two = Room {
+            id: rand::random(),
+            structure_id: structure_unauth.id.clone(),
+            name: String::from("Garage"),
+        };
+        let device_auth_one = Device {
+            id: rand::random(),
+            room_id: room_auth_one.id.clone(),
+            password_hash: Some(String::from("some-light-password")),
+            device_type: DeviceType::Light,
+            traits: [DeviceTrait::OnOff].to_vec(),
+            name: String::from("Night lamp"),
+            will_push_state: false,
+            model: String::from("alice"),
+            hw_version: Version::new(0, 0, 0),
+            sw_version: Version::new(0, 0, 0),
+            attributes: Default::default(),
+        };
+        let device_auth_two = Device {
+            id: rand::random(),
+            room_id: room_auth_two.id.clone(),
+            password_hash: Some(String::from("some-garage-password")),
+            device_type: DeviceType::Garage,
+            traits: [DeviceTrait::OpenClose].to_vec(),
+            name: String::from("garage"),
+            will_push_state: false,
+            model: String::from("bob"),
+            hw_version: Version::new(0, 0, 0),
+            sw_version: Version::new(0, 0, 0),
+            attributes: Default::default(),
+        };
+        let device_unauth_one = Device {
+            id: rand::random(),
+            room_id: room_unauth_one.id.clone(),
+            password_hash: Some(String::from("some-light-password")),
+            device_type: DeviceType::Light,
+            traits: [DeviceTrait::OnOff].to_vec(),
+            name: String::from("Night lamp"),
+            will_push_state: false,
+            model: String::from("alice"),
+            hw_version: Version::new(0, 0, 0),
+            sw_version: Version::new(0, 0, 0),
+            attributes: Default::default(),
+        };
+        let device_unauth_two = Device {
+            id: rand::random(),
+            room_id: room_unauth_two.id.clone(),
+            password_hash: Some(String::from("some-garage-password")),
+            device_type: DeviceType::Garage,
+            traits: [DeviceTrait::OpenClose].to_vec(),
+            name: String::from("garage"),
+            will_push_state: false,
+            model: String::from("bob"),
+            hw_version: Version::new(0, 0, 0),
+            sw_version: Version::new(0, 0, 0),
+            attributes: Default::default(),
+        };
+        let config = Config {
+            network: Default::default(),
+            secrets: rand::random(),
+            tls: Default::default(),
+            google: Default::default(),
+            structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),
+            rooms: [
+                room_auth_one,
+                room_auth_two,
+                room_unauth_one,
+                room_unauth_two,
+            ]
+            .to_vec(),
+            devices: [
+                device_auth_one.clone(),
+                device_auth_two.clone(),
+                device_unauth_one.clone(),
+                device_unauth_two.clone(),
+            ]
+            .to_vec(),
+            permissions: [
+                Permission {
+                    structure_id: structure_auth.id.clone(),
+                    user_id: user_auth.id.clone(),
+                    is_manager: true,
+                },
+                Permission {
+                    structure_id: structure_unauth.id.clone(),
+                    user_id: user_unauth.id.clone(),
+                    is_manager: true,
+                },
+            ]
+            .to_vec(),
+        };
+        let user_auth_devices = config.get_user_devices(&user_auth.id);
+        let user_unauth_devices = config.get_user_devices(&user_unauth.id);
+        assert_eq!(
+            user_auth_devices,
+            vec![device_auth_one.id.clone(), device_auth_two.id.clone()]
+        );
+        assert_eq!(
+            user_unauth_devices,
+            vec![device_unauth_one.id.clone(), device_unauth_two.id.clone()]
+        );
     }
 }
