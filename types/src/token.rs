@@ -37,7 +37,6 @@ impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Debug for Token<P> {
     }
 }
 
-
 impl<P: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<P> {
     type Target = P;
 

@@ -1,4 +1,4 @@
-use houseflow_config::{defaults, Error as ConfigError, server::Config, Config as _};
+use houseflow_config::{defaults, server::Config, Config as _, Error as ConfigError};
 use houseflow_db::sqlite::Database as SqliteDatabase;
 use houseflow_server::{Sessions, SledTokenStore};
 use std::net::ToSocketAddrs;
@@ -19,9 +19,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(config) => config,
         Err(ConfigError::IOError(err)) => match err.kind() {
             std::io::ErrorKind::NotFound => {
-                tracing::error!("Config file could not be found at {}", config_path.to_str().unwrap());
-                return Ok(())
-            },
+                tracing::error!(
+                    "Config file could not be found at {}",
+                    config_path.to_str().unwrap()
+                );
+                return Ok(());
+            }
             _ => panic!("Read config IO Error: {}", err),
         },
         Err(err) => panic!("Config error: {}", err),
