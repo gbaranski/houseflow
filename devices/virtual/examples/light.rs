@@ -40,7 +40,13 @@ impl houseflow_device::Device for Device {
 #[tokio::main]
 async fn main() {
     houseflow_config::init_logging(true);
-    let config = Config::read(Config::default_path()).expect("cannot load device config");
+    let path = Config::default_path();
+    tracing::debug!("Config path: {}", path.to_str().unwrap());
+    let config = if path.exists() {
+        Config::read(path).expect("cannot load device config")
+    } else {
+        Config::default()
+    };
     let device_config = config.light.expect("light is not configured");
     let device = Device {
         state: State { on: false },
