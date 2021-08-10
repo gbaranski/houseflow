@@ -32,6 +32,6 @@ pub fn database_path() -> std::path::PathBuf {
     data_home().join("database.sqlite3")
 }
 
-pub fn token_store_path() -> std::path::PathBuf {
-    data_home().join("token_store.sled")
+pub fn token_blacklist_path() -> std::path::PathBuf {
+    data_home().join("token_blacklist.sled")
 }

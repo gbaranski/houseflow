@@ -42,10 +42,6 @@ pub async fn handle(
             exp: Utc::now() + Duration::minutes(10),
         },
     );
-    state
-        .token_store
-        .add(&refresh_token.tid, refresh_token.exp.as_ref())
-        .await?;
 
     tracing::event!(Level::INFO, user_id = %user.id, "Logged in");
 
@@ -85,10 +81,6 @@ mod tests {
             RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &rt).unwrap(),
         );
         assert_eq!(at.sub, rt.sub);
-        assert!(
-            state.token_store.exists(&rt.tid).await.unwrap(),
-            "refresh token not found in token store"
-        );
     }
 
     #[tokio::test]

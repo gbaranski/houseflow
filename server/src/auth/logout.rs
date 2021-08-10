@@ -12,7 +12,11 @@ pub async fn handle(
     RefreshToken(refresh_token): RefreshToken,
     Json(_request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
-    state.token_store.remove(&refresh_token.tid).await.unwrap();
+    state
+        .token_blacklist
+        .add(&refresh_token.tid, refresh_token.exp)
+        .await
+        .unwrap();
     tracing::event!(Level::INFO, user_id = %refresh_token.sub, "Logged out");
     Ok(Json(Response {}))
 }
@@ -35,11 +39,6 @@ mod tests {
             },
         );
         state.database.add_user(&user).unwrap();
-        state
-            .token_store
-            .add(&refresh_token.tid, refresh_token.exp.as_ref())
-            .await
-            .unwrap();
         let _ = super::handle(
             state.clone(),
             crate::extractors::RefreshToken(refresh_token.clone()),
@@ -47,6 +46,10 @@ mod tests {
         )
         .await
         .unwrap();
-        assert!(!state.token_store.exists(&refresh_token.tid).await.unwrap());
+        assert!(state
+            .token_blacklist
+            .exists(&refresh_token.tid)
+            .await
+            .unwrap());
     }
 }

@@ -3,7 +3,7 @@ use axum::{extract::Extension, Json};
 use chrono::{Duration, Utc};
 use houseflow_types::{
     auth::token::{Request, Response},
-    errors::{AuthError, ServerError},
+    errors::ServerError,
     token::{AccessToken, AccessTokenPayload},
 };
 use tracing::Level;
@@ -14,10 +14,6 @@ pub async fn handle(
     RefreshToken(refresh_token): RefreshToken,
     Json(_request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
-    if !state.token_store.exists(&refresh_token.tid).await? {
-        return Err(AuthError::RefreshTokenNotInStore.into());
-    }
-
     let access_token_payload = AccessTokenPayload {
         sub: refresh_token.sub.clone(),
         exp: Utc::now() + Duration::minutes(10),
@@ -53,11 +49,6 @@ mod tests {
             },
         );
         state.database.add_user(&user).unwrap();
-        state
-            .token_store
-            .add(&refresh_token.tid, refresh_token.exp.as_ref())
-            .await
-            .unwrap();
         let Json(response) = super::handle(
             state.clone(),
             crate::extractors::RefreshToken(refresh_token.clone()),

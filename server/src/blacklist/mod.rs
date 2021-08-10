@@ -14,20 +14,19 @@ pub enum Error {
 }
 
 #[async_trait]
-pub trait TokenStore: Send + Sync {
+pub trait TokenBlacklist: Send + Sync {
     async fn exists(&self, id: &RefreshTokenID) -> Result<bool, Error>;
 
     async fn remove(&self, id: &RefreshTokenID) -> Result<bool, Error>;
 
-    async fn add(
-        &self,
-        id: &RefreshTokenID,
-        expire_at: Option<&DateTime<Utc>>,
-    ) -> Result<(), Error>;
+    async fn remove_expired(&self) -> Result<(), Error>;
+
+    async fn add(&self, id: &RefreshTokenID, expire_at: Option<DateTime<Utc>>)
+        -> Result<(), Error>;
 }
 
 impl From<Error> for houseflow_types::errors::ServerError {
     fn from(val: Error) -> Self {
-        houseflow_types::errors::InternalError::TokenStoreError(val.to_string()).into()
+        houseflow_types::errors::InternalError::TokenBlacklistError(val.to_string()).into()
     }
 }

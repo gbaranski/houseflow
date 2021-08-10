@@ -53,7 +53,7 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::UserNotFound => StatusCode::NOT_FOUND,
                 AuthError::DeviceNotFound => StatusCode::NOT_FOUND,
                 AuthError::UserAlreadyExists => StatusCode::NOT_ACCEPTABLE,
-                AuthError::RefreshTokenNotInStore => StatusCode::UNAUTHORIZED,
+                AuthError::RefreshTokenBlacklisted => StatusCode::UNAUTHORIZED,
                 AuthError::NoDevicePermission => StatusCode::UNAUTHORIZED,
             },
             Self::FulfillmentError(ref err) => match err {

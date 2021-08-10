@@ -64,8 +64,8 @@ impl axum::extract::FromRequest<Body> for RefreshToken {
         let token: Token<RefreshTokenPayload> =
             from_request(req, |secrets| &secrets.refresh_key).await?;
         let state: &State = req.extensions().unwrap().get().unwrap();
-        if !state.token_store.exists(&token.tid).await? {
-            return Err(AuthError::RefreshTokenNotInStore.into());
+        if state.token_blacklist.exists(&token.tid).await? {
+            return Err(AuthError::RefreshTokenBlacklisted.into());
         }
         Ok(Self(token))
     }
