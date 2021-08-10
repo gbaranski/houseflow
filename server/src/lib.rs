@@ -1,13 +1,13 @@
 mod extractors;
 
-mod token_store;
+mod blacklist;
 
 mod auth;
 mod fulfillment;
 mod lighthouse;
 // mod oauth;
 
-pub use token_store::{sled::TokenStore as SledTokenStore, TokenStore};
+pub use blacklist::{sled::TokenBlacklist as SledTokenBlacklist, TokenBlacklist};
 
 use houseflow_config::server::Config;
 use houseflow_db::Database;
@@ -35,7 +35,7 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct State {
-    pub token_store: Arc<dyn TokenStore>,
+    pub token_blacklist: Arc<dyn TokenBlacklist>,
     pub database: Arc<dyn Database>,
     pub config: Arc<Config>,
     pub sessions: Arc<Mutex<Sessions>>,
@@ -107,7 +107,7 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
 
 #[cfg(test)]
 mod test_utils {
-    use super::{token_store, Sessions, State};
+    use super::{Sessions, SledTokenBlacklist, State};
     use axum::extract;
     use houseflow_config::server::{Config, Network, Secrets};
     use houseflow_db::sqlite::Database as SqliteDatabase;
@@ -120,9 +120,9 @@ mod test_utils {
 
     pub fn get_state() -> extract::Extension<State> {
         let database = SqliteDatabase::new_in_memory().unwrap();
-        let token_store_path =
+        let token_blacklist_path =
             std::env::temp_dir().join(format!("houseflow-server_test-{}", rand::random::<u32>()));
-        let token_store = token_store::sled::TokenStore::new_temporary(token_store_path).unwrap();
+        let token_blacklist = SledTokenBlacklist::new_temporary(token_blacklist_path).unwrap();
         let config = Config {
             network: Network {
                 hostname: url::Host::Domain(String::from("localhost")),
@@ -148,7 +148,7 @@ mod test_utils {
 
         extract::Extension(State {
             database: Arc::new(database),
-            token_store: Arc::new(token_store),
+            token_blacklist: Arc::new(token_blacklist),
             config: Arc::new(config),
             sessions: Arc::new(sessions),
         })

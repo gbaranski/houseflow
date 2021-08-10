@@ -26,9 +26,9 @@ pub enum Error {
     #[error("user already exists")]
     UserAlreadyExists,
 
-    /// Refresh token not found in store, this may occur when refreshing access token
-    #[error("token not found in store")]
-    RefreshTokenNotInStore,
+    /// Refresh token is blacklisted
+    #[error("refresh token is blacklisted")]
+    RefreshTokenBlacklisted,
 
     /// User does not have permission to a device
     #[error("user does not have permission to a specified device")]

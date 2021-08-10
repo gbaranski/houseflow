@@ -20,6 +20,34 @@ pub use common::*;
 pub use device::*;
 pub use user::*;
 
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, strum::Display, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+#[repr(u8)]
+pub enum ClientType {
+    Internal,
+    GoogleSmartHome,
+}
+
+use std::time::Duration;
+
+impl ClientType {
+    pub fn refresh_token_duration(&self) -> Option<Duration> {
+        match *self {
+            Self::Internal => Some(Duration::from_secs(3600 * 24 * 7)), // One week
+            Self::GoogleSmartHome => None,                              // Never
+        }
+    }
+
+    pub fn access_token_duration(&self) -> Option<Duration> {
+        match *self {
+            Self::Internal => Some(Duration::from_secs(60 * 10)), // 10 Minutes
+            Self::GoogleSmartHome => Some(Duration::from_secs(60 * 10)), // 10 Minutes
+        }
+    }
+}
+
 #[cfg(feature = "token")]
 pub mod serde_token_expiration {
     use chrono::Duration;

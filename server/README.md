@@ -28,9 +28,9 @@ Handles websocket connections with embedded devices.
 
 Handles OAuth2 requests from G-Home.
 
-## token_store/
+## token_blacklist/
 
-Store for refresh tokens, used to invalidate them in case something happens. [Sled](https://github.com/spacejam/sled) is used by default, but any database is supported because of available `TokenStore` interface.
+Store for refresh tokens, used to invalidate them in case something happens. [Sled](https://github.com/spacejam/sled) is used by default, but any database is supported because of available `TokenBlacklist` interface.
 
 ## extractors.rs
 

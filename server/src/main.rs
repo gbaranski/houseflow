@@ -1,6 +1,6 @@
 use houseflow_config::{defaults, server::Config, Config as _, Error as ConfigError};
 use houseflow_db::sqlite::Database as SqliteDatabase;
-use houseflow_server::{Sessions, SledTokenStore};
+use houseflow_server::{Sessions, SledTokenBlacklist};
 use std::net::ToSocketAddrs;
 use std::sync::{Arc, Mutex};
 
@@ -30,13 +30,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let token_store =
-        SledTokenStore::new(defaults::token_store_path()).expect("cannot open token store");
+    let token_blacklist = SledTokenBlacklist::new(defaults::token_blacklist_path())
+        .expect("cannot open token blacklist");
     let database = SqliteDatabase::new(defaults::database_path()).expect("cannot open database");
     let sessions = Sessions::new();
 
     let state = houseflow_server::State {
-        token_store: Arc::new(token_store),
+        token_blacklist: Arc::new(token_blacklist),
         database: Arc::new(database),
         config: Arc::new(config),
         sessions: Arc::new(Mutex::new(sessions)),
