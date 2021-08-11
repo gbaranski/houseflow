@@ -2,7 +2,7 @@
 
 # Server network configuration
 [network]
-hostname = "0.0.0.0" # Change to 0.0.0.0 to allow clients from other networks to connect
+address = "0.0.0.0" # Change to 0.0.0.0 to allow clients from other networks to connect
 
 # Secret values for server.
 [secrets]
