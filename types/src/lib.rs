@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 #[repr(u8)]
 pub enum ClientType {
     Internal,
-    GoogleSmartHome,
+    GoogleHome,
 }
 
 use std::time::Duration;
