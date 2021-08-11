@@ -78,7 +78,8 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
                 route("/execute", post(fulfillment::internal::execute::handle))
                     .route("/query", post(fulfillment::internal::query::handle))
                     .route("/sync", get(fulfillment::internal::sync::handle)),
-            ),
+            )
+            .route("/google-home", post(fulfillment::ghome::handle)),
         )
         .nest(
             "/lighthouse",

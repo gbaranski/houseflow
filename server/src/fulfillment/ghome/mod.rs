@@ -8,7 +8,7 @@ use google_smart_home::{Request, RequestInput, Response};
 use houseflow_types::errors::ServerError;
 
 #[tracing::instrument(skip(state), err)]
-pub async fn on_webhook(
+pub async fn handle(
     Extension(state): Extension<State>,
     UserID(user_id): UserID,
     Json(request): Json<Request>,
