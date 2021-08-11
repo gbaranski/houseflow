@@ -5,7 +5,7 @@ mod blacklist;
 mod auth;
 mod fulfillment;
 mod lighthouse;
-// mod oauth;
+mod oauth;
 
 pub use blacklist::{sled::TokenBlacklist as SledTokenBlacklist, TokenBlacklist};
 
@@ -41,13 +41,45 @@ pub struct State {
     pub sessions: Arc<Mutex<Sessions>>,
 }
 
-pub async fn run(address: &std::net::SocketAddr, state: State) {
+use tokio::net::{TcpListener, ToSocketAddrs};
+
+pub async fn run_tls(
+    address: impl ToSocketAddrs,
+    state: State,
+    tls_config: Arc<tokio_rustls::rustls::ServerConfig>,
+) -> Result<(), tokio::io::Error> {
+    use tokio_rustls::TlsAcceptor;
+
+    let acceptor = TlsAcceptor::from(tls_config);
+    let listener = TcpListener::bind(address).await?;
+    let app = app(state);
+    loop {
+        let (stream, _) = listener.accept().await?;
+        let acceptor = acceptor.clone();
+        let app = app.clone();
+        tokio::spawn(async move {
+            if let Ok(stream) = acceptor.accept(stream).await {
+                hyper::server::conn::Http::new()
+                    .serve_connection(stream, app)
+                    .await
+                    .unwrap();
+            }
+        });
+    }
+}
+
+pub async fn run(address: impl ToSocketAddrs, state: State) -> Result<(), hyper::Error> {
     use axum::routing::RoutingDsl;
 
-    hyper::Server::bind(address)
-        .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
-        .await
-        .expect("server error");
+    hyper::Server::bind(
+        &tokio::net::lookup_host(address)
+            .await
+            .unwrap()
+            .next()
+            .unwrap(),
+    )
+    .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
+    .await
 }
 
 pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
@@ -70,6 +102,12 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
                 .route("/refresh", post(auth::refresh::handle))
                 .route("/whoami", get(auth::whoami::handle))
                 .boxed(),
+        )
+        .nest(
+            "/oauth",
+            route("/authorize", get(oauth::authorize::handle))
+                .route("/login", post(oauth::login::handle))
+                .route("/token", post(oauth::token::handle)),
         )
         .nest(
             "/fulfillment",

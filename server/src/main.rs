@@ -1,8 +1,8 @@
 use houseflow_config::{defaults, server::Config, Config as _, Error as ConfigError};
 use houseflow_db::sqlite::Database as SqliteDatabase;
 use houseflow_server::{Sessions, SledTokenBlacklist};
-use std::net::ToSocketAddrs;
 use std::sync::{Arc, Mutex};
+use tokio_rustls::rustls;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,18 +42,48 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         sessions: Arc::new(Mutex::new(sessions)),
     };
 
-    let address = format!(
-        "{}:{}",
-        state.config.network.hostname,
-        defaults::server_port()
+    let address_with_port = |port| (state.config.network.hostname.to_string(), port);
+    let (address, tls_address) = (
+        address_with_port(defaults::server_port()),
+        address_with_port(defaults::server_port_tls()),
     );
-    let address = address
-        .to_socket_addrs()
-        .expect("invalid address")
-        .next()
-        .unwrap();
-    tracing::debug!("{} address will be used", address);
-    houseflow_server::run(&address, state).await;
+
+    if let Some(tls) = &state.config.tls {
+        let mut rustls_config = rustls::ServerConfig::new(rustls::NoClientAuth::new());
+        let certificate = &mut std::io::BufReader::new(
+            std::fs::File::open(&tls.certificate).expect("read certificate fail"),
+        );
+        let private_key = &mut std::io::BufReader::new(
+            std::fs::File::open(&tls.private_key).expect("read private key fail"),
+        );
+        let certificate_chain = rustls::internal::pemfile::certs(certificate).unwrap();
+        let keys = rustls::internal::pemfile::pkcs8_private_keys(private_key).unwrap();
+        rustls_config
+            .set_single_cert(certificate_chain, keys.into_iter().next().unwrap())
+            .unwrap();
+
+        tracing::info!("Starting server at {}:{}", address.0, address.1);
+        let run_fut =
+            houseflow_server::run(address_with_port(defaults::server_port()), state.clone());
+        tracing::info!("Starting TLS server at {}:{}", tls_address.0, tls_address.1);
+        let run_tls_fut = houseflow_server::run_tls(
+            address_with_port(defaults::server_port_tls()),
+            state,
+            Arc::new(rustls_config),
+        );
+
+        tokio::select! {
+            val = run_fut => {
+                val?;
+            },
+            val = run_tls_fut => {
+                val?;
+            },
+        };
+    } else {
+        tracing::info!("Starting server at {}:{}", address.0, address.1);
+        houseflow_server::run(address_with_port(defaults::server_port()), state).await?;
+    }
 
     Ok(())
 }

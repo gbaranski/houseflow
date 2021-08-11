@@ -24,8 +24,6 @@ houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"
 
 google-smart-home = { path = "../google-smart-home" }
 
-rustls = "0.19.1"
-
 tokio = { version="1.5", features=["sync", "time", "rt-multi-thread"] }
 
 validator = "0.13.0"
@@ -54,3 +52,4 @@ headers = "0.3.4"
 futures-util = { version = "0.3.16", optional = true }
 tower = "0.4.8"
 tower-http = { version = "0.1.1", features = ["trace"] }
+tokio-rustls = "0.22.0"
