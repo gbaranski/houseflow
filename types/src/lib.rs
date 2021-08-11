@@ -30,20 +30,20 @@ pub enum ClientType {
     GoogleHome,
 }
 
-use std::time::Duration;
+use chrono::Duration;
 
 impl ClientType {
     pub fn refresh_token_duration(&self) -> Option<Duration> {
         match *self {
-            Self::Internal => Some(Duration::from_secs(3600 * 24 * 7)), // One week
-            Self::GoogleSmartHome => None,                              // Never
+            Self::Internal => Some(Duration::days(7)),
+            Self::GoogleHome => None,
         }
     }
 
-    pub fn access_token_duration(&self) -> Option<Duration> {
+    pub fn access_token_duration(&self) -> Duration {
         match *self {
-            Self::Internal => Some(Duration::from_secs(60 * 10)), // 10 Minutes
-            Self::GoogleSmartHome => Some(Duration::from_secs(60 * 10)), // 10 Minutes
+            Self::Internal => Duration::minutes(10),
+            Self::GoogleHome => Duration::minutes(10),
         }
     }
 }
