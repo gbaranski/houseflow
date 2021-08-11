@@ -1,83 +1,43 @@
-use actix_web::{
-    web::{Data, Form, Query},
-    HttpResponse,
-};
+use crate::{verify_password, State};
+use axum::extract::{Extension, Form, Query};
 use chrono::{Duration, Utc};
-use houseflow_config::server::Config;
-use houseflow_db::Database;
 use houseflow_types::{
     auth::login::Request,
+    errors::InternalError,
     token::{AuthorizationCode, AuthorizationCodePayload},
 };
 
-use super::{verify_redirect_uri, AuthorizationRequestQuery, AuthorizationResponseError};
+use super::{verify_redirect_uri, AuthorizationRequestQuery, Error};
 
-fn verify_password(hash: &str, password: &str) -> Result<(), ResponseError> {
-    match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
-        true => Ok(()),
-        false => Err(ResponseError::InvalidPassword),
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum ResponseError {
-    #[error("internal error: {0}")]
-    InternalError(#[from] houseflow_types::InternalServerError),
-
-    #[error("validation error: {0}")]
-    ValidationError(#[from] houseflow_types::ValidationError),
-
-    #[error("{0}")]
-    Authorize(#[from] AuthorizationResponseError),
-
-    #[error("invalid password")]
-    InvalidPassword,
-
-    #[error("user not found")]
-    UserNotFound,
-}
-
-impl actix_web::ResponseError for ResponseError {
-    fn status_code(&self) -> actix_web::http::StatusCode {
-        use actix_web::http::StatusCode;
-
-        match self {
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-            Self::InvalidPassword => StatusCode::UNAUTHORIZED,
-            Self::UserNotFound => StatusCode::UNAUTHORIZED,
-            Self::Authorize(err) => err.status_code(),
-        }
-    }
-}
-
-pub async fn on_login(
+pub async fn handle(
+    Extension(state): Extension<State>,
     Form(request): Form<Request>,
     Query(query): Query<AuthorizationRequestQuery>,
-    config: Data<Config>,
-    db: Data<dyn Database>,
-) -> Result<HttpResponse, ResponseError> {
-    validator::Validate::validate(&request).map_err(houseflow_types::ValidationError::from)?;
-    let user = db
+) -> Result<http::Response<axum::body::Body>, Error> {
+    validator::Validate::validate(&request)
+        .map_err(|err| Error::InvalidRequest(Some(err.to_string())))?;
+    let user = state
+        .database
         .get_user_by_email(&request.email)
-        .map_err(houseflow_db::Error::into_internal_server_error)?
-        .ok_or(ResponseError::UserNotFound)?;
+        .map_err(|err| Error::InternalError(InternalError::DatabaseError(err.to_string())))?
+        .ok_or(Error::InvalidGrant(Some(String::from("user not found"))))?;
 
-    verify_password(&user.password_hash, &request.password)?;
-    let google_config = config.google.as_ref().unwrap();
+    verify_password(&user.password_hash, &request.password)
+        .map_err(|_| Error::InvalidRequest(Some(String::from("invalid password"))))?;
+    let google_config = state.config.google.as_ref().unwrap();
     if *query.client_id != *google_config.client_id {
-        return Err(ResponseError::Authorize(
-            AuthorizationResponseError::InvalidClientID,
-        ));
+        return Err(Error::InvalidClient(Some(String::from(
+            "invalid client id",
+        ))));
     }
     verify_redirect_uri(&query.redirect_uri, &google_config.project_id)
-        .map_err(AuthorizationResponseError::InvalidRedirectURI)?;
+        .map_err(|err| Error::InvalidRequest(Some(err.to_string())))?;
     let authorization_code_payload = AuthorizationCodePayload {
         sub: user.id,
         exp: Utc::now() + Duration::minutes(10),
     };
     let authorization_code = AuthorizationCode::new(
-        config.secrets.authorization_code_key.as_bytes(),
+        state.config.secrets.authorization_code_key.as_bytes(),
         authorization_code_payload,
     );
     let mut redirect_uri = query.redirect_uri;
@@ -86,7 +46,9 @@ pub async fn on_login(
         authorization_code, query.state
     )));
 
-    Ok(HttpResponse::SeeOther()
-        .append_header(("Location", redirect_uri.to_string()))
-        .body(""))
+    Ok(http::Response::builder()
+        .status(http::StatusCode::SEE_OTHER)
+        .header("Location", redirect_uri.to_string())
+        .body(axum::body::Body::empty())
+        .unwrap())
 }
