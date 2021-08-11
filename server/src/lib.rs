@@ -41,10 +41,10 @@ pub struct State {
     pub sessions: Arc<Mutex<Sessions>>,
 }
 
-use tokio::net::{TcpListener, ToSocketAddrs};
+use tokio::net::TcpListener;
 
 pub async fn run_tls(
-    address: impl ToSocketAddrs,
+    address: &std::net::SocketAddr,
     state: State,
     tls_config: Arc<tokio_rustls::rustls::ServerConfig>,
 ) -> Result<(), tokio::io::Error> {
@@ -68,15 +68,11 @@ pub async fn run_tls(
     }
 }
 
-pub async fn run(address: impl ToSocketAddrs, state: State) -> Result<(), hyper::Error> {
+pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), hyper::Error> {
     use axum::routing::RoutingDsl;
 
     hyper::Server::bind(
-        &tokio::net::lookup_host(address)
-            .await
-            .unwrap()
-            .next()
-            .unwrap(),
+        address
     )
     .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
     .await
@@ -148,7 +144,7 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
 mod test_utils {
     use super::{Sessions, SledTokenBlacklist, State};
     use axum::extract;
-    use houseflow_config::server::{Config, Network, Secrets};
+    use houseflow_config::{server::{Config, Network, Secrets}, defaults};
     use houseflow_db::sqlite::Database as SqliteDatabase;
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
     use std::sync::{Arc, Mutex};
@@ -164,7 +160,7 @@ mod test_utils {
         let token_blacklist = SledTokenBlacklist::new_temporary(token_blacklist_path).unwrap();
         let config = Config {
             network: Network {
-                hostname: url::Host::Domain(String::from("localhost")),
+                address: defaults::server_address(),
             },
             secrets: Secrets {
                 refresh_key: String::from("refresh-key"),

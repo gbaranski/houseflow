@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         sessions: Arc::new(Mutex::new(sessions)),
     };
 
-    let address_with_port = |port| (state.config.network.hostname.to_string(), port);
+    let address_with_port = |port| std::net::SocketAddr::new(state.config.network.address, port);
     let (address, tls_address) = (
         address_with_port(defaults::server_port()),
         address_with_port(defaults::server_port_tls()),
@@ -62,12 +62,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .set_single_cert(certificate_chain, keys.into_iter().next().unwrap())
             .unwrap();
 
-        tracing::info!("Starting server at {}:{}", address.0, address.1);
+        tracing::info!("Starting server at {}", address);
         let run_fut =
-            houseflow_server::run(address_with_port(defaults::server_port()), state.clone());
-        tracing::info!("Starting TLS server at {}:{}", tls_address.0, tls_address.1);
+            houseflow_server::run(&address, state.clone());
+        tracing::info!("Starting TLS server at {}", tls_address);
         let run_tls_fut = houseflow_server::run_tls(
-            address_with_port(defaults::server_port_tls()),
+            &tls_address,
             state,
             Arc::new(rustls_config),
         );
@@ -81,8 +81,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         };
     } else {
-        tracing::info!("Starting server at {}:{}", address.0, address.1);
-        houseflow_server::run(address_with_port(defaults::server_port()), state).await?;
+        tracing::info!("Starting server at {}", address);
+        houseflow_server::run(&address, state).await?;
     }
 
     Ok(())

@@ -1,11 +1,9 @@
-pub fn localhost(port: u16) -> std::net::SocketAddr {
-    use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-
-    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::LOCALHOST, port))
-}
-
 pub fn server_hostname() -> url::Host {
     url::Host::Domain(String::from("localhost"))
+}
+
+pub fn server_address() -> std::net::IpAddr {
+    std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)
 }
 
 pub const fn server_port() -> u16 {

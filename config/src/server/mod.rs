@@ -33,9 +33,9 @@ pub struct Config {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Network {
-    /// Server hostname
-    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
-    pub hostname: url::Host,
+    /// Server address
+    #[serde(default = "defaults::server_address")]
+    pub address: std::net::IpAddr,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -98,7 +98,7 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
 impl Default for Network {
     fn default() -> Self {
         Self {
-            hostname: defaults::server_hostname(),
+            address: defaults::server_address(),
         }
     }
 }
@@ -175,7 +175,7 @@ mod tests {
     fn test_example() {
         let expected = Config {
             network: Network {
-                hostname: url::Host::Ipv4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
+                address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
             },
             secrets: Secrets {
                 refresh_key: String::from("some-refresh-key"),
