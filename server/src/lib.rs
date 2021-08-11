@@ -71,11 +71,9 @@ pub async fn run_tls(
 pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), hyper::Error> {
     use axum::routing::RoutingDsl;
 
-    hyper::Server::bind(
-        address
-    )
-    .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
-    .await
+    hyper::Server::bind(address)
+        .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
+        .await
 }
 
 pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
@@ -144,7 +142,10 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
 mod test_utils {
     use super::{Sessions, SledTokenBlacklist, State};
     use axum::extract;
-    use houseflow_config::{server::{Config, Network, Secrets}, defaults};
+    use houseflow_config::{
+        defaults,
+        server::{Config, Network, Secrets},
+    };
     use houseflow_db::sqlite::Database as SqliteDatabase;
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
     use std::sync::{Arc, Mutex};

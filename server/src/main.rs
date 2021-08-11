@@ -63,14 +63,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap();
 
         tracing::info!("Starting server at {}", address);
-        let run_fut =
-            houseflow_server::run(&address, state.clone());
+        let run_fut = houseflow_server::run(&address, state.clone());
         tracing::info!("Starting TLS server at {}", tls_address);
-        let run_tls_fut = houseflow_server::run_tls(
-            &tls_address,
-            state,
-            Arc::new(rustls_config),
-        );
+        let run_tls_fut = houseflow_server::run_tls(&tls_address, state, Arc::new(rustls_config));
 
         tokio::select! {
             val = run_fut => {

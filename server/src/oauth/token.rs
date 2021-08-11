@@ -62,10 +62,10 @@ pub enum TokenType {
 }
 
 async fn on_refresh_token_grant(state: State, refresh_token: String) -> Result<Response, Error> {
-    let refresh_token = RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &refresh_token)
-        .map_err(|err| {
-            Error::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string())))
-        })?;
+    let refresh_token =
+        RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &refresh_token).map_err(
+            |err| Error::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string()))),
+        )?;
 
     let expires_in = ClientType::GoogleHome.access_token_duration();
     let access_token = AccessToken::new(
