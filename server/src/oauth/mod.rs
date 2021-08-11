@@ -89,7 +89,7 @@ fn verify_redirect_uri(
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 pub enum Error {
     #[error("internal error: {0}")]
-    InternalError(#[from] houseflow_types::errors::InternalError),
+    Internal(#[from] houseflow_types::errors::InternalError),
 
     /// The request is missing a parameter so the server can’t proceed with the request.
     /// This may also be returned if the request includes an unsupported parameter or repeats a parameter.
@@ -129,7 +129,7 @@ impl axum::response::IntoResponse for Error {
     fn into_response(self) -> http::Response<Self::Body> {
         use http::StatusCode;
         let status = match self {
-            Self::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::BAD_REQUEST,
         };
         let mut response = axum::Json(self).into_response();

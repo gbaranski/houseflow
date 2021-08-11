@@ -19,8 +19,8 @@ pub async fn handle(
     let user = state
         .database
         .get_user_by_email(&request.email)
-        .map_err(|err| Error::InternalError(InternalError::DatabaseError(err.to_string())))?
-        .ok_or(Error::InvalidGrant(Some(String::from("user not found"))))?;
+        .map_err(|err| Error::Internal(InternalError::DatabaseError(err.to_string())))?
+        .ok_or_else(|| Error::InvalidGrant(Some(String::from("user not found"))))?;
 
     verify_password(&user.password_hash, &request.password)
         .map_err(|_| Error::InvalidRequest(Some(String::from("invalid password"))))?;

@@ -15,7 +15,7 @@ pub async fn handle(
         ))));
     }
     verify_redirect_uri(&request.redirect_uri, &google_config.project_id)
-        .map_err(|err| Error::InvalidRequest(Some(String::from(err.to_string()))))?;
+        .map_err(|err| Error::InvalidRequest(Some(err.to_string())))?;
 
     let response = http::Response::builder()
         .header("Content-Type", "text/html")
