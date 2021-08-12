@@ -41,13 +41,16 @@ pub async fn handle(
             }
         };
 
-        let command = DeviceCommand::from_str(
-            &execution
-                .command
-                .strip_prefix(format!("{}.", super::COMMAND_PREFIX).as_str())
-                .unwrap(),
-        )
-        .expect("invalid command");
+        let stripped_command = execution
+            .command
+            .strip_prefix(format!("{}.", super::COMMAND_PREFIX).as_str())
+            .unwrap();
+        let command = DeviceCommand::from_str(stripped_command).unwrap_or_else(|err| {
+            panic!(
+                "invalid command `{}`. stripped: {}. raw: {}",
+                err, stripped_command, execution.command
+            )
+        });
         let request = houseflow_types::lighthouse::proto::execute::Frame {
             id: rand::random(),
             command: command.clone(),
