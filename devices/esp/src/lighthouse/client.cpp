@@ -4,9 +4,6 @@
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
 
-#define AUTHORIZATION_HEADER                                                   \
-  "Authorization: Basic " DEVICE_ID ":" DEVICE_SECRET
-
 #define SERVER_PORT 6001
 #define RECONNECT_INTERVAL 10000
 #define PING_INTERVAL 5000
@@ -31,14 +28,19 @@ void LighthouseClient::loop() {
   }
 }
 
+#include <base64.h>
+
 void LighthouseClient::setup_websocket_client() {
   static auto *this_ptr = this;
   auto handler = [](WStype_t type, uint8_t *payload, size_t length) {
     this_ptr->onEvent(type, payload, length);
   };
 
+  String encoded_credentials = base64::encode(DEVICE_ID ":" DEVICE_SECRET);
+  String authorization_header = "Authorization: Basic " + encoded_credentials;
+
   websocketClient.begin(SERVER_HOST, SERVER_PORT, "/lighthouse/ws");
-  websocketClient.setExtraHeaders(AUTHORIZATION_HEADER);
+  websocketClient.setExtraHeaders(authorization_header.c_str());
   websocketClient.onEvent(handler);
   websocketClient.setReconnectInterval(RECONNECT_INTERVAL);
   websocketClient.enableHeartbeat(PING_INTERVAL, PONG_INTERVAL,
