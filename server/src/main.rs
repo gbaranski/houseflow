@@ -71,7 +71,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             val = run_fut => val?,
             val = run_tls_fut => val?
         };
-
     } else {
         tracing::info!("Starting server at {}", address);
         houseflow_server::run(&address, state).await?;

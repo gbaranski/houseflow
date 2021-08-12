@@ -4,11 +4,7 @@ use axum::extract::{Extension, Query};
 
 const AUTHORIZE_PAGE: &str = include_str!("authorize.html");
 
-#[tracing::instrument(
-    name = "Authorization",
-    skip(state),
-    err,
-)]
+#[tracing::instrument(name = "Authorization", skip(state), err)]
 pub async fn handle(
     Extension(state): Extension<State>,
     Query(request): Query<AuthorizationRequestQuery>,
