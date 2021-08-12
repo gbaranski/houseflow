@@ -25,13 +25,15 @@ Houseflow is open source home automation system, it lets you configure various d
 
 Houseflow server is splitted into few parts.
 
-- Auth, responsible for handling user logging in, signing up, refreshing access tokens, handling OAuth2 from other applications.
-- Fulfillment, responsible for handling requests device requests from WAN, e.g execute some command on a device, query state of the device and etc. It also handles requests from third-party services like Google Actions.
-- Lighthouse, responsible for allowing devices to connect from outside network and provide HTTP JSON RPC for the [fulfillment service](#fulfillment). Uses websockets for communication with devices.
+- Auth, responsible for handling user logging in, signing up, refreshing access tokens.
+- OAuth2, handles OAuth2 requests from Google, used for integration with Google Home.
+- Fulfillment. Handles all device related requests from users, such as EXECUTE, QUERY, or SYNC. Supports multiple clients, see [Client](#Client).
+responsible for handling requests device requests, e.g execute some command on a device, query state of the device and etc. It also handles requests from third-party services like Google Home.
+- Lighthouse. A websocket server which connects with embedded devices.
 
 ## Client
 
-Houseflow is designed to have many clients, and if need easily add new third-party services like Google Home, currently there are few clients supported:
+Houseflow is designed to have many clients. At the moment only 2 clients are supported.
 
 - Internal CLI app, located at [`core/`](./core)
 - [Google Home](https://developers.google.com/assistant/smarthome/overview)
