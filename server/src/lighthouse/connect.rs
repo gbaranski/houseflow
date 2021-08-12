@@ -3,7 +3,7 @@ use crate::State;
 use async_trait::async_trait;
 use axum::{
     body::Body,
-    extract::{ws::WebSocketUpgrade, ConnectInfo, Extension, TypedHeader},
+    extract::{ws::WebSocketUpgrade, Extension, TypedHeader},
     response::IntoResponse,
 };
 use houseflow_types::{
@@ -41,7 +41,7 @@ impl axum::extract::FromRequest<Body> for DeviceCredentials {
 pub async fn handle(
     websocket: WebSocketUpgrade,
     Extension(state): Extension<State>,
-    ConnectInfo(socket_address): ConnectInfo<std::net::SocketAddr>,
+    Extension(socket_address): Extension<std::net::SocketAddr>,
     DeviceCredentials(device_id, device_password): DeviceCredentials,
 ) -> Result<impl IntoResponse, ServerError> {
     let device = state

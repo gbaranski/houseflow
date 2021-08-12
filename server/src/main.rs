@@ -68,13 +68,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let run_tls_fut = houseflow_server::run_tls(&tls_address, state, Arc::new(rustls_config));
 
         tokio::select! {
-            val = run_fut => {
-                val?;
-            },
-            val = run_tls_fut => {
-                val?;
-            },
+            val = run_fut => val?,
+            val = run_tls_fut => val?
         };
+
     } else {
         tracing::info!("Starting server at {}", address);
         houseflow_server::run(&address, state).await?;

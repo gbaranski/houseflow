@@ -9,6 +9,7 @@ mod oauth;
 
 pub use blacklist::{sled::TokenBlacklist as SledTokenBlacklist, TokenBlacklist};
 
+use axum::{routing::RoutingDsl, AddExtensionLayer};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{errors::AuthError, DeviceID};
@@ -54,9 +55,9 @@ pub async fn run_tls(
     let listener = TcpListener::bind(address).await?;
     let app = app(state);
     loop {
-        let (stream, _) = listener.accept().await?;
+        let (stream, address) = listener.accept().await?;
         let acceptor = acceptor.clone();
-        let app = app.clone();
+        let app = app.clone().layer(AddExtensionLayer::new(address));
         tokio::spawn(async move {
             if let Ok(stream) = acceptor.accept(stream).await {
                 hyper::server::conn::Http::new()
@@ -68,17 +69,25 @@ pub async fn run_tls(
     }
 }
 
-pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), hyper::Error> {
-    use axum::routing::RoutingDsl;
-
-    hyper::Server::bind(address)
-        .serve(app(state).into_make_service_with_connect_info::<std::net::SocketAddr, _>())
-        .await
+pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), tokio::io::Error> {
+    let listener = TcpListener::bind(address).await?;
+    let app = app(state);
+    loop {
+        let (stream, address) = listener.accept().await?;
+        let app = app.clone().layer(AddExtensionLayer::new(address));
+        tokio::spawn(async move {
+            hyper::server::conn::Http::new()
+                .serve_connection(stream, app)
+                .with_upgrades()
+                .await
+                .unwrap();
+        });
+    }
 }
 
 pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
     use axum::{
-        prelude::{get, post, route, RoutingDsl},
+        prelude::{get, post, route},
         routing::nest,
     };
     use http::{Request, Response};
