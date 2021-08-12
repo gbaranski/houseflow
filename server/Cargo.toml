@@ -1,0 +1,55 @@
+[package]
+name = "houseflow-server"
+version = "0.1.2"
+description = "Server for Houseflow"
+homepage = "https://github.com/gbaranski/houseflow"
+repository = "https://github.com/gbaranski/houseflow"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+license = "GPL-3.0-or-later"
+edition = "2018"
+resolver = "2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+houseflow-db = { path="../db", version="0.1.1", features = ["sqlite"] }
+houseflow-types = { path="../types", version="0.1.1", features=[
+    "axum",
+    "token",
+    "auth",
+    "fulfillment",
+    "lighthouse",
+] }
+houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
+
+google-smart-home = { path = "../google-smart-home" }
+
+tokio = { version="1.5", features=["sync", "time", "rt-multi-thread"] }
+
+validator = "0.13.0"
+thiserror = "1.0"
+
+itertools = "0.10"
+
+bytes = "1.0"
+serde = "1.0"
+serde_json = "1.0"
+rust-argon2 = "0.8.3"
+semver = "1.0.3"
+rand = "0.8.4"
+async-trait = "0.1.50"
+futures = "0.3.15"
+url = { version = "2.2.2", features = ["serde"] }
+chrono = "0.4.19"
+sled = "0.34.6"
+tracing = "0.1.26"
+
+axum = { git = "https://github.com/tokio-rs/axum.git", version = "0.1.2", features = ["ws", "headers"] }
+http = "0.2.4"
+http-body = "0.4.2"
+hyper = "0.14.11"
+headers = "0.3.4"
+futures-util = { version = "0.3.16", optional = true }
+tower = "0.4.8"
+tower-http = { version = "0.1.1", features = ["trace"] }
+tokio-rustls = "0.22.0"

@@ -42,8 +42,7 @@ impl<const N: usize> AsRef<[u8]> for Credential<N> {
     }
 }
 
-#[derive(Debug, Clone, Error, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Error, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CredentialError {
     #[error("Invalid size, expected: {expected}, received: {received}")]
     InvalidSize { expected: usize, received: usize },
@@ -82,17 +81,17 @@ impl<const N: usize> FromStr for Credential<N> {
     fn from_str(v: &str) -> Result<Self, Self::Err> {
         // N * 2 because encoding with hex doubles the size
 
-        if v.len() != N * 2 {
-            Err(CredentialError::InvalidSize {
-                expected: N * 2,
-                received: v.len(),
-            })
-        } else {
+        if v.len() == N * 2 {
             Ok(Self {
                 inner: hex::decode(v)
                     .map_err(|err| CredentialError::InvalidEncoding(err.to_string()))?
                     .try_into()
                     .unwrap(),
+            })
+        } else {
+            Err(CredentialError::InvalidSize {
+                expected: N * 2,
+                received: v.len(),
             })
         }
     }
@@ -106,7 +105,7 @@ impl<const N: usize> std::fmt::Display for Credential<N> {
 
 impl<const N: usize> std::fmt::Debug for Credential<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "Inner: `{}`", hex::encode(self.inner))
+        write!(f, "{}", hex::encode(self.inner))
     }
 }
 
@@ -124,59 +123,10 @@ impl<const N: usize> rand::distributions::Distribution<Credential<N>>
     }
 }
 
-#[cfg(feature = "postgres-types")]
-impl<const N: usize> postgres_types::ToSql for Credential<N> {
-    fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::BPCHAR
-    }
-
-    fn to_sql(
-        &self,
-        _ty: &postgres_types::Type,
-        out: &mut bytes::BytesMut,
-    ) -> Result<postgres_types::IsNull, Box<dyn std::error::Error + Sync + Send>>
-    where
-        Self: Sized,
-    {
-        let string = self.to_string();
-        out.put_slice(string.as_bytes());
-        Ok(postgres_types::IsNull::No)
-    }
-
-    fn to_sql_checked(
-        &self,
-        _ty: &postgres_types::Type,
-        out: &mut bytes::BytesMut,
-    ) -> Result<postgres_types::IsNull, Box<dyn std::error::Error + Sync + Send>> {
-        let string = self.to_string();
-        out.put_slice(string.as_bytes());
-        Ok(postgres_types::IsNull::No)
-    }
-}
-
-#[cfg(feature = "postgres-types")]
-impl<'a, const N: usize> postgres_types::FromSql<'a> for Credential<N> {
-    fn from_sql(
-        _ty: &postgres_types::Type,
-        raw: &'a [u8],
-    ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        let str = std::str::from_utf8(raw)?;
-        let credential = Self::from_str(str)?;
-        Ok(credential)
-    }
-
-    fn accepts(ty: &postgres_types::Type) -> bool {
-        *ty == postgres_types::Type::BPCHAR
-    }
-}
-
-#[cfg(feature = "serde")]
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg(feature = "serde")]
 struct CredentialVisitor<const N: usize>;
 
-#[cfg(feature = "serde")]
 impl<'de, const N: usize> Visitor<'de> for CredentialVisitor<N> {
     type Value = Credential<N>;
 
@@ -197,7 +147,6 @@ impl<'de, const N: usize> Visitor<'de> for CredentialVisitor<N> {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de, const N: usize> Deserialize<'de> for Credential<N> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -207,13 +156,29 @@ impl<'de, const N: usize> Deserialize<'de> for Credential<N> {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<const N: usize> Serialize for Credential<N> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         serializer.serialize_str(&self.to_string())
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl<const N: usize> rusqlite::ToSql for Credential<N> {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        Ok(rusqlite::types::ToSqlOutput::Owned(
+            rusqlite::types::Value::Text(self.to_string()),
+        ))
+    }
+}
+
+#[cfg(feature = "rusqlite")]
+impl<const N: usize> rusqlite::types::FromSql for Credential<N> {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        Self::from_str(value.as_str()?)
+            .map_err(|err| rusqlite::types::FromSqlError::Other(Box::new(err)))
     }
 }
 

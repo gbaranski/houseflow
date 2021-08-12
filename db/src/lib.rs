@@ -1,16 +1,23 @@
-use async_trait::async_trait;
-
-mod memory;
-mod postgres;
-pub use memory::{MemoryDatabase, MemoryDatabaseError};
-pub use postgres::{PostgresConfig, PostgresDatabase, PostgresError};
-
-pub trait DatabaseInternalError: std::fmt::Debug + std::error::Error + Send + Sync {}
+#[cfg(feature = "sqlite")]
+pub mod sqlite;
 
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum Error {
-    #[error("internal error: `{0}`")]
-    InternalError(Box<dyn DatabaseInternalError>),
+    #[cfg(feature = "sqlite")]
+    #[error("sqlite error: {0}")]
+    Sqlite(#[from] rusqlite::Error),
+
+    #[cfg(feature = "refinery")]
+    #[error("sqlite error: {0}")]
+    Refinery(#[from] refinery::Error),
+
+    #[cfg(feature = "refinery")]
+    #[error("sqlite error: {0}")]
+    PoolError(#[from] r2d2::Error),
+
+    #[error("json error: {0}")]
+    JsonError(#[from] serde_json::Error),
 
     #[error("Query did not modify anything")]
     NotModified,
@@ -19,41 +26,23 @@ pub enum Error {
     AlreadyExists,
 }
 
-impl<T: DatabaseInternalError + 'static> From<T> for Error {
-    fn from(v: T) -> Self {
-        Self::InternalError(Box::new(v))
-    }
+use houseflow_types::{User, UserID};
+
+pub trait Database: Send + Sync {
+    fn add_user(&self, user: &User) -> Result<(), Error>;
+    fn add_admin(&self, user_id: &UserID) -> Result<(), Error>;
+
+    fn delete_user(&self, user_id: &UserID) -> Result<bool, Error>;
+    fn delete_admin(&self, user_id: &UserID) -> Result<bool, Error>;
+
+    fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
+    fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;
+
+    fn check_user_admin(&self, user_id: &UserID) -> Result<bool, Error>;
 }
 
-use types::{Device, DeviceID, DevicePermission, User, UserID};
-
-#[async_trait]
-pub trait Database: Send + Sync {
-    async fn get_device(&self, device_id: &DeviceID) -> Result<Option<Device>, Error>;
-    async fn add_device(&self, device: &Device) -> Result<(), Error>;
-
-    async fn get_user_devices(
-        &self,
-        user_id: &UserID,
-        permission: &DevicePermission,
-    ) -> Result<Vec<Device>, Error>;
-
-    async fn check_user_device_permission(
-        &self,
-        user_id: &UserID,
-        device_id: &DeviceID,
-        permission: &DevicePermission,
-    ) -> Result<bool, Error>;
-
-    async fn add_user_device(
-        &self,
-        device_id: &DeviceID,
-        user_id: &UserID,
-        permission: &DevicePermission,
-    ) -> Result<(), Error>;
-
-    async fn get_user(&self, user_id: &UserID) -> Result<Option<User>, Error>;
-    async fn get_user_by_email(&self, email: &str) -> Result<Option<User>, Error>;
-    async fn add_user(&self, user: &User) -> Result<(), Error>;
-    async fn delete_user(&self, user_id: &UserID) -> Result<(), Error>;
+impl From<Error> for houseflow_types::errors::ServerError {
+    fn from(val: Error) -> Self {
+        houseflow_types::errors::InternalError::DatabaseError(val.to_string()).into()
+    }
 }

@@ -1,0 +1,53 @@
+# Houseflow server configuration
+
+# Server network configuration
+[network]
+address = "0.0.0.0" # Change to 0.0.0.0 to allow clients from other networks to connect
+
+# Secret values for server.
+[secrets]
+refresh-key = "some-refresh-key"
+access-key = "some-access-key"
+authorization-code-key = "some-authorization-code-key"
+
+# TLS/SSL Configuration. If not defined, TLS will be disabled. 
+[tls]
+certificate = "/etc/certificate"  # e.g /etc/letsencrypt/live/example.com/fullchain.pem
+private-key = "/etc/private-key"  # e.g /etc/letsencrypt/live/example.com/privkey.pem
+
+# Google provider configuration. If not defined, Google Home integration will be disabled.
+[google]
+client-id = "google-client-id"     # Actions Console -> Account Linking -> Client ID.
+client-secret = "google-client-secret" # Actions Console -> Account Linking -> Client Secret. 
+project-id = "google-project-id"   # Project ID set during creation.
+
+# Define a structure.
+[[structures]]
+id = "bd7feab5033940e296ed7fcdc700ba65" # Unique 16 byte hex-encoded structure identifier.
+name = "Zukago"                         # Name of the structure. 
+
+# Define a room.
+[[rooms]]
+id = "baafebaa0708441782cf17470dd98392"           # Unique 16 byte hex-encoded room identifier.
+structure-id = "bd7feab5033940e296ed7fcdc700ba65" # A reference to the structure `id` field.
+name = "Bedroom"                                  # Name of the room.
+
+# Define a device.
+[[devices]]
+id = "aa9936b052cb4718b77c87961d14c79c"       # Unique 16 byte hex-encoded device identifier.
+room-id = "baafebaa0708441782cf17470dd98392"  # A reference to the room `id` field.
+password-hash = "$argon2i$v=19$m=4096,t=3,p=1$oWC2oDYLWUkx46MehdPiuw$3ibEvJypruiJ1kk4IczUPgbgLKiMOJ6nO+OqiA1Ez6U" # A hashed password
+type = "light"                                # Type of the device. Possible values: "garage" | "gate" | "light"
+traits = ["on-off"]                           # List of traits that the device implements. Possible values: "on-off" | "open-close"
+name = "Night Lamp"                           # Name of the device.
+will-push-state = true                        # True if device will push state by itself, otherwise will poll state
+model = "alice"                               # Model name of the device
+hw-version = "0.1.0"                          # Hardware version of the device
+sw-version = "0.1.0"                          # Software version of the device
+attributes = {}                               # Aligned with per-trait attributes described in each trait schema reference.
+
+# Define a new permission.
+[[permissions]]
+structure-id = "bd7feab5033940e296ed7fcdc700ba65" # 16 byte hex-encoded room identifier, must reference to an existing structure.
+user-id = "861ccceaa3e349138ce2498768dbfe09" # 16 byte hex-encoded user identifier, must reference to an existing user.
+is-manager = true # True if user can manage structure(add new devices, invite new home members).

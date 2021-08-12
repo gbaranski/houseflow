@@ -1,0 +1,28 @@
+[package]
+name = "houseflow-api"
+version = "0.1.1"
+description = "API for Houseflow"
+homepage = "https://github.com/gbaranski/houseflow"
+repository = "https://github.com/gbaranski/houseflow"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+license = "GPL-3.0-or-later"
+edition = "2018"
+resolver = "2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio      = { version = "1.6.0", features = ["sync"] }
+reqwest    = { version = "0.11", features = [ "json" ] }
+serde      = "1.0"
+serde_json = "1.0"
+thiserror  = "1.0"
+url        = "2.2"
+
+houseflow-types = { path = "../types", version = "0.1.1", features = ["token"] }
+houseflow-config = { path = "../config", version = "0.1.1", features = ["client"] }
+tracing = "0.1.26"
+
+[features]
+auth = ["houseflow-types/auth"]
+fulfillment = ["houseflow-types/fulfillment"]

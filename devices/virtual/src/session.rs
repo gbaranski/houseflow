@@ -1,47 +1,74 @@
-use bytes::{Buf, BytesMut};
+use crate::Device;
+use anyhow::anyhow;
 use futures_util::{Sink, SinkExt, StreamExt};
-use lighthouse_proto::{execute_response, Decoder, Encoder, Frame};
-use tokio::sync::mpsc;
+use houseflow_config::device::Server;
+use houseflow_types::{
+    lighthouse::proto::{execute_response, state, Frame},
+    DeviceCommand,
+};
+use std::time::{Duration, Instant};
+use tokio::sync::{mpsc, Mutex};
 use tungstenite::Message as WebsocketMessage;
-use types::{DeviceID, DevicePassword};
 use url::Url;
 
+const PING_TIMEOUT: Duration = Duration::from_secs(10);
+const PING_INTERVAL: Duration = Duration::from_secs(5);
+
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum Event {
+    #[allow(dead_code)]
     Ping,
+
     Pong,
     LighthouseFrame(Frame),
-    // Execute(frame::execute::Frame),
-    // ExecuteResponse(frame::execute_response::Frame),
 }
-
-const BUFFER_CAPACITY: usize = 1024;
 
 pub type EventSender = mpsc::Sender<Event>;
 pub type EventReceiver = mpsc::Receiver<Event>;
 
-pub struct Options {
-    pub url: Url,
-    pub id: DeviceID,
-    pub password: DevicePassword,
-}
-
 pub struct Session {
-    opts: Options,
+    heartbeat: Mutex<Instant>,
+    server_config: Server,
 }
 
 impl Session {
-    pub fn new(opts: Options) -> Self {
-        Self { opts }
+    pub fn new(server_config: Server) -> Self {
+        Self {
+            server_config,
+            heartbeat: Mutex::new(Instant::now()),
+        }
     }
 
-    pub async fn run(self) -> Result<(), anyhow::Error> {
+    pub async fn run(self, device: impl Device) -> Result<(), anyhow::Error> {
+        use houseflow_config::defaults;
+
+        let url = format!(
+            "ws{}://{}:{}/lighthouse/ws",
+            if self.server_config.use_tls { "s" } else { "" },
+            self.server_config.hostname,
+            if self.server_config.use_tls {
+                defaults::server_port_tls()
+            } else {
+                defaults::server_port()
+            },
+        );
+        tracing::info!("`{}` will be used the as Server URL", url);
+        let url = Url::parse(&url).unwrap();
+
+        tracing::debug!("will use {} as websocket endpoint", url);
+
+        let credentials = device.credentials();
         let http_request = http::Request::builder()
-            .uri(self.opts.url.to_string())
+            .uri(url.to_string())
             .header(
                 http::header::AUTHORIZATION,
-                format!("Basic {}:{}", self.opts.id, self.opts.password),
+                format!(
+                    "Basic {}",
+                    base64::encode(format!(
+                        "{}:{}",
+                        credentials.device_id, credentials.device_password
+                    ))
+                ),
             )
             .body(())
             .unwrap();
@@ -51,34 +78,68 @@ impl Session {
         let (stream_sender, stream_receiver) = stream.split();
 
         tokio::select! {
-            v = self.stream_read(stream_receiver, event_sender) => { v }
+            v = self.stream_read(stream_receiver, event_sender.clone(), device) => { v }
             v = self.stream_write(stream_sender, event_receiver) => { v }
+            _ = self.heartbeat(event_sender.clone()) => { Err(anyhow::anyhow!("server did not respond to heartbeat")) }
         }
     }
 
-    async fn stream_read<S>(&self, mut stream: S, events: EventSender) -> Result<(), anyhow::Error>
+    async fn stream_read<S, D>(
+        &self,
+        mut stream: S,
+        events: EventSender,
+        mut device: D,
+    ) -> anyhow::Result<()>
     where
         S: futures_util::Stream<Item = Result<WebsocketMessage, tungstenite::Error>> + Unpin,
+        D: Device,
     {
         while let Some(message) = stream.next().await {
             let message = message?;
             match message {
                 WebsocketMessage::Text(text) => {
-                    log::info!("Received text data: {:?}", text);
-                }
-                WebsocketMessage::Binary(bytes) => {
-                    let mut bytes = BytesMut::from(bytes.as_slice());
-                    let frame = Frame::decode(&mut bytes)?;
-                    log::info!("Received frame: {:?}", frame);
+                    tracing::debug!("Raw frame: `{}`", text);
+                    let frame: Frame = serde_json::from_str(&text)?;
+                    tracing::debug!("Parsed frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
+                            use houseflow_types::commands;
+                            let status = match frame.command {
+                                DeviceCommand::OnOff => {
+                                    let params: commands::OnOff =
+                                        serde_json::from_value(frame.params.into())?;
+                                    device.on_off(params.on).await
+                                }
+                                DeviceCommand::OpenClose => {
+                                    let params: commands::OpenClose =
+                                        serde_json::from_value(frame.params.into())?;
+                                    device.open_close(params.open_percent).await
+                                }
+                                _ => unreachable!(),
+                            }?;
+                            let state = serde_json::to_value(device.state()?)?
+                                .as_object()
+                                .unwrap()
+                                .to_owned();
                             let response_frame = execute_response::Frame {
                                 id: frame.id,
-                                status: execute_response::Status::Success,
-                                error: execute_response::Error::None,
-                                state: frame.params,
+                                status,
+                                state,
                             };
                             let response_frame = Frame::ExecuteResponse(response_frame);
+                            let response_event = Event::LighthouseFrame(response_frame);
+                            events
+                                .send(response_event)
+                                .await
+                                .expect("failed sending event");
+                        }
+                        Frame::Query(_) => {
+                            let state = serde_json::to_value(device.state()?)?
+                                .as_object()
+                                .unwrap()
+                                .to_owned();
+                            let response_frame = state::Frame { state };
+                            let response_frame = Frame::State(response_frame);
                             let response_event = Event::LighthouseFrame(response_frame);
                             events
                                 .send(response_event)
@@ -90,18 +151,22 @@ impl Session {
                         }
                     }
                 }
+                WebsocketMessage::Binary(bytes) => {
+                    tracing::debug!("received binary: {:?}", bytes);
+                }
                 WebsocketMessage::Ping(payload) => {
+                    tracing::debug!("Received ping, payload: {:?}", payload);
                     events
                         .send(Event::Pong)
                         .await
                         .expect("message receiver half is down");
-                    log::info!("Received ping, payload: {:?}", payload);
                 }
                 WebsocketMessage::Pong(payload) => {
-                    log::info!("Received ping, payload: {:?}", payload);
+                    tracing::debug!("Received pong, payload: {:?}", payload);
+                    *self.heartbeat.lock().await = Instant::now();
                 }
                 WebsocketMessage::Close(frame) => {
-                    log::info!("Received close frame: {:?}", frame);
+                    tracing::info!("Received close frame: {:?}", frame);
                     return Ok(());
                 }
             }
@@ -117,27 +182,35 @@ impl Session {
     where
         S: Sink<WebsocketMessage, Error = tungstenite::Error> + Unpin,
     {
-        let mut buf = BytesMut::with_capacity(BUFFER_CAPACITY);
         while let Some(event) = events.recv().await {
             match event {
                 Event::Ping => {
-                    log::info!("Sending Ping");
+                    tracing::debug!("Sending Ping");
                     stream.send(WebsocketMessage::Ping(Vec::new())).await?;
                 }
                 Event::Pong => {
-                    log::info!("Sending Pong");
+                    tracing::debug!("Sending Pong");
                     stream.send(WebsocketMessage::Pong(Vec::new())).await?;
                 }
                 Event::LighthouseFrame(frame) => {
-                    assert_eq!(buf.remaining(), 0);
-
-                    frame.encode(&mut buf);
-                    let vec = buf.to_vec();
-                    buf.advance(vec.len());
-                    stream.send(WebsocketMessage::Binary(vec)).await?;
+                    let json = serde_json::to_string(&frame).unwrap();
+                    tracing::debug!("sending text message: {}", json);
+                    stream.send(WebsocketMessage::Text(json)).await?;
                 }
             }
         }
-        unimplemented!();
+        Ok(())
+    }
+
+    async fn heartbeat(&self, events: EventSender) -> anyhow::Result<()> {
+        let mut interval = tokio::time::interval(PING_INTERVAL);
+        loop {
+            interval.tick().await;
+            if Instant::now().duration_since(*self.heartbeat.lock().await) > PING_TIMEOUT {
+                return Err(anyhow!("server heartbeat failed"));
+            } else {
+                events.send(Event::Ping).await?;
+            }
+        }
     }
 }

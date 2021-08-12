@@ -1,13 +1,5 @@
-# Secrets
-.env
-firebaseConfig.json
-service-account.json
-
-# OSX Files
-.DS_Store
-
-# trash
-*.log
-
 # Rust files
 target
+
+# IDE/Editors
+.vscode

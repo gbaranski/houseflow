@@ -1,45 +1,76 @@
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
-#include <WebSocketsClient.h>
-#include <Hash.h>
+#include "optserial.hpp"
 #include "lighthouse.hpp"
-#include "config.hpp"
+#include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <ESP8266WiFi.h>
+#include <Hash.h>
+#include <WebSocketsClient.h>
 
-static Lighthouse lighthouse;
+static LighthouseClient lighthouseClient;
 
-void setupWifi() 
-{
-  ESP8266WiFiMulti WiFiMulti;
+void setupWifi() {
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  WiFiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
-  Serial.printf("Starting WiFi with SSID: %s\n", WIFI_SSID);
-  while (WiFiMulti.run() != WL_CONNECTED) {
-    Serial.println("Waiting for WiFi to connect");
-    delay(100);
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+    delay(1000);
+    OptSerial.print(++i);
+    OptSerial.print(' ');
   }
+  OptSerial.println('\n');
+  OptSerial.println("Connection established!");
+  OptSerial.print("IP address:\t");
+  OptSerial.println(
+      WiFi.localIP()); // Send the IP address of the ESP8266 to the computer
 }
 
-void setupSerial()
-{
-  Serial.begin(SERIAL_BAUD);
-  Serial.println("Starting serial");
+
+void setupOptSerial() {
+  OptSerial.begin(115200);
+  OptSerial.println("Starting serial");
 }
 
-void setupGPIO() 
-{
-    pinMode(LED_PIN, OUTPUT);
+void setupOTA() {
+  ArduinoOTA.setHostname("ESP-" DEVICE_ID);
+  ArduinoOTA.setPassword(DEVICE_SECRET);
+  ArduinoOTA.onStart([]() { OptSerial.printf("[OTA] Started\n"); });
+  ArduinoOTA.onError([](auto error) {
+    OptSerial.printf("[OTA] Error (%u)\n", error);
+
+    if (error == OTA_AUTH_ERROR)
+      OptSerial.println("[OTA] Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      OptSerial.println("[OTA] Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      OptSerial.println("[OTA] Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      OptSerial.println("[OTA] Receive Failed");
+    else if (error == OTA_END_ERROR)
+      OptSerial.println("[OTA] End Failed");
+  });
+  ArduinoOTA.onEnd([]() { OptSerial.printf("[OTA] End\n"); });
+  ArduinoOTA.begin();
 }
 
-void setup() 
-{
+void setupGPIO() {
+#ifdef ON_OFF
+  pinMode(ON_OFF_PIN, OUTPUT);
+#endif
+#ifdef OPEN_CLOSE
+  pinMode(OPEN_CLOSE_PIN, OUTPUT);
+  digitalWrite(OPEN_CLOSE_PIN, HIGH);
+#endif
+}
+
+void setup() {
   setupGPIO();
-  setupSerial();
+  setupOptSerial();
   setupWifi();
-  lighthouse.setup_websocket_client();
+  setupOTA();
+  lighthouseClient.setup_websocket_client();
 }
 
-void loop() 
-{
-  lighthouse.loop();
+void loop() {
+  lighthouseClient.loop();
+  ArduinoOTA.handle();
 }
