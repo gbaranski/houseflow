@@ -41,6 +41,7 @@ pub struct Device {
     pub sw_version: Version,
 
     /// Aligned with per-trait attributes described in each trait schema reference.
+    #[serde(default)]
     pub attributes: serde_json::Map<String, serde_json::Value>,
 }
 
