@@ -67,6 +67,8 @@ async fn on_refresh_token_grant(state: State, refresh_token: String) -> Result<R
             |err| Error::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string()))),
         )?;
 
+    tracing::info!(user_id = %refresh_token.sub, "Refresh token grant");
+
     let expires_in = ClientType::GoogleHome.access_token_duration();
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
@@ -96,6 +98,8 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
         )))
     })?;
 
+    tracing::info!(user_id = %code.sub, "Authorization code grant");
+
     let expires_in = Duration::minutes(10);
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
@@ -122,9 +126,10 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
     })
 }
 
+#[tracing::instrument(name = "Token", skip(state, request))]
 pub async fn handle(
-    Form(request): Form<Request>,
     Extension(state): Extension<State>,
+    Form(request): Form<Request>,
 ) -> Result<Json<Response>, Error> {
     let verify_client = |client_id, client_secret| {
         if client_id != state.config.google.as_ref().unwrap().client_id

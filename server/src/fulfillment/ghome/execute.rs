@@ -41,9 +41,16 @@ pub async fn handle(
             }
         };
 
+        let command = DeviceCommand::from_str(
+            &execution
+                .command
+                .strip_prefix(format!("{}.", super::COMMAND_PREFIX).as_str())
+                .unwrap(),
+        )
+        .expect("invalid command");
         let request = houseflow_types::lighthouse::proto::execute::Frame {
             id: rand::random(),
-            command: DeviceCommand::from_str(&execution.command).expect("invalid command"),
+            command: command.clone(),
             params: execution.params.clone(),
         };
         let response = match tokio::time::timeout(
@@ -62,6 +69,8 @@ pub async fn handle(
                 })
             }
         };
+
+        tracing::info!(command = %command, status = %response.status, "Executed command on device");
 
         Ok(match response.status {
             houseflow_types::DeviceStatus::Success => response::PayloadCommand {

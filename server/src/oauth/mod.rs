@@ -11,7 +11,7 @@ pub enum AuthorizationResponseType {
     Code,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct AuthorizationRequestQuery {
     pub client_id: String,
     pub redirect_uri: Url,

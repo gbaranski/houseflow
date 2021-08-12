@@ -51,6 +51,8 @@ pub async fn handle(
                 }
             };
 
+            tracing::info!(state = %serde_json::to_string(&response.state).unwrap(), "Queried device state");
+
             Ok(response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,

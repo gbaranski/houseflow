@@ -19,8 +19,17 @@ pub async fn handle(state: State, user_id: UserID) -> Result<response::Payload, 
                 .ok_or_else(|| InternalError::Other("couldn't find matching room".to_string()))?;
             let payload = response::PayloadDevice {
                 id: device.id.to_string(),
-                device_type: device.device_type.to_string(),
-                traits: device.traits.iter().map(ToString::to_string).collect(),
+                device_type: format!(
+                    "{}.{}",
+                    super::TYPE_PREFIX,
+                    device.device_type.to_string().to_uppercase()
+                ),
+                traits: device
+                    .traits
+                    .iter()
+                    .map(ToString::to_string)
+                    .map(|name| format!("{}.{}", super::TRAIT_PREFIX, name))
+                    .collect(),
                 name: response::PayloadDeviceName {
                     default_names: None,
                     name: device.name,
@@ -43,6 +52,8 @@ pub async fn handle(state: State, user_id: UserID) -> Result<response::Payload, 
             Ok::<_, ServerError>(payload)
         })
         .collect::<Result<Vec<_>, _>>()?;
+
+    tracing::info!("Synced {} devices", user_devices.len());
 
     Ok(response::Payload {
         agent_user_id: user_id.to_string(),

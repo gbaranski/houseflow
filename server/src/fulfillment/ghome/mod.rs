@@ -2,12 +2,16 @@ mod execute;
 mod query;
 mod sync;
 
+const TRAIT_PREFIX: &str = "action.devices.traits";
+const TYPE_PREFIX: &str = "action.devices.types";
+const COMMAND_PREFIX: &str = "action.devices.commands";
+
 use crate::{extractors::UserID, State};
 use axum::{extract::Extension, Json};
 use google_smart_home::{Request, RequestInput, Response};
 use houseflow_types::errors::ServerError;
 
-#[tracing::instrument(skip(state), err)]
+#[tracing::instrument(name = "GHome", skip(state), err)]
 pub async fn handle(
     Extension(state): Extension<State>,
     UserID(user_id): UserID,

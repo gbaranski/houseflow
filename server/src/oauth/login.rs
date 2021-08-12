@@ -9,6 +9,14 @@ use houseflow_types::{
 
 use super::{verify_redirect_uri, AuthorizationRequestQuery, Error};
 
+#[tracing::instrument(
+    name = "Login",
+    skip(state, request, query),
+    fields(
+        email = %request.email,
+    ),
+    err,
+)]
 pub async fn handle(
     Extension(state): Extension<State>,
     Form(request): Form<Request>,
