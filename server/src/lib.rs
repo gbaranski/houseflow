@@ -60,10 +60,14 @@ pub async fn run_tls(
         let app = app.clone().layer(AddExtensionLayer::new(address));
         tokio::spawn(async move {
             if let Ok(stream) = acceptor.accept(stream).await {
-                hyper::server::conn::Http::new()
+                match hyper::server::conn::Http::new()
                     .serve_connection(stream, app)
+                    .with_upgrades()
                     .await
-                    .unwrap();
+                {
+                    Ok(_) => (),
+                    Err(err) => tracing::warn!("accept connection error: {}", err),
+                };
             }
         });
     }
@@ -76,11 +80,14 @@ pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), tok
         let (stream, address) = listener.accept().await?;
         let app = app.clone().layer(AddExtensionLayer::new(address));
         tokio::spawn(async move {
-            hyper::server::conn::Http::new()
+            match hyper::server::conn::Http::new()
                 .serve_connection(stream, app)
                 .with_upgrades()
                 .await
-                .unwrap();
+            {
+                Ok(_) => (),
+                Err(err) => tracing::warn!("accept connection error: {}", err),
+            };
         });
     }
 }
