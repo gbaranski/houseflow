@@ -19,6 +19,7 @@ lazy_static! {
 #[derive(Clone)]
 pub struct TokenBlacklist {
     database: sled::Db,
+    #[allow(clippy::type_complexity)]
     clean_expired_handle: Arc<Mutex<Option<tokio::task::JoinHandle<Result<(), Error>>>>>,
 }
 
