@@ -33,8 +33,13 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)?;
         let config: Self = toml::from_str(&content)?;
+        config.validate().map_err(Error::Validation)?;
 
         Ok(config)
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        Ok(())
     }
 
     fn default_path() -> std::path::PathBuf {
@@ -48,14 +53,18 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
 #[cfg(feature = "fs")]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("io error: {0}")]
-    IOError(#[from] std::io::Error),
+    #[error("io: {0}")]
+    IO(#[from] std::io::Error),
 
-    #[error("toml deserialize error: {0}")]
-    TomlDeserializeError(#[from] toml::de::Error),
+    #[error("toml deserialize: {0}")]
+    TomlDeserialize(#[from] toml::de::Error),
 
-    #[error("toml serialize error: {0}")]
-    TomlSerializeError(#[from] toml::ser::Error),
+    #[error("toml serialize: {0}")]
+    TomlSerialize(#[from] toml::ser::Error),
+
+    #[error("validation: {0}")]
+    Validation(String),
+
 }
 
 pub fn init_logging(hide_timestamp: bool) {
@@ -82,8 +91,8 @@ pub fn init_logging(hide_timestamp: bool) {
 
 #[allow(dead_code)]
 pub(crate) mod serde_hostname {
+    use serde::de;
     use serde::de::Visitor;
-    use serde::de::{self};
     use serde::Deserializer;
     use serde::Serializer;
     use url::Host;
