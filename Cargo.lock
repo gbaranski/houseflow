@@ -758,6 +758,7 @@ dependencies = [
  "http-body",
  "hyper",
  "itertools",
+ "lazy_static",
  "rand",
  "rust-argon2",
  "semver",

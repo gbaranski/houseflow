@@ -3,26 +3,51 @@ use async_trait::async_trait;
 use bytes::{Buf, BufMut, BytesMut};
 use chrono::{DateTime, Utc};
 use houseflow_types::token::RefreshTokenID;
+use lazy_static::lazy_static;
 use std::convert::TryFrom;
+use std::sync::Arc;
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref CLEAN_EXPIRED_INTERVAL: std::time::Duration =
+        chrono::Duration::hours(12).to_std().unwrap();
+}
 
 #[derive(Clone)]
 pub struct TokenBlacklist {
     database: sled::Db,
+    clean_expired_handle: Arc<Mutex<Option<tokio::task::JoinHandle<Result<(), Error>>>>>,
 }
 
 impl TokenBlacklist {
     pub fn new(path: impl AsRef<std::path::Path>) -> Result<Self, Error> {
         let config = sled::Config::new().path(path);
-        Ok(Self {
-            database: config.open()?,
-        })
+        Self::with_config(config)
     }
 
     pub fn new_temporary(path: impl AsRef<std::path::Path>) -> Result<Self, Error> {
         let config = sled::Config::new().path(path).temporary(true);
-        Ok(Self {
+        Self::with_config(config)
+    }
+
+    pub fn with_config(config: sled::Config) -> Result<Self, Error> {
+        let this = Self {
             database: config.open()?,
-        })
+            clean_expired_handle: Arc::new(Mutex::new(None)),
+        };
+        let clean_expired_handle = {
+            let this = this.clone();
+            tokio::spawn(async move { this.clean_expired_loop().await })
+        };
+        *this.clean_expired_handle.lock().unwrap() = Some(clean_expired_handle);
+        Ok(this)
+    }
+
+    async fn clean_expired_loop(&self) -> Result<(), Error> {
+        loop {
+            crate::TokenBlacklist::remove_expired(self).await?;
+            tokio::time::sleep(*CLEAN_EXPIRED_INTERVAL).await;
+        }
     }
 }
 
