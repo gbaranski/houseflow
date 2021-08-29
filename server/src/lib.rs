@@ -10,10 +10,10 @@ mod oauth;
 pub use blacklist::{sled::TokenBlacklist as SledTokenBlacklist, TokenBlacklist};
 
 use axum::{AddExtensionLayer, Router};
+use dashmap::DashMap;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{errors::AuthError, DeviceID};
-use dashmap::DashMap;
 
 pub(crate) fn get_password_salt() -> [u8; 16] {
     rand::random()
