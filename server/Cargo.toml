@@ -5,6 +5,7 @@ description = "Server for Houseflow"
 homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+keywords = ["iot", "home-automation", "smart-home", "web"]
 license = "GPL-3.0-or-later"
 edition = "2018"
 resolver = "2"

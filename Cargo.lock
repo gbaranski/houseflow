@@ -611,7 +611,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
-name = "houseflow"
+name = "houseflow-api"
+version = "0.1.1"
+dependencies = [
+ "houseflow-config",
+ "houseflow-types",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "houseflow-cli"
 version = "0.5.2"
 dependencies = [
  "Inflector",
@@ -636,21 +651,6 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "xdg",
-]
-
-[[package]]
-name = "houseflow-api"
-version = "0.1.1"
-dependencies = [
- "houseflow-config",
- "houseflow-types",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tracing",
- "url",
 ]
 
 [[package]]
