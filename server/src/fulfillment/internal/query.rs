@@ -1,11 +1,14 @@
 use std::time::Instant;
 
-use crate::{extractors::UserID, State};
-use axum::{extract::Extension, Json};
-use houseflow_types::{
-    errors::{AuthError, FulfillmentError, ServerError},
-    fulfillment::query::{Request, Response},
-};
+use crate::extractors::UserID;
+use crate::State;
+use axum::extract::Extension;
+use axum::Json;
+use houseflow_types::errors::AuthError;
+use houseflow_types::errors::FulfillmentError;
+use houseflow_types::errors::ServerError;
+use houseflow_types::fulfillment::query::Request;
+use houseflow_types::fulfillment::query::Response;
 use tracing::Level;
 
 #[tracing::instrument(name = "Query", skip(state), err)]

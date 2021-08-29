@@ -1,5 +1,7 @@
-use bytes::{Buf, BufMut};
-use std::{convert::TryInto, str::FromStr};
+use bytes::Buf;
+use bytes::BufMut;
+use std::convert::TryInto;
+use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Hash, Eq, PartialEq, PartialOrd, Ord, Clone)]
@@ -123,7 +125,11 @@ impl<const N: usize> rand::distributions::Distribution<Credential<N>>
     }
 }
 
-use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::Visitor;
+use serde::Deserialize;
+use serde::Deserializer;
+use serde::Serialize;
+use serde::Serializer;
 
 struct CredentialVisitor<const N: usize>;
 

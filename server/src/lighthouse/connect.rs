@@ -1,15 +1,16 @@
-use super::{Session, SessionInternals};
+use super::Session;
+use super::SessionInternals;
 use crate::State;
 use async_trait::async_trait;
-use axum::{
-    body::Body,
-    extract::{ws::WebSocketUpgrade, Extension, TypedHeader},
-    response::IntoResponse,
-};
-use houseflow_types::{
-    errors::{AuthError, LighthouseError, ServerError},
-    DeviceID,
-};
+use axum::body::Body;
+use axum::extract::ws::WebSocketUpgrade;
+use axum::extract::Extension;
+use axum::extract::TypedHeader;
+use axum::response::IntoResponse;
+use houseflow_types::errors::AuthError;
+use houseflow_types::errors::LighthouseError;
+use houseflow_types::errors::ServerError;
+use houseflow_types::DeviceID;
 use std::str::FromStr;
 
 pub struct DeviceCredentials(DeviceID, String);

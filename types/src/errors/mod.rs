@@ -10,7 +10,8 @@ pub use internal::Error as InternalError;
 pub use lighthouse::Error as LighthouseError;
 pub use token::Error as TokenError;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(

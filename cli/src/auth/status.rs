@@ -1,7 +1,9 @@
 use crate::CommandContext;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
-use houseflow_types::token::{AccessToken, RefreshToken};
+use chrono::DateTime;
+use chrono::Utc;
+use houseflow_types::token::AccessToken;
+use houseflow_types::token::RefreshToken;
 
 pub struct Command {
     pub show_token: bool,

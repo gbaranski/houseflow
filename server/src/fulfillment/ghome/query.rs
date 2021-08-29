@@ -1,6 +1,9 @@
 use crate::State;
-use google_smart_home::query::{request, response};
-use houseflow_types::{errors::InternalError, DeviceID, UserID};
+use google_smart_home::query::request;
+use google_smart_home::query::response;
+use houseflow_types::errors::InternalError;
+use houseflow_types::DeviceID;
+use houseflow_types::UserID;
 use std::str::FromStr;
 
 #[tracing::instrument(name = "Query", skip(state), err)]

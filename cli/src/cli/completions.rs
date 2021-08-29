@@ -1,4 +1,6 @@
-use clap::{AppSettings, Arg, SubCommand};
+use clap::AppSettings;
+use clap::Arg;
+use clap::SubCommand;
 
 pub(super) fn subcommand() -> clap::App<'static, 'static> {
     SubCommand::with_name("completions")

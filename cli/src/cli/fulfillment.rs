@@ -1,4 +1,6 @@
-use clap::{AppSettings, Arg, SubCommand};
+use clap::AppSettings;
+use clap::Arg;
+use clap::SubCommand;
 use houseflow_types::DeviceCommand;
 use strum::VariantNames;
 

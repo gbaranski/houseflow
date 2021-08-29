@@ -1,6 +1,9 @@
-use super::{verify_redirect_uri, AuthorizationRequestQuery, Error};
+use super::verify_redirect_uri;
+use super::AuthorizationRequestQuery;
+use super::Error;
 use crate::State;
-use axum::extract::{Extension, Query};
+use axum::extract::Extension;
+use axum::extract::Query;
 
 const AUTHORIZE_PAGE: &str = include_str!("authorize.html");
 

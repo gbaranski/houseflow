@@ -1,5 +1,6 @@
 use crate::defaults;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -36,7 +37,8 @@ impl crate::Config for Config {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Server};
+    use super::Config;
+    use super::Server;
 
     #[test]
     fn test_example() {

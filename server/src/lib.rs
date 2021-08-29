@@ -7,13 +7,16 @@ mod fulfillment;
 mod lighthouse;
 mod oauth;
 
-pub use blacklist::{sled::TokenBlacklist as SledTokenBlacklist, TokenBlacklist};
+pub use blacklist::sled::TokenBlacklist as SledTokenBlacklist;
+pub use blacklist::TokenBlacklist;
 
-use axum::{AddExtensionLayer, Router};
+use axum::AddExtensionLayer;
+use axum::Router;
 use dashmap::DashMap;
 use houseflow_config::server::Config;
 use houseflow_db::Database;
-use houseflow_types::{errors::AuthError, DeviceID};
+use houseflow_types::errors::AuthError;
+use houseflow_types::DeviceID;
 
 pub(crate) fn get_password_salt() -> [u8; 16] {
     rand::random()
@@ -91,8 +94,10 @@ pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), tok
 }
 
 pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
-    use axum::handler::{get, post};
-    use http::{Request, Response};
+    use axum::handler::get;
+    use axum::handler::post;
+    use http::Request;
+    use http::Response;
     use hyper::Body;
     use std::time::Duration;
     use tower_http::trace::TraceLayer;
@@ -156,14 +161,20 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
 
 #[cfg(test)]
 mod test_utils {
-    use super::{SledTokenBlacklist, State};
+    use super::SledTokenBlacklist;
+    use super::State;
     use axum::extract;
-    use houseflow_config::{
-        defaults,
-        server::{Config, Network, Secrets},
-    };
+    use houseflow_config::defaults;
+    use houseflow_config::server::Config;
+    use houseflow_config::server::Network;
+    use houseflow_config::server::Secrets;
     use houseflow_db::sqlite::Database as SqliteDatabase;
-    use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
+    use houseflow_types::Device;
+    use houseflow_types::DeviceType;
+    use houseflow_types::Room;
+    use houseflow_types::Structure;
+    use houseflow_types::User;
+    use houseflow_types::UserID;
     use std::sync::Arc;
 
     pub const PASSWORD: &str = "SomePassword";

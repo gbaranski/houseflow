@@ -2,7 +2,9 @@ mod auth;
 mod completions;
 mod fulfillment;
 
-use clap::{App, AppSettings, Arg};
+use clap::App;
+use clap::AppSettings;
+use clap::Arg;
 
 pub(crate) fn dialoguer_theme() -> impl dialoguer::theme::Theme {
     dialoguer::theme::ColorfulTheme {

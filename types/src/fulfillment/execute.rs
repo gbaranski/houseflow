@@ -1,5 +1,7 @@
-use crate::{lighthouse, DeviceID};
-use serde::{Deserialize, Serialize};
+use crate::lighthouse;
+use crate::DeviceID;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Request {

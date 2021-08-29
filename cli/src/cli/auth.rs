@@ -1,4 +1,6 @@
-use clap::{AppSettings, Arg, SubCommand};
+use clap::AppSettings;
+use clap::Arg;
+use clap::SubCommand;
 
 fn login() -> clap::App<'static, 'static> {
     SubCommand::with_name("login")

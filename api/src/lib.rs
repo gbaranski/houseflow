@@ -65,7 +65,8 @@ mod utils {
     use super::Error;
     use houseflow_types::token::Token;
     use reqwest::Client;
-    use serde::{de::DeserializeOwned, ser::Serialize};
+    use serde::de::DeserializeOwned;
+    use serde::ser::Serialize;
     use url::Url;
 
     pub(crate) async fn send_request<B: DeserializeOwned, E: DeserializeOwned>(

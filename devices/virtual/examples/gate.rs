@@ -1,10 +1,10 @@
 use async_trait::async_trait;
-use houseflow_config::{
-    device::{Config, Gate},
-    Config as _,
-};
+use houseflow_config::device::Config;
+use houseflow_config::device::Gate;
+use houseflow_config::Config as _;
 use houseflow_types::DeviceStatus;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

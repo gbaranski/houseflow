@@ -1,6 +1,7 @@
 use crate::lighthouse::proto::FrameID;
 use crate::DeviceCommand;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Frame {

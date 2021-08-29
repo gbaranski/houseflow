@@ -1,10 +1,11 @@
 use async_trait::async_trait;
-use houseflow_config::{
-    device::{Config, Credentials, Light},
-    Config as _,
-};
+use houseflow_config::device::Config;
+use houseflow_config::device::Credentials;
+use houseflow_config::device::Light;
+use houseflow_config::Config as _;
 use houseflow_types::DeviceStatus;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct State {

@@ -26,7 +26,8 @@ pub enum Error {
     AlreadyExists,
 }
 
-use houseflow_types::{User, UserID};
+use houseflow_types::User;
+use houseflow_types::UserID;
 
 pub trait Database: Send + Sync {
     fn add_user(&self, user: &User) -> Result<(), Error>;

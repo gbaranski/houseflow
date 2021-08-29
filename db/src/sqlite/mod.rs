@@ -1,4 +1,5 @@
-use houseflow_types::{User, UserID};
+use houseflow_types::User;
+use houseflow_types::UserID;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::path::Path;
 
@@ -38,7 +39,8 @@ impl Database {
     }
 }
 
-use rusqlite::{params, OptionalExtension};
+use rusqlite::params;
+use rusqlite::OptionalExtension;
 
 impl crate::Database for Database {
     fn add_user(&self, user: &User) -> Result<(), Error> {

@@ -1,6 +1,12 @@
-use crate::{errors::TokenError as Error, Credential, UserID};
-use chrono::{DateTime, Utc};
-use serde::{de, ser, Deserialize, Serialize};
+use crate::errors::TokenError as Error;
+use crate::Credential;
+use crate::UserID;
+use chrono::DateTime;
+use chrono::Utc;
+use serde::de;
+use serde::ser;
+use serde::Deserialize;
+use serde::Serialize;
 
 pub type RefreshTokenID = Credential<16>;
 

@@ -1,10 +1,11 @@
 use crate::State;
-use axum::{extract::Extension, Json};
-use houseflow_types::{
-    auth::register::{Request, Response},
-    errors::{AuthError, ServerError},
-    User,
-};
+use axum::extract::Extension;
+use axum::Json;
+use houseflow_types::auth::register::Request;
+use houseflow_types::auth::register::Response;
+use houseflow_types::errors::AuthError;
+use houseflow_types::errors::ServerError;
+use houseflow_types::User;
 use rand::random;
 use tracing::Level;
 
@@ -60,8 +61,10 @@ pub async fn handle(
 mod tests {
     use super::Request;
     use crate::test_utils::*;
-    use axum::{extract, response};
-    use houseflow_types::errors::{AuthError, ServerError};
+    use axum::extract;
+    use axum::response;
+    use houseflow_types::errors::AuthError;
+    use houseflow_types::errors::ServerError;
 
     #[tokio::test]
     async fn valid() {

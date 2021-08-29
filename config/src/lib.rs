@@ -82,10 +82,10 @@ pub fn init_logging(hide_timestamp: bool) {
 
 #[allow(dead_code)]
 pub(crate) mod serde_hostname {
-    use serde::{
-        de::{self, Visitor},
-        Deserializer, Serializer,
-    };
+    use serde::de::Visitor;
+    use serde::de::{self};
+    use serde::Deserializer;
+    use serde::Serializer;
     use url::Host;
 
     use std::fmt;

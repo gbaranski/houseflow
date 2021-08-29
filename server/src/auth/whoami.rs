@@ -1,9 +1,11 @@
-use crate::{extractors::UserID, State};
-use axum::{extract::Extension, Json};
-use houseflow_types::{
-    auth::whoami::{Request, Response},
-    errors::{AuthError, ServerError},
-};
+use crate::extractors::UserID;
+use crate::State;
+use axum::extract::Extension;
+use axum::Json;
+use houseflow_types::auth::whoami::Request;
+use houseflow_types::auth::whoami::Response;
+use houseflow_types::errors::AuthError;
+use houseflow_types::errors::ServerError;
 
 #[tracing::instrument(name = "Whoami", skip(state, _request), err)]
 pub async fn handle(

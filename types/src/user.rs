@@ -1,5 +1,6 @@
 use crate::common::Credential;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 pub type UserID = Credential<16>;
 

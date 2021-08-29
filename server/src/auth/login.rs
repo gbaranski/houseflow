@@ -1,11 +1,16 @@
 use crate::State;
-use axum::{extract::Extension, Json};
-use chrono::{Duration, Utc};
-use houseflow_types::{
-    auth::login::{Request, Response},
-    errors::{AuthError, ServerError},
-    token::{AccessToken, AccessTokenPayload, RefreshToken, RefreshTokenPayload},
-};
+use axum::extract::Extension;
+use axum::Json;
+use chrono::Duration;
+use chrono::Utc;
+use houseflow_types::auth::login::Request;
+use houseflow_types::auth::login::Response;
+use houseflow_types::errors::AuthError;
+use houseflow_types::errors::ServerError;
+use houseflow_types::token::AccessToken;
+use houseflow_types::token::AccessTokenPayload;
+use houseflow_types::token::RefreshToken;
+use houseflow_types::token::RefreshTokenPayload;
 use tracing::Level;
 
 #[tracing::instrument(
@@ -56,10 +61,10 @@ mod tests {
     use super::Request;
     use crate::test_utils::*;
     use axum::Json;
-    use houseflow_types::{
-        errors::{AuthError, ServerError},
-        token::{AccessToken, RefreshToken},
-    };
+    use houseflow_types::errors::AuthError;
+    use houseflow_types::errors::ServerError;
+    use houseflow_types::token::AccessToken;
+    use houseflow_types::token::RefreshToken;
 
     #[tokio::test]
     async fn valid() {

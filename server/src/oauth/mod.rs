@@ -2,7 +2,8 @@ pub mod authorize;
 pub mod login;
 pub mod token;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use url::Url;
 
 #[derive(Debug, Deserialize, Serialize)]

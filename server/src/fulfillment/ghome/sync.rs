@@ -1,9 +1,8 @@
 use crate::State;
 use google_smart_home::sync::response;
-use houseflow_types::{
-    errors::{InternalError, ServerError},
-    UserID,
-};
+use houseflow_types::errors::InternalError;
+use houseflow_types::errors::ServerError;
+use houseflow_types::UserID;
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: UserID) -> Result<response::Payload, ServerError> {

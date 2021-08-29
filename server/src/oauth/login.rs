@@ -1,13 +1,18 @@
-use crate::{verify_password, State};
-use axum::extract::{Extension, Form, Query};
-use chrono::{Duration, Utc};
-use houseflow_types::{
-    auth::login::Request,
-    errors::InternalError,
-    token::{AuthorizationCode, AuthorizationCodePayload},
-};
+use crate::verify_password;
+use crate::State;
+use axum::extract::Extension;
+use axum::extract::Form;
+use axum::extract::Query;
+use chrono::Duration;
+use chrono::Utc;
+use houseflow_types::auth::login::Request;
+use houseflow_types::errors::InternalError;
+use houseflow_types::token::AuthorizationCode;
+use houseflow_types::token::AuthorizationCodePayload;
 
-use super::{verify_redirect_uri, AuthorizationRequestQuery, Error};
+use super::verify_redirect_uri;
+use super::AuthorizationRequestQuery;
+use super::Error;
 
 #[tracing::instrument(
     name = "Login",

@@ -20,7 +20,8 @@ pub use common::*;
 pub use device::*;
 pub use user::*;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, strum::Display, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -51,10 +52,9 @@ impl ClientType {
 #[cfg(feature = "token")]
 pub mod serde_token_expiration {
     use chrono::Duration;
-    use serde::{
-        de::{self, Visitor},
-        ser,
-    };
+    use serde::de::Visitor;
+    use serde::de::{self};
+    use serde::ser;
     pub struct TokenExpirationVisitor;
 
     impl<'de> Visitor<'de> for TokenExpirationVisitor {

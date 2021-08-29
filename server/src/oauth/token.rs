@@ -1,17 +1,18 @@
 use super::Error;
 use crate::State;
-use axum::{
-    extract::{Extension, Form},
-    Json,
-};
-use chrono::{Duration, Utc};
-use houseflow_types::{
-    token::{
-        AccessToken, AccessTokenPayload, AuthorizationCode, RefreshToken, RefreshTokenPayload,
-    },
-    ClientType,
-};
-use serde::{Deserialize, Serialize};
+use axum::extract::Extension;
+use axum::extract::Form;
+use axum::Json;
+use chrono::Duration;
+use chrono::Utc;
+use houseflow_types::token::AccessToken;
+use houseflow_types::token::AccessTokenPayload;
+use houseflow_types::token::AuthorizationCode;
+use houseflow_types::token::RefreshToken;
+use houseflow_types::token::RefreshTokenPayload;
+use houseflow_types::ClientType;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "grant_type", rename_all = "snake_case")]

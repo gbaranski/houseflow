@@ -1,9 +1,12 @@
-use crate::{get_with_token, post, post_with_token, Error, HouseflowAPI};
-use houseflow_types::{
-    auth,
-    errors::ServerError,
-    token::{AccessToken, RefreshToken},
-};
+use crate::get_with_token;
+use crate::post;
+use crate::post_with_token;
+use crate::Error;
+use crate::HouseflowAPI;
+use houseflow_types::auth;
+use houseflow_types::errors::ServerError;
+use houseflow_types::token::AccessToken;
+use houseflow_types::token::RefreshToken;
 
 #[cfg(feature = "auth")]
 impl HouseflowAPI {

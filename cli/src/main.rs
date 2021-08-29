@@ -5,10 +5,14 @@ mod auth;
 mod fulfillment;
 
 use anyhow::Context;
-use context::{CommandContext, Tokens};
+use context::CommandContext;
+use context::Tokens;
 
 use async_trait::async_trait;
-use cli::{get_input, get_input_with_variants, get_password, unwrap_subcommand};
+use cli::get_input;
+use cli::get_input_with_variants;
+use cli::get_password;
+use cli::unwrap_subcommand;
 use houseflow_types::DeviceCommand;
 use std::str::FromStr;
 use strum::VariantNames;
@@ -18,7 +22,8 @@ pub trait Command {
     async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()>;
 }
 
-use houseflow_config::{client::Config, Config as _};
+use houseflow_config::client::Config;
+use houseflow_config::Config as _;
 use std::path::Path;
 
 #[tokio::main]

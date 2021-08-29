@@ -1,6 +1,8 @@
 use crate::defaults;
-use houseflow_types::{DeviceID, DevicePassword};
-use serde::{Deserialize, Serialize};
+use houseflow_types::DeviceID;
+use houseflow_types::DevicePassword;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -73,7 +75,12 @@ impl Default for Server {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Credentials, Garage, Gate, Light, Server};
+    use super::Config;
+    use super::Credentials;
+    use super::Garage;
+    use super::Gate;
+    use super::Light;
+    use super::Server;
     use houseflow_types::DeviceID;
     use std::str::FromStr;
 

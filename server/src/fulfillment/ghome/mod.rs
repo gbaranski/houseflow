@@ -6,9 +6,13 @@ const TRAIT_PREFIX: &str = "action.devices.traits";
 const TYPE_PREFIX: &str = "action.devices.types";
 const COMMAND_PREFIX: &str = "action.devices.commands";
 
-use crate::{extractors::UserID, State};
-use axum::{extract::Extension, Json};
-use google_smart_home::{Request, RequestInput, Response};
+use crate::extractors::UserID;
+use crate::State;
+use axum::extract::Extension;
+use axum::Json;
+use google_smart_home::Request;
+use google_smart_home::RequestInput;
+use google_smart_home::Response;
 use houseflow_types::errors::ServerError;
 
 #[tracing::instrument(name = "GHome", skip(state), err)]

@@ -2,12 +2,15 @@ use crate::State;
 use async_trait::async_trait;
 use axum::body::Body;
 use houseflow_config::server::Secrets;
-use houseflow_types::{
-    errors::{AuthError, ServerError, TokenError},
-    token::{AccessTokenPayload, RefreshTokenPayload, Token},
-};
+use houseflow_types::errors::AuthError;
+use houseflow_types::errors::ServerError;
+use houseflow_types::errors::TokenError;
+use houseflow_types::token::AccessTokenPayload;
+use houseflow_types::token::RefreshTokenPayload;
+use houseflow_types::token::Token;
 
-use serde::{de, ser};
+use serde::de;
+use serde::ser;
 
 pub struct UserID(pub houseflow_types::UserID);
 

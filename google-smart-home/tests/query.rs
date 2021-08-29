@@ -1,12 +1,10 @@
 mod common;
 
-use google_smart_home::{
-    query::{
-        request,
-        response::{self, Response},
-    },
-    Request, RequestInput,
-};
+use google_smart_home::query::request;
+use google_smart_home::query::response::Response;
+use google_smart_home::query::response::{self};
+use google_smart_home::Request;
+use google_smart_home::RequestInput;
 use serde_json::json;
 
 #[test]

@@ -1,7 +1,10 @@
 use crate::common::Credential;
 use semver::Version;
-use serde::{Deserialize, Serialize};
-use strum::{EnumIter, EnumVariantNames, IntoEnumIterator};
+use serde::Deserialize;
+use serde::Serialize;
+use strum::EnumIter;
+use strum::EnumVariantNames;
+use strum::IntoEnumIterator;
 
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
@@ -153,7 +156,8 @@ pub enum DeviceCommand {
 }
 
 pub mod commands {
-    use serde::{Deserialize, Serialize};
+    use serde::Deserialize;
+    use serde::Serialize;
 
     #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
     pub struct OnOff {

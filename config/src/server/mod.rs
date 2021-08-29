@@ -1,6 +1,10 @@
 use crate::defaults;
-use houseflow_types::{Device, Permission, Room, Structure};
-use serde::{Deserialize, Serialize};
+use houseflow_types::Device;
+use houseflow_types::Permission;
+use houseflow_types::Room;
+use houseflow_types::Structure;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -103,7 +107,9 @@ impl Default for Network {
     }
 }
 
-use houseflow_types::{DeviceID, RoomID, UserID};
+use houseflow_types::DeviceID;
+use houseflow_types::RoomID;
+use houseflow_types::UserID;
 
 impl Config {
     pub fn get_device(&self, device_id: &DeviceID) -> Option<Device> {
@@ -163,11 +169,22 @@ impl Config {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, Google, Network, Secrets, Tls};
-    use houseflow_types::{
-        Device, DeviceID, DeviceTrait, DeviceType, Permission, Room, RoomID, Structure,
-        StructureID, User, UserID,
-    };
+    use super::Config;
+    use super::Google;
+    use super::Network;
+    use super::Secrets;
+    use super::Tls;
+    use houseflow_types::Device;
+    use houseflow_types::DeviceID;
+    use houseflow_types::DeviceTrait;
+    use houseflow_types::DeviceType;
+    use houseflow_types::Permission;
+    use houseflow_types::Room;
+    use houseflow_types::RoomID;
+    use houseflow_types::Structure;
+    use houseflow_types::StructureID;
+    use houseflow_types::User;
+    use houseflow_types::UserID;
     use semver::Version;
     use std::str::FromStr;
 

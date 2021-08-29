@@ -1,13 +1,17 @@
 use crate::Device;
 use anyhow::anyhow;
-use futures_util::{Sink, SinkExt, StreamExt};
+use futures_util::Sink;
+use futures_util::SinkExt;
+use futures_util::StreamExt;
 use houseflow_config::device::Server;
-use houseflow_types::{
-    lighthouse::proto::{execute_response, state, Frame},
-    DeviceCommand,
-};
-use std::time::{Duration, Instant};
-use tokio::sync::{mpsc, Mutex};
+use houseflow_types::lighthouse::proto::execute_response;
+use houseflow_types::lighthouse::proto::state;
+use houseflow_types::lighthouse::proto::Frame;
+use houseflow_types::DeviceCommand;
+use std::time::Duration;
+use std::time::Instant;
+use tokio::sync::mpsc;
+use tokio::sync::Mutex;
 use tungstenite::Message as WebsocketMessage;
 use url::Url;
 

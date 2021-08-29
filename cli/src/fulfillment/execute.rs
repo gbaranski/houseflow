@@ -2,9 +2,11 @@ use std::time::Instant;
 
 use crate::CommandContext;
 use async_trait::async_trait;
-use houseflow_types::{
-    fulfillment::execute, lighthouse::proto, DeviceCommand, DeviceID, DeviceStatus,
-};
+use houseflow_types::fulfillment::execute;
+use houseflow_types::lighthouse::proto;
+use houseflow_types::DeviceCommand;
+use houseflow_types::DeviceID;
+use houseflow_types::DeviceStatus;
 
 pub struct Command {
     pub device_id: DeviceID,

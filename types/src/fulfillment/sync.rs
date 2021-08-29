@@ -1,5 +1,6 @@
 use crate::Device;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Request {}

@@ -1,6 +1,8 @@
 use async_trait::async_trait;
-use houseflow_config::device::{Credentials, Server};
-use houseflow_types::{DeviceError, DeviceStatus};
+use houseflow_config::device::Credentials;
+use houseflow_config::device::Server;
+use houseflow_types::DeviceError;
+use houseflow_types::DeviceStatus;
 use session::Session;
 
 mod session;

@@ -1,11 +1,12 @@
 use anyhow::Context;
 use houseflow_api::HouseflowAPI;
-use houseflow_config::{client::Config, Config as _};
-use houseflow_types::{
-    token::{AccessToken, RefreshToken},
-    Device,
-};
-use serde::{Deserialize, Serialize};
+use houseflow_config::client::Config;
+use houseflow_config::Config as _;
+use houseflow_types::token::AccessToken;
+use houseflow_types::token::RefreshToken;
+use houseflow_types::Device;
+use serde::Deserialize;
+use serde::Serialize;
 use szafka::Szafka;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

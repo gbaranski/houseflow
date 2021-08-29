@@ -1,6 +1,8 @@
 use crate::CommandContext;
 use async_trait::async_trait;
-use houseflow_types::{fulfillment::query, lighthouse::proto, DeviceID};
+use houseflow_types::fulfillment::query;
+use houseflow_types::lighthouse::proto;
+use houseflow_types::DeviceID;
 
 pub struct Command {
     pub device_id: DeviceID,

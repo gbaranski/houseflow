@@ -6,7 +6,8 @@ pub mod state;
 
 pub type FrameID = u16;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]

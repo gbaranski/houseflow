@@ -1,7 +1,8 @@
 pub mod sled;
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use chrono::DateTime;
+use chrono::Utc;
 use houseflow_types::token::RefreshTokenID;
 
 #[derive(Debug, thiserror::Error)]

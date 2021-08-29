@@ -1,9 +1,10 @@
-use crate::{extractors::RefreshToken, State};
-use axum::{extract::Extension, Json};
-use houseflow_types::{
-    auth::logout::{Request, Response},
-    errors::ServerError,
-};
+use crate::extractors::RefreshToken;
+use crate::State;
+use axum::extract::Extension;
+use axum::Json;
+use houseflow_types::auth::logout::Request;
+use houseflow_types::auth::logout::Response;
+use houseflow_types::errors::ServerError;
 use tracing::Level;
 
 #[tracing::instrument(name = "Logout", skip(state, refresh_token, _request), err)]
