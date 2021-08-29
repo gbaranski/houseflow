@@ -4,11 +4,8 @@
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
 
-#define AUTHORIZATION_HEADER                                                   \
-  "Authorization: Basic " DEVICE_ID ":" DEVICE_SECRET
-
 #define SERVER_PORT 6001
-#define RECONNECT_INTERVAL 5000
+#define RECONNECT_INTERVAL 10000
 #define PING_INTERVAL 5000
 #define PONG_INTERVAL 5000
 #define DISCONNECT_TIMEOUT_COUNT 2
@@ -31,14 +28,19 @@ void LighthouseClient::loop() {
   }
 }
 
+#include <base64.h>
+
 void LighthouseClient::setup_websocket_client() {
   static auto *this_ptr = this;
   auto handler = [](WStype_t type, uint8_t *payload, size_t length) {
     this_ptr->onEvent(type, payload, length);
   };
 
+  String encoded_credentials = base64::encode(DEVICE_ID ":" DEVICE_SECRET);
+  String authorization_header = "Authorization: Basic " + encoded_credentials;
+
   websocketClient.begin(SERVER_HOST, SERVER_PORT, "/lighthouse/ws");
-  websocketClient.setExtraHeaders(AUTHORIZATION_HEADER);
+  websocketClient.setExtraHeaders(authorization_header.c_str());
   websocketClient.onEvent(handler);
   websocketClient.setReconnectInterval(RECONNECT_INTERVAL);
   websocketClient.enableHeartbeat(PING_INTERVAL, PONG_INTERVAL,
@@ -50,15 +52,15 @@ void LighthouseClient::onExecute(
     const StaticJsonDocument<requestDocCapacity> &requestDoc,
     StaticJsonDocument<responseDocCapacity> &responseDoc) {
 
-  responseDoc["type"] = "ExecuteResponse";
+  responseDoc["type"] = "execute-response";
   OptSerial.println("[Lighthouse] received Execute frame");
   const char *command_str = requestDoc["command"];
 
   DeviceCommand command;
 
-  if (strcmp(command_str, "OnOff") == 0) {
+  if (strcmp(command_str, "on-off") == 0) {
     command = DeviceCommand::OnOff;
-  } else if (strcmp(command_str, "OpenClose") == 0) {
+  } else if (strcmp(command_str, "open-close") == 0) {
     command = DeviceCommand::OpenClose;
   } else {
     OptSerial.printf("[Lighthouse] received invalid command: %s\n", command_str);
@@ -73,7 +75,7 @@ void LighthouseClient::onExecute(
 
     digitalWrite(ON_OFF_PIN, on);
 
-    responseDoc["status"] = "Success";
+    responseDoc["status"] = "success";
     responseDoc["state"]["on"] = on;
     break;
   }
@@ -88,14 +90,14 @@ void LighthouseClient::onExecute(
         GpioTask(millis() + OPEN_CLOSE_TOGGLE_DURATION, OPEN_CLOSE_PIN, HIGH);
     gpioQueue.push_back(gpioTask);
 
-    responseDoc["status"] = "Success";
+    responseDoc["status"] = "success";
     break;
   }
 #endif
   default:
     OptSerial.printf("[Lighthouse] received unknown command: %s\n", command_str);
-    responseDoc["status"] = "Error";
-    responseDoc["error"] = "FunctionNotSupported";
+    responseDoc["status"] = "error";
+    responseDoc["error"] = "function-not-supported";
   }
 }
 
@@ -103,9 +105,9 @@ template <size_t requestDocCapacity, size_t responseDocCapacity>
 void LighthouseClient::onQuery(
     const StaticJsonDocument<requestDocCapacity> &requestDoc,
     StaticJsonDocument<responseDocCapacity> &responseDoc) {
-  OptSerial.println("[Lighthouse] received Query frame");
+  OptSerial.println("[Lighthouse] received query frame");
 
-  responseDoc["type"] = "State";
+  responseDoc["type"] = "state";
 #ifdef ON_OFF
   responseDoc["state"]["on"] = digitalRead(ON_OFF_PIN);
 #endif
@@ -129,9 +131,9 @@ void LighthouseClient::onText(char *text, size_t length) {
   responseDoc["id"] = requestDoc["id"];
 
   const char *frame_type = requestDoc["type"];
-  if (strcmp(frame_type, "Execute") == 0) {
+  if (strcmp(frame_type, "execute") == 0) {
     onExecute(requestDoc, responseDoc);
-  } else if (strcmp(frame_type, "Query") == 0) {
+  } else if (strcmp(frame_type, "query") == 0) {
     onQuery(requestDoc, responseDoc);
   } else {
     OptSerial.printf("[Lighthouse] received unrecognized frame type: %s\n",

@@ -4,6 +4,7 @@ version = "0.1.1"
 description = "Types for Houseflow"
 homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"
+keywords = ["iot", "home-automation", "smart-home"]
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
 license = "GPL-3.0-or-later"
 edition = "2018"
@@ -32,7 +33,7 @@ ring = { version = "0.16.20", optional = true }
 base64 = { version = "0.13.0", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 
-axum_crate = { git = "https://github.com/tokio-rs/axum.git", package = "axum", version = "0.1.2", optional = true }
+axum_crate = { package = "axum", version = "0.2.0", optional = true }
 http = { version = "0.2.4", optional = true }
 http-body = { version = "0.4.2", optional = true }
 hyper = { version = "0.14.11", optional = true }

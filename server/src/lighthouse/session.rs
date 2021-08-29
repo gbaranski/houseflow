@@ -110,9 +110,9 @@ impl Session {
     ) -> Result<(), tower::BoxError> {
         let (tx, rx) = stream.split();
         tokio::select! {
-            _ = self.stream_read(rx) => {},
-            _ = self.stream_write(tx, internals) => {}
-            _ = self.heartbeat() => {}
+            value = self.stream_read(rx) => value?,
+            value = self.stream_write(tx, internals) => value?,
+            value = self.heartbeat() => value?,
         };
 
         Ok(())

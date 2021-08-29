@@ -9,7 +9,7 @@ mod oauth;
 
 pub use blacklist::{sled::TokenBlacklist as SledTokenBlacklist, TokenBlacklist};
 
-use axum::{routing::RoutingDsl, AddExtensionLayer};
+use axum::{AddExtensionLayer, Router};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{errors::AuthError, DeviceID};
@@ -60,10 +60,14 @@ pub async fn run_tls(
         let app = app.clone().layer(AddExtensionLayer::new(address));
         tokio::spawn(async move {
             if let Ok(stream) = acceptor.accept(stream).await {
-                hyper::server::conn::Http::new()
+                match hyper::server::conn::Http::new()
                     .serve_connection(stream, app)
+                    .with_upgrades()
                     .await
-                    .unwrap();
+                {
+                    Ok(_) => (),
+                    Err(err) => tracing::warn!("accept connection error: {}", err),
+                };
             }
         });
     }
@@ -76,30 +80,32 @@ pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), tok
         let (stream, address) = listener.accept().await?;
         let app = app.clone().layer(AddExtensionLayer::new(address));
         tokio::spawn(async move {
-            hyper::server::conn::Http::new()
+            match hyper::server::conn::Http::new()
                 .serve_connection(stream, app)
                 .with_upgrades()
                 .await
-                .unwrap();
+            {
+                Ok(_) => (),
+                Err(err) => tracing::warn!("accept connection error: {}", err),
+            };
         });
     }
 }
 
-pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
-    use axum::{
-        prelude::{get, post, route},
-        routing::nest,
-    };
+pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
+    use axum::handler::{get, post};
     use http::{Request, Response};
     use hyper::Body;
     use std::time::Duration;
     use tower_http::trace::TraceLayer;
     use tracing::Span;
 
-    route("/health_check", get(health_check))
+    Router::new()
+        .route("/health_check", get(health_check))
         .nest(
             "/auth",
-            route("/login", post(auth::login::handle))
+            Router::new()
+                .route("/login", post(auth::login::handle))
                 .route("/logout", post(auth::logout::handle))
                 .route("/register", post(auth::register::handle))
                 .route("/refresh", post(auth::refresh::handle))
@@ -108,23 +114,26 @@ pub fn app(state: State) -> axum::routing::BoxRoute<axum::body::Body> {
         )
         .nest(
             "/oauth",
-            route("/authorize", get(oauth::authorize::handle))
+            Router::new()
+                .route("/authorize", get(oauth::authorize::handle))
                 .route("/login", post(oauth::login::handle))
                 .route("/token", post(oauth::token::handle)),
         )
         .nest(
             "/fulfillment",
-            nest(
-                "/internal",
-                route("/execute", post(fulfillment::internal::execute::handle))
-                    .route("/query", post(fulfillment::internal::query::handle))
-                    .route("/sync", get(fulfillment::internal::sync::handle)),
-            )
-            .route("/google-home", post(fulfillment::ghome::handle)),
+            Router::new()
+                .nest(
+                    "/internal",
+                    Router::new()
+                        .route("/execute", post(fulfillment::internal::execute::handle))
+                        .route("/query", post(fulfillment::internal::query::handle))
+                        .route("/sync", get(fulfillment::internal::sync::handle)),
+                )
+                .route("/google-home", post(fulfillment::ghome::handle)),
         )
         .nest(
             "/lighthouse",
-            route("/ws", get(lighthouse::connect::handle)),
+            Router::new().route("/ws", get(lighthouse::connect::handle)),
         )
         .layer(axum::AddExtensionLayer::new(state))
         .layer(
