@@ -8,11 +8,10 @@ Houseflow is open source home automation system, it lets you configure various d
 ## Features
 
 - [x] Fast, written with high-performance languague, Rust.
-- [ ] Easy to use([issues with #ux label](https://github.com/gbaranski/houseflow/issues?q=is%3Aissue+label%3Aux+))
-- [x] CLI Client
 - [x] Integration with Google Home
-- [x] Linux support on x86-64 architecture
-- [ ] Windows support(issue [#160](https://github.com/gbaranski/houseflow/issues/160))
+- [x] Configurable from config files.
+- [x] CLI Client
+- [ ] Easy to use([issues with #ux label](https://github.com/gbaranski/houseflow/issues?q=is%3Aissue+label%3Aux+))
 - [x] ESP8266 Support 
 - [ ] ESP32 Support(issue [#161](https://github.com/gbaranski/houseflow/issues/161))
 
