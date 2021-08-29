@@ -55,3 +55,4 @@ tower = "0.4.8"
 tower-http = { version = "0.1.1", features = ["trace"] }
 tokio-rustls = "0.22.0"
 dashmap = "4.0.2"
+lazy_static = "1.4.0"
