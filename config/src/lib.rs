@@ -64,29 +64,25 @@ pub enum Error {
 
     #[error("validation: {0}")]
     Validation(String),
-
 }
 
 pub fn init_logging(hide_timestamp: bool) {
     const LOG_ENV: &str = "HOUSEFLOW_LOG";
     use std::str::FromStr;
-    use tracing::Level;
+    use tracing_subscriber::EnvFilter;
 
-    let level = std::env::var(LOG_ENV)
-        .map(|env| {
-            Level::from_str(env.to_uppercase().as_str())
-                .unwrap_or_else(|err| panic!("invalid `{}` environment variable {}", LOG_ENV, err))
-        })
-        .unwrap_or(Level::INFO);
+    let env_filter = std::env::var(LOG_ENV).unwrap_or("info".to_string());
+    let env_filter = EnvFilter::from_str(&env_filter)
+        .unwrap_or_else(|err| panic!("invalid `{}` environment variable {}", LOG_ENV, err));
 
     if hide_timestamp {
         tracing_subscriber::fmt()
-            .with_max_level(level)
+            .with_env_filter(env_filter)
             .without_time()
-            .init();
+            .init()
     } else {
-        tracing_subscriber::fmt().with_max_level(level).init();
-    }
+        tracing_subscriber::fmt().with_env_filter(env_filter).init()
+    };
 }
 
 #[allow(dead_code)]
