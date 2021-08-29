@@ -13,9 +13,7 @@ use axum::{AddExtensionLayer, Router};
 use houseflow_config::server::Config;
 use houseflow_db::Database;
 use houseflow_types::{errors::AuthError, DeviceID};
-
-use std::{collections::HashMap, sync::Mutex};
-pub type Sessions = HashMap<DeviceID, lighthouse::Session>;
+use dashmap::DashMap;
 
 pub(crate) fn get_password_salt() -> [u8; 16] {
     rand::random()
@@ -39,7 +37,7 @@ pub struct State {
     pub token_blacklist: Arc<dyn TokenBlacklist>,
     pub database: Arc<dyn Database>,
     pub config: Arc<Config>,
-    pub sessions: Arc<Mutex<Sessions>>,
+    pub sessions: DashMap<DeviceID, lighthouse::Session>,
 }
 
 use tokio::net::TcpListener;
@@ -158,7 +156,7 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
 
 #[cfg(test)]
 mod test_utils {
-    use super::{Sessions, SledTokenBlacklist, State};
+    use super::{SledTokenBlacklist, State};
     use axum::extract;
     use houseflow_config::{
         defaults,
@@ -166,7 +164,7 @@ mod test_utils {
     };
     use houseflow_db::sqlite::Database as SqliteDatabase;
     use houseflow_types::{Device, DeviceType, Room, Structure, User, UserID};
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
 
     pub const PASSWORD: &str = "SomePassword";
     pub const PASSWORD_INVALID: &str = "SomeOtherPassword";
@@ -198,13 +196,13 @@ mod test_utils {
             permissions: vec![],
         };
 
-        let sessions = Mutex::new(Sessions::new());
+        let sessions = Default::default();
 
         extract::Extension(State {
             database: Arc::new(database),
             token_blacklist: Arc::new(token_blacklist),
             config: Arc::new(config),
-            sessions: Arc::new(sessions),
+            sessions,
         })
     }
 

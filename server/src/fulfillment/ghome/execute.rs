@@ -29,7 +29,7 @@ pub async fn handle(
                 error_code: Some(String::from("authFailure")),
             });
         }
-        let session = match sessions.lock().unwrap().get(&device_id) {
+        let session = match sessions.get(&device_id) {
             Some(session) => session.clone(),
             None => {
                 return Ok(response::PayloadCommand {

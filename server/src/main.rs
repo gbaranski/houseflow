@@ -1,7 +1,7 @@
 use houseflow_config::{defaults, server::Config, Config as _, Error as ConfigError};
 use houseflow_db::sqlite::Database as SqliteDatabase;
-use houseflow_server::{Sessions, SledTokenBlacklist};
-use std::sync::{Arc, Mutex};
+use houseflow_server::SledTokenBlacklist;
+use std::sync::Arc;
 use tokio_rustls::rustls;
 
 #[tokio::main]
@@ -33,13 +33,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token_blacklist = SledTokenBlacklist::new(defaults::token_blacklist_path())
         .expect("cannot open token blacklist");
     let database = SqliteDatabase::new(defaults::database_path()).expect("cannot open database");
-    let sessions = Sessions::new();
 
     let state = houseflow_server::State {
         token_blacklist: Arc::new(token_blacklist),
         database: Arc::new(database),
         config: Arc::new(config),
-        sessions: Arc::new(Mutex::new(sessions)),
+        sessions: Default::default(),
     };
 
     let address_with_port = |port| std::net::SocketAddr::new(state.config.network.address, port);
