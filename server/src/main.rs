@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = match Config::read(&config_path) {
         Ok(config) => config,
-        Err(ConfigError::IOError(err)) => match err.kind() {
+        Err(ConfigError::IO(err)) => match err.kind() {
             std::io::ErrorKind::NotFound => {
                 tracing::error!(
                     "Config file could not be found at {}",
