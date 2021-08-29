@@ -54,3 +54,4 @@ futures-util = { version = "0.3.16", optional = true }
 tower = "0.4.8"
 tower-http = { version = "0.1.1", features = ["trace"] }
 tokio-rustls = "0.22.0"
+dashmap = "4.0.2"

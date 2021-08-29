@@ -49,7 +49,7 @@ pub async fn handle(
         .get_device(&device_id)
         .ok_or(AuthError::DeviceNotFound)?;
     crate::verify_password(device.password_hash.as_ref().unwrap(), &device_password)?;
-    if state.sessions.lock().unwrap().contains_key(&device.id) {
+    if state.sessions.contains_key(&device.id) {
         return Err(LighthouseError::AlreadyConnected.into());
     }
 
@@ -61,16 +61,12 @@ pub async fn handle(
             let session_internals = SessionInternals::new();
             let session = Session::new(&session_internals);
             tracing::info!(address = %socket_address, "Device connected");
-            state
-                .sessions
-                .lock()
-                .unwrap()
-                .insert(device.id.clone(), session.clone());
+            state.sessions.insert(device.id.clone(), session.clone());
             match session.run(stream, session_internals).await {
                 Ok(_) => tracing::info!("Connection closed"),
                 Err(err) => tracing::error!("Connection closed with error: {}", err),
             }
-            state.sessions.lock().unwrap().remove(&device.id);
+            state.sessions.remove(&device.id);
         }
         .instrument(span)
     }))
