@@ -74,8 +74,10 @@ pub fn init_logging(hide_timestamp: bool) {
     let env_filter = match std::env::var(LOG_ENV) {
         Ok(env) => env,
         Err(std::env::VarError::NotPresent) => "info".to_string(),
-        Err(std::env::VarError::NotUnicode(_)) => panic!("{} environment variable is not valid unicode and can't be read", LOG_ENV),
-
+        Err(std::env::VarError::NotUnicode(_)) => panic!(
+            "{} environment variable is not valid unicode and can't be read",
+            LOG_ENV
+        ),
     };
     let env_filter = EnvFilter::from_str(&env_filter)
         .unwrap_or_else(|err| panic!("invalid `{}` environment variable {}", LOG_ENV, err));
