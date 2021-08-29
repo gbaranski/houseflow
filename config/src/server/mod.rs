@@ -82,6 +82,44 @@ impl crate::Config for Config {
     const DEFAULT_TOML: &'static str = include_str!("default.toml");
 
     const DEFAULT_FILE: &'static str = "server.toml";
+
+    fn validate(&self) -> Result<(), String> {
+        for room in &self.rooms {
+            if !self
+                .structures
+                .iter()
+                .any(|structure| structure.id == room.structure_id)
+            {
+                return Err(format!(
+                    "Couldn't find structure with id: {} for room: {}",
+                    room.structure_id, room.id
+                ));
+            }
+        }
+
+        for device in &self.devices {
+            if !self.rooms.iter().any(|room| room.id == device.room_id) {
+                return Err(format!(
+                    "Couldn't find room with id: {} for device: {}",
+                    device.room_id, device.id
+                ));
+            }
+        }
+
+        for permission in &self.permissions {
+            if !self
+                .structures
+                .iter()
+                .any(|structure| structure.id == permission.structure_id)
+            {
+                return Err(format!(
+                    "Couldn't find structure with id: {} for permission: {:?}",
+                    permission.structure_id, permission
+                ));
+            }
+        }
+        Ok(())
+    }
 }
 
 impl rand::distributions::Distribution<Secrets> for rand::distributions::Standard {
