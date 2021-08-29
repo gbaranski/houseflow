@@ -1,13 +1,13 @@
 [workspace]
 members = [
+  "api",
   "cli",
   "config",
+  "db",
   "devices/virtual",
   "devices/rpi",
+  "google-smart-home",
   "server",
   "types",
-  "db",
-  "api",
-  "google-smart-home"
 ]
 resolver = "2"
