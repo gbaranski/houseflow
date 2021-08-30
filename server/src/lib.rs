@@ -1,7 +1,5 @@
 mod extractors;
 
-mod blacklist;
-
 mod auth;
 mod fulfillment;
 mod lighthouse;
