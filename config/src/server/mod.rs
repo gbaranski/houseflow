@@ -3,6 +3,7 @@ use houseflow_types::Device;
 use houseflow_types::Permission;
 use houseflow_types::Room;
 use houseflow_types::Structure;
+use houseflow_types::User;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -29,6 +30,9 @@ pub struct Config {
     /// Devices
     #[serde(default)]
     pub devices: Vec<Device>,
+    /// Devices
+    #[serde(default)]
+    pub users: Vec<User>,
     /// User -> Structure permission
     #[serde(default)]
     pub permissions: Vec<Permission>,
@@ -272,6 +276,13 @@ mod tests {
                     attributes: Default::default(),
                 }
             ].to_vec(),
+            users: [
+                User {
+                    id: UserID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
+                    username: String::from("gbaranski"),
+                    email: String::from("root@gbaranski.com"),
+                }
+            ].to_vec(),
             permissions: [
                 Permission {
                     structure_id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
@@ -282,6 +293,7 @@ mod tests {
         };
         let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
+        crate::Config::validate(&config).unwrap();
     }
 
     #[test]
@@ -290,13 +302,11 @@ mod tests {
             id: rand::random(),
             username: String::from("gbaranski"),
             email: String::from("root@gbaranski.com"),
-            password_hash: String::from("user-auth-password"),
         };
         let user_unauth = User {
             id: rand::random(),
             username: String::from("stanbar"),
             email: String::from("stanbar@gbaranski.com"),
-            password_hash: String::from("user-unauth-password"),
         };
         let structure_auth = Structure {
             id: rand::random(),
@@ -398,6 +408,10 @@ mod tests {
                 device_unauth_two.clone(),
             ]
             .to_vec(),
+            users: [
+                user_auth.clone(),
+                user_unauth.clone(),
+            ].to_vec(),
             permissions: [
                 Permission {
                     structure_id: structure_auth.id.clone(),

@@ -8,13 +8,8 @@ pub type UserID = Credential<16>;
 pub struct User {
     /// Unique ID of the user
     pub id: UserID,
-
     /// Name of the user
     pub username: String,
-
     /// Email of the user
     pub email: String,
-
-    /// Hashed user password
-    pub password_hash: String,
 }
