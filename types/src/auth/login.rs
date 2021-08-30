@@ -6,9 +6,6 @@ use validator::Validate;
 pub struct Request {
     #[validate(email)]
     pub email: String,
-
-    #[validate(length(min = 8))]
-    pub password: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
