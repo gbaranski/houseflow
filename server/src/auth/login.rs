@@ -27,17 +27,15 @@ pub async fn handle(
 ) -> Result<Json<Response>, ServerError> {
     validator::Validate::validate(&request)?;
     let user = state
-        .database
-        .get_user_by_email(&request.email)?
+        .config
+        .get_user_by_email(&request.email)
         .ok_or(AuthError::UserNotFound)?;
 
-    crate::verify_password(&user.password_hash, &request.password)?;
     let refresh_token = RefreshToken::new(
         state.config.secrets.refresh_key.as_bytes(),
         RefreshTokenPayload {
             sub: user.id.clone(),
             exp: Some(Utc::now() + Duration::days(7)),
-            tid: rand::random(),
         },
     );
     let access_token = AccessToken::new(
@@ -65,21 +63,22 @@ mod tests {
     use houseflow_types::errors::ServerError;
     use houseflow_types::token::AccessToken;
     use houseflow_types::token::RefreshToken;
+    use tokio::sync::mpsc;
 
     #[tokio::test]
     async fn valid() {
-        let state = get_state();
         let user = get_user();
-        state.database.add_user(&user).unwrap();
-        let Json(response) = super::handle(
-            state.clone(),
-            Json(Request {
-                email: user.email,
-                password: PASSWORD.into(),
-            }),
-        )
-        .await
-        .unwrap();
+        let state = get_state(
+            &mpsc::unbounded_channel(),
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![user.clone()],
+        );
+        let Json(response) = super::handle(state.clone(), Json(Request { email: user.email }))
+            .await
+            .unwrap();
         let (at, rt) = (response.access_token, response.refresh_token);
         let (at, rt) = (
             AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
@@ -90,35 +89,36 @@ mod tests {
 
     #[tokio::test]
     async fn invalid_password() {
-        let state = get_state();
         let user = get_user();
-        state.database.add_user(&user).unwrap();
-        let response = super::handle(
-            state.clone(),
-            Json(Request {
-                email: user.email,
-                password: PASSWORD_INVALID.into(),
-            }),
-        )
-        .await
-        .unwrap_err();
+        let state = get_state(
+            &mpsc::unbounded_channel(),
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![user.clone()],
+        );
+        let response = super::handle(state.clone(), Json(Request { email: user.email }))
+            .await
+            .unwrap_err();
 
         assert_eq!(response, ServerError::AuthError(AuthError::InvalidPassword));
     }
 
     #[tokio::test]
     async fn not_existing_user() {
-        let state = get_state();
         let user = get_user();
-        let response = super::handle(
-            state.clone(),
-            Json(Request {
-                email: user.email,
-                password: PASSWORD.into(),
-            }),
-        )
-        .await
-        .unwrap_err();
+        let state = get_state(
+            &mpsc::unbounded_channel(),
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        );
+        let response = super::handle(state.clone(), Json(Request { email: user.email }))
+            .await
+            .unwrap_err();
 
         assert_eq!(response, ServerError::AuthError(AuthError::UserNotFound));
     }

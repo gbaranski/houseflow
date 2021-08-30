@@ -109,8 +109,6 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
             "/auth",
             Router::new()
                 .route("/login", post(auth::login::handle))
-                .route("/logout", post(auth::logout::handle))
-                .route("/register", post(auth::register::handle))
                 .route("/refresh", post(auth::refresh::handle))
                 .route("/whoami", get(auth::whoami::handle))
                 .boxed(),
