@@ -18,7 +18,9 @@ pub struct Config {
     /// Path to the TLS configuration
     #[serde(default)]
     pub tls: Option<Tls>,
-    /// Configuration of the Google 3rd party service
+    /// Configuration of the email
+    pub email: Email,
+    /// Configuration of the Google 3rd party client
     #[serde(default)]
     pub google: Option<Google>,
     /// Structures
@@ -51,12 +53,12 @@ pub struct Network {
 pub struct Secrets {
     /// Key used to sign refresh tokens. Must be secret and should be farily random.
     pub refresh_key: String,
-
     /// Key used to sign access tokens. Must be secret and should be farily random.
     pub access_key: String,
-
     /// Key used to sign authorization codes. Must be secret and should be farily random.
     pub authorization_code_key: String,
+    /// Key used to sign verification codes. Must be secret and should be farily random.
+    pub verification_code_key: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -64,20 +66,29 @@ pub struct Secrets {
 pub struct Tls {
     /// Path to the TLS certificate
     pub certificate: std::path::PathBuf,
-
     /// Path to the TLS private key
     pub private_key: std::path::PathBuf,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "provider", rename_all = "kebab-case")]
+pub enum Email {
+    AwsSes(EmailAwsSes),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct EmailAwsSes {
+    pub region: rusoto_core::Region,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Google {
-    ///  OAuth2 Client ID identifying Google to your service
+    /// OAuth2 Client ID identifying Google to your service
     pub client_id: String,
-
     /// OAuth2 Client Secret assigned to the Client ID which identifies Google to you
     pub client_secret: String,
-
     /// Google Project ID
     pub project_id: String,
 }
@@ -137,6 +148,7 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
             refresh_key: gen_secret(),
             access_key: gen_secret(),
             authorization_code_key: gen_secret(),
+            verification_code_key: gen_secret(),
         }
     }
 }
@@ -159,7 +171,10 @@ impl Config {
     }
 
     pub fn get_user_by_email(&self, user_email: &str) -> Option<User> {
-        self.users.iter().find(|user| user.email == *user_email).cloned()
+        self.users
+            .iter()
+            .find(|user| user.email == *user_email)
+            .cloned()
     }
 
     pub fn get_device(&self, device_id: &DeviceID) -> Option<Device> {
@@ -220,6 +235,8 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::Config;
+    use super::Email;
+    use super::EmailAwsSes;
     use super::Google;
     use super::Network;
     use super::Secrets;
@@ -248,10 +265,14 @@ mod tests {
                 refresh_key: String::from("some-refresh-key"),
                 access_key: String::from("some-access-key"),
                 authorization_code_key: String::from("some-authorization-code-key"),
+                verification_code_key: String::from("some-verification-code-key"),
             },
             tls: Some(Tls {
                 certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
                 private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
+            }),
+            email: Email::AwsSes(EmailAwsSes {
+                region: rusoto_core::Region::EuCentral1,
             }),
             google: Some(Google {
                 client_id: String::from("google-client-id"),
@@ -403,6 +424,9 @@ mod tests {
             network: Default::default(),
             secrets: rand::random(),
             tls: Default::default(),
+            email: Email::AwsSes(EmailAwsSes {
+                region: rusoto_core::Region::EuCentral1,
+            }),
             google: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),
             rooms: [
