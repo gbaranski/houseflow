@@ -154,6 +154,14 @@ use houseflow_types::RoomID;
 use houseflow_types::UserID;
 
 impl Config {
+    pub fn get_user(&self, user_id: &UserID) -> Option<User> {
+        self.users.iter().find(|user| user.id == *user_id).cloned()
+    }
+
+    pub fn get_user_by_email(&self, user_email: &str) -> Option<User> {
+        self.users.iter().find(|user| user.email == *user_email).cloned()
+    }
+
     pub fn get_device(&self, device_id: &DeviceID) -> Option<Device> {
         self.devices
             .iter()
@@ -281,6 +289,7 @@ mod tests {
                     id: UserID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
                     username: String::from("gbaranski"),
                     email: String::from("root@gbaranski.com"),
+                    admin: false,
                 }
             ].to_vec(),
             permissions: [
@@ -302,11 +311,13 @@ mod tests {
             id: rand::random(),
             username: String::from("gbaranski"),
             email: String::from("root@gbaranski.com"),
+            admin: false,
         };
         let user_unauth = User {
             id: rand::random(),
             username: String::from("stanbar"),
             email: String::from("stanbar@gbaranski.com"),
+            admin: false,
         };
         let structure_auth = Structure {
             id: rand::random(),
@@ -408,10 +419,7 @@ mod tests {
                 device_unauth_two.clone(),
             ]
             .to_vec(),
-            users: [
-                user_auth.clone(),
-                user_unauth.clone(),
-            ].to_vec(),
+            users: [user_auth.clone(), user_unauth.clone()].to_vec(),
             permissions: [
                 Permission {
                     structure_id: structure_auth.id.clone(),

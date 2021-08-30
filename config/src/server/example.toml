@@ -51,6 +51,7 @@ attributes = {}                               # Aligned with per-trait attribute
 id = "861ccceaa3e349138ce2498768dbfe09"
 username = "gbaranski"
 email = "root@gbaranski.com"
+admin = false
 
 # Define a new permission.
 [[permissions]]
