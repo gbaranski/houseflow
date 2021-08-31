@@ -69,7 +69,7 @@ impl TryFrom<&sled::IVec> for EntryValue {
     type Error = Error;
 
     fn try_from(value: &sled::IVec) -> Result<Self, Self::Error> {
-        Ok(bincode::deserialize(&value)?)
+        Ok(bincode::deserialize(value)?)
     }
 }
 

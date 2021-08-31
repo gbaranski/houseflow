@@ -77,7 +77,7 @@ impl<'de> Visitor<'de> for VerificationCodeVisitor {
     type Value = VerificationCode;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str(&format!("verification code in proper format"))
+        formatter.write_str("verification code in proper format")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
