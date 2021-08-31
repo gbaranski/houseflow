@@ -1,16 +1,16 @@
-use lettre::Message;
-use async_trait::async_trait;
-use tokio::sync::mpsc;
 use super::Error;
+use async_trait::async_trait;
 use houseflow_types::code::VerificationCode;
+use lettre::Message;
+use tokio::sync::mpsc;
 
 pub struct Mailer {
-    tx: mpsc::UnboundedSender<VerificationCode>
+    tx: mpsc::UnboundedSender<VerificationCode>,
 }
 
 impl Mailer {
     pub fn new(tx: mpsc::UnboundedSender<VerificationCode>) -> Self {
-        Self {tx}
+        Self { tx }
     }
 }
 
@@ -32,5 +32,4 @@ impl super::Mailer for Mailer {
         self.tx.send(code.clone()).unwrap();
         Ok(())
     }
-
 }

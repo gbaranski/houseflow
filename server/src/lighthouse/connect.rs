@@ -22,7 +22,6 @@ fn verify_password(hash: &str, password: &str) -> Result<(), AuthError> {
     }
 }
 
-
 #[async_trait]
 impl axum::extract::FromRequest<Body> for DeviceCredentials {
     type Rejection = ServerError;

@@ -43,7 +43,8 @@ impl FromStr for VerificationCode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.chars().filter(|char| *char != '-').collect::<String>();
-        let bytes = hex::decode(s).map_err(|err| Error::Encoding(format!("invalid encoding: {}", err)))?;
+        let bytes =
+            hex::decode(s).map_err(|err| Error::Encoding(format!("invalid encoding: {}", err)))?;
         let bytes_len = bytes.len();
         Ok(Self(bytes.try_into().map_err(|_| Error::InvalidSize {
             received: bytes_len,
@@ -63,7 +64,6 @@ impl rand::distributions::Distribution<VerificationCode> for rand::distributions
         )
     }
 }
-
 
 use serde::de::Visitor;
 use serde::Deserialize;
@@ -110,4 +110,3 @@ impl Serialize for VerificationCode {
         serializer.serialize_str(&self.to_string())
     }
 }
-

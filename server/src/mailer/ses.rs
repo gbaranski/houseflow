@@ -1,8 +1,8 @@
 use super::Error;
+use async_trait::async_trait;
 use houseflow_config::server::EmailAwsSes as Config;
 use lettre::Message;
 use rusoto_ses::RawMessage;
-use async_trait::async_trait;
 use rusoto_ses::SendRawEmailRequest;
 use rusoto_ses::Ses;
 use rusoto_ses::SesClient;

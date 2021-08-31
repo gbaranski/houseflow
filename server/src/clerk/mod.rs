@@ -21,7 +21,12 @@ pub enum Error {
 #[async_trait]
 pub trait Clerk: Send + Sync {
     async fn get(&self, code: &VerificationCode) -> Result<Option<UserID>, Error>;
-    async fn add(&self, code: VerificationCode, user_id: UserID, expire_at: DateTime<Utc>) -> Result<(), Error>;
+    async fn add(
+        &self,
+        code: VerificationCode,
+        user_id: UserID,
+        expire_at: DateTime<Utc>,
+    ) -> Result<(), Error>;
     async fn remove(&self, code: &VerificationCode) -> Result<bool, Error>;
     async fn clean(&self) -> Result<(), Error>;
 }
