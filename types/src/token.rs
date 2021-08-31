@@ -51,7 +51,6 @@ impl<P: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<P> {
 pub type AccessToken = Token<AccessTokenPayload>;
 pub type RefreshToken = Token<RefreshTokenPayload>;
 pub type AuthorizationCode = Token<AuthorizationCodePayload>;
-pub type VerificationCode = Token<VerificationCodePayload>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessTokenPayload {
@@ -73,14 +72,6 @@ pub struct RefreshTokenPayload {
     #[serde(with = "chrono::serde::ts_seconds_option")]
     pub exp: Option<DateTime<Utc>>,
 }
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct VerificationCodePayload {
-    pub sub: UserID,
-    #[serde(with = "chrono::serde::ts_seconds")]
-    pub exp: DateTime<Utc>,
-}
-
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct BasePayload {

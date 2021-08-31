@@ -57,8 +57,6 @@ pub struct Secrets {
     pub access_key: String,
     /// Key used to sign authorization codes. Must be secret and should be farily random.
     pub authorization_code_key: String,
-    /// Key used to sign verification codes. Must be secret and should be farily random.
-    pub verification_code_key: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,6 +78,7 @@ pub enum Email {
 #[serde(rename_all = "kebab-case")]
 pub struct EmailAwsSes {
     pub region: rusoto_core::Region,
+    pub from: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -148,7 +147,6 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
             refresh_key: gen_secret(),
             access_key: gen_secret(),
             authorization_code_key: gen_secret(),
-            verification_code_key: gen_secret(),
         }
     }
 }
@@ -265,7 +263,6 @@ mod tests {
                 refresh_key: String::from("some-refresh-key"),
                 access_key: String::from("some-access-key"),
                 authorization_code_key: String::from("some-authorization-code-key"),
-                verification_code_key: String::from("some-verification-code-key"),
             },
             tls: Some(Tls {
                 certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
@@ -273,6 +270,7 @@ mod tests {
             }),
             email: Email::AwsSes(EmailAwsSes {
                 region: rusoto_core::Region::EuCentral1,
+                from: String::from("houseflow@gbaranski.com")
             }),
             google: Some(Google {
                 client_id: String::from("google-client-id"),
@@ -426,6 +424,7 @@ mod tests {
             tls: Default::default(),
             email: Email::AwsSes(EmailAwsSes {
                 region: rusoto_core::Region::EuCentral1,
+                from: String::new(),
             }),
             google: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),

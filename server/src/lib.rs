@@ -1,6 +1,7 @@
 mod extractors;
 
 mod auth;
+pub mod clerk;
 mod fulfillment;
 mod lighthouse;
 pub mod mailer;
@@ -20,6 +21,7 @@ async fn health_check() -> &'static str {
 
 #[derive(Clone)]
 pub struct State {
+    pub clerk: Arc<dyn clerk::Clerk>,
     pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
     pub sessions: DashMap<DeviceID, lighthouse::Session>,
@@ -141,8 +143,10 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
 
 #[cfg(test)]
 mod test_utils {
+    use crate::clerk::sled::Clerk;
+
+    use super::mailer::fake::Mailer as FakeMailer;
     use super::State;
-    use super::mailer::noop::Mailer as NoopMailer;
     use axum::extract;
     use houseflow_config::defaults;
     use houseflow_config::server::Config;
@@ -150,6 +154,7 @@ mod test_utils {
     use houseflow_config::server::EmailAwsSes;
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
+    use houseflow_types::code::VerificationCode;
     use houseflow_types::Device;
     use houseflow_types::DeviceType;
     use houseflow_types::Permission;
@@ -158,11 +163,10 @@ mod test_utils {
     use houseflow_types::User;
     use houseflow_types::UserID;
     use std::sync::Arc;
-    use lettre::Message;
     use tokio::sync::mpsc;
 
     pub fn get_state(
-        (tx, _): &(mpsc::UnboundedSender<Message>, mpsc::UnboundedReceiver<Message>),
+        tx: &mpsc::UnboundedSender<VerificationCode>,
         structures: Vec<Structure>,
         rooms: Vec<Room>,
         devices: Vec<Device>,
@@ -177,11 +181,11 @@ mod test_utils {
                 refresh_key: String::from("refresh-key"),
                 access_key: String::from("access-key"),
                 authorization_code_key: String::from("authorization-code-key"),
-                verification_code_key: String::from("verification-code-key"),
             },
             tls: None,
             email: Email::AwsSes(EmailAwsSes {
                 region: Default::default(),
+                from: String::from("houseflow@gbaranski.com"),
             }),
             google: Some(houseflow_config::server::Google {
                 client_id: String::from("client-id"),
@@ -196,11 +200,14 @@ mod test_utils {
         };
 
         let sessions = Default::default();
+        let clerk_path =
+            std::env::temp_dir().join(format!("houseflow-clerk-test-{}", rand::random::<u32>()));
 
         extract::Extension(State {
             config: Arc::new(config),
-            mailer: Arc::new(NoopMailer::new(tx.clone())),
+            mailer: Arc::new(FakeMailer::new(tx.clone())),
             sessions,
+            clerk: Arc::new(Clerk::new_temporary(clerk_path).unwrap()),
         })
     }
 

@@ -36,7 +36,7 @@ mod tests {
     async fn valid() {
         let user = get_user();
         let state = get_state(
-            &mpsc::unbounded_channel(),
+            &mpsc::unbounded_channel().0,
             vec![],
             vec![],
             vec![],

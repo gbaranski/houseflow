@@ -9,12 +9,13 @@ use rusoto_ses::SesClient;
 
 pub struct Mailer {
     client: SesClient,
+    config: Config,
 }
 
 impl Mailer {
     pub fn new(config: Config) -> Self {
-        let client = SesClient::new(config.region);
-        Self { client }
+        let client = SesClient::new(config.region.clone());
+        Self { client, config }
     }
 }
 
@@ -29,5 +30,9 @@ impl super::Mailer for Mailer {
         };
         self.client.send_raw_email(request).await?;
         Ok(())
+    }
+
+    fn from_address(&self) -> &str {
+        &self.config.from
     }
 }

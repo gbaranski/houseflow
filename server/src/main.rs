@@ -2,6 +2,7 @@ use houseflow_config::defaults;
 use houseflow_config::server::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
+use houseflow_server::clerk::sled::Clerk;
 use std::sync::Arc;
 use tokio_rustls::rustls;
 
@@ -31,10 +32,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
+    let mailer = match config.email {
+        houseflow_config::server::Email::AwsSes(ref config) => {
+            houseflow_server::mailer::ses::Mailer::new(config.clone())
+        }
+    };
+    let clerk = Clerk::new(defaults::clerk_path())?;
     let state = houseflow_server::State {
         config: Arc::new(config),
         sessions: Default::default(),
-        mailer: Arc::new(todo!()),
+        mailer: Arc::new(mailer),
+        clerk: Arc::new(clerk),
     };
 
     let address_with_port = |port| std::net::SocketAddr::new(state.config.network.address, port);
