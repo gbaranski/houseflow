@@ -31,5 +31,8 @@ pub fn clerk_path() -> std::path::PathBuf {
 }
 
 pub fn aws_credentials_path() -> std::path::PathBuf {
-    dirs_next::home_dir().unwrap().join(".aws").join("credentials")
+    dirs_next::home_dir()
+        .unwrap()
+        .join(".aws")
+        .join("credentials")
 }
