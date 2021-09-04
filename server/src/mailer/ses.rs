@@ -19,7 +19,7 @@ impl Mailer {
         let credentials = rusoto_core::credential::ProfileProvider::with_default_configuration(
             &config.credentials,
         );
-        dbg!(credentials.credentials().await).unwrap();
+        credentials.credentials().await.expect("invalid AWS Credentials");
         let client = rusoto_core::Client::new_with(credentials, dispatcher);
         let ses_client = SesClient::new_with_client(client, config.region.clone());
         Self { ses_client, config }
