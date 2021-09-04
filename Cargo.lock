@@ -735,6 +735,7 @@ dependencies = [
 name = "houseflow-config"
 version = "0.1.1"
 dependencies = [
+ "dirs-next",
  "hex",
  "houseflow-types",
  "rand",

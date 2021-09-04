@@ -186,6 +186,7 @@ mod test_utils {
             email: Email::AwsSes(EmailAwsSes {
                 region: Default::default(),
                 from: String::from("houseflow@gbaranski.com"),
+                credentials: std::path::PathBuf::new(),
             }),
             google: Some(houseflow_config::server::Google {
                 client_id: String::from("client-id"),

@@ -79,6 +79,8 @@ pub enum Email {
 pub struct EmailAwsSes {
     pub region: rusoto_core::Region,
     pub from: String,
+    #[serde(default = "defaults::aws_credentials_path")]
+    pub credentials: std::path::PathBuf,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -131,7 +133,14 @@ impl crate::Config for Config {
                     permission.structure_id, permission
                 ));
             }
+            if !self.users.iter().any(|user| user.id == permission.user_id) {
+                return Err(format!(
+                    "Couldn't find user with id: {} for permission: {:?}",
+                    permission.user_id, permission
+                ));
+            }
         }
+
         Ok(())
     }
 }
@@ -270,7 +279,8 @@ mod tests {
             }),
             email: Email::AwsSes(EmailAwsSes {
                 region: rusoto_core::Region::EuCentral1,
-                from: String::from("houseflow@gbaranski.com")
+                from: String::from("houseflow@gbaranski.com"),
+                credentials: std::path::PathBuf::from_str("/aws/credentials").unwrap(),
             }),
             google: Some(Google {
                 client_id: String::from("google-client-id"),
@@ -425,6 +435,7 @@ mod tests {
             email: Email::AwsSes(EmailAwsSes {
                 region: rusoto_core::Region::EuCentral1,
                 from: String::new(),
+                credentials: std::path::PathBuf::new(),
             }),
             google: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),

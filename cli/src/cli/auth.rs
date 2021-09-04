@@ -1,6 +1,8 @@
 use clap::AppSettings;
 use clap::Arg;
 use clap::SubCommand;
+use houseflow_types::code::VerificationCode;
+use std::str::FromStr;
 
 fn login() -> clap::App<'static, 'static> {
     SubCommand::with_name("login")
@@ -12,15 +14,15 @@ fn login() -> clap::App<'static, 'static> {
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("password")
-                .help("Password used to log in")
+            Arg::with_name("code")
+                .help("Verification code")
                 .long("password")
+                .validator(|s| match VerificationCode::from_str(&s) {
+                    Ok(_) => Ok(()),
+                    Err(err) => Err(err.to_string()),
+                })
                 .takes_value(true),
         )
-}
-
-fn register() -> clap::App<'static, 'static> {
-    SubCommand::with_name("register").about("Register a Houseflow account")
 }
 
 fn logout() -> clap::App<'static, 'static> {
@@ -43,10 +45,9 @@ fn status() -> clap::App<'static, 'static> {
 
 pub(super) fn subcommand() -> clap::App<'static, 'static> {
     SubCommand::with_name("auth")
-        .about("Login, Register, Logout, and refresh your authentication")
+        .about("Login, Logout, and refresh your authentication")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(login())
-        .subcommand(register())
         .subcommand(logout())
         .subcommand(refresh())
         .subcommand(status())

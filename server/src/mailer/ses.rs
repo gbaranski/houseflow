@@ -2,20 +2,27 @@ use super::Error;
 use async_trait::async_trait;
 use houseflow_config::server::EmailAwsSes as Config;
 use lettre::Message;
+use rusoto_core::credential::ProvideAwsCredentials;
 use rusoto_ses::RawMessage;
 use rusoto_ses::SendRawEmailRequest;
 use rusoto_ses::Ses;
 use rusoto_ses::SesClient;
 
 pub struct Mailer {
-    client: SesClient,
+    ses_client: SesClient,
     config: Config,
 }
 
 impl Mailer {
-    pub fn new(config: Config) -> Self {
-        let client = SesClient::new(config.region.clone());
-        Self { client, config }
+    pub async fn new(config: Config) -> Self {
+        let dispatcher = rusoto_core::HttpClient::new().unwrap();
+        let credentials = rusoto_core::credential::ProfileProvider::with_default_configuration(
+            &config.credentials,
+        );
+        dbg!(credentials.credentials().await).unwrap();
+        let client = rusoto_core::Client::new_with(credentials, dispatcher);
+        let ses_client = SesClient::new_with_client(client, config.region.clone());
+        Self { ses_client, config }
     }
 }
 
@@ -28,7 +35,7 @@ impl super::Mailer for Mailer {
             },
             ..Default::default()
         };
-        self.client.send_raw_email(request).await?;
+        self.ses_client.send_raw_email(request).await?;
         Ok(())
     }
 
