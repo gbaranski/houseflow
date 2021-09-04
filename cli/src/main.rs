@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
                 auth::login::Command {
                     email: get_value(matches, get_input, "email")?,
                     code: matches
-                        .value_of("unwrap")
+                        .value_of("code")
                         .map(|str| VerificationCode::from_str(str).unwrap()),
                 }
                 .run(ctx)
