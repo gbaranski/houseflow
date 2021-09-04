@@ -17,8 +17,9 @@ private-key = "/etc/private-key"  # e.g /etc/letsencrypt/live/example.com/privke
 
 [email]
 provider = "aws-ses"
-region = "eu-central-1"
+region = ["eu-central-1"]
 from = "houseflow@gbaranski.com"
+credentials = "/aws/credentials"
 
 # Google provider configuration. If not defined, Google Home integration will be disabled.
 [google]
