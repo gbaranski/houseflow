@@ -10,28 +10,12 @@ use houseflow_types::token::RefreshToken;
 
 #[cfg(feature = "auth")]
 impl HouseflowAPI {
-    pub async fn register(
-        &self,
-        request: &auth::register::Request,
-    ) -> Result<Result<auth::register::Response, ServerError>, Error> {
-        let url = self.auth_url.join("register").unwrap();
-        post(url, request).await
-    }
-
     pub async fn login(
         &self,
         request: &auth::login::Request,
     ) -> Result<Result<auth::login::Response, ServerError>, Error> {
         let url = self.auth_url.join("login").unwrap();
         post(url, request).await
-    }
-
-    pub async fn logout(
-        &self,
-        refresh_token: &RefreshToken,
-    ) -> Result<Result<auth::logout::Response, ServerError>, Error> {
-        let url = self.auth_url.join("logout").unwrap();
-        post_with_token(url, &auth::logout::Request {}, refresh_token).await
     }
 
     pub async fn refresh_token(

@@ -11,7 +11,6 @@ use context::Tokens;
 use async_trait::async_trait;
 use cli::get_input;
 use cli::get_input_with_variants;
-use cli::get_password;
 use cli::unwrap_subcommand;
 use houseflow_types::code::VerificationCode;
 use houseflow_types::DeviceCommand;
@@ -45,15 +44,6 @@ async fn main() -> anyhow::Result<()> {
                     code: matches
                         .value_of("code")
                         .map(|str| VerificationCode::from_str(str).unwrap()),
-                }
-                .run(ctx)
-                .await
-            }
-            ("register", matches) => {
-                auth::register::Command {
-                    email: get_value(matches, get_input, "email")?,
-                    username: get_value(matches, get_input, "username")?,
-                    password: get_value(matches, get_password, "password")?,
                 }
                 .run(ctx)
                 .await
