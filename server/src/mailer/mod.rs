@@ -30,6 +30,7 @@ pub trait Mailer: Send + Sync {
             ))
             .unwrap();
         self.send(message).await?;
+        tracing::info!("Sent verification code to {}", address);
         Ok(())
     }
 

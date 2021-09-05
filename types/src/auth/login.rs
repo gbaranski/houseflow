@@ -1,12 +1,14 @@
 use serde::Deserialize;
+use crate::code::VerificationCode;
 use serde::Serialize;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "kebab-case")]
 pub struct Request {
     #[validate(email)]
     pub email: String,
-    pub verification_code: Option<String>,
+    pub verification_code: Option<VerificationCode>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]

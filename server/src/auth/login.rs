@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::State;
 use axum::extract::Extension;
 use axum::Json;
@@ -38,15 +36,13 @@ pub async fn handle(
 
     let response = match request.verification_code {
         Some(verification_code) => {
-            let verification_code = VerificationCode::from_str(&verification_code)
-                .map_err(AuthError::InvalidVerificationCode)?;
             let user_id = state
                 .clerk
                 .get(&verification_code)
                 .await?
-                .ok_or(AuthError::VerificationCodeUnknownByClerk)?;
+                .ok_or_else(|| AuthError::InvalidVerificationCode("code is not known by clerk".to_string()))?;
             if user_id != user.id {
-                return Err(AuthError::VerificationCodeInvalidUserID.into());
+                return Err(AuthError::InvalidVerificationCode("user-id doesn't match".to_string()).into());
             }
             let refresh_token = RefreshToken::new(
                 state.config.secrets.refresh_key.as_bytes(),
@@ -131,7 +127,7 @@ mod tests {
             state.clone(),
             Json(Request {
                 email: user.email.clone(),
-                verification_code: Some(verification_code.to_string()),
+                verification_code: Some(verification_code),
             }),
         )
         .await
@@ -166,16 +162,13 @@ mod tests {
             state.clone(),
             Json(Request {
                 email: user.email,
-                verification_code: Some(verification_code.to_string()),
+                verification_code: Some(verification_code),
             }),
         )
         .await
         .unwrap_err();
 
-        assert_eq!(
-            response,
-            ServerError::AuthError(AuthError::VerificationCodeUnknownByClerk)
-        );
+        assert!(matches!(response, ServerError::AuthError(_)))
     }
 
     #[tokio::test]
@@ -204,16 +197,13 @@ mod tests {
             state.clone(),
             Json(Request {
                 email: user.email,
-                verification_code: Some(verification_code.to_string()),
+                verification_code: Some(verification_code),
             }),
         )
         .await
         .unwrap_err();
 
-        assert_eq!(
-            response,
-            ServerError::AuthError(AuthError::VerificationCodeInvalidUserID)
-        );
+        assert!(matches!(response, ServerError::AuthError(_)))
     }
 
     #[tokio::test]

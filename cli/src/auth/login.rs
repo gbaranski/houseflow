@@ -17,7 +17,7 @@ impl crate::Command for Command {
             Some(code) => {
                 let request = login::Request {
                     email: self.email,
-                    verification_code: Some(code.to_string()),
+                    verification_code: Some(code),
                 };
                 let response = ctx.houseflow_api().await?.login(&request).await??;
                 match response {

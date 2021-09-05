@@ -13,15 +13,7 @@ pub enum Error {
 
     /// Client sent invalid verification code
     #[error("invalid verification code: {0}")]
-    InvalidVerificationCode(crate::code::Error),
-
-    /// Clerk does not know about the specified verification code
-    #[error("clerk doesn't know about the specified verification code")]
-    VerificationCodeUnknownByClerk,
-
-    /// Verification code has invalid User ID
-    #[error("verification code has invalid user id")]
-    VerificationCodeInvalidUserID,
+    InvalidVerificationCode(String),
 
     /// When password hashes doesn't match with the one from database
     #[error("invalid password")]
