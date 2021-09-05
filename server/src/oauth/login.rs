@@ -60,8 +60,7 @@ pub async fn handle(
             if user_id != user.id {
                 return Err(Error::InvalidRequest(Some(
                     "verification code user-id doesn't match".to_string(),
-                ))
-                .into());
+                )));
             }
 
             let authorization_code_payload = AuthorizationCodePayload {
