@@ -18,7 +18,7 @@ pub struct Config {
     /// Path to the TLS configuration
     #[serde(default)]
     pub tls: Option<Tls>,
-    /// Configuration of the email
+    /// Configuration of the Email
     pub email: Email,
     /// Configuration of the Google 3rd party client
     #[serde(default)]
@@ -69,18 +69,21 @@ pub struct Tls {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "provider", rename_all = "kebab-case")]
+#[serde(tag = "protocol", rename_all = "kebab-case")]
 pub enum Email {
-    AwsSes(EmailAwsSes),
+    Smtp(Smtp),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct EmailAwsSes {
-    pub region: rusoto_core::Region,
+pub struct Smtp {
+    #[serde(with = "crate::serde_hostname")]
+    pub hostname: url::Host,
+    #[serde(default = "defaults::smtp_port")]
+    pub port: u16,
     pub from: String,
-    #[serde(default = "defaults::aws_credentials_path")]
-    pub credentials: std::path::PathBuf,
+    pub username: String,
+    pub password: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -243,10 +246,10 @@ impl Config {
 mod tests {
     use super::Config;
     use super::Email;
-    use super::EmailAwsSes;
     use super::Google;
     use super::Network;
     use super::Secrets;
+    use super::Smtp;
     use super::Tls;
     use houseflow_types::Device;
     use houseflow_types::DeviceID;
@@ -277,10 +280,12 @@ mod tests {
                 certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
                 private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
             }),
-            email: Email::AwsSes(EmailAwsSes {
-                region: rusoto_core::Region::EuCentral1,
+            email: Email::Smtp(Smtp {
+                hostname: url::Host::Domain(String::from("email.houseflow.gbaranski.com")),
+                port: 666,
                 from: String::from("houseflow@gbaranski.com"),
-                credentials: std::path::PathBuf::from_str("/aws/credentials").unwrap(),
+                username: String::from("some-username"),
+                password: String::from("some-password"),
             }),
             google: Some(Google {
                 client_id: String::from("google-client-id"),
@@ -432,10 +437,12 @@ mod tests {
             network: Default::default(),
             secrets: rand::random(),
             tls: Default::default(),
-            email: Email::AwsSes(EmailAwsSes {
-                region: rusoto_core::Region::EuCentral1,
+            email: Email::Smtp(Smtp {
+                hostname: url::Host::Ipv4(std::net::Ipv4Addr::UNSPECIFIED),
+                port: 0,
                 from: String::new(),
-                credentials: std::path::PathBuf::new(),
+                username: String::new(),
+                password: String::new(),
             }),
             google: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),

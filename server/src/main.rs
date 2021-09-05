@@ -33,8 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     tracing::debug!("Config: {:#?}", config);
     let mailer = match config.email {
-        houseflow_config::server::Email::AwsSes(ref config) => {
-            houseflow_server::mailer::ses::Mailer::new(config.clone()).await
+        houseflow_config::server::Email::Smtp(ref config) => {
+            houseflow_server::mailer::smtp::Mailer::new(config.clone()).await
         }
     };
     let clerk = Clerk::new(defaults::clerk_path())?;

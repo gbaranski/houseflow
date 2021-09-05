@@ -143,17 +143,16 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
 
 #[cfg(test)]
 mod test_utils {
-    use crate::clerk::sled::Clerk;
-
     use super::mailer::fake::Mailer as FakeMailer;
     use super::State;
+    use crate::clerk::sled::Clerk;
     use axum::extract;
     use houseflow_config::defaults;
     use houseflow_config::server::Config;
     use houseflow_config::server::Email;
-    use houseflow_config::server::EmailAwsSes;
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
+    use houseflow_config::server::Smtp;
     use houseflow_types::code::VerificationCode;
     use houseflow_types::Device;
     use houseflow_types::DeviceType;
@@ -183,10 +182,12 @@ mod test_utils {
                 authorization_code_key: String::from("authorization-code-key"),
             },
             tls: None,
-            email: Email::AwsSes(EmailAwsSes {
-                region: Default::default(),
-                from: String::from("houseflow@gbaranski.com"),
-                credentials: std::path::PathBuf::new(),
+            email: Email::Smtp(Smtp {
+                hostname: url::Host::Ipv4(std::net::Ipv4Addr::UNSPECIFIED),
+                port: 0,
+                from: String::new(),
+                username: String::new(),
+                password: String::new(),
             }),
             google: Some(houseflow_config::server::Google {
                 client_id: String::from("client-id"),

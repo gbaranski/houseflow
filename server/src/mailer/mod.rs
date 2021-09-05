@@ -1,5 +1,5 @@
 pub mod fake;
-pub mod ses;
+pub mod smtp;
 
 use async_trait::async_trait;
 use houseflow_types::code::VerificationCode;
@@ -7,8 +7,8 @@ use lettre::Message;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("aws-ses send raw email error: {0}")]
-    AwsSesSendRawEmailError(#[from] rusoto_core::RusotoError<rusoto_ses::SendRawEmailError>),
+    #[error("smtp: {0}")]
+    Smtp(#[from] lettre::transport::smtp::Error),
 }
 
 #[async_trait]

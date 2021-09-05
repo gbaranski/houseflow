@@ -16,10 +16,12 @@ certificate = "/etc/certificate"  # e.g /etc/letsencrypt/live/example.com/fullch
 private-key = "/etc/private-key"  # e.g /etc/letsencrypt/live/example.com/privkey.pem
 
 [email]
-provider = "aws-ses"
-region = ["eu-central-1"]
+protocol = "smtp"
+hostname = "email.houseflow.gbaranski.com"
+port = 666
 from = "houseflow@gbaranski.com"
-credentials = "/aws/credentials"
+username = "some-username"
+password = "some-password"
 
 # Google provider configuration. If not defined, Google Home integration will be disabled.
 [google]

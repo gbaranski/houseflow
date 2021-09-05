@@ -30,9 +30,6 @@ pub fn clerk_path() -> std::path::PathBuf {
     data_home().join("clerk.sled")
 }
 
-pub fn aws_credentials_path() -> std::path::PathBuf {
-    dirs_next::home_dir()
-        .unwrap()
-        .join(".aws")
-        .join("credentials")
+pub fn smtp_port() -> u16 {
+    587
 }
