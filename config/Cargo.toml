@@ -22,6 +22,7 @@ url = { version = "2.2.2", features = ["serde"] }
 tracing-subscriber = "0.2.19"
 tracing = "0.1.26"
 toml = { version = "0.5.8", optional = true }
+dirs-next = "2.0.0"
 
 [features]
 device = []

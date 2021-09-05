@@ -56,6 +56,7 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::UserAlreadyExists => StatusCode::NOT_ACCEPTABLE,
                 AuthError::RefreshTokenBlacklisted => StatusCode::UNAUTHORIZED,
                 AuthError::NoDevicePermission => StatusCode::UNAUTHORIZED,
+                AuthError::InvalidVerificationCode(_) => StatusCode::UNAUTHORIZED,
             },
             Self::FulfillmentError(ref err) => match err {
                 FulfillmentError::DeviceNotConnected => StatusCode::BAD_GATEWAY,

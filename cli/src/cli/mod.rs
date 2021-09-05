@@ -84,9 +84,9 @@ pub fn get_input_with_variants(prompt: impl Into<String>, variants: &[&str]) -> 
         .unwrap()
 }
 
-pub fn get_password(prompt: impl Into<String>) -> String {
-    dialoguer::Password::with_theme(&dialoguer_theme())
-        .with_prompt(prompt)
-        .interact()
-        .unwrap()
-}
+// pub fn get_password(prompt: impl Into<String>) -> String {
+//     dialoguer::Password::with_theme(&dialoguer_theme())
+//         .with_prompt(prompt)
+//         .interact()
+//         .unwrap()
+// }

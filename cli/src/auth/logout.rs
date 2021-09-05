@@ -5,11 +5,7 @@ pub struct Command {}
 
 #[async_trait]
 impl crate::Command for Command {
-    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
-        let refresh_token = ctx.refresh_token().await?;
-
-        ctx.houseflow_api().await?.logout(&refresh_token).await??;
-
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
         ctx.tokens.remove().await?;
         tracing::info!("✔ Succesfully logged out");
 

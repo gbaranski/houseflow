@@ -26,10 +26,10 @@ pub fn data_home() -> std::path::PathBuf {
     base_directories().get_data_home()
 }
 
-pub fn database_path() -> std::path::PathBuf {
-    data_home().join("database.sqlite3")
+pub fn clerk_path() -> std::path::PathBuf {
+    data_home().join("clerk.sled")
 }
 
-pub fn token_blacklist_path() -> std::path::PathBuf {
-    data_home().join("token_blacklist.sled")
+pub fn smtp_port() -> u16 {
+    587
 }

@@ -8,8 +8,12 @@ pub enum Error {
     InvalidAuthorizationHeader(String),
 
     /// Client sent invalid token
-    #[error("invalid error: {0}")]
+    #[error("invalid token: {0}")]
     InvalidToken(#[from] super::token::Error),
+
+    /// Client sent invalid verification code
+    #[error("invalid verification code: {0}")]
+    InvalidVerificationCode(String),
 
     /// When password hashes doesn't match with the one from database
     #[error("invalid password")]
