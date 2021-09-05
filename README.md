@@ -23,7 +23,7 @@ Houseflow is open source home automation system, it lets you configure various d
 
 Houseflow server is splitted into few parts.
 
-- Auth, responsible for handling user logging in, signing up, refreshing access tokens.
+- Auth, responsible for handling user logging in, refreshing access tokens.
 - OAuth2, handles OAuth2 requests from Google, used for integration with Google Home.
 - Fulfillment. Handles all device related requests from users, such as EXECUTE, QUERY, or SYNC. Supports multiple clients, see [Client](#Client). Uses Lighthouse to send the requests.
 - Lighthouse. A websocket server which connects with embedded devices.
