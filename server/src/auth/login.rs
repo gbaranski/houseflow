@@ -36,13 +36,14 @@ pub async fn handle(
 
     let response = match request.verification_code {
         Some(verification_code) => {
-            let user_id = state
-                .clerk
-                .get(&verification_code)
-                .await?
-                .ok_or_else(|| AuthError::InvalidVerificationCode("code is not known by clerk".to_string()))?;
+            let user_id = state.clerk.get(&verification_code).await?.ok_or_else(|| {
+                AuthError::InvalidVerificationCode("code is not known by clerk".to_string())
+            })?;
             if user_id != user.id {
-                return Err(AuthError::InvalidVerificationCode("user-id doesn't match".to_string()).into());
+                return Err(AuthError::InvalidVerificationCode(
+                    "user-id doesn't match".to_string(),
+                )
+                .into());
             }
             let refresh_token = RefreshToken::new(
                 state.config.secrets.refresh_key.as_bytes(),

@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::code::VerificationCode;
+use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
 
