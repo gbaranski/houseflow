@@ -1,23 +1,20 @@
 use crate::defaults;
 use houseflow_types::DeviceID;
 use houseflow_types::DevicePassword;
+use houseflow_types::DeviceTrait;
+use houseflow_types::DeviceType;
 use serde::Deserialize;
 use serde::Serialize;
+use std::collections::HashMap;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
+    pub device_type: DeviceType,
     #[serde(default)]
     pub server: Server,
-
-    /// Configuration of the Garage device
-    pub garage: Option<Garage>,
-
-    /// Configuration of the Gate device
-    pub gate: Option<Gate>,
-
-    /// Configuration of the Light device
-    pub light: Option<Light>,
+    pub credentials: Credentials,
+    pub traits: HashMap<DeviceTrait, Trait>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,37 +22,23 @@ pub struct Config {
 pub struct Server {
     #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
     pub hostname: url::Host,
-
     #[serde(default)]
     pub use_tls: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Garage {
-    pub credentials: Credentials,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Gate {
-    pub credentials: Credentials,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Light {
-    pub credentials: Credentials,
+pub struct Trait {
+    pub command: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Credentials {
     /// ID of the device
-    pub device_id: DeviceID,
-
+    pub id: DeviceID,
     /// Password of the device in plain-text
-    pub device_password: DevicePassword,
+    pub password: DevicePassword,
 }
 
 impl crate::Config for Config {
@@ -77,39 +60,36 @@ impl Default for Server {
 mod tests {
     use super::Config;
     use super::Credentials;
-    use super::Garage;
-    use super::Gate;
-    use super::Light;
     use super::Server;
+    use super::Trait;
     use houseflow_types::DeviceID;
+    use houseflow_types::DeviceTrait;
+    use houseflow_types::DeviceType;
+    use std::collections::HashMap;
     use std::str::FromStr;
 
     #[test]
     fn test_example() {
+        let mut traits = HashMap::new();
+        traits.insert(
+            DeviceTrait::OpenClose,
+            Trait {
+                command: "echo 1".to_string(),
+            },
+        );
         let expected = Config {
+            device_type: DeviceType::Garage,
             server: Server {
                 hostname: url::Host::Domain(String::from("example.com")),
                 use_tls: true,
             },
-            garage: Some(Garage {
-                credentials: Credentials {
-                    device_id: DeviceID::from_str("546c8a4b71f04c78bd338069ad3b174b").unwrap(),
-                    device_password: String::from("garage-password"),
-                },
-            }),
-            gate: Some(Gate {
-                credentials: Credentials {
-                    device_id: DeviceID::from_str("efeec97b9835430cb719e6f62690a72d").unwrap(),
-                    device_password: String::from("gate-password"),
-                },
-            }),
-            light: Some(Light {
-                credentials: Credentials {
-                    device_id: DeviceID::from_str("86dda092906147938483618eb513c92c").unwrap(),
-                    device_password: String::from("light-password"),
-                },
-            }),
+            credentials: Credentials {
+                id: DeviceID::from_str("546c8a4b71f04c78bd338069ad3b174b").unwrap(),
+                password: String::from("garage-password"),
+            },
+            traits,
         };
+        println!("--------------------\n\n Serialized: \n{}\n\n--------------------", toml::to_string(&expected).unwrap());
         let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
     }

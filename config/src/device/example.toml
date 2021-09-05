@@ -1,20 +1,14 @@
 # Houseflow device configuration
 
+device-type = "garage"
+
 [server]
 hostname = "example.com"   # Hostname of the server, e.g `localhost` 
 use-tls = true         # Whether to use TLS.
 
-[garage]
-[garage.credentials]
-device-id = "546c8a4b71f04c78bd338069ad3b174b"
-device-password = "garage-password"
+[credentials]
+id = "546c8a4b71f04c78bd338069ad3b174b"
+password = "garage-password"
 
-[gate]
-[gate.credentials]
-device-id = "efeec97b9835430cb719e6f62690a72d"
-device-password = "gate-password"
-
-[light]
-[light.credentials]
-device-id = "86dda092906147938483618eb513c92c"
-device-password = "light-password"
+[traits.open-close]
+command = "echo 1"

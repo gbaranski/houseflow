@@ -5,6 +5,7 @@ use serde::Serialize;
 use strum::EnumIter;
 use strum::EnumVariantNames;
 use strum::IntoEnumIterator;
+use strum::IntoStaticStr;
 
 pub type DeviceID = Credential<16>;
 pub type DevicePassword = String;
@@ -85,16 +86,25 @@ use strum::EnumString;
     Eq,
     PartialEq,
     strum::Display,
+    IntoStaticStr,
     EnumString,
-    EnumVariantNames,
     Serialize,
     Deserialize,
 )]
 #[non_exhaustive]
-#[serde(rename_all = "kebab-case")]
+#[serde(try_from = "&str", into = "&str", rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum DeviceTrait {
     OnOff,
     OpenClose,
+}
+
+impl TryFrom<&str> for DeviceTrait {
+    type Error = strum::ParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        std::str::FromStr::from_str(value)
+    }
 }
 
 impl DeviceTrait {
@@ -228,6 +238,7 @@ impl rusqlite::ToSql for DeviceTrait {
     }
 }
 
+use std::convert::TryFrom;
 #[cfg(feature = "rusqlite")]
 use std::str::FromStr;
 
