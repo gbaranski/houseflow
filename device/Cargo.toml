@@ -12,8 +12,8 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types   = { path = "../../types", version = "0.1.1", features = ["lighthouse"] }
-houseflow-config  = { path = "../../config", version = "0.1.1", features = [ "device" ] }
+houseflow-types   = { path = "../types", version = "0.1.1", features = ["lighthouse"] }
+houseflow-config  = { path = "../config", version = "0.1.1", features = [ "device" ] }
 
 tokio             = { version = "1.5", features = [ "macros", "sync", "time" ] }
 bytes             = "1.0"
@@ -33,7 +33,7 @@ base64 = "0.13.0"
 
 [dev-dependencies]
 tokio = { version = "1.5", features = [ "rt-multi-thread", "macros", "sync", "time" ] }
-houseflow-config = { path="../../config", version="0.1.1", features=["device", "fs"] }
+houseflow-config = { path="../config", version="0.1.1", features=["device", "fs"] }
 tracing-subscriber = "0.2.19"
 
 
