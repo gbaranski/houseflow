@@ -4,7 +4,6 @@ members = [
   "cli",
   "config",
   "devices/virtual",
-  "devices/rpi",
   "google-smart-home",
   "server",
   "types",

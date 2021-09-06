@@ -70,7 +70,7 @@ impl Session {
                     "Basic {}",
                     base64::encode(format!(
                         "{}:{}",
-                        credentials.device_id, credentials.device_password
+                        credentials.id, credentials.password
                     ))
                 ),
             )
