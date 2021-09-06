@@ -47,6 +47,31 @@ pub mod request {
         #[serde(default)]
         pub params: serde_json::Map<String, serde_json::Value>,
     }
+
+    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum Command {
+        OnOff(commands::OnOff),
+        OpenClose(commands::OpenClose)
+    }
+
+    pub mod commands {
+        use serde::Deserialize;
+        use serde::Serialize;
+
+        #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct OnOff {
+            pub on: bool,
+        }
+
+        #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct OpenClose {
+            #[serde(alias = "openPercent")]
+            pub open_percent: u8,
+        }
+    }
 }
 
 /// Response types of the EXECUTE intent
