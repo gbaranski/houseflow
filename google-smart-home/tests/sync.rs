@@ -1,7 +1,8 @@
 mod common;
 
+use google_smart_home::device::Trait;
+use google_smart_home::sync::response;
 use google_smart_home::sync::response::Response;
-use google_smart_home::sync::response::{self};
 use google_smart_home::Request;
 use google_smart_home::RequestInput;
 use serde_json::json;
@@ -31,7 +32,7 @@ fn sync_response() {
                     response::PayloadDevice {
                         id: String::from("123"),
                         device_type: String::from("action.devices.types.OUTLET"),
-                        traits: [String::from("action.devices.traits.OnOff")].to_vec(),
+                        traits: [Trait::OnOff].to_vec(),
                         name: response::PayloadDeviceName {
                             default_names: Some([String::from("My Outlet 1234")].to_vec()),
                             name: String::from("Night light"),
@@ -46,7 +47,7 @@ fn sync_response() {
                             hw_version: Some(String::from("3.2")),
                             sw_version: Some(String::from("11.4")),
                         }),
-                        attributes: None,
+                        attributes: Default::default(),
                         custom_data: Some(
                             json!({
                                 "fooValue": 74,
@@ -68,12 +69,7 @@ fn sync_response() {
                     response::PayloadDevice {
                         id: String::from("456"),
                         device_type: String::from("action.devices.types.LIGHT"),
-                        traits: [
-                            String::from("action.devices.traits.OnOff"),
-                            String::from("action.devices.traits.Brightness"),
-                            String::from("action.devices.traits.ColorSetting"),
-                        ]
-                        .to_vec(),
+                        traits: [Trait::OnOff, Trait::Brightness, Trait::ColorSetting].to_vec(),
                         name: response::PayloadDeviceName {
                             default_names: Some(
                                 [String::from("lights out inc. bulb A19 color hyperglow")].to_vec(),
@@ -90,19 +86,17 @@ fn sync_response() {
                             hw_version: Some(String::from("1.2")),
                             sw_version: Some(String::from("5.4")),
                         }),
-                        attributes: Some(
-                            json!({
-                                "colorModel": "rgb",
-                                "colorTemperatureRange": {
-                                    "temperatureMinK": 2000,
-                                    "temperatureMaxK": 9000
-                                },
-                                "commandOnlyColorSetting": false
-                            })
-                            .as_object()
-                            .unwrap()
-                            .to_owned(),
-                        ),
+                        attributes: json!({
+                            "colorModel": "rgb",
+                            "colorTemperatureRange": {
+                                "temperatureMinK": 2000,
+                                "temperatureMaxK": 9000
+                            },
+                            "commandOnlyColorSetting": false
+                        })
+                        .as_object()
+                        .unwrap()
+                        .to_owned(),
                         custom_data: Some(
                             json!({
                                 "fooValue": 12,

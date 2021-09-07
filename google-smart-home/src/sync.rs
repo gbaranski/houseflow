@@ -1,3 +1,4 @@
+use crate::device::Trait;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -56,7 +57,7 @@ pub mod response {
         pub device_type: String,
 
         /// List of traits this device has. This defines the commands, attributes, and states that the device supports.
-        pub traits: Vec<String>,
+        pub traits: Vec<Trait>,
 
         /// Names of this device.
         pub name: PayloadDeviceName,
@@ -77,7 +78,7 @@ pub mod response {
 
         /// Aligned with per-trait attributes described in each trait schema reference.
         #[serde(default)]
-        pub attributes: Option<serde_json::Map<String, serde_json::Value>>,
+        pub attributes: serde_json::Map<String, serde_json::Value>,
 
         /// Object defined by the developer which will be attached to future QUERY and EXECUTE requests, maximum of 512 bytes per device. Use this object to store additional information about the device your cloud service may need, such as the global region of the device. Data in this object has a few constraints: No sensitive information, including but not limited to Personally Identifiable Information.
         #[serde(default)]

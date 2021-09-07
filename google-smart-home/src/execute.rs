@@ -1,3 +1,4 @@
+use crate::device::Command;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -33,7 +34,7 @@ pub mod request {
 
         /// If the opaque customData object is provided in SYNC, it's sent here.
         #[serde(default)]
-        pub custom_data: Option<serde_json::Map<String, serde_json::Value>>,
+        pub custom_data: serde_json::Map<String, serde_json::Value>,
     }
 
     /// Device command.
@@ -41,36 +42,8 @@ pub mod request {
     #[serde(rename_all = "camelCase")]
     pub struct PayloadCommandExecution {
         /// The command to execute, usually with accompanying parameters.
-        pub command: String,
-
-        /// Aligned with the parameters for each command.
-        #[serde(default)]
-        pub params: serde_json::Map<String, serde_json::Value>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum Command {
-        OnOff(commands::OnOff),
-        OpenClose(commands::OpenClose)
-    }
-
-    pub mod commands {
-        use serde::Deserialize;
-        use serde::Serialize;
-
-        #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        pub struct OnOff {
-            pub on: bool,
-        }
-
-        #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        pub struct OpenClose {
-            #[serde(alias = "openPercent")]
-            pub open_percent: u8,
-        }
+        #[serde(flatten)]
+        pub command: Command,
     }
 }
 
