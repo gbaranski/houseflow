@@ -1,9 +1,9 @@
+pub mod client;
 pub mod device;
 pub mod permission;
-pub mod structure;
 pub mod room;
+pub mod structure;
 pub mod user;
-pub mod client;
 
 pub mod code;
 pub mod errors;

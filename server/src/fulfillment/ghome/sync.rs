@@ -1,7 +1,7 @@
 use crate::State;
-use google_smart_home::sync::response;
 use google_smart_home::device::Trait as GHomeDeviceTrait;
 use google_smart_home::device::Type as GHomeDeviceType;
+use google_smart_home::sync::response;
 use houseflow_types::device::Trait as DeviceTrait;
 use houseflow_types::device::Type as DeviceType;
 use houseflow_types::errors::InternalError;
@@ -34,7 +34,7 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
                     .map(|t| match t {
                         DeviceTrait::OnOff => GHomeDeviceTrait::OnOff,
                         DeviceTrait::OpenClose => GHomeDeviceTrait::OpenClose,
-                        _ => todo!()
+                        _ => todo!(),
                     })
                     .collect(),
                 name: response::PayloadDeviceName {

@@ -85,7 +85,10 @@ mod tests {
             },
             traits,
         };
-        println!("--------------------\n\n Serialized: \n{}\n\n--------------------", toml::to_string(&expected).unwrap());
+        println!(
+            "--------------------\n\n Serialized: \n{}\n\n--------------------",
+            toml::to_string(&expected).unwrap()
+        );
         let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
     }

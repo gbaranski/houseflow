@@ -1,5 +1,5 @@
-pub mod execute;
 pub mod device;
+pub mod execute;
 pub mod query;
 pub mod sync;
 

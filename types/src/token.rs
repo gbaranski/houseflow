@@ -1,11 +1,11 @@
 use crate::errors::TokenError as Error;
-use uuid::Uuid;
 use chrono::DateTime;
 use chrono::Utc;
 use serde::de;
 use serde::ser;
 use serde::Deserialize;
 use serde::Serialize;
+use uuid::Uuid;
 
 pub type Signature = Vec<u8>;
 

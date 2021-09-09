@@ -2,10 +2,10 @@ use crate::extractors::UserID;
 use crate::State;
 use axum::extract::Extension;
 use axum::Json;
+use houseflow_types::device::Device;
 use houseflow_types::errors::ServerError;
 use houseflow_types::fulfillment::sync::Request;
 use houseflow_types::fulfillment::sync::Response;
-use houseflow_types::device::Device;
 use tracing::Level;
 
 #[tracing::instrument(name = "Sync", skip(state, _request), err)]

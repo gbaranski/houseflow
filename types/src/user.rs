@@ -1,6 +1,6 @@
-use uuid::Uuid;
 use serde::Deserialize;
 use serde::Serialize;
+use uuid::Uuid;
 
 pub type ID = Uuid;
 

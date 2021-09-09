@@ -1,8 +1,8 @@
 use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
-use houseflow_types::errors::InternalError;
 use houseflow_types::device;
+use houseflow_types::errors::InternalError;
 use houseflow_types::lighthouse;
 use houseflow_types::user;
 use std::str::FromStr;

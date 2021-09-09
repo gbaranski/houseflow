@@ -100,16 +100,7 @@ impl Type {
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    strum::Display,
-    EnumVariantNames,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, strum::Display, EnumVariantNames, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(tag = "command", content = "params", rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
@@ -127,7 +118,7 @@ impl Command {
 
         for required_trait in required_traits {
             if !t.contains(required_trait) {
-                return false
+                return false;
             }
         }
         true

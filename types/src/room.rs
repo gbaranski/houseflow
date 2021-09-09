@@ -1,7 +1,7 @@
-use serde::Serialize;
 use crate::structure;
-use uuid::Uuid;
 use serde::Deserialize;
+use serde::Serialize;
+use uuid::Uuid;
 
 pub type ID = Uuid;
 
@@ -12,4 +12,3 @@ pub struct Room {
     pub structure_id: structure::ID,
     pub name: String,
 }
-

@@ -1,5 +1,5 @@
-use serde::Serialize;
 use serde::Deserialize;
+use serde::Serialize;
 use uuid::Uuid;
 
 pub type ID = Uuid;
@@ -10,4 +10,3 @@ pub struct Structure {
     pub id: ID,
     pub name: String,
 }
-

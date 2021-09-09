@@ -67,10 +67,7 @@ impl Session {
                 http::header::AUTHORIZATION,
                 format!(
                     "Basic {}",
-                    base64::encode(format!(
-                        "{}:{}",
-                        credentials.id, credentials.password
-                    ))
+                    base64::encode(format!("{}:{}", credentials.id, credentials.password))
                 ),
             )
             .body(())

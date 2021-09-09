@@ -1,5 +1,5 @@
-use crate::lighthouse;
 use crate::device;
+use crate::lighthouse;
 use serde::Deserialize;
 use serde::Serialize;
 
