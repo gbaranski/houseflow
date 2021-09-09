@@ -68,10 +68,11 @@ async fn main() -> anyhow::Result<()> {
         }
         ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
             ("execute", matches) => {
-                let command = serde_json::from_value(serde_json::json!({
-                    "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, device::Command::VARIANTS), "command")?,
-                    "params": get_value::<String, _, _>(matches, |s| get_input(s), "command")?
-                }))?;
+                let json = serde_json::json!({
+                    "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, device::Command::VARIANTS), "command").context("get command")?,
+                    "params": get_value::<serde_json::Value, _, _>(matches, |s| get_input(s), "params").context("get params")?
+                });
+                let command = serde_json::from_value(json).context("parse into command")?;
                 fulfillment::execute::Command {
                     device_id: get_value(matches, get_input, "device-id")?,
                     command,
