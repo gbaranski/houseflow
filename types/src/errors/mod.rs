@@ -59,8 +59,8 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::InvalidVerificationCode(_) => StatusCode::UNAUTHORIZED,
             },
             Self::FulfillmentError(ref err) => match err {
-                FulfillmentError::DeviceNotConnected => StatusCode::BAD_GATEWAY,
-                FulfillmentError::Timeout => StatusCode::GATEWAY_TIMEOUT,
+                FulfillmentError::DeviceNotConnected => StatusCode::NOT_ACCEPTABLE,
+                FulfillmentError::Timeout => StatusCode::REQUEST_TIMEOUT,
             },
             Self::LighthouseError(ref err) => match err {
                 LighthouseError::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
