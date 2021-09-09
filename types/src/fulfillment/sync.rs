@@ -1,4 +1,4 @@
-use crate::Device;
+use crate::device::Device;
 use serde::Deserialize;
 use serde::Serialize;
 

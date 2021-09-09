@@ -1,6 +1,6 @@
 mod common;
 
-use google_smart_home::device::Trait;
+use google_smart_home::device;
 use google_smart_home::sync::response;
 use google_smart_home::sync::response::Response;
 use google_smart_home::Request;
@@ -31,8 +31,8 @@ fn sync_response() {
                 devices: [
                     response::PayloadDevice {
                         id: String::from("123"),
-                        device_type: String::from("action.devices.types.OUTLET"),
-                        traits: [Trait::OnOff].to_vec(),
+                        device_type: device::Type::Outlet,
+                        traits: [device::Trait::OnOff].to_vec(),
                         name: response::PayloadDeviceName {
                             default_names: Some([String::from("My Outlet 1234")].to_vec()),
                             name: String::from("Night light"),
@@ -68,8 +68,13 @@ fn sync_response() {
                     },
                     response::PayloadDevice {
                         id: String::from("456"),
-                        device_type: String::from("action.devices.types.LIGHT"),
-                        traits: [Trait::OnOff, Trait::Brightness, Trait::ColorSetting].to_vec(),
+                        device_type: device::Type::Light,
+                        traits: [
+                            device::Trait::OnOff,
+                            device::Trait::Brightness,
+                            device::Trait::ColorSetting,
+                        ]
+                        .to_vec(),
                         name: response::PayloadDeviceName {
                             default_names: Some(
                                 [String::from("lights out inc. bulb A19 color hyperglow")].to_vec(),

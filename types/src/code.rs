@@ -1,4 +1,5 @@
-use std::{convert::TryInto, str::FromStr};
+use std::str::FromStr;
+use std::convert::TryInto;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
 pub enum Error {

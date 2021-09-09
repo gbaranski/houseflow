@@ -1,8 +1,5 @@
 use crate::defaults;
-use houseflow_types::DeviceID;
-use houseflow_types::DevicePassword;
-use houseflow_types::DeviceTrait;
-use houseflow_types::DeviceType;
+use houseflow_types::device;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -10,11 +7,11 @@ use std::collections::HashMap;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
-    pub device_type: DeviceType,
+    pub device_type: device::Type,
     #[serde(default)]
     pub server: Server,
     pub credentials: Credentials,
-    pub traits: HashMap<DeviceTrait, Trait>,
+    pub traits: HashMap<device::Trait, Trait>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -36,9 +33,9 @@ pub struct Trait {
 #[serde(rename_all = "kebab-case")]
 pub struct Credentials {
     /// ID of the device
-    pub id: DeviceID,
+    pub id: device::ID,
     /// Password of the device in plain-text
-    pub password: DevicePassword,
+    pub password: device::Password,
 }
 
 impl crate::Config for Config {
@@ -62,9 +59,7 @@ mod tests {
     use super::Credentials;
     use super::Server;
     use super::Trait;
-    use houseflow_types::DeviceID;
-    use houseflow_types::DeviceTrait;
-    use houseflow_types::DeviceType;
+    use houseflow_types::device;
     use std::collections::HashMap;
     use std::str::FromStr;
 
@@ -72,19 +67,19 @@ mod tests {
     fn test_example() {
         let mut traits = HashMap::new();
         traits.insert(
-            DeviceTrait::OpenClose,
+            device::Trait::OpenClose,
             Trait {
                 command: "echo 1".to_string(),
             },
         );
         let expected = Config {
-            device_type: DeviceType::Garage,
+            device_type: device::Type::Garage,
             server: Server {
                 hostname: url::Host::Domain(String::from("example.com")),
                 use_tls: true,
             },
             credentials: Credentials {
-                id: DeviceID::from_str("546c8a4b71f04c78bd338069ad3b174b").unwrap(),
+                id: device::ID::from_str("546c8a4b71f04c78bd338069ad3b174b").unwrap(),
                 password: String::from("garage-password"),
             },
             traits,

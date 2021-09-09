@@ -4,7 +4,7 @@ use houseflow_config::client::Config;
 use houseflow_config::Config as _;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::RefreshToken;
-use houseflow_types::Device;
+use houseflow_types::device::Device;
 use serde::Deserialize;
 use serde::Serialize;
 use szafka::Szafka;

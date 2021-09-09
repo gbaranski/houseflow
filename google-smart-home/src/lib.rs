@@ -18,13 +18,10 @@ pub struct Request {
 pub enum RequestInput {
     #[serde(rename = "action.devices.SYNC")]
     Sync,
-
     #[serde(rename = "action.devices.QUERY")]
     Query(query::request::Payload),
-
     #[serde(rename = "action.devices.EXECUTE")]
     Execute(execute::request::Payload),
-
     #[serde(rename = "action.devices.DISCONNECT")]
     Disconnect,
 }

@@ -1,6 +1,9 @@
-mod common;
-mod device;
-mod user;
+pub mod device;
+pub mod permission;
+pub mod structure;
+pub mod room;
+pub mod user;
+pub mod client;
 
 pub mod code;
 pub mod errors;
@@ -16,39 +19,6 @@ pub mod lighthouse;
 
 #[cfg(feature = "token")]
 pub mod token;
-
-pub use common::*;
-pub use device::*;
-pub use user::*;
-
-use serde::Deserialize;
-use serde::Serialize;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, strum::Display, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-#[repr(u8)]
-pub enum ClientType {
-    Internal,
-    GoogleHome,
-}
-
-use chrono::Duration;
-
-impl ClientType {
-    pub fn refresh_token_duration(&self) -> Option<Duration> {
-        match *self {
-            Self::Internal => Some(Duration::days(7)),
-            Self::GoogleHome => None,
-        }
-    }
-
-    pub fn access_token_duration(&self) -> Duration {
-        match *self {
-            Self::Internal => Duration::minutes(10),
-            Self::GoogleHome => Duration::minutes(10),
-        }
-    }
-}
 
 #[cfg(feature = "token")]
 pub mod serde_token_expiration {

@@ -10,10 +10,10 @@ use axum::response::IntoResponse;
 use houseflow_types::errors::AuthError;
 use houseflow_types::errors::LighthouseError;
 use houseflow_types::errors::ServerError;
-use houseflow_types::DeviceID;
+use houseflow_types::device;
 use std::str::FromStr;
 
-pub struct DeviceCredentials(DeviceID, String);
+pub struct DeviceCredentials(device::ID, device::Password);
 
 fn verify_password(hash: &str, password: &str) -> Result<(), AuthError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
@@ -33,7 +33,7 @@ impl axum::extract::FromRequest<Body> for DeviceCredentials {
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await
                 .map_err(|err| AuthError::InvalidAuthorizationHeader(err.to_string()))?;
-        let device_id = DeviceID::from_str(authorization.username()).map_err(|err| {
+        let device_id = device::ID::from_str(authorization.username()).map_err(|err| {
             AuthError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
         })?;
 

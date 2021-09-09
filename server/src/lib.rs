@@ -11,7 +11,7 @@ use axum::AddExtensionLayer;
 use axum::Router;
 use dashmap::DashMap;
 use houseflow_config::server::Config;
-use houseflow_types::DeviceID;
+use houseflow_types::device;
 use mailer::Mailer;
 use std::sync::Arc;
 
@@ -24,7 +24,7 @@ pub struct State {
     pub clerk: Arc<dyn clerk::Clerk>,
     pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
-    pub sessions: DashMap<DeviceID, lighthouse::Session>,
+    pub sessions: DashMap<device::ID, lighthouse::Session>,
 }
 
 use tokio::net::TcpListener;
@@ -154,15 +154,20 @@ mod test_utils {
     use houseflow_config::server::Secrets;
     use houseflow_config::server::Smtp;
     use houseflow_types::code::VerificationCode;
-    use houseflow_types::Device;
-    use houseflow_types::DeviceType;
-    use houseflow_types::Permission;
-    use houseflow_types::Room;
-    use houseflow_types::Structure;
-    use houseflow_types::User;
-    use houseflow_types::UserID;
     use std::sync::Arc;
     use tokio::sync::mpsc;
+
+    use houseflow_types::device;
+    use houseflow_types::permission;
+    use houseflow_types::room;
+    use houseflow_types::structure;
+    use houseflow_types::user;
+
+    use device::Device;
+    use permission::Permission;
+    use room::Room;
+    use structure::Structure;
+    use user::User;
 
     pub fn get_state(
         tx: &mpsc::UnboundedSender<VerificationCode>,
@@ -214,7 +219,7 @@ mod test_utils {
     }
 
     pub fn get_user() -> User {
-        let id: UserID = rand::random();
+        let id = user::ID::new_v4();
         User {
             id: id.clone(),
             username: format!("john-{}", id.clone()),
@@ -226,7 +231,7 @@ mod test_utils {
     #[allow(dead_code)]
     pub fn get_structure() -> Structure {
         Structure {
-            id: rand::random(),
+            id: structure::ID::new_v4(),
             name: "test-home".to_string(),
         }
     }
@@ -234,7 +239,7 @@ mod test_utils {
     #[allow(dead_code)]
     pub fn get_room(structure: &Structure) -> Room {
         Room {
-            id: rand::random(),
+            id: room::ID::new_v4(),
             structure_id: structure.id.clone(),
             name: "test-garage".to_string(),
         }
@@ -245,10 +250,10 @@ mod test_utils {
         use semver::Version;
 
         Device {
-            id: rand::random(),
+            id: device::ID::new_v4(),
             room_id: room.id.clone(),
             password_hash: Some("$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU".into()),
-            device_type: DeviceType::Gate,
+            device_type: device::Type::Gate,
             traits: vec![],
             name: String::from("SuperTestingGate"),
             will_push_state: true,

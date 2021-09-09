@@ -5,15 +5,17 @@ mod auth;
 mod fulfillment;
 
 use anyhow::Context;
-use context::CommandContext;
-use context::Tokens;
-
 use async_trait::async_trait;
 use cli::get_input;
 use cli::get_input_with_variants;
 use cli::unwrap_subcommand;
+use context::CommandContext;
+use context::Tokens;
+use houseflow_config::client::Config;
+use houseflow_config::Config as _;
 use houseflow_types::code::VerificationCode;
-use houseflow_types::DeviceCommand;
+use houseflow_types::device;
+use std::path::Path;
 use std::str::FromStr;
 use strum::VariantNames;
 
@@ -21,10 +23,6 @@ use strum::VariantNames;
 pub trait Command {
     async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()>;
 }
-
-use houseflow_config::client::Config;
-use houseflow_config::Config as _;
-use std::path::Path;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -70,13 +68,13 @@ async fn main() -> anyhow::Result<()> {
         }
         ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
             ("execute", matches) => {
+                let command = serde_json::from_value(serde_json::json!({
+                    "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, device::Command::VARIANTS), "command")?,
+                    "params": get_value::<String, _, _>(matches, |s| get_input(s), "command")?
+                }))?;
                 fulfillment::execute::Command {
                     device_id: get_value(matches, get_input, "device-id")?,
-                    command: get_value(
-                        matches,
-                        |s| get_input_with_variants(s, DeviceCommand::VARIANTS),
-                        "command",
-                    )?,
+                    command,
                     params: serde_json::from_str(
                         &matches
                             .value_of("params")

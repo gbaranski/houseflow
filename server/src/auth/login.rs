@@ -99,6 +99,7 @@ mod tests {
     use houseflow_types::errors::ServerError;
     use houseflow_types::token::AccessToken;
     use houseflow_types::token::RefreshToken;
+    use houseflow_types::user;
     use tokio::sync::mpsc;
 
     #[tokio::test]
@@ -188,7 +189,7 @@ mod tests {
             .clerk
             .add(
                 verification_code.clone(),
-                rand::random(),
+                user::ID::new_v4(),
                 Utc::now() + chrono::Duration::from_std(VERIFICATION_CODE_DURATION).unwrap(),
             )
             .await

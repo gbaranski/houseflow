@@ -1,4 +1,4 @@
-use crate::UserID;
+use crate::user;
 use serde::Deserialize;
 use serde::Serialize;
 use validator::Validate;
@@ -7,16 +7,14 @@ use validator::Validate;
 pub struct Request {
     #[validate(email)]
     pub email: String,
-
     pub username: String,
-
     #[validate(length(min = 8))]
     pub password: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Response {
-    pub user_id: UserID,
+    pub user_id: user::ID,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]

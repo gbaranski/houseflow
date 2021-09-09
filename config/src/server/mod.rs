@@ -1,11 +1,18 @@
 use crate::defaults;
-use houseflow_types::Device;
-use houseflow_types::Permission;
-use houseflow_types::Room;
-use houseflow_types::Structure;
-use houseflow_types::User;
 use serde::Deserialize;
 use serde::Serialize;
+
+use houseflow_types::device;
+use houseflow_types::permission;
+use houseflow_types::room;
+use houseflow_types::structure;
+use houseflow_types::user;
+
+use device::Device;
+use permission::Permission;
+use room::Room;
+use structure::Structure;
+use user::User;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -171,12 +178,8 @@ impl Default for Network {
     }
 }
 
-use houseflow_types::DeviceID;
-use houseflow_types::RoomID;
-use houseflow_types::UserID;
-
 impl Config {
-    pub fn get_user(&self, user_id: &UserID) -> Option<User> {
+    pub fn get_user(&self, user_id: &user::ID) -> Option<User> {
         self.users.iter().find(|user| user.id == *user_id).cloned()
     }
 
@@ -187,18 +190,18 @@ impl Config {
             .cloned()
     }
 
-    pub fn get_device(&self, device_id: &DeviceID) -> Option<Device> {
+    pub fn get_device(&self, device_id: &device::ID) -> Option<Device> {
         self.devices
             .iter()
             .find(|device| device.id == *device_id)
             .cloned()
     }
 
-    pub fn get_room(&self, room_id: &RoomID) -> Option<Room> {
+    pub fn get_room(&self, room_id: &room::ID) -> Option<Room> {
         self.rooms.iter().find(|room| room.id == *room_id).cloned()
     }
 
-    pub fn get_permission(&self, device_id: &DeviceID, user_id: &UserID) -> Option<Permission> {
+    pub fn get_permission(&self, device_id: &device::ID, user_id: &user::ID) -> Option<Permission> {
         let device = self
             .devices
             .iter()
@@ -216,7 +219,7 @@ impl Config {
         permission.cloned()
     }
 
-    pub fn get_user_devices(&self, user_id: &UserID) -> Vec<DeviceID> {
+    pub fn get_user_devices(&self, user_id: &user::ID) -> Vec<device::ID> {
         let permissions = self
             .permissions
             .iter()
@@ -251,19 +254,21 @@ mod tests {
     use super::Secrets;
     use super::Smtp;
     use super::Tls;
-    use houseflow_types::Device;
-    use houseflow_types::DeviceID;
-    use houseflow_types::DeviceTrait;
-    use houseflow_types::DeviceType;
-    use houseflow_types::Permission;
-    use houseflow_types::Room;
-    use houseflow_types::RoomID;
-    use houseflow_types::Structure;
-    use houseflow_types::StructureID;
-    use houseflow_types::User;
-    use houseflow_types::UserID;
+
     use semver::Version;
     use std::str::FromStr;
+
+    use houseflow_types::device;
+    use houseflow_types::permission;
+    use houseflow_types::room;
+    use houseflow_types::structure;
+    use houseflow_types::user;
+
+    use device::Device;
+    use permission::Permission;
+    use room::Room;
+    use structure::Structure;
+    use user::User;
 
     #[test]
     fn test_example() {
@@ -293,23 +298,23 @@ mod tests {
                 project_id: String::from("google-project-id"),
             }),
             structures: [Structure {
-                id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
                 name: String::from("Zukago"),
             }]
             .to_vec(),
             rooms: [Room {
-                id: RoomID::from_str("baafebaa0708441782cf17470dd98392").unwrap(),
-                structure_id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                id: room::ID::from_str("baafebaa0708441782cf17470dd98392").unwrap(),
+                structure_id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
                 name: String::from("Bedroom"),
             }]
             .to_vec(),
             devices: [
                 Device {
-                    id: DeviceID::from_str("aa9936b052cb4718b77c87961d14c79c").unwrap(),
-                    room_id: RoomID::from_str("baafebaa0708441782cf17470dd98392").unwrap(),
+                    id: device::ID::from_str("aa9936b052cb4718b77c87961d14c79c").unwrap(),
+                    room_id: room::ID::from_str("baafebaa0708441782cf17470dd98392").unwrap(),
                     password_hash: Some(String::from("$argon2i$v=19$m=4096,t=3,p=1$oWC2oDYLWUkx46MehdPiuw$3ibEvJypruiJ1kk4IczUPgbgLKiMOJ6nO+OqiA1Ez6U")),
-                    device_type: DeviceType::Light,
-                    traits: [DeviceTrait::OnOff].to_vec(),
+                    device_type: device::Type::Light,
+                    traits: [device::Trait::OnOff].to_vec(),
                     name: String::from("Night Lamp"),
                     will_push_state: true,
                     model: String::from("alice"),
@@ -320,7 +325,7 @@ mod tests {
             ].to_vec(),
             users: [
                 User {
-                    id: UserID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
+                    id: user::ID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
                     username: String::from("gbaranski"),
                     email: String::from("root@gbaranski.com"),
                     admin: false,
@@ -328,8 +333,8 @@ mod tests {
             ].to_vec(),
             permissions: [
                 Permission {
-                    structure_id: StructureID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
-                    user_id: UserID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
+                    structure_id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                    user_id: user::ID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
                     is_manager: true,
                 }
             ].to_vec(),
@@ -342,51 +347,51 @@ mod tests {
     #[test]
     fn user_permissions() {
         let user_auth = User {
-            id: rand::random(),
+            id: user::ID::new_v4(),
             username: String::from("gbaranski"),
             email: String::from("root@gbaranski.com"),
             admin: false,
         };
         let user_unauth = User {
-            id: rand::random(),
+            id: user::ID::new_v4(),
             username: String::from("stanbar"),
             email: String::from("stanbar@gbaranski.com"),
             admin: false,
         };
         let structure_auth = Structure {
-            id: rand::random(),
+            id: structure::ID::new_v4(),
             name: String::from("Zukago"),
         };
         let structure_unauth = Structure {
-            id: rand::random(),
+            id: structure::ID::new_v4(),
             name: String::from("Gdansk"),
         };
         let room_auth_one = Room {
-            id: rand::random(),
+            id: room::ID::new_v4(),
             structure_id: structure_auth.id.clone(),
             name: String::from("Bedroom"),
         };
         let room_auth_two = Room {
-            id: rand::random(),
+            id: room::ID::new_v4(),
             structure_id: structure_auth.id.clone(),
             name: String::from("Garage"),
         };
         let room_unauth_one = Room {
-            id: rand::random(),
+            id: room::ID::new_v4(),
             structure_id: structure_unauth.id.clone(),
             name: String::from("Bedroom"),
         };
         let room_unauth_two = Room {
-            id: rand::random(),
+            id: room::ID::new_v4(),
             structure_id: structure_unauth.id.clone(),
             name: String::from("Garage"),
         };
         let device_auth_one = Device {
-            id: rand::random(),
+            id: device::ID::new_v4(),
             room_id: room_auth_one.id.clone(),
             password_hash: Some(String::from("some-light-password")),
-            device_type: DeviceType::Light,
-            traits: [DeviceTrait::OnOff].to_vec(),
+            device_type: device::Type::Light,
+            traits: [device::Trait::OnOff].to_vec(),
             name: String::from("Night lamp"),
             will_push_state: false,
             model: String::from("alice"),
@@ -395,11 +400,11 @@ mod tests {
             attributes: Default::default(),
         };
         let device_auth_two = Device {
-            id: rand::random(),
+            id: device::ID::new_v4(),
             room_id: room_auth_two.id.clone(),
             password_hash: Some(String::from("some-garage-password")),
-            device_type: DeviceType::Garage,
-            traits: [DeviceTrait::OpenClose].to_vec(),
+            device_type: device::Type::Garage,
+            traits: [device::Trait::OpenClose].to_vec(),
             name: String::from("garage"),
             will_push_state: false,
             model: String::from("bob"),
@@ -408,11 +413,11 @@ mod tests {
             attributes: Default::default(),
         };
         let device_unauth_one = Device {
-            id: rand::random(),
+            id: device::ID::new_v4(),
             room_id: room_unauth_one.id.clone(),
             password_hash: Some(String::from("some-light-password")),
-            device_type: DeviceType::Light,
-            traits: [DeviceTrait::OnOff].to_vec(),
+            device_type: device::Type::Light,
+            traits: [device::Trait::OnOff].to_vec(),
             name: String::from("Night lamp"),
             will_push_state: false,
             model: String::from("alice"),
@@ -421,11 +426,11 @@ mod tests {
             attributes: Default::default(),
         };
         let device_unauth_two = Device {
-            id: rand::random(),
+            id: device::ID::new_v4(),
             room_id: room_unauth_two.id.clone(),
             password_hash: Some(String::from("some-garage-password")),
-            device_type: DeviceType::Garage,
-            traits: [DeviceTrait::OpenClose].to_vec(),
+            device_type: device::Type::Garage,
+            traits: [device::Trait::OpenClose].to_vec(),
             name: String::from("garage"),
             will_push_state: false,
             model: String::from("bob"),

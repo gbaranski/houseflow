@@ -2,10 +2,6 @@ mod execute;
 mod query;
 mod sync;
 
-const TRAIT_PREFIX: &str = "action.devices.traits";
-const TYPE_PREFIX: &str = "action.devices.types";
-const COMMAND_PREFIX: &str = "action.devices.commands";
-
 use crate::extractors::UserID;
 use crate::State;
 use axum::extract::Extension;

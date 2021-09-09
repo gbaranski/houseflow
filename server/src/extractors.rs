@@ -8,11 +8,11 @@ use houseflow_types::errors::TokenError;
 use houseflow_types::token::AccessTokenPayload;
 use houseflow_types::token::RefreshTokenPayload;
 use houseflow_types::token::Token;
-
+use houseflow_types::user;
 use serde::de;
 use serde::ser;
 
-pub struct UserID(pub houseflow_types::UserID);
+pub struct UserID(pub user::ID);
 
 #[async_trait]
 impl axum::extract::FromRequest<Body> for UserID {
