@@ -782,7 +782,6 @@ dependencies = [
  "tokio",
  "tokio-tungstenite 0.14.0",
  "tracing",
- "tracing-subscriber",
  "tungstenite 0.13.0",
  "url",
 ]

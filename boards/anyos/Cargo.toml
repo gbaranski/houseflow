@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.43"
 async-trait = "0.1.51"
-houseflow-config = { path = "../../config/" }
+houseflow-config = { path = "../../config/", features = ["device", "fs"] }
 houseflow-device = { path = "../../device/" }
 houseflow-types = { path = "../../types/" }
 serde = { version = "1.0.130", features = ["derive"] }
