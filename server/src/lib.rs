@@ -127,8 +127,7 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
                     tracing::debug_span!(
                         "Request",
                         status_code = tracing::field::Empty,
-                        latency = tracing::field::Empty,
-                        user_id = tracing::field::Empty
+                        ms = tracing::field::Empty,
                     )
                 })
                 .on_response(|response: &Response<_>, latency: Duration, span: &Span| {
