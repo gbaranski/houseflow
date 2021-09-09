@@ -7,11 +7,12 @@ use axum::extract::ws::WebSocketUpgrade;
 use axum::extract::Extension;
 use axum::extract::TypedHeader;
 use axum::response::IntoResponse;
+use houseflow_types::device;
 use houseflow_types::errors::AuthError;
 use houseflow_types::errors::LighthouseError;
 use houseflow_types::errors::ServerError;
-use houseflow_types::device;
 use std::str::FromStr;
+use tracing::Instrument;
 
 pub struct DeviceCredentials(device::ID, device::Password);
 
@@ -41,11 +42,7 @@ impl axum::extract::FromRequest<Body> for DeviceCredentials {
     }
 }
 
-#[tracing::instrument(
-    name = "WebSocket",
-    skip(websocket, state, socket_address, device_password),
-    err
-)]
+#[tracing::instrument(name = "WebSocket", skip(websocket, state, device_password), err)]
 pub async fn handle(
     websocket: WebSocketUpgrade,
     Extension(state): Extension<State>,
@@ -61,21 +58,18 @@ pub async fn handle(
         return Err(LighthouseError::AlreadyConnected.into());
     }
 
-    use tracing::Instrument;
-    let span = tracing::Span::current();
-
-    Ok(websocket.on_upgrade(move |stream| {
+    Ok(websocket.on_upgrade(move |stream|  {
+        let span = tracing::span!(tracing::Level::INFO, "WebSocket", address = %socket_address, device_id = %device.id);
         async move {
             let session_internals = SessionInternals::new();
             let session = Session::new(&session_internals);
-            tracing::info!(address = %socket_address, "Device connected");
+            tracing::info!("Device connected");
             state.sessions.insert(device.id.clone(), session.clone());
             match session.run(stream, session_internals).await {
                 Ok(_) => tracing::info!("Connection closed"),
                 Err(err) => tracing::error!("Connection closed with error: {}", err),
             }
             state.sessions.remove(&device.id);
-        }
-        .instrument(span)
+        }.instrument(span)
     }))
 }
