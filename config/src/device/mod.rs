@@ -11,6 +11,7 @@ pub struct Config {
     #[serde(default)]
     pub server: Server,
     pub credentials: Credentials,
+    #[serde(default)]
     pub traits: HashMap<device::Trait, Trait>,
 }
 
