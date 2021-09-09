@@ -55,7 +55,7 @@ pub struct Device {
     Deserialize,
 )]
 #[non_exhaustive]
-#[serde(try_from = "&str", into = "&str", rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
 pub enum Trait {
     OnOff,
@@ -112,6 +112,7 @@ impl Type {
 )]
 #[non_exhaustive]
 #[serde(tag = "command", content = "params", rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
 pub enum Command {
     OnOff(commands::OnOff),
     OpenClose(commands::OpenClose),
