@@ -24,7 +24,7 @@ pub struct State {
     pub clerk: Arc<dyn clerk::Clerk>,
     pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
-    pub sessions: DashMap<device::ID, lighthouse::Session>,
+    pub sessions: Arc<DashMap<device::ID, lighthouse::Session>>,
 }
 
 use tokio::net::TcpListener;
