@@ -2,8 +2,11 @@ use crate::defaults;
 use houseflow_types::device;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::serde_as;
+use serde_with::DisplayFromStr;
 use std::collections::HashMap;
 
+#[serde_as]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
@@ -12,6 +15,7 @@ pub struct Config {
     pub server: Server,
     pub credentials: Credentials,
     #[serde(default)]
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub traits: HashMap<device::Trait, Trait>,
 }
 

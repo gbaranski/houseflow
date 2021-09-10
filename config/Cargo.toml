@@ -23,13 +23,15 @@ tracing-subscriber = "0.2.19"
 tracing = "0.1.26"
 toml = { version = "0.5.8", optional = true }
 dirs-next = "2.0.0"
+serde_with = { version = "1.10.0", optional = true }
 
 [features]
-device = []
+device = ["serde_with"]
 client = []
 server = []
 fs = ["toml"]
 
 [dev-dependencies]
 semver = "1.0.4"
+serde_with = "1.10.0"
 toml = "0.5.8"
