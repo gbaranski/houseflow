@@ -18,7 +18,7 @@ pub async fn handle(
     Json(_request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
     let access_token_payload = AccessTokenPayload {
-        sub: refresh_token.sub.clone(),
+        sub: refresh_token.sub,
         exp: Utc::now() + Duration::minutes(10),
     };
     let access_token = AccessToken::new(

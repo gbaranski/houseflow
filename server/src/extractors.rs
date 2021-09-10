@@ -22,7 +22,7 @@ impl axum::extract::FromRequest<Body> for UserID {
         req: &mut axum::extract::RequestParts<Body>,
     ) -> Result<Self, Self::Rejection> {
         let AccessToken(access_token) = AccessToken::from_request(req).await?;
-        Ok(Self(access_token.sub.clone()))
+        Ok(Self(access_token.sub))
     }
 }
 

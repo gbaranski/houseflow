@@ -91,7 +91,7 @@ pub async fn handle(
                 .clerk
                 .add(
                     verification_code.clone(),
-                    user.id.clone(),
+                    user.id,
                     Utc::now() + chrono::Duration::from_std(VERIFICATION_CODE_DURATION).unwrap(),
                 )
                 .await

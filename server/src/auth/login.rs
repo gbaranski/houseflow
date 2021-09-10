@@ -48,14 +48,14 @@ pub async fn handle(
             let refresh_token = RefreshToken::new(
                 state.config.secrets.refresh_key.as_bytes(),
                 RefreshTokenPayload {
-                    sub: user.id.clone(),
+                    sub: user.id,
                     exp: Some(Utc::now() + Duration::days(7)),
                 },
             );
             let access_token = AccessToken::new(
                 state.config.secrets.access_key.as_bytes(),
                 AccessTokenPayload {
-                    sub: user.id.clone(),
+                    sub: user.id,
                     exp: Utc::now() + Duration::minutes(10),
                 },
             );
@@ -71,7 +71,7 @@ pub async fn handle(
                 .clerk
                 .add(
                     verification_code.clone(),
-                    user.id.clone(),
+                    user.id,
                     Utc::now() + chrono::Duration::from_std(VERIFICATION_CODE_DURATION).unwrap(),
                 )
                 .await?;

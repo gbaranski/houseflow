@@ -64,7 +64,7 @@ pub async fn handle(
             let session_internals = SessionInternals::new();
             let session = Session::new(&session_internals);
             tracing::info!("Device connected");
-            state.sessions.insert(device.id.clone(), session.clone());
+            state.sessions.insert(device.id, session.clone());
             match session.run(stream, session_internals).await {
                 Ok(_) => tracing::info!("Connection closed"),
                 Err(err) => tracing::error!("Connection closed with error: {}", err),

@@ -70,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
             ("execute", matches) => {
                 let json = serde_json::json!({
                     "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, device::Command::VARIANTS), "command").context("get command")?,
-                    "params": get_value::<serde_json::Value, _, _>(matches, |s| get_input(s), "params").context("get params")?
+                    "params": get_value::<serde_json::Value, _, _>(matches, get_input, "params").context("get params")?
                 });
                 let command = serde_json::from_value(json).context("parse into command")?;
                 fulfillment::execute::Command {

@@ -24,7 +24,7 @@ impl crate::Command for Command {
 
         let query_frame = lighthouse::query::Frame {};
         let request = query::Request {
-            device_id: self.device_id.clone(),
+            device_id: self.device_id,
             frame: query_frame,
         };
         let response = ctx

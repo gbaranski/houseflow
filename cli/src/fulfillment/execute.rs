@@ -44,7 +44,7 @@ impl crate::Command for Command {
             command: self.command.clone(),
         };
         let request = execute::Request {
-            device_id: self.device_id.clone(),
+            device_id: self.device_id,
             frame: execute_frame,
         };
 

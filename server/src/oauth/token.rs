@@ -70,7 +70,7 @@ async fn on_refresh_token_grant(state: State, refresh_token: String) -> Result<R
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: refresh_token.sub.clone(),
+            sub: refresh_token.sub,
             exp: Utc::now() + expires_in,
         },
     );
@@ -101,7 +101,7 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: code.sub.clone(),
+            sub: code.sub,
             exp: Utc::now() + expires_in,
         },
     );
@@ -109,7 +109,7 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
     let refresh_token = RefreshToken::new(
         state.config.secrets.refresh_key.as_bytes(),
         RefreshTokenPayload {
-            sub: code.sub.clone(),
+            sub: code.sub,
             exp: None,
         },
     );
