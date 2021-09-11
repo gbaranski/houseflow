@@ -2,15 +2,13 @@ use std::time::Instant;
 
 use crate::CommandContext;
 use async_trait::async_trait;
+use houseflow_types::device;
 use houseflow_types::fulfillment::execute;
-use houseflow_types::lighthouse::proto;
-use houseflow_types::DeviceCommand;
-use houseflow_types::DeviceID;
-use houseflow_types::DeviceStatus;
+use houseflow_types::lighthouse;
 
 pub struct Command {
-    pub device_id: DeviceID,
-    pub command: DeviceCommand,
+    pub device_id: device::ID,
+    pub command: device::Command,
     pub params: serde_json::Map<String, serde_json::Value>,
 }
 
@@ -38,31 +36,15 @@ impl crate::Command for Command {
                     "device not found, try `houseflow fulfillment sync` to fetch new devices",
                 )
             })?;
-        let supported_commands = device
-            .traits
-            .iter()
-            .flat_map(|device_trait| device_trait.commands());
-        let is_supported = supported_commands
-            .clone()
-            .any(|command| command == self.command);
-
-        if !is_supported {
-            return Err(anyhow::Error::msg(format!(
-                "command is not supported by the device\nsupported commands: {}",
-                supported_commands
-                    .map(|command| command.to_string())
-                    .collect::<Vec<String>>()
-                    .join("\n")
-            )));
+        if !self.command.is_supported(&device.traits) {
+            return Err(anyhow::Error::msg("Command is not supported by the device"));
         }
-
-        let execute_frame = proto::execute::Frame {
+        let execute_frame = lighthouse::execute::Frame {
             id: rand::random(),
             command: self.command.clone(),
-            params: self.params,
         };
         let request = execute::Request {
-            device_id: self.device_id.clone(),
+            device_id: self.device_id,
             frame: execute_frame,
         };
 
@@ -74,13 +56,13 @@ impl crate::Command for Command {
             .await??;
 
         match response.frame.status {
-            DeviceStatus::Success => {
+            device::Status::Success => {
                 println!(
                     "✔ Device responded with success after {}ms!",
                     Instant::now().duration_since(before).as_millis()
                 )
             }
-            DeviceStatus::Error(err) => {
+            device::Status::Error(err) => {
                 println!("❌ Device responded with error! Error: {}", err)
             }
         };

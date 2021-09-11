@@ -1,16 +1,18 @@
 use crate::State;
+use google_smart_home::device::commands as ghome_commands;
+use google_smart_home::device::Command as GHomeCommand;
 use google_smart_home::execute::request;
 use google_smart_home::execute::response;
+use houseflow_types::device;
+use houseflow_types::device::commands;
 use houseflow_types::errors::InternalError;
-use houseflow_types::DeviceCommand;
-use houseflow_types::DeviceID;
-use houseflow_types::UserID;
+use houseflow_types::user;
 use std::str::FromStr;
 
 #[tracing::instrument(name = "Execute", skip(state), err)]
 pub async fn handle(
     state: State,
-    user_id: UserID,
+    user_id: user::ID,
     payload: &request::Payload,
 ) -> Result<response::Payload, InternalError> {
     let requests = payload
@@ -23,7 +25,7 @@ pub async fn handle(
     let user_id = &user_id;
 
     let responses = requests.map(|(execution, device)| async move {
-        let device_id = DeviceID::from_str(&device.id).expect("invalid device ID");
+        let device_id = device::ID::from_str(&device.id).expect("invalid device ID");
         let ids = [device.id.clone()].to_vec();
         if config.get_permission(&device_id, user_id).is_none() {
             return Ok::<_, InternalError>(response::PayloadCommand {
@@ -45,20 +47,19 @@ pub async fn handle(
             }
         };
 
-        let stripped_command = execution
-            .command
-            .strip_prefix(format!("{}.", super::COMMAND_PREFIX).as_str())
-            .unwrap();
-        let command = DeviceCommand::from_str(stripped_command).unwrap_or_else(|err| {
-            panic!(
-                "invalid command `{}`. stripped: {}. raw: {}",
-                err, stripped_command, execution.command
-            )
-        });
-        let request = houseflow_types::lighthouse::proto::execute::Frame {
+        let command = match execution.command {
+            GHomeCommand::OnOff(ghome_commands::OnOff { on }) => {
+                device::Command::OnOff(commands::OnOff { on })
+            }
+            GHomeCommand::OpenClose(ghome_commands::OpenClose { open_percent }) => {
+                device::Command::OpenClose(commands::OpenClose { open_percent })
+            }
+            _ => todo!(),
+        };
+
+        let request = houseflow_types::lighthouse::execute::Frame {
             id: rand::random(),
             command: command.clone(),
-            params: execution.params.clone(),
         };
         let response = match tokio::time::timeout(
             crate::fulfillment::EXECUTE_TIMEOUT,
@@ -80,13 +81,13 @@ pub async fn handle(
         tracing::info!(command = %command, status = %response.status, "Executed command on device");
 
         Ok(match response.status {
-            houseflow_types::DeviceStatus::Success => response::PayloadCommand {
+            device::Status::Success => response::PayloadCommand {
                 ids,
                 status: response::PayloadCommandStatus::Success,
                 states: response.state,
                 error_code: None,
             },
-            houseflow_types::DeviceStatus::Error(error) => response::PayloadCommand {
+            device::Status::Error(error) => response::PayloadCommand {
                 ids,
                 status: response::PayloadCommandStatus::Error,
                 states: response.state,

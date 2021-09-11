@@ -1,8 +1,10 @@
 mod common;
 
+use google_smart_home::device::commands;
+use google_smart_home::device::Command;
 use google_smart_home::execute::request;
+use google_smart_home::execute::response;
 use google_smart_home::execute::response::Response;
-use google_smart_home::execute::response::{self};
 use google_smart_home::Request;
 use google_smart_home::RequestInput;
 use serde_json::json;
@@ -18,40 +20,30 @@ fn execute_request() {
                     devices: [
                         request::PayloadCommandDevice {
                             id: String::from("123"),
-                            custom_data: Some(
-                                json!({
-                                    "fooValue": 74,
-                                    "barValue": true,
-                                    "bazValue": "sheepdip"
-                                })
-                                .as_object()
-                                .unwrap()
-                                .clone(),
-                            ),
+                            custom_data: json!({
+                                "fooValue": 74,
+                                "barValue": true,
+                                "bazValue": "sheepdip"
+                            })
+                            .as_object()
+                            .unwrap()
+                            .clone(),
                         },
                         request::PayloadCommandDevice {
                             id: String::from("456"),
-                            custom_data: Some(
-                                json!({
-                                    "fooValue": 36,
-                                    "barValue": false,
-                                    "bazValue": "moarsheep"
-                                })
-                                .as_object()
-                                .unwrap()
-                                .clone(),
-                            ),
+                            custom_data: json!({
+                                "fooValue": 36,
+                                "barValue": false,
+                                "bazValue": "moarsheep"
+                            })
+                            .as_object()
+                            .unwrap()
+                            .clone(),
                         },
                     ]
                     .to_vec(),
                     execution: [request::PayloadCommandExecution {
-                        command: String::from("action.devices.commands.OnOff"),
-                        params: json!({
-                            "on": true,
-                        })
-                        .as_object()
-                        .unwrap()
-                        .clone(),
+                        command: Command::OnOff(commands::OnOff { on: true }),
                     }]
                     .to_vec(),
                 }]

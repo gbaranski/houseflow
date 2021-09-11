@@ -48,14 +48,14 @@ pub async fn handle(
             let refresh_token = RefreshToken::new(
                 state.config.secrets.refresh_key.as_bytes(),
                 RefreshTokenPayload {
-                    sub: user.id.clone(),
+                    sub: user.id,
                     exp: Some(Utc::now() + Duration::days(7)),
                 },
             );
             let access_token = AccessToken::new(
                 state.config.secrets.access_key.as_bytes(),
                 AccessTokenPayload {
-                    sub: user.id.clone(),
+                    sub: user.id,
                     exp: Utc::now() + Duration::minutes(10),
                 },
             );
@@ -71,7 +71,7 @@ pub async fn handle(
                 .clerk
                 .add(
                     verification_code.clone(),
-                    user.id.clone(),
+                    user.id,
                     Utc::now() + chrono::Duration::from_std(VERIFICATION_CODE_DURATION).unwrap(),
                 )
                 .await?;
@@ -99,6 +99,7 @@ mod tests {
     use houseflow_types::errors::ServerError;
     use houseflow_types::token::AccessToken;
     use houseflow_types::token::RefreshToken;
+    use houseflow_types::user;
     use tokio::sync::mpsc;
 
     #[tokio::test]
@@ -188,7 +189,7 @@ mod tests {
             .clerk
             .add(
                 verification_code.clone(),
-                rand::random(),
+                user::ID::new_v4(),
                 Utc::now() + chrono::Duration::from_std(VERIFICATION_CODE_DURATION).unwrap(),
             )
             .await

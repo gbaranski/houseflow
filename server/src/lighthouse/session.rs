@@ -1,10 +1,10 @@
 use axum::extract::ws::Message as WebSocketMessage;
 use houseflow_types::errors::InternalError;
-use houseflow_types::lighthouse::proto::execute;
-use houseflow_types::lighthouse::proto::execute_response;
-use houseflow_types::lighthouse::proto::query;
-use houseflow_types::lighthouse::proto::state;
-use houseflow_types::lighthouse::proto::Frame;
+use houseflow_types::lighthouse::execute;
+use houseflow_types::lighthouse::execute_response;
+use houseflow_types::lighthouse::query;
+use houseflow_types::lighthouse::state;
+use houseflow_types::lighthouse::Frame;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;

@@ -1,13 +1,13 @@
-use crate::common::Credential;
 use serde::Deserialize;
 use serde::Serialize;
+use uuid::Uuid;
 
-pub type UserID = Credential<16>;
+pub type ID = Uuid;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct User {
     /// Unique ID of the user
-    pub id: UserID,
+    pub id: ID,
     /// Name of the user
     pub username: String,
     /// Email of the user

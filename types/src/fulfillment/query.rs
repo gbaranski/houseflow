@@ -1,17 +1,16 @@
+use crate::device;
 use crate::lighthouse;
-use crate::DeviceID;
 use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Request {
-    pub device_id: DeviceID,
-
+    pub device_id: device::ID,
     #[serde(flatten)]
-    pub frame: lighthouse::proto::query::Frame,
+    pub frame: lighthouse::query::Frame,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Response {
-    pub frame: lighthouse::proto::state::Frame,
+    pub frame: lighthouse::state::Frame,
 }

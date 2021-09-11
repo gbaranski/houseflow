@@ -37,6 +37,7 @@ axum_crate = { package = "axum", version = "0.2.0", optional = true }
 http = { version = "0.2.4", optional = true }
 http-body = { version = "0.4.2", optional = true }
 hyper = { version = "0.14.11", optional = true }
+uuid = { version = "0.8.2", features = ["v4", "serde"] }
 
 [features]
 axum = ["axum_crate", "http", "http-body", "hyper"]

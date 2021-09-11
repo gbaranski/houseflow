@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use houseflow_config::device::Config;
-use houseflow_config::device::Garage;
 use houseflow_config::Config as _;
-use houseflow_types::DeviceStatus;
+use houseflow_types::device;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -10,11 +9,12 @@ use serde::Serialize;
 #[serde(rename_all = "camelCase")]
 struct State {
     open_percent: u8,
+    on: bool,
 }
 
 struct Device {
     state: State,
-    config: Garage,
+    config: Config,
 }
 
 #[async_trait]
@@ -30,22 +30,36 @@ impl houseflow_device::Device for Device {
         &self.config.credentials
     }
 
-    async fn on_command(&mut self, command: DeviceCommand) -> anyhow::Result<DeviceStatus> {
-        tracing::info!("Changing `open_percent` to {0}", open_percent);
-        self.state.open_percent = open_percent;
-
-        Ok(DeviceStatus::Success)
+    async fn on_command(&mut self, command: device::Command) -> anyhow::Result<device::Status> {
+        tracing::info!(command = %command, "command received");
+        let status = match command {
+            device::Command::OnOff(params) => {
+                tracing::info!("Set `on` to {}", params.on);
+                self.state.on = params.on;
+                device::Status::Success
+            }
+            device::Command::OpenClose(params) => {
+                tracing::info!("Set `open_percent` to {}", params.open_percent);
+                self.state.open_percent = params.open_percent;
+                device::Status::Success
+            }
+            _ => device::Status::Error(device::Error::FunctionNotSupported),
+        };
+        Ok(status)
     }
 }
 
 #[tokio::main]
 async fn main() {
-    houseflow_config::init_logging(true);
+    houseflow_config::init_logging(false);
     let config = Config::read(Config::default_path()).expect("cannot load device config");
-    let device_config = config.garage.expect("garage is not configured");
+    let server_config = config.server.clone();
     let device = Device {
-        state: State { open_percent: 0 },
-        config: device_config,
+        state: State {
+            open_percent: 0,
+            on: false,
+        },
+        config,
     };
-    houseflow_device::run(config.server, device).await.unwrap();
+    houseflow_device::run(server_config, device).await.unwrap();
 }

@@ -1,82 +1,45 @@
-use crate::common::Credential;
+use crate::room;
 use semver::Version;
 use serde::Deserialize;
 use serde::Serialize;
-use strum::EnumIter;
+use std::convert::TryFrom;
+use strum::EnumString;
 use strum::EnumVariantNames;
-use strum::IntoEnumIterator;
 use strum::IntoStaticStr;
+use uuid::Uuid;
 
-pub type DeviceID = Credential<16>;
-pub type DevicePassword = String;
+pub type ID = Uuid;
+pub type Password = String;
+pub type PasswordHash = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Device {
     /// Identifier of the device
-    pub id: DeviceID,
-
+    pub id: ID,
     /// Name of room(if available)
-    pub room_id: RoomID,
-
+    pub room_id: room::ID,
     /// Hashed password for device
-    pub password_hash: Option<String>,
-
+    pub password_hash: Option<PasswordHash>,
     /// Type of the device
     #[serde(rename = "type")]
-    pub device_type: DeviceType,
-
+    pub device_type: Type,
     /// Functionatily that the device has
-    pub traits: Vec<DeviceTrait>,
-
+    pub traits: Vec<Trait>,
     /// Name of the device
     pub name: String,
-
     /// True if device will push state by itself, otherwise will use polling
     pub will_push_state: bool,
-
     /// The model or SKU identifier of the device
     pub model: String,
-
     /// Specific version number of hardware of the device
     pub hw_version: Version,
-
     /// Specific version number of software of the device
     pub sw_version: Version,
-
     /// Aligned with per-trait attributes described in each trait schema reference.
     #[serde(default)]
     pub attributes: serde_json::Map<String, serde_json::Value>,
 }
-
-pub type StructureID = Credential<16>;
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Structure {
-    pub id: StructureID,
-    pub name: String,
-}
-
-pub type RoomID = Credential<16>;
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Room {
-    pub id: RoomID,
-    pub structure_id: StructureID,
-    pub name: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Permission {
-    pub structure_id: StructureID,
-    pub user_id: crate::UserID,
-    pub is_manager: bool,
-}
-
-use strum::EnumString;
 
 /// Traits defines what functionality device supports
 #[derive(
@@ -92,27 +55,18 @@ use strum::EnumString;
     Deserialize,
 )]
 #[non_exhaustive]
-#[serde(try_from = "&str", into = "&str", rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 #[strum(serialize_all = "kebab-case")]
-pub enum DeviceTrait {
+pub enum Trait {
     OnOff,
     OpenClose,
 }
 
-impl TryFrom<&str> for DeviceTrait {
+impl TryFrom<&str> for Trait {
     type Error = strum::ParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         std::str::FromStr::from_str(value)
-    }
-}
-
-impl DeviceTrait {
-    pub fn commands(&self) -> Vec<DeviceCommand> {
-        match *self {
-            Self::OnOff => vec![DeviceCommand::OnOff],
-            Self::OpenClose => vec![DeviceCommand::OpenClose],
-        }
     }
 }
 
@@ -130,39 +84,45 @@ impl DeviceTrait {
 )]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
-pub enum DeviceType {
+pub enum Type {
     Garage,
     Gate,
     Light,
 }
 
-impl DeviceType {
-    pub fn required_traits(&self) -> Vec<DeviceTrait> {
+impl Type {
+    pub fn required_traits(&self) -> Vec<Trait> {
         match *self {
-            Self::Gate => vec![DeviceTrait::OpenClose],
-            Self::Garage => vec![DeviceTrait::OpenClose],
-            Self::Light => vec![DeviceTrait::OnOff],
+            Self::Gate => vec![Trait::OpenClose],
+            Self::Garage => vec![Trait::OpenClose],
+            Self::Light => vec![Trait::OnOff],
         }
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Eq,
-    PartialEq,
-    EnumIter,
-    strum::Display,
-    EnumString,
-    EnumVariantNames,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Debug, Clone, Eq, PartialEq, strum::Display, EnumVariantNames, Serialize, Deserialize)]
 #[non_exhaustive]
-#[serde(rename_all = "kebab-case")]
-pub enum DeviceCommand {
-    OnOff,
-    OpenClose,
+#[serde(tag = "command", content = "params", rename_all = "kebab-case")]
+#[strum(serialize_all = "kebab-case")]
+pub enum Command {
+    OnOff(commands::OnOff),
+    OpenClose(commands::OpenClose),
+}
+
+impl Command {
+    pub fn is_supported(&self, t: &[Trait]) -> bool {
+        let required_traits = match self {
+            Command::OnOff(_) => &[Trait::OnOff],
+            Command::OpenClose(_) => &[Trait::OpenClose],
+        };
+
+        for required_trait in required_traits {
+            if !t.contains(required_trait) {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 pub mod commands {
@@ -176,18 +136,16 @@ pub mod commands {
 
     #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
     pub struct OpenClose {
-        #[serde(alias = "openPercent")]
         pub open_percent: u8,
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display, EnumIter)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case")]
-pub enum DeviceError {
+pub enum Error {
     /// Actually, <device(s)> <doesn't/don't> support that functionality.
     FunctionNotSupported,
-
     /// Device does not support sent parameters
     InvalidParameters,
 }
@@ -196,64 +154,9 @@ pub enum DeviceError {
 #[serde(tag = "status", content = "description")]
 #[repr(u8)]
 #[serde(rename_all = "kebab-case")]
-pub enum DeviceStatus {
+pub enum Status {
     /// Confirm that the command succeeded.
     Success,
-
     /// Target device is unable to perform the command.
-    Error(DeviceError),
-}
-
-impl rand::distributions::Distribution<DeviceError> for rand::distributions::Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> DeviceError {
-        DeviceError::iter()
-            .nth(rng.gen_range(0..DeviceError::iter().len()))
-            .unwrap()
-    }
-}
-
-impl rand::distributions::Distribution<DeviceCommand> for rand::distributions::Standard {
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> DeviceCommand {
-        DeviceCommand::iter()
-            .nth(rng.gen_range(0..DeviceCommand::iter().len()))
-            .unwrap()
-    }
-}
-
-#[cfg(feature = "rusqlite")]
-impl rusqlite::ToSql for DeviceType {
-    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
-        Ok(rusqlite::types::ToSqlOutput::Owned(
-            rusqlite::types::Value::Text(self.to_string()),
-        ))
-    }
-}
-
-#[cfg(feature = "rusqlite")]
-impl rusqlite::ToSql for DeviceTrait {
-    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
-        Ok(rusqlite::types::ToSqlOutput::Owned(
-            rusqlite::types::Value::Text(self.to_string()),
-        ))
-    }
-}
-
-use std::convert::TryFrom;
-#[cfg(feature = "rusqlite")]
-use std::str::FromStr;
-
-#[cfg(feature = "rusqlite")]
-impl rusqlite::types::FromSql for DeviceType {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Self::from_str(value.as_str()?)
-            .map_err(|err| rusqlite::types::FromSqlError::Other(Box::new(err)))
-    }
-}
-
-#[cfg(feature = "rusqlite")]
-impl rusqlite::types::FromSql for DeviceTrait {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        Self::from_str(value.as_str()?)
-            .map_err(|err| rusqlite::types::FromSqlError::Other(Box::new(err)))
-    }
+    Error(Error),
 }

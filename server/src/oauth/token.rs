@@ -5,12 +5,12 @@ use axum::extract::Form;
 use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
+use houseflow_types::client::Client;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::AccessTokenPayload;
 use houseflow_types::token::AuthorizationCode;
 use houseflow_types::token::RefreshToken;
 use houseflow_types::token::RefreshTokenPayload;
-use houseflow_types::ClientType;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -21,10 +21,8 @@ pub enum Request {
     RefreshToken {
         /// The client ID
         client_id: String,
-
         /// The client secret
         client_secret: String,
-
         /// The refresh token previously issued to the client.
         refresh_token: String,
     },
@@ -32,10 +30,8 @@ pub enum Request {
     AuthorizationCode {
         /// The client ID
         client_id: String,
-
         /// The client secret
         client_secret: String,
-
         /// This parameter is the authorization code that the client previously received from the authorization server.
         code: String,
     },
@@ -70,11 +66,11 @@ async fn on_refresh_token_grant(state: State, refresh_token: String) -> Result<R
 
     tracing::info!(user_id = %refresh_token.sub, "Refresh token grant");
 
-    let expires_in = ClientType::GoogleHome.access_token_duration();
+    let expires_in = Client::GoogleHome.access_token_duration();
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: refresh_token.sub.clone(),
+            sub: refresh_token.sub,
             exp: Utc::now() + expires_in,
         },
     );
@@ -105,7 +101,7 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: code.sub.clone(),
+            sub: code.sub,
             exp: Utc::now() + expires_in,
         },
     );
@@ -113,7 +109,7 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
     let refresh_token = RefreshToken::new(
         state.config.secrets.refresh_key.as_bytes(),
         RefreshTokenPayload {
-            sub: code.sub.clone(),
+            sub: code.sub,
             exp: None,
         },
     );

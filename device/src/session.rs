@@ -4,10 +4,9 @@ use futures_util::Sink;
 use futures_util::SinkExt;
 use futures_util::StreamExt;
 use houseflow_config::device::Server;
-use houseflow_types::lighthouse::proto::execute_response;
-use houseflow_types::lighthouse::proto::state;
-use houseflow_types::lighthouse::proto::Frame;
-use houseflow_types::DeviceCommand;
+use houseflow_types::lighthouse::execute_response;
+use houseflow_types::lighthouse::state;
+use houseflow_types::lighthouse::Frame;
 use std::time::Duration;
 use std::time::Instant;
 use tokio::sync::mpsc;
@@ -68,10 +67,7 @@ impl Session {
                 http::header::AUTHORIZATION,
                 format!(
                     "Basic {}",
-                    base64::encode(format!(
-                        "{}:{}",
-                        credentials.id, credentials.password
-                    ))
+                    base64::encode(format!("{}:{}", credentials.id, credentials.password))
                 ),
             )
             .body(())
@@ -107,20 +103,7 @@ impl Session {
                     tracing::debug!("Parsed frame: {:?}", frame);
                     match frame {
                         Frame::Execute(frame) => {
-                            use houseflow_types::commands;
-                            let status = match frame.command {
-                                DeviceCommand::OnOff => {
-                                    let params: commands::OnOff =
-                                        serde_json::from_value(frame.params.into())?;
-                                    device.on_off(params.on).await
-                                }
-                                DeviceCommand::OpenClose => {
-                                    let params: commands::OpenClose =
-                                        serde_json::from_value(frame.params.into())?;
-                                    device.open_close(params.open_percent).await
-                                }
-                                _ => unreachable!(),
-                            }?;
+                            let status = device.on_command(frame.command).await?;
                             let state = serde_json::to_value(device.state()?)?
                                 .as_object()
                                 .unwrap()

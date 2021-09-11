@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use chrono::DateTime;
 use chrono::Utc;
 use houseflow_types::code::VerificationCode;
-use houseflow_types::UserID;
+use houseflow_types::user;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -56,7 +56,7 @@ use serde::Serialize;
 struct EntryValue {
     #[serde(with = "chrono::serde::ts_seconds")]
     expires_at: DateTime<Utc>,
-    user_id: UserID,
+    user_id: user::ID,
 }
 
 impl EntryValue {
@@ -75,7 +75,7 @@ impl TryFrom<&sled::IVec> for EntryValue {
 
 #[async_trait]
 impl super::Clerk for Clerk {
-    async fn get(&self, code: &VerificationCode) -> Result<Option<UserID>, Error> {
+    async fn get(&self, code: &VerificationCode) -> Result<Option<user::ID>, Error> {
         let result = match self.database.get(code)? {
             Some(vec) => {
                 let entry: EntryValue = bincode::deserialize(&vec)?;
@@ -100,7 +100,7 @@ impl super::Clerk for Clerk {
     async fn add(
         &self,
         code: VerificationCode,
-        user_id: UserID,
+        user_id: user::ID,
         expire_at: DateTime<Utc>,
     ) -> Result<(), Error> {
         let entry_value = EntryValue {
@@ -134,11 +134,11 @@ impl super::Clerk for Clerk {
 
 #[cfg(test)]
 mod tests {
-    use rand::random;
-
     use super::super::Clerk as _;
     use super::*;
     use chrono::Duration;
+    use houseflow_types::user;
+    use rand::random;
 
     fn get_clerk() -> Clerk {
         let path = std::env::temp_dir().join(format!("houseflow-clerk-{}", rand::random::<u32>()));
@@ -148,7 +148,7 @@ mod tests {
     #[tokio::test]
     async fn add_get_remove() {
         let clerk = get_clerk();
-        let user_id: UserID = random();
+        let user_id = user::ID::new_v4();
         let verification_code: VerificationCode = random();
         clerk
             .add(
@@ -170,7 +170,7 @@ mod tests {
     #[tokio::test]
     async fn expired() {
         let clerk = get_clerk();
-        let user_id: UserID = random();
+        let user_id = user::ID::new_v4();
         let verification_code: VerificationCode = random();
         clerk
             .add(
@@ -186,7 +186,7 @@ mod tests {
     #[tokio::test]
     async fn clean() {
         let clerk = get_clerk();
-        let user_id: UserID = random();
+        let user_id = user::ID::new_v4();
         let verification_code_expired: VerificationCode = random();
 
         clerk

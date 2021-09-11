@@ -1,11 +1,11 @@
 use crate::errors::TokenError as Error;
-use crate::UserID;
 use chrono::DateTime;
 use chrono::Utc;
 use serde::de;
 use serde::ser;
 use serde::Deserialize;
 use serde::Serialize;
+use uuid::Uuid;
 
 pub type Signature = Vec<u8>;
 
@@ -54,21 +54,21 @@ pub type AuthorizationCode = Token<AuthorizationCodePayload>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessTokenPayload {
-    pub sub: UserID,
+    pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub exp: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthorizationCodePayload {
-    pub sub: UserID,
+    pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub exp: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RefreshTokenPayload {
-    pub sub: UserID,
+    pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds_option")]
     pub exp: Option<DateTime<Utc>>,
 }
@@ -227,8 +227,6 @@ fn validate(base_payload: &BasePayload) -> Result<(), Error> {
 mod tests {
     use super::*;
     use chrono::SubsecRound;
-    use rand::random;
-
     fn get_key() -> Vec<u8> {
         use rand::RngCore;
         let mut bytes = [0; 32];
@@ -244,7 +242,7 @@ mod tests {
         fn valid() {
             let key = get_key();
             let payload = AccessTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: Utc::now().round_subsecs(0) + chrono::Duration::hours(1),
             };
             let token = AccessToken::new(&key, payload);
@@ -258,7 +256,7 @@ mod tests {
             let key = get_key();
             let expired_by = chrono::Duration::hours(1);
             let payload = AccessTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: Utc::now() - expired_by,
             };
             let token = AccessToken::new(&key, payload);
@@ -277,7 +275,7 @@ mod tests {
             let valid_key = get_key();
             let invalid_key = get_key();
             let payload = AccessTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: Utc::now() - chrono::Duration::hours(1),
             };
             let token = AccessToken::new(&valid_key, payload);
@@ -294,7 +292,7 @@ mod tests {
         fn valid_with_exp() {
             let key = get_key();
             let payload = RefreshTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
             };
             let token = RefreshToken::new(&key, payload);
@@ -307,7 +305,7 @@ mod tests {
         fn valid_without_exp() {
             let key = get_key();
             let payload = RefreshTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: None,
             };
             let token = RefreshToken::new(&key, payload);
@@ -321,7 +319,7 @@ mod tests {
             let key = get_key();
             let expired_by = chrono::Duration::hours(1);
             let payload = RefreshTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: Some(Utc::now() - expired_by),
             };
             let token = Token::new(&key, payload);
@@ -340,7 +338,7 @@ mod tests {
             let valid_key = get_key();
             let invalid_key = get_key();
             let payload = RefreshTokenPayload {
-                sub: random(),
+                sub: Uuid::new_v4(),
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
             };
             let token = RefreshToken::new(&valid_key, payload);

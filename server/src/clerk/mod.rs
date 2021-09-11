@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::DateTime;
 use chrono::Utc;
 use houseflow_types::code::VerificationCode;
-use houseflow_types::UserID;
+use houseflow_types::user;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -20,11 +20,11 @@ pub enum Error {
 
 #[async_trait]
 pub trait Clerk: Send + Sync {
-    async fn get(&self, code: &VerificationCode) -> Result<Option<UserID>, Error>;
+    async fn get(&self, code: &VerificationCode) -> Result<Option<user::ID>, Error>;
     async fn add(
         &self,
         code: VerificationCode,
-        user_id: UserID,
+        user_id: user::ID,
         expire_at: DateTime<Utc>,
     ) -> Result<(), Error>;
     async fn remove(&self, code: &VerificationCode) -> Result<bool, Error>;

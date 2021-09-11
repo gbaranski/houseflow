@@ -8,7 +8,6 @@ pub struct Request {}
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 pub struct Response {
     pub refresh_token: Option<String>,
-
     pub access_token: String,
 }
 

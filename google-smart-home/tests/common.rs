@@ -5,12 +5,13 @@ pub fn two_way_serde<
     expected: T,
 ) {
     {
-        let parsed = serde_json::from_str::<T>(json).unwrap();
+        let json = serde_json::to_string(&expected).unwrap();
+        println!("json: {}", json);
+        let parsed = serde_json::from_str::<T>(&json).unwrap();
         assert_eq!(parsed, expected);
     }
     {
-        let json = serde_json::to_string(&expected).unwrap();
-        let parsed = serde_json::from_str::<T>(&json).unwrap();
+        let parsed = serde_json::from_str::<T>(json).unwrap();
         assert_eq!(parsed, expected);
     }
 }

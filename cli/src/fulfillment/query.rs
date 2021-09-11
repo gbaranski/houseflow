@@ -1,11 +1,11 @@
 use crate::CommandContext;
 use async_trait::async_trait;
+use houseflow_types::device;
 use houseflow_types::fulfillment::query;
-use houseflow_types::lighthouse::proto;
-use houseflow_types::DeviceID;
+use houseflow_types::lighthouse;
 
 pub struct Command {
-    pub device_id: DeviceID,
+    pub device_id: device::ID,
 }
 
 #[async_trait]
@@ -22,9 +22,9 @@ impl crate::Command for Command {
                 )
             })?;
 
-        let query_frame = proto::query::Frame {};
+        let query_frame = lighthouse::query::Frame {};
         let request = query::Request {
-            device_id: self.device_id.clone(),
+            device_id: self.device_id,
             frame: query_frame,
         };
         let response = ctx
