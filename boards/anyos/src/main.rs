@@ -9,6 +9,7 @@ use serde::Serialize;
 #[serde(rename_all = "camelCase")]
 struct State {
     open_percent: u8,
+    on: bool,
 }
 
 struct Device {
@@ -29,17 +30,22 @@ impl houseflow_device::Device for Device {
         &self.config.credentials
     }
 
-    async fn on_command(&self, command: device::Command) -> anyhow::Result<device::Status> {
+    async fn on_command(&mut self, command: device::Command) -> anyhow::Result<device::Status> {
         tracing::info!(command = %command, "command received");
-        // match command {
-        //     device::Command::OnOff(commands::OnOff { on }) => todo!(),
-        //     device::Command::OpenClose(commands::OpenClose { open_percent }) => todo!(),
-        //     _ => todo!(),
-        // };
-        // tracing::info!("Changing `open_percent` to {0}", open_percent);
-        // self.state.open_percent = open_percent;
-
-        Ok(device::Status::Error(device::Error::FunctionNotSupported))
+        let status = match command {
+            device::Command::OnOff(params) => {
+                tracing::info!("Set `on` to {}", params.on);
+                self.state.on = params.on;
+                device::Status::Success
+            }
+            device::Command::OpenClose(params) => {
+                tracing::info!("Set `open_percent` to {}", params.open_percent);
+                self.state.open_percent = params.open_percent;
+                device::Status::Success
+            }
+            _ => device::Status::Error(device::Error::FunctionNotSupported),
+        };
+        Ok(status)
     }
 }
 
@@ -49,7 +55,10 @@ async fn main() {
     let config = Config::read(Config::default_path()).expect("cannot load device config");
     let server_config = config.server.clone();
     let device = Device {
-        state: State { open_percent: 0 },
+        state: State {
+            open_percent: 0,
+            on: false,
+        },
         config,
     };
     houseflow_device::run(server_config, device).await.unwrap();

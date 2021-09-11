@@ -21,5 +21,5 @@ where
     fn state(&self) -> anyhow::Result<serde_json::Map<String, serde_json::Value>>;
     fn credentials(&self) -> &Credentials;
 
-    async fn on_command(&self, command: device::Command) -> anyhow::Result<device::Status>;
+    async fn on_command(&mut self, command: device::Command) -> anyhow::Result<device::Status>;
 }

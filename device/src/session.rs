@@ -88,7 +88,7 @@ impl Session {
         &self,
         mut stream: S,
         events: EventSender,
-        device: D,
+        mut device: D,
     ) -> anyhow::Result<()>
     where
         S: futures_util::Stream<Item = Result<WebsocketMessage, tungstenite::Error>> + Unpin,
