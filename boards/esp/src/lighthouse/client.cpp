@@ -1,5 +1,5 @@
 #include "lighthouse.hpp"
-#include "optserial.hpp"
+#include "maybeserial.hpp"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
@@ -11,7 +11,7 @@
 #define DISCONNECT_TIMEOUT_COUNT 2
 
 LighthouseClient::LighthouseClient() {
-  OptSerial.println("Constructor called");
+  MaybeSerial.println("Constructor called");
   websocketClient = WebSocketsClient();
 }
 
@@ -53,7 +53,7 @@ void LighthouseClient::onExecute(
     StaticJsonDocument<responseDocCapacity> &responseDoc) {
 
   responseDoc["type"] = "execute-response";
-  OptSerial.println("[Lighthouse] received Execute frame");
+  MaybeSerial.println("[Lighthouse] received Execute frame");
   const char *command_str = requestDoc["command"];
 
   DeviceCommand command;
@@ -63,7 +63,7 @@ void LighthouseClient::onExecute(
   } else if (strcmp(command_str, "open-close") == 0) {
     command = DeviceCommand::OpenClose;
   } else {
-    OptSerial.printf("[Lighthouse] received invalid command: %s\n", command_str);
+    MaybeSerial.printf("[Lighthouse] received invalid command: %s\n", command_str);
     return;
   }
 
@@ -71,7 +71,7 @@ void LighthouseClient::onExecute(
 #ifdef ON_OFF
   case OnOff: {
     bool on = requestDoc["params"]["on"];
-    OptSerial.printf("[Lighthouse] setting `on` to `%d`\n", on);
+    MaybeSerial.printf("[Lighthouse] setting `on` to `%d`\n", on);
 
     digitalWrite(ON_OFF_PIN, on);
 
@@ -82,7 +82,7 @@ void LighthouseClient::onExecute(
 #endif
 #ifdef OPEN_CLOSE
   case OpenClose: {
-    OptSerial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
+    MaybeSerial.printf("[Lighthouse] toggling OPEN_PIN for %ums\n",
                   OPEN_CLOSE_TOGGLE_DURATION);
 
     digitalWrite(OPEN_CLOSE_PIN, LOW);
@@ -95,7 +95,7 @@ void LighthouseClient::onExecute(
   }
 #endif
   default:
-    OptSerial.printf("[Lighthouse] received unknown command: %s\n", command_str);
+    MaybeSerial.printf("[Lighthouse] received unknown command: %s\n", command_str);
     responseDoc["status"] = "error";
     responseDoc["error"] = "function-not-supported";
   }
@@ -105,7 +105,7 @@ template <size_t requestDocCapacity, size_t responseDocCapacity>
 void LighthouseClient::onQuery(
     const StaticJsonDocument<requestDocCapacity> &requestDoc,
     StaticJsonDocument<responseDocCapacity> &responseDoc) {
-  OptSerial.println("[Lighthouse] received query frame");
+  MaybeSerial.println("[Lighthouse] received query frame");
 
   responseDoc["type"] = "state";
 #ifdef ON_OFF
@@ -123,8 +123,8 @@ void LighthouseClient::onText(char *text, size_t length) {
 
   DeserializationError error = deserializeJson(requestDoc, text);
   if (error) {
-    OptSerial.print(F("deserializeJson() failed: "));
-    OptSerial.println(error.f_str());
+    MaybeSerial.print(F("deserializeJson() failed: "));
+    MaybeSerial.println(error.f_str());
     return;
   }
 
@@ -136,7 +136,7 @@ void LighthouseClient::onText(char *text, size_t length) {
   } else if (strcmp(frame_type, "query") == 0) {
     onQuery(requestDoc, responseDoc);
   } else {
-    OptSerial.printf("[Lighthouse] received unrecognized frame type: %s\n",
+    MaybeSerial.printf("[Lighthouse] received unrecognized frame type: %s\n",
                   frame_type);
     return;
   }
@@ -147,44 +147,44 @@ void LighthouseClient::onText(char *text, size_t length) {
   this->websocketClient.sendTXT(buf);
 
   auto post_process = millis();
-  OptSerial.printf("Processing message took %lu ms\n", post_process - pre_process);
+  MaybeSerial.printf("Processing message took %lu ms\n", post_process - pre_process);
 }
 
 void LighthouseClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {
   switch (type) {
   case WStype_DISCONNECTED:
-    OptSerial.printf("[Lighthouse] disconnected\n");
+    MaybeSerial.printf("[Lighthouse] disconnected\n");
     break;
   case WStype_CONNECTED:
-    OptSerial.printf("[Lighthouse] connected to %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] connected to %s\n", payload);
     break;
   case WStype_TEXT:
-    OptSerial.printf("[Lighthouse] received text: %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] received text: %s\n", payload);
     this->onText((char *)payload, length);
     break;
   case WStype_BIN:
-    OptSerial.printf("[Lighthouse] received binary\n");
+    MaybeSerial.printf("[Lighthouse] received binary\n");
     break;
   case WStype_PING:
-    OptSerial.printf("[Lighthouse] received ping\n");
+    MaybeSerial.printf("[Lighthouse] received ping\n");
     break;
   case WStype_PONG:
-    OptSerial.printf("[Lighthouse] received pong\n");
+    MaybeSerial.printf("[Lighthouse] received pong\n");
     break;
   case WStype_ERROR:
-    OptSerial.printf("[Lighthouse] received error: %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] received error: %s\n", payload);
     break;
   case WStype_FRAGMENT:
-    OptSerial.printf("[Lighthouse] received fragment: %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] received fragment: %s\n", payload);
     break;
   case WStype_FRAGMENT_BIN_START:
-    OptSerial.printf("[Lighthouse] received bin_start: %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] received bin_start: %s\n", payload);
     break;
   case WStype_FRAGMENT_TEXT_START:
-    OptSerial.printf("[Lighthouse] received text_start: %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] received text_start: %s\n", payload);
     break;
   case WStype_FRAGMENT_FIN:
-    OptSerial.printf("[Lighthouse] received fin: %s\n", payload);
+    MaybeSerial.printf("[Lighthouse] received fin: %s\n", payload);
     break;
   }
 }

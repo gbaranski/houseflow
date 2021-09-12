@@ -5,7 +5,7 @@
 
 #ifdef SERIAL_DISABLED
 
-#define OptSerial NullSerial
+#define MaybeSerial NullSerial
 static class {
 public:
   void begin(...) {}
@@ -16,7 +16,7 @@ public:
 
 #else
 
-#define OptSerial Serial
+#define MaybeSerial Serial
 
 #endif
 
