@@ -4,5 +4,4 @@
 .pio
 include/config.hpp
 .vscode
-platformio.ini
 .env*
