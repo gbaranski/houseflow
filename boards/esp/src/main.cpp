@@ -71,6 +71,6 @@ void setup() {
 }
 
 void loop() {
-  lighthouseClient.loop();
   ArduinoOTA.handle();
+  lighthouseClient.loop();
 }
