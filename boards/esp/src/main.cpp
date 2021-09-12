@@ -9,6 +9,7 @@
 static LighthouseClient lighthouseClient;
 
 void setupWifi() {
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   int i = 0;
