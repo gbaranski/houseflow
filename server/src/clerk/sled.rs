@@ -138,7 +138,7 @@ impl super::Clerk for Clerk {
             .iter()
             .filter(|kv| {
                 let (_, value) = kv.as_ref().unwrap();
-                let value: EntryValue = bincode::deserialize(&value).unwrap();
+                let value: EntryValue = bincode::deserialize(value).unwrap();
                 *user_id == value.user_id
             })
             .count();
