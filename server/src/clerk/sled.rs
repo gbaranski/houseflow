@@ -91,12 +91,6 @@ impl super::Clerk for Clerk {
         Ok(result)
     }
 
-    async fn remove(&self, code: &VerificationCode) -> Result<bool, Error> {
-        let did_exist = self.database.remove(code)?.is_some();
-        self.database.flush_async().await?;
-        Ok(did_exist)
-    }
-
     async fn add(
         &self,
         code: VerificationCode,
@@ -109,7 +103,14 @@ impl super::Clerk for Clerk {
         };
         let serialized = bincode::serialize(&entry_value)?;
         self.database.insert(code, serialized)?;
+        self.database.flush_async().await?;
         Ok(())
+    }
+
+    async fn remove(&self, code: &VerificationCode) -> Result<bool, Error> {
+        let did_exist = self.database.remove(code)?.is_some();
+        self.database.flush_async().await?;
+        Ok(did_exist)
     }
 
     async fn clean(&self) -> Result<(), Error> {
@@ -129,6 +130,19 @@ impl super::Clerk for Clerk {
             });
         self.database.flush_async().await?;
         Ok(())
+    }
+
+    fn count_verification_codes_for_user(&self, user_id: &user::ID) -> Result<usize, Error> {
+        let n = self
+            .database
+            .iter()
+            .filter(|kv| {
+                let (_, value) = kv.as_ref().unwrap();
+                let value: EntryValue = bincode::deserialize(&value).unwrap();
+                *user_id == value.user_id
+            })
+            .count();
+        Ok(n)
     }
 }
 

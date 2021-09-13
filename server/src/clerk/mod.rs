@@ -10,10 +10,8 @@ use houseflow_types::user;
 pub enum Error {
     #[error("sled error: {0}")]
     Sled(#[from] ::sled::Error),
-
     #[error("invalid data {0}")]
     InvalidData(String),
-
     #[error("bincode: {0}")]
     Bincode(#[from] bincode::Error),
 }
@@ -29,6 +27,7 @@ pub trait Clerk: Send + Sync {
     ) -> Result<(), Error>;
     async fn remove(&self, code: &VerificationCode) -> Result<bool, Error>;
     async fn clean(&self) -> Result<(), Error>;
+    fn count_verification_codes_for_user(&self, user_id: &user::ID) -> Result<usize, Error>;
 }
 
 impl From<Error> for houseflow_types::errors::ServerError {
