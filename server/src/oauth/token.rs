@@ -1,4 +1,3 @@
-use super::Error;
 use crate::State;
 use axum::extract::Extension;
 use axum::extract::Form;
@@ -6,6 +5,8 @@ use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
 use houseflow_types::client::Client;
+use houseflow_types::errors::OAuthError;
+use houseflow_types::errors::ServerError;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::AccessTokenPayload;
 use houseflow_types::token::AuthorizationCode;
@@ -58,11 +59,17 @@ pub enum TokenType {
     Bearer,
 }
 
-async fn on_refresh_token_grant(state: State, refresh_token: String) -> Result<Response, Error> {
-    let refresh_token =
-        RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &refresh_token).map_err(
-            |err| Error::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string()))),
-        )?;
+async fn on_refresh_token_grant(
+    state: State,
+    refresh_token: String,
+) -> Result<Response, ServerError> {
+    let refresh_token = RefreshToken::decode(
+        state.config.secrets.refresh_key.as_bytes(),
+        &refresh_token,
+    )
+    .map_err(|err| {
+        OAuthError::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string())))
+    })?;
 
     tracing::info!(user_id = %refresh_token.sub, "Refresh token grant");
 
@@ -83,13 +90,13 @@ async fn on_refresh_token_grant(state: State, refresh_token: String) -> Result<R
     })
 }
 
-async fn on_authorization_code_grant(state: State, code: String) -> Result<Response, Error> {
+async fn on_authorization_code_grant(state: State, code: String) -> Result<Response, ServerError> {
     let code = AuthorizationCode::decode(
         state.config.secrets.authorization_code_key.as_bytes(),
         &code,
     )
     .map_err(|err| {
-        Error::InvalidGrant(Some(format!(
+        OAuthError::InvalidGrant(Some(format!(
             "invalid authorization code: {}",
             err.to_string()
         )))
@@ -126,12 +133,12 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
 pub async fn handle(
     Extension(state): Extension<State>,
     Form(request): Form<Request>,
-) -> Result<Json<Response>, Error> {
-    let verify_client = |client_id, client_secret| {
+) -> Result<Json<Response>, ServerError> {
+    let verify_client = |client_id, client_secret| -> Result<(), ServerError> {
         if client_id != state.config.google.as_ref().unwrap().client_id
             || client_secret != state.config.google.as_ref().unwrap().client_secret
         {
-            Err(Error::InvalidClient(None))
+            Err(OAuthError::InvalidClient(None).into())
         } else {
             Ok(())
         }

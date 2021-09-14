@@ -15,6 +15,7 @@ use houseflow_types::token::RefreshTokenPayload;
 use tracing::Level;
 
 const VERIFICATION_CODE_DURATION: std::time::Duration = std::time::Duration::from_secs(60 * 30);
+const VERIFICATION_CODE_LIMIT: usize = 3;
 
 #[tracing::instrument(
     name = "Login",
@@ -66,6 +67,9 @@ pub async fn handle(
             }
         }
         None => {
+            if state.clerk.count_verification_codes_for_user(&user.id)? > VERIFICATION_CODE_LIMIT {
+                return Err(ServerError::TooManyRequests);
+            }
             let verification_code: VerificationCode = rand::random();
             state
                 .clerk
