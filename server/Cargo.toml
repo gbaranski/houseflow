@@ -21,16 +21,10 @@ houseflow-types = { path="../types", version="0.1.1", features=[
     "lighthouse",
 ] }
 houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
-
 google-smart-home = { path = "../google-smart-home" }
-
 tokio = { version="1.5", features=["sync", "time", "macros", "rt-multi-thread"] }
-
 validator = "0.13.0"
 thiserror = "1.0"
-
-itertools = "0.10"
-
 bytes = "1.0"
 serde = "1.0"
 serde_json = "1.0"
@@ -43,7 +37,6 @@ url = { version = "2.2.2", features = ["serde"] }
 chrono = "0.4.19"
 sled = "0.34.6"
 tracing = "0.1.26"
-
 axum = { version = "0.2.0", features = ["ws", "headers"] }
 http = "0.2.4"
 http-body = "0.4.2"
