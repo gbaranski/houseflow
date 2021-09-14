@@ -48,7 +48,7 @@ tower-http = { version = "0.1.1", features = ["trace"] }
 tokio-rustls = "0.22.0"
 dashmap = "4.0.2"
 lazy_static = "1.4.0"
-lettre = "0.10.0-rc.3"
+lettre = { version = "0.10.0-rc.3", default-features = false, features = ["smtp-transport", "builder", "rustls-tls"] }
 base64 = "0.13.0"
 bincode = "1.3.3"
 
