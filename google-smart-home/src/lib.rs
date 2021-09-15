@@ -1,3 +1,6 @@
+//! Types for [Google Smart Home API](https://developers.google.com/assistant/smarthome)
+
+
 pub mod device;
 pub mod execute;
 pub mod query;
