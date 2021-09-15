@@ -24,7 +24,6 @@ pub mod commands {
     #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct OpenClose {
-        #[serde(alias = "openPercent")]
         pub open_percent: u8,
     }
 }
