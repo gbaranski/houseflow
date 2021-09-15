@@ -1,7 +1,14 @@
 [package]
 name = "google-smart-home"
 version = "0.1.0"
+description = "Types for Google Smart Home"
+homepage = "https://github.com/gbaranski/houseflow/tree/master/google-smart-home"
+repository = "https://github.com/gbaranski/houseflow/tree/master/google-smart-home"
+authors = ["Grzegorz Baranski <root@gbaranski.com>"]
+keywords = ["google", "api", "smart-home", "houseflow"]
+license = "GPL-3.0-or-later"
 edition = "2018"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
