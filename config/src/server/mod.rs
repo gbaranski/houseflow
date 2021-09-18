@@ -344,7 +344,10 @@ mod tests {
         };
         std::env::set_var("REFRESH_KEY", &expected.secrets.refresh_key);
         std::env::set_var("ACCESS_KEY", &expected.secrets.access_key);
-        std::env::set_var("AUTHORIZATION_CODE_KEY", &expected.secrets.authorization_code_key);
+        std::env::set_var(
+            "AUTHORIZATION_CODE_KEY",
+            &expected.secrets.authorization_code_key,
+        );
         std::env::set_var("EMAIL_USERNAME", expected.email.url.username());
         std::env::set_var("EMAIL_PASSWORD", expected.email.url.password().unwrap());
         println!(

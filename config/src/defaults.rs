@@ -1,6 +1,6 @@
-use url::Url;
 use std::net::IpAddr;
 use std::net::Ipv4Addr;
+use url::Url;
 
 pub fn server_websocket_url() -> Url {
     let url = format!("ws://localhost:{}", server_port());
@@ -11,7 +11,6 @@ pub fn server_http_url() -> Url {
     let url = format!("http://localhost:{}", server_port());
     Url::parse(&url).unwrap()
 }
-
 
 pub const fn server_listen_address() -> IpAddr {
     IpAddr::V4(Ipv4Addr::LOCALHOST)
