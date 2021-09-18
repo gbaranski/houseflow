@@ -12,6 +12,7 @@ use device::Device;
 use permission::Permission;
 use room::Room;
 use structure::Structure;
+use url::Url;
 use user::User;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,8 +52,11 @@ pub struct Config {
 #[serde(rename_all = "kebab-case")]
 pub struct Network {
     /// Server address
-    #[serde(default = "defaults::server_address")]
+    #[serde(default = "defaults::server_listen_address")]
     pub address: std::net::IpAddr,
+    /// Server port
+    #[serde(default = "defaults::server_port")]
+    pub port: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -69,6 +73,12 @@ pub struct Secrets {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Tls {
+    /// Server address
+    #[serde(default = "defaults::server_listen_address")]
+    pub address: std::net::IpAddr,
+    /// Server port
+    #[serde(default = "defaults::server_port_tls")]
+    pub port: u16,
     /// Path to the TLS certificate
     pub certificate: std::path::PathBuf,
     /// Path to the TLS private key
@@ -76,21 +86,12 @@ pub struct Tls {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "protocol", rename_all = "kebab-case")]
-pub enum Email {
-    Smtp(Smtp),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Smtp {
-    #[serde(with = "crate::serde_hostname")]
-    pub hostname: url::Host,
-    #[serde(default = "defaults::smtp_port")]
-    pub port: u16,
+pub struct Email {
+    /// URL of the email server
+    pub url: Url,
+    /// E-Mail from which to send emails
     pub from: String,
-    pub username: String,
-    pub password: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -173,7 +174,8 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
 impl Default for Network {
     fn default() -> Self {
         Self {
-            address: defaults::server_address(),
+            address: defaults::server_listen_address(),
+            port: defaults::server_port(),
         }
     }
 }
@@ -252,11 +254,12 @@ mod tests {
     use super::Google;
     use super::Network;
     use super::Secrets;
-    use super::Smtp;
     use super::Tls;
+    use crate::Config as _;
 
     use semver::Version;
     use std::str::FromStr;
+    use url::Url;
 
     use houseflow_types::device;
     use houseflow_types::permission;
@@ -275,6 +278,7 @@ mod tests {
         let expected = Config {
             network: Network {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
+                port: 1234,
             },
             secrets: Secrets {
                 refresh_key: String::from("some-refresh-key"),
@@ -284,14 +288,13 @@ mod tests {
             tls: Some(Tls {
                 certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
                 private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
+                address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 2, 3, 4)),
+                port: 4321,
             }),
-            email: Email::Smtp(Smtp {
-                hostname: url::Host::Domain(String::from("email.houseflow.gbaranski.com")),
-                port: 666,
+            email: Email {
+                url: Url::from_str("smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666").unwrap(),
                 from: String::from("houseflow@gbaranski.com"),
-                username: String::from("some-username"),
-                password: String::from("some-password"),
-            }),
+            },
             google: Some(Google {
                 client_id: String::from("google-client-id"),
                 client_secret: String::from("google-client-secret"),
@@ -339,7 +342,16 @@ mod tests {
                 }
             ].to_vec(),
         };
-        let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
+        std::env::set_var("REFRESH_KEY", &expected.secrets.refresh_key);
+        std::env::set_var("ACCESS_KEY", &expected.secrets.access_key);
+        std::env::set_var("AUTHORIZATION_CODE_KEY", &expected.secrets.authorization_code_key);
+        std::env::set_var("EMAIL_USERNAME", expected.email.url.username());
+        std::env::set_var("EMAIL_PASSWORD", expected.email.url.password().unwrap());
+        println!(
+            "--------------------\n\n Serialized: \n{}\n\n--------------------",
+            toml::to_string(&expected).unwrap()
+        );
+        let config = Config::parse(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
         crate::Config::validate(&config).unwrap();
     }
@@ -442,13 +454,10 @@ mod tests {
             network: Default::default(),
             secrets: rand::random(),
             tls: Default::default(),
-            email: Email::Smtp(Smtp {
-                hostname: url::Host::Ipv4(std::net::Ipv4Addr::UNSPECIFIED),
-                port: 0,
+            email: Email {
+                url: Url::parse("smtp://example.com").unwrap(),
                 from: String::new(),
-                username: String::new(),
-                password: String::new(),
-            }),
+            },
             google: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),
             rooms: [

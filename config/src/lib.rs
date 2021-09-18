@@ -28,14 +28,42 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         Ok(())
     }
 
+    fn parse(s: &str) -> Result<Self, Error> {
+        use regex::Regex;
+
+        let re = Regex::new(r"\$[A-Z_]+").unwrap();
+        let s = re.replace_all(s, |caps: &regex::Captures| {
+            let (pos, name) = {
+            let name_match = caps.get(0).unwrap();
+            let pos = name_match.start();
+            let name = name_match.as_str().strip_prefix('$').unwrap();
+            (pos, name)
+            };
+            match std::env::var(name) {
+                Ok(env) => env,
+                Err(std::env::VarError::NotPresent) => panic!(
+                    "environment variable named {} from configuration file at {} is not defined",
+                    name,
+                    pos
+                ),
+                Err(std::env::VarError::NotUnicode(_)) => panic!(
+                    "environment variable named {} from configuration file at {} is not valid unicode",
+                    name,
+                    pos
+                ),
+            }
+        });
+        let config: Self = toml::from_str(&s)?;
+        config.validate().map_err(Error::Validation)?;
+
+        Ok(config)
+    }
+
     #[cfg(feature = "fs")]
     fn read(path: impl AsRef<std::path::Path>) -> Result<Self, Error> {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)?;
-        let config: Self = toml::from_str(&content)?;
-        config.validate().map_err(Error::Validation)?;
-
-        Ok(config)
+        Self::parse(&content)
     }
 
     fn validate(&self) -> Result<(), String> {
@@ -50,18 +78,14 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     }
 }
 
-#[cfg(feature = "fs")]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("io: {0}")]
     IO(#[from] std::io::Error),
-
     #[error("toml deserialize: {0}")]
     TomlDeserialize(#[from] toml::de::Error),
-
     #[error("toml serialize: {0}")]
     TomlSerialize(#[from] toml::ser::Error),
-
     #[error("validation: {0}")]
     Validation(String),
 }

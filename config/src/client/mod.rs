@@ -1,6 +1,7 @@
 use crate::defaults;
 use serde::Deserialize;
 use serde::Serialize;
+use url::Url;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -12,19 +13,14 @@ pub struct Config {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Server {
-    /// Host of the server
-    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
-    pub hostname: url::Host,
-
-    #[serde(default)]
-    pub use_tls: bool,
+    #[serde(default = "defaults::server_websocket_url")]
+    pub url: Url,
 }
 
 impl Default for Server {
     fn default() -> Self {
         Self {
-            hostname: defaults::server_hostname(),
-            use_tls: Default::default(),
+            url: defaults::server_http_url(),
         }
     }
 }
@@ -39,16 +35,21 @@ impl crate::Config for Config {
 mod tests {
     use super::Config;
     use super::Server;
+    use crate::Config as _;
+    use url::Url;
 
     #[test]
     fn test_example() {
         let expected = Config {
             server: Server {
-                hostname: url::Host::Domain(String::from("example.com")),
-                use_tls: true,
+                url: Url::parse("https://example.com:1234/hello/world").unwrap(),
             },
         };
-        let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
+        std::env::set_var(
+            "SERVER_PORT",
+            expected.server.url.port().unwrap().to_string(),
+        );
+        let config = Config::parse(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
     }
 }

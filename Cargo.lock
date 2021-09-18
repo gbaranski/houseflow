@@ -750,6 +750,7 @@ dependencies = [
  "hex",
  "houseflow-types",
  "rand",
+ "regex",
  "semver",
  "serde",
  "serde_with",

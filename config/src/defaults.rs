@@ -1,9 +1,20 @@
-pub fn server_hostname() -> url::Host {
-    url::Host::Domain(String::from("localhost"))
+use url::Url;
+use std::net::IpAddr;
+use std::net::Ipv4Addr;
+
+pub fn server_websocket_url() -> Url {
+    let url = format!("ws://localhost:{}", server_port());
+    Url::parse(&url).unwrap()
 }
 
-pub fn server_address() -> std::net::IpAddr {
-    std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST)
+pub fn server_http_url() -> Url {
+    let url = format!("http://localhost:{}", server_port());
+    Url::parse(&url).unwrap()
+}
+
+
+pub const fn server_listen_address() -> IpAddr {
+    IpAddr::V4(Ipv4Addr::LOCALHOST)
 }
 
 pub const fn server_port() -> u16 {

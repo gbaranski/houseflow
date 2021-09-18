@@ -1,14 +1,11 @@
-# Houseflow device configuration
-
 device-type = "garage"
 
 [server]
-hostname = "example.com"   # Hostname of the server, e.g `localhost` 
-use-tls = true         # Whether to use TLS.
+url = "wss://$SERVER_HOST:1234/hello/world"
 
 [credentials]
-id = "546c8a4b71f04c78bd338069ad3b174b"
-password = "garage-password"
+id = "$DEVICE_ID"
+password = "$DEVICE_PASSWORD"
 
 [traits.open-close]
 command = "echo 1"

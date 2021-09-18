@@ -5,6 +5,7 @@ use serde::Serialize;
 use serde_with::serde_as;
 use serde_with::DisplayFromStr;
 use std::collections::HashMap;
+use url::Url;
 
 #[serde_as]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,10 +23,8 @@ pub struct Config {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Server {
-    #[serde(default = "defaults::server_hostname", with = "crate::serde_hostname")]
-    pub hostname: url::Host,
-    #[serde(default)]
-    pub use_tls: bool,
+    #[serde(default = "defaults::server_websocket_url")]
+    pub url: Url,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -52,8 +51,7 @@ impl crate::Config for Config {
 impl Default for Server {
     fn default() -> Self {
         Self {
-            hostname: defaults::server_hostname(),
-            use_tls: false,
+            url: defaults::server_websocket_url(),
         }
     }
 }
@@ -64,9 +62,11 @@ mod tests {
     use super::Credentials;
     use super::Server;
     use super::Trait;
+    use crate::Config as _;
     use houseflow_types::device;
     use std::collections::HashMap;
     use std::str::FromStr;
+    use url::Url;
 
     #[test]
     fn test_example() {
@@ -80,8 +80,7 @@ mod tests {
         let expected = Config {
             device_type: device::Type::Garage,
             server: Server {
-                hostname: url::Host::Domain(String::from("example.com")),
-                use_tls: true,
+                url: Url::parse("wss://example.com:1234/hello/world").unwrap(),
             },
             credentials: Credentials {
                 id: device::ID::from_str("546c8a4b71f04c78bd338069ad3b174b").unwrap(),
@@ -89,11 +88,15 @@ mod tests {
             },
             traits,
         };
+
+        std::env::set_var("DEVICE_ID", expected.credentials.id.to_string());
+        std::env::set_var("DEVICE_PASSWORD", &expected.credentials.password);
+        std::env::set_var("SERVER_HOST", expected.server.url.host_str().unwrap());
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()
         );
-        let config = toml::from_str::<Config>(include_str!("example.toml")).unwrap();
+        let config = Config::parse(include_str!("example.toml")).unwrap();
         assert_eq!(config, expected);
     }
 }
