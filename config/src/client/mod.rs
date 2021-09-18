@@ -36,7 +36,7 @@ impl crate::Config for Config {
             let port = match scheme {
                 "http" => defaults::server_port(),
                 "https" => defaults::server_port_tls(),
-                _ => return Err(format!("unexpected scheme: {}", scheme))
+                _ => return Err(format!("unexpected scheme: {}", scheme)),
             };
             self.server.url.set_port(Some(port)).unwrap();
         }

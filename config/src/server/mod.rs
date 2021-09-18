@@ -165,7 +165,7 @@ impl crate::Config for Config {
             self.email.url.set_port(Some(port)).unwrap();
         }
         if self.email.url.password().is_none() {
-            return Err("missing email URL password".to_string())
+            return Err("missing email URL password".to_string());
         }
         Ok(())
     }

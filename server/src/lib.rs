@@ -152,9 +152,9 @@ mod test_utils {
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
     use houseflow_types::code::VerificationCode;
-    use url::Url;
     use std::sync::Arc;
     use tokio::sync::mpsc;
+    use url::Url;
 
     use houseflow_types::device;
     use houseflow_types::permission;

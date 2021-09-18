@@ -53,7 +53,7 @@ impl crate::Config for Config {
             let port = match scheme {
                 "ws" => defaults::server_port(),
                 "wss" => defaults::server_port_tls(),
-                _ => return Err(format!("unexpected scheme: {}", scheme))
+                _ => return Err(format!("unexpected scheme: {}", scheme)),
             };
             self.server.url.set_port(Some(port)).unwrap();
         }

@@ -34,16 +34,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     tracing::debug!("Config: {:#?}", config);
     let mailer = match config.email.url.scheme() {
-        "smtp" => {
-            mailer::smtp::Mailer::new(mailer::smtp::Config {
-                host: config.email.url.host_str().unwrap().to_string(),
-                port: config.email.url.port().unwrap(),
-                username: config.email.url.username().to_string(),
-                password: config.email.url.password().unwrap().to_string(),
-                from: config.email.from.clone(),
-            })
-        }
-        scheme => panic!("unexpected email URL scheme: {}", scheme)
+        "smtp" => mailer::smtp::Mailer::new(mailer::smtp::Config {
+            host: config.email.url.host_str().unwrap().to_string(),
+            port: config.email.url.port().unwrap(),
+            username: config.email.url.username().to_string(),
+            password: config.email.url.password().unwrap().to_string(),
+            from: config.email.from.clone(),
+        }),
+        scheme => panic!("unexpected email URL scheme: {}", scheme),
     };
     let clerk = Clerk::new(defaults::clerk_path())?;
     let state = houseflow_server::State {
