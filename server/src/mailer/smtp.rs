@@ -1,10 +1,17 @@
 use super::Error;
 use async_trait::async_trait;
-use houseflow_config::server::Smtp as Config;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::Message;
 use lettre::SmtpTransport;
 use lettre::Transport;
+
+pub struct Config {
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub password: String,
+    pub from: String,
+}
 
 pub struct Mailer {
     transport: SmtpTransport,
@@ -12,9 +19,10 @@ pub struct Mailer {
 }
 
 impl Mailer {
-    pub async fn new(config: Config) -> Self {
-        let transport = lettre::SmtpTransport::relay(config.hostname.to_string().as_str())
+    pub fn new(config: Config) -> Self {
+        let transport = lettre::SmtpTransport::relay(config.host.as_str())
             .unwrap()
+            .port(config.port)
             .credentials(Credentials::new(
                 config.username.clone(),
                 config.password.clone(),

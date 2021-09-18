@@ -12,7 +12,6 @@ use std::time::Instant;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 use tungstenite::Message as WebsocketMessage;
-use url::Url;
 
 const PING_TIMEOUT: Duration = Duration::from_secs(10);
 const PING_INTERVAL: Duration = Duration::from_secs(5);
@@ -43,22 +42,7 @@ impl Session {
     }
 
     pub async fn run(self, device: impl Device) -> Result<(), anyhow::Error> {
-        use houseflow_config::defaults;
-
-        let url = format!(
-            "ws{}://{}:{}/lighthouse/ws",
-            if self.server_config.use_tls { "s" } else { "" },
-            self.server_config.hostname,
-            if self.server_config.use_tls {
-                defaults::server_port_tls()
-            } else {
-                defaults::server_port()
-            },
-        );
-        tracing::info!("`{}` will be used the as Server URL", url);
-        let url = Url::parse(&url).unwrap();
-
-        tracing::debug!("will use {} as websocket endpoint", url);
+        let url = self.server_config.url.join("/lighthouse/ws").unwrap();
 
         let credentials = device.credentials();
         let http_request = http::Request::builder()

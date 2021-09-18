@@ -33,29 +33,16 @@ pub struct HouseflowAPI {
     fulfillment_url: Url,
 }
 
+use houseflow_config::client::Config;
+
 impl HouseflowAPI {
-    pub fn new(config: &houseflow_config::client::Config) -> Self {
-        use houseflow_config::defaults;
-        let base_url = Url::parse(&format!(
-            "http{}://{}:{}",
-            if config.server.use_tls { "s" } else { "" },
-            config.server.hostname,
-            if config.server.use_tls {
-                defaults::server_port_tls()
-            } else {
-                defaults::server_port()
-            }
-        ))
-        .unwrap();
-
-        tracing::debug!("{} will be used as base server URL", base_url);
-
+    pub fn new(config: &Config) -> Self {
         Self {
             #[cfg(feature = "auth")]
-            auth_url: base_url.join("auth/").unwrap(),
+            auth_url: config.server.url.join("auth/").unwrap(),
 
             #[cfg(feature = "fulfillment")]
-            fulfillment_url: base_url.join("fulfillment/internal/").unwrap(),
+            fulfillment_url: config.server.url.join("fulfillment/internal/").unwrap(),
         }
     }
 }

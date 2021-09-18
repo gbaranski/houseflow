@@ -46,6 +46,19 @@ impl crate::Config for Config {
     const DEFAULT_TOML: &'static str = include_str!("default.toml");
 
     const DEFAULT_FILE: &'static str = "device.toml";
+
+    fn preprocess(&mut self) -> Result<(), String> {
+        if self.server.url.port().is_none() {
+            let scheme = self.server.url.scheme();
+            let port = match scheme {
+                "ws" => defaults::server_port(),
+                "wss" => defaults::server_port_tls(),
+                _ => return Err(format!("unexpected scheme: {}", scheme))
+            };
+            self.server.url.set_port(Some(port)).unwrap();
+        }
+        Ok(())
+    }
 }
 
 impl Default for Server {

@@ -13,6 +13,14 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     const DEFAULT_TOML: &'static str;
     const DEFAULT_FILE: &'static str;
 
+    fn preprocess(&mut self) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn validate(&self) -> Result<(), String> {
+        Ok(())
+    }
+
     #[cfg(feature = "fs")]
     fn write_defaults(path: impl AsRef<std::path::Path>) -> Result<(), Error> {
         use std::io::Write;
@@ -64,10 +72,6 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
         let path = path.as_ref();
         let content = std::fs::read_to_string(path)?;
         Self::parse(&content)
-    }
-
-    fn validate(&self) -> Result<(), String> {
-        Ok(())
     }
 
     fn default_path() -> std::path::PathBuf {

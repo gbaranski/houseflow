@@ -151,8 +151,8 @@ mod test_utils {
     use houseflow_config::server::Email;
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
-    use houseflow_config::server::Smtp;
     use houseflow_types::code::VerificationCode;
+    use url::Url;
     use std::sync::Arc;
     use tokio::sync::mpsc;
 
@@ -178,7 +178,8 @@ mod test_utils {
     ) -> extract::Extension<State> {
         let config = Config {
             network: Network {
-                address: defaults::server_address(),
+                address: defaults::server_listen_address(),
+                port: defaults::server_port(),
             },
             secrets: Secrets {
                 refresh_key: String::from("refresh-key"),
@@ -186,13 +187,10 @@ mod test_utils {
                 authorization_code_key: String::from("authorization-code-key"),
             },
             tls: None,
-            email: Email::Smtp(Smtp {
-                hostname: url::Host::Ipv4(std::net::Ipv4Addr::UNSPECIFIED),
-                port: 0,
+            email: Email {
                 from: String::new(),
-                username: String::new(),
-                password: String::new(),
-            }),
+                url: Url::parse("smtp://localhost").unwrap(),
+            },
             google: Some(houseflow_config::server::Google {
                 client_id: String::from("client-id"),
                 client_secret: String::from("client-secret"),

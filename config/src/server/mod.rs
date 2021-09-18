@@ -154,6 +154,21 @@ impl crate::Config for Config {
 
         Ok(())
     }
+
+    fn preprocess(&mut self) -> Result<(), String> {
+        if self.email.url.port().is_none() {
+            let scheme = self.email.url.scheme();
+            let port = match scheme {
+                "smtp" => defaults::smtp_port(),
+                _ => return Err(format!("unexpected email URL scheme: {}", scheme)),
+            };
+            self.email.url.set_port(Some(port)).unwrap();
+        }
+        if self.email.url.password().is_none() {
+            return Err("missing email URL password".to_string())
+        }
+        Ok(())
+    }
 }
 
 impl rand::distributions::Distribution<Secrets> for rand::distributions::Standard {
