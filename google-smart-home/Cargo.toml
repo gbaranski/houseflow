@@ -1,6 +1,6 @@
 [package]
 name = "google-smart-home"
-version = "0.1.0"
+version = "0.1.1"
 description = "Types for Google Smart Home"
 homepage = "https://github.com/gbaranski/houseflow/tree/master/google-smart-home"
 repository = "https://github.com/gbaranski/houseflow/tree/master/google-smart-home"
