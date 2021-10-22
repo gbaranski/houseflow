@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mailer = match config.email.url.scheme() {
         "smtp" => mailer::smtp::Mailer::new(mailer::smtp::Config {
             host: config.email.url.host_str().unwrap().to_string(),
-            port: config.email.url.port().unwrap(),
+            port: config.email.url.port().unwrap_or(25),
             username: config.email.url.username().to_string(),
             password: config.email.url.password().unwrap().to_string(),
             from: config.email.from.clone(),
