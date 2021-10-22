@@ -4,6 +4,7 @@ services:
     build:
       dockerfile: ./Dockerfile
       context: .
+    restart: unless-stopped
     ports:
       - 6001:6001
       - 6002:6002 # TLS 
