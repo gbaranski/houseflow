@@ -5,7 +5,6 @@ use houseflow_config::Error as ConfigError;
 use houseflow_server::clerk::sled::Clerk;
 use houseflow_server::mailer;
 use std::sync::Arc;
-use tokio_rustls::rustls;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -36,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mailer = match config.email.url.scheme() {
         "smtp" => mailer::smtp::Mailer::new(mailer::smtp::Config {
             host: config.email.url.host_str().unwrap().to_string(),
-            port: config.email.url.port().unwrap_or(25),
+            port: config.email.url.port().unwrap_or(465),
             username: config.email.url.username().to_string(),
             password: config.email.url.password().unwrap().to_string(),
             from: config.email.from.clone(),
@@ -58,31 +57,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if let Some(tls) = &state.config.tls {
-        let mut rustls_config = rustls::ServerConfig::new(rustls::NoClientAuth::new());
-        let certificate = &mut std::io::BufReader::new(
-            std::fs::File::open(&tls.certificate).expect("read certificate fail"),
-        );
-        let private_key = &mut std::io::BufReader::new(
-            std::fs::File::open(&tls.private_key).expect("read private key fail"),
-        );
-        let certificate_chain = rustls::internal::pemfile::certs(certificate).unwrap();
-        let keys = rustls::internal::pemfile::pkcs8_private_keys(private_key).unwrap();
-        rustls_config
-            .set_single_cert(certificate_chain, keys.into_iter().next().unwrap())
-            .unwrap();
-
+        let fut = axum_server::bind(address).serve(houseflow_server::app(state.clone()));
         tracing::info!("Starting server at {}", address);
-        let run_fut = houseflow_server::run(&address, state.clone());
+
+        let tls_fut = axum_server::bind_rustls(tls_address)
+            .certificate_file(&tls.certificate)
+            .private_key_file(&tls.private_key)
+            .serve(houseflow_server::app(state));
         tracing::info!("Starting TLS server at {}", tls_address);
-        let run_tls_fut = houseflow_server::run_tls(&tls_address, state, Arc::new(rustls_config));
 
         tokio::select! {
-            val = run_fut => val?,
-            val = run_tls_fut => val?
+            val = fut => val?,
+            val = tls_fut => val?
         };
     } else {
+        let fut = axum_server::bind(address).serve(houseflow_server::app(state));
         tracing::info!("Starting server at {}", address);
-        houseflow_server::run(&address, state).await?;
+        fut.await?;
     }
 
     Ok(())
