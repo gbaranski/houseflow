@@ -39,13 +39,13 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     fn parse(s: &str) -> Result<Self, Error> {
         use regex::Regex;
 
-        let re = Regex::new(r"\$[A-Z_]+").unwrap();
+        let re = Regex::new(r"\$\{([a-zA-Z_]+)\}").unwrap();
         let s = re.replace_all(s, |caps: &regex::Captures| {
             let (pos, name) = {
-            let name_match = caps.get(0).unwrap();
-            let pos = name_match.start();
-            let name = name_match.as_str().strip_prefix('$').unwrap();
-            (pos, name)
+                let name_match = caps.get(1).unwrap();
+                let pos = name_match.start();
+                let name = name_match.as_str();
+                (pos, name)
             };
             match std::env::var(name) {
                 Ok(env) => env,

@@ -3,9 +3,9 @@ address = "0.0.0.0"
 port = 1234
 
 [secrets]
-refresh-key = "$REFRESH_KEY"
-access-key = "$ACCESS_KEY"
-authorization-code-key = "$AUTHORIZATION_CODE_KEY"
+refresh-key = "${REFRESH_KEY}"
+access-key = "${ACCESS_KEY}"
+authorization-code-key = "${AUTHORIZATION_CODE_KEY}"
 
 [tls]
 certificate = "/etc/certificate"
@@ -14,7 +14,7 @@ address = "1.2.3.4"
 port = 4321
 
 [email]
-url = "smtp://$EMAIL_USERNAME:$EMAIL_PASSWORD@email.houseflow.gbaranski.com:666"
+url = "smtp://${EMAIL_USERNAME}:${EMAIL_PASSWORD}@email.houseflow.gbaranski.com:666"
 from = "houseflow@gbaranski.com"
 
 [google]
