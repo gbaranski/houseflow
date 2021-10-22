@@ -1,2 +1,2 @@
 [server]
-url = "https://example.com:$SERVER_PORT/hello/world"
+url = "https://example.com:${SERVER_PORT}/hello/world"
