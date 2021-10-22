@@ -1,14 +1,12 @@
 use crate::CommandContext;
 use anyhow::Context;
-use async_trait::async_trait;
 
 pub struct Command {}
 
-#[async_trait]
 impl crate::Command for Command {
-    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
-        let access_token = ctx.access_token().await?;
-        let response = ctx.houseflow_api().await?.sync(&access_token).await??;
+    fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
+        let access_token = ctx.access_token()?;
+        let response = ctx.client()?.sync(&access_token)??;
 
         println!("Synced {} devices", response.devices.len());
         response.devices.iter().for_each(|device| {
@@ -20,7 +18,6 @@ impl crate::Command for Command {
         });
         ctx.devices
             .save(&response.devices)
-            .await
             .with_context(|| "save devices")?;
         tracing::debug!("saved devices to {:#?}", ctx.devices.path);
 

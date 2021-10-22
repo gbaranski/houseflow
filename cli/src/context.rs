@@ -1,5 +1,5 @@
 use anyhow::Context;
-use houseflow_api::HouseflowAPI;
+use houseflow_api::Client;
 use houseflow_config::client::Config;
 use houseflow_config::Config as _;
 use houseflow_types::device::Device;
@@ -19,24 +19,24 @@ pub struct Tokens {
 pub struct CommandContext {
     config_path: std::path::PathBuf,
     config: Option<Config>,
-    houseflow_api: Option<HouseflowAPI>,
+    client: Option<Client>,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Device>>,
 }
 
 impl CommandContext {
-    pub async fn new(config_path: std::path::PathBuf) -> anyhow::Result<Self> {
+    pub fn new(config_path: std::path::PathBuf) -> anyhow::Result<Self> {
         let ctx = CommandContext {
             config_path,
             config: None,
-            houseflow_api: None,
+            client: None,
             tokens: Szafka::new(houseflow_config::defaults::data_home().join("tokens")),
             devices: Szafka::new(houseflow_config::defaults::data_home().join("devices")),
         };
         Ok::<_, anyhow::Error>(ctx)
     }
 
-    pub async fn config(&mut self) -> anyhow::Result<&Config> {
+    pub fn config(&mut self) -> anyhow::Result<&Config> {
         match self.config {
             Some(ref config) => Ok(config),
             None => {
@@ -52,20 +52,20 @@ impl CommandContext {
         }
     }
 
-    pub async fn houseflow_api(&mut self) -> anyhow::Result<&HouseflowAPI> {
-        match self.houseflow_api {
+    pub fn client(&mut self) -> anyhow::Result<&Client> {
+        match self.client {
             Some(ref api) => Ok(api),
             None => {
-                let config = self.config().await?;
-                let api = HouseflowAPI::new(config);
-                self.houseflow_api = Some(api);
-                Ok(self.houseflow_api.as_ref().unwrap())
+                let config = self.config()?;
+                let client = Client::new(config.clone());
+                self.client = Some(client);
+                Ok(self.client.as_ref().unwrap())
             }
         }
     }
 
-    pub async fn access_token(&mut self) -> anyhow::Result<AccessToken> {
-        let tokens = match self.tokens.get().await {
+    pub fn access_token(&mut self) -> anyhow::Result<AccessToken> {
+        let tokens = match self.tokens.get() {
             Ok(tokens) => tokens,
             Err(szafka::Error::OpenFileError(err)) => match err.kind() {
                 std::io::ErrorKind::NotFound => {
@@ -89,26 +89,22 @@ impl CommandContext {
             Err(err) => {
                 tracing::debug!("token verify returned error: {}", err);
                 tracing::debug!("cached access token is expired, fetching new one");
-                let raw_fetched_access_token = self
-                    .houseflow_api()
-                    .await?
-                    .refresh_token(&refresh_token)
-                    .await??
-                    .access_token;
+                let raw_fetched_access_token =
+                    self.client()?.refresh_token(&refresh_token)??.access_token;
                 let fetched_access_token = AccessToken::decode_unsafe(&raw_fetched_access_token)?;
                 let tokens = Tokens {
                     refresh: tokens.refresh,
                     access: raw_fetched_access_token,
                 };
 
-                self.tokens.save(&tokens).await?;
+                self.tokens.save(&tokens)?;
                 Ok(fetched_access_token)
             }
         }
     }
 
-    pub async fn refresh_token(&mut self) -> anyhow::Result<RefreshToken> {
-        let tokens = self.tokens.get().await.with_context(|| "get tokens")?;
+    pub fn refresh_token(&mut self) -> anyhow::Result<RefreshToken> {
+        let tokens = self.tokens.get().with_context(|| "get tokens")?;
         RefreshToken::decode_unsafe(&tokens.refresh)
             .with_context(|| "you may need to log in again using `houseflow auth login`")
     }

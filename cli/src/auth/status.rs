@@ -1,5 +1,4 @@
 use crate::CommandContext;
-use async_trait::async_trait;
 use chrono::DateTime;
 use chrono::Utc;
 use houseflow_types::token::AccessToken;
@@ -9,13 +8,12 @@ pub struct Command {
     pub show_token: bool,
 }
 
-#[async_trait]
 impl crate::Command for Command {
-    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
-        let access_token = ctx.access_token().await?;
+    fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
+        let access_token = ctx.access_token()?;
 
-        let response = ctx.houseflow_api().await?.whoami(&access_token).await??;
-        let tokens = ctx.tokens.get().await?;
+        let response = ctx.client()?.whoami(&access_token)??;
+        let tokens = ctx.tokens.get()?;
         let (access_token, refresh_token) = (
             AccessToken::decode_unsafe_novalidate(&tokens.access)?,
             RefreshToken::decode_unsafe_novalidate(&tokens.refresh)?,

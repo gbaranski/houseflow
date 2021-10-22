@@ -1,6 +1,5 @@
 use crate::CommandContext;
 use crate::Tokens;
-use async_trait::async_trait;
 use houseflow_types::code::VerificationCode;
 
 pub struct Command {
@@ -8,9 +7,8 @@ pub struct Command {
     pub code: Option<VerificationCode>,
 }
 
-#[async_trait]
 impl crate::Command for Command {
-    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
+    fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
         use houseflow_types::auth::login;
 
         match self.code {
@@ -19,7 +17,7 @@ impl crate::Command for Command {
                     email: self.email,
                     verification_code: Some(code),
                 };
-                let response = ctx.houseflow_api().await?.login(&request).await??;
+                let response = ctx.client()?.login(&request)??;
                 match response {
                     login::Response::LoggedIn {
                         access_token,
@@ -30,7 +28,7 @@ impl crate::Command for Command {
                             refresh: refresh_token,
                             access: access_token,
                         };
-                        ctx.tokens.save(&tokens).await?;
+                        ctx.tokens.save(&tokens)?;
                         tracing::debug!("Saved refresh token at {:#?}", ctx.tokens.path);
                     }
                     _ => panic!("Expected Response::LoggedIn"),
@@ -41,7 +39,7 @@ impl crate::Command for Command {
                     email: self.email,
                     verification_code: None,
                 };
-                let response = ctx.houseflow_api().await?.login(&request).await??;
+                let response = ctx.client()?.login(&request)??;
                 match response {
                     login::Response::VerificationCodeSent => {
                         tracing::info!(

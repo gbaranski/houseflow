@@ -11,18 +11,16 @@ edition = "2018"
 resolver = "2"
 
 [dependencies]
-houseflow-api = { version="0.1.1", path="../api", features=["auth", "fulfillment"] }
+houseflow-api = { version="0.1.1", path="../api", features=["auth", "fulfillment", "sync"] }
 houseflow-config = { version="0.1.1", path="../config", features=["client", "fs"] }
 houseflow-types = { version="0.1.1", path="../types", features=["token"] }
 
-szafka = { version="0.2.0" }
-tokio = { version="1.6.1", features=["sync", "rt-multi-thread", "macros", "fs"] }
+szafka = { version="0.3.0" }
 dialoguer = { version="0.8.0" }
 url = { version="2.2.2", features=["serde"] }
 strum = { version="0.21.0", features=["derive"] }
 anyhow = "1.0.40"
 xdg = "2.2.0"
-async-trait = "0.1.50"
 serde = "1.0"
 clap = "2.33.3"
 futures = "0.3.15"
