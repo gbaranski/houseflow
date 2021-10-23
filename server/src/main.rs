@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             host: config.email.url.host_str().unwrap().to_string(),
             port: config.email.url.port().unwrap_or(465),
             username: config.email.url.username().to_string(),
-            password: config.email.url.password().unwrap().to_string(),
+            password: urlencoding::decode(&config.email.url.password().unwrap().to_string()).unwrap().to_string(),
             from: config.email.from.clone(),
         }),
         scheme => panic!("unexpected email URL scheme: {}", scheme),
