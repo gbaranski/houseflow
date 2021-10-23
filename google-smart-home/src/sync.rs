@@ -32,8 +32,10 @@ pub mod response {
         pub agent_user_id: String,
         /// An error code for the entire transaction for auth failures and developer system unavailability.
         /// For individual device errors, use the errorCode within the device object.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub error_code: Option<String>,
         /// Detailed error which will never be presented to users but may be logged or used during development.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub debug_string: Option<String>,
         /// Reflects the unique (and immutable) user ID on the agent's platform.
         pub devices: Vec<PayloadDevice>,
@@ -62,16 +64,19 @@ pub mod response {
         #[serde(default)]
         pub notification_supported_by_agent: bool,
         /// Provides the current room of the device in the user's home to simplify setup.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub room_hint: Option<String>,
         /// Contains fields describing the device for use in one-off logic if needed (e.g. 'broken firmware version X of light Y requires adjusting color', or 'security flaw requires notifying all users of firmware Z').
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub device_info: Option<PayloadDeviceInfo>,
         /// Aligned with per-trait attributes described in each trait schema reference.
         #[serde(default)]
         pub attributes: serde_json::Map<String, serde_json::Value>,
         /// Object defined by the developer which will be attached to future QUERY and EXECUTE requests, maximum of 512 bytes per device. Use this object to store additional information about the device your cloud service may need, such as the global region of the device. Data in this object has a few constraints: No sensitive information, including but not limited to Personally Identifiable Information.
-        #[serde(default)]
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub custom_data: Option<serde_json::Map<String, serde_json::Value>>,
         /// List of alternate IDs used to identify a cloud synced device for local execution.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub other_device_ids: Option<Vec<PayloadOtherDeviceID>>,
     }
 
@@ -79,11 +84,13 @@ pub mod response {
     #[serde(rename_all = "camelCase")]
     pub struct PayloadDeviceName {
         /// List of names provided by the developer rather than the user, often manufacturer names, SKUs, etc.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub default_names: Option<Vec<String>>,
         /// Primary name of the device, generally provided by the user.
         /// This is also the name the Assistant will prefer to describe the device in responses.
         pub name: String,
         /// Additional names provided by the user for the device.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub nicknames: Option<Vec<String>>,
     }
 
@@ -92,12 +99,16 @@ pub mod response {
     pub struct PayloadDeviceInfo {
         /// Especially useful when the developer is a hub for other devices.
         /// Google may provide a standard list of manufacturers here so that e.g. TP-Link and Smartthings both describe 'osram' the same way.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub manufacturer: Option<String>,
         /// The model or SKU identifier of the particular device.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub model: Option<String>,
         /// Specific version number attached to the hardware if available.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub hw_version: Option<String>,
         /// Specific version number attached to the software/firmware, if available.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub sw_version: Option<String>,
     }
 
@@ -105,6 +116,7 @@ pub mod response {
     #[serde(rename_all = "camelCase")]
     pub struct PayloadOtherDeviceID {
         /// The agent's ID. Generally, this is the project ID in the Actions console.
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub agent_id: Option<String>,
         /// Device ID defined by the agent. The device ID must be unique.
         pub device_id: String,
