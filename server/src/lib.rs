@@ -7,7 +7,6 @@ mod lighthouse;
 pub mod mailer;
 mod oauth;
 
-use axum::AddExtensionLayer;
 use axum::Router;
 use dashmap::DashMap;
 use houseflow_config::server::Config;
@@ -25,56 +24,6 @@ pub struct State {
     pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
     pub sessions: Arc<DashMap<device::ID, lighthouse::Session>>,
-}
-
-use tokio::net::TcpListener;
-
-pub async fn run_tls(
-    address: &std::net::SocketAddr,
-    state: State,
-    tls_config: Arc<tokio_rustls::rustls::ServerConfig>,
-) -> Result<(), tokio::io::Error> {
-    use tokio_rustls::TlsAcceptor;
-
-    let acceptor = TlsAcceptor::from(tls_config);
-    let listener = TcpListener::bind(address).await?;
-    let app = app(state);
-    loop {
-        let (stream, address) = listener.accept().await?;
-        let acceptor = acceptor.clone();
-        let app = app.clone().layer(AddExtensionLayer::new(address));
-        tokio::spawn(async move {
-            if let Ok(stream) = acceptor.accept(stream).await {
-                match hyper::server::conn::Http::new()
-                    .serve_connection(stream, app)
-                    .with_upgrades()
-                    .await
-                {
-                    Ok(_) => (),
-                    Err(err) => tracing::warn!("accept connection error: {}", err),
-                };
-            }
-        });
-    }
-}
-
-pub async fn run(address: &std::net::SocketAddr, state: State) -> Result<(), tokio::io::Error> {
-    let listener = TcpListener::bind(address).await?;
-    let app = app(state);
-    loop {
-        let (stream, address) = listener.accept().await?;
-        let app = app.clone().layer(AddExtensionLayer::new(address));
-        tokio::spawn(async move {
-            match hyper::server::conn::Http::new()
-                .serve_connection(stream, app)
-                .with_upgrades()
-                .await
-            {
-                Ok(_) => (),
-                Err(err) => tracing::warn!("accept connection error: {}", err),
-            };
-        });
-    }
 }
 
 pub fn app(state: State) -> Router<axum::routing::BoxRoute> {

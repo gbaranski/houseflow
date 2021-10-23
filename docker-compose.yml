@@ -1,0 +1,16 @@
+version: "3"
+services:
+  server:
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    restart: unless-stopped
+    ports:
+      - 6001:6001
+      - 6002:6002 # TLS 
+    environment:
+      - HOUSEFLOW_SERVER_CONFIG=/houseflow-server.toml
+    volumes:
+      - ./deployment/server-config.toml:/houseflow-server.toml
+      - /etc/letsencrypt/live/${DOMAIN}/fullchain.pem:/tls/certificate.pem
+      - /etc/letsencrypt/live/${DOMAIN}/privkey.pem:/tls/private-key.pem
