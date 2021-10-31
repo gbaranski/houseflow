@@ -8,10 +8,15 @@ use axum::response::Html;
 use houseflow_types::errors::InternalError;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::ServerError;
+use url::Url;
 
 #[derive(Template)]
 #[template(path = "authorize.html")]
-struct AuthorizeTemplate {}
+struct AuthorizeTemplate {
+    client_id: String,
+    redirect_uri: Url,
+    state: String,
+}
 
 #[tracing::instrument(name = "Authorization", skip(state), err)]
 pub async fn handle(
@@ -29,6 +34,10 @@ pub async fn handle(
     verify_redirect_uri(&request.redirect_uri, &google_config.project_id)
         .map_err(|err| OAuthError::InvalidRequest(Some(err.to_string())))?;
 
-    let template = AuthorizeTemplate {};
+    let template = AuthorizeTemplate {
+        client_id: request.client_id.to_owned(),
+        redirect_uri: request.redirect_uri.to_owned(),
+        state: request.state.to_owned(),
+    };
     Ok(Html(template.render()?))
 }
