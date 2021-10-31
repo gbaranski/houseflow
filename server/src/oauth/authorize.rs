@@ -16,6 +16,7 @@ struct AuthorizeTemplate {
     client_id: String,
     redirect_uri: Url,
     state: String,
+    google_login_client_id: Option<String>,
 }
 
 #[tracing::instrument(name = "Authorization", skip(state), err)]
@@ -38,6 +39,11 @@ pub async fn handle(
         client_id: request.client_id.to_owned(),
         redirect_uri: request.redirect_uri.to_owned(),
         state: request.state.to_owned(),
+        google_login_client_id: state
+            .config
+            .google_login
+            .as_ref()
+            .map(|c| c.client_id.to_owned()),
     };
     Ok(Html(template.render()?))
 }

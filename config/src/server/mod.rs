@@ -31,6 +31,9 @@ pub struct Config {
     /// Configuration of the Google 3rd party client
     #[serde(default)]
     pub google: Option<Google>,
+    /// Configuration for Google login
+    #[serde(default)]
+    pub google_login: Option<GoogleLogin>,
     /// Structures
     #[serde(default)]
     pub structures: Vec<Structure>,
@@ -103,6 +106,13 @@ pub struct Google {
     pub client_secret: String,
     /// Google Project ID
     pub project_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct GoogleLogin {
+    /// OAuth2 Client ID identifying your service to Google.
+    pub client_id: String,
 }
 
 impl crate::Config for Config {
@@ -267,6 +277,7 @@ mod tests {
     use super::Config;
     use super::Email;
     use super::Google;
+    use super::GoogleLogin;
     use super::Network;
     use super::Secrets;
     use super::Tls;
@@ -314,6 +325,9 @@ mod tests {
                 client_id: String::from("google-client-id"),
                 client_secret: String::from("google-client-secret"),
                 project_id: String::from("google-project-id"),
+            }),
+            google_login: Some(GoogleLogin {
+                client_id: String::from("google-login-client-id"),
             }),
             structures: [Structure {
                 id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
@@ -477,6 +491,7 @@ mod tests {
                 from: String::new(),
             },
             google: Default::default(),
+            google_login: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),
             rooms: [
                 room_auth_one,

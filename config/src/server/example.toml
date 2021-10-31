@@ -22,6 +22,9 @@ client-id = "google-client-id"
 client-secret = "google-client-secret"
 project-id = "google-project-id"
 
+[google-login]
+client-id = "google-login-client-id"
+
 [[structures]]
 id = "bd7feab5033940e296ed7fcdc700ba65"
 name = "Zukago"

@@ -1,4 +1,5 @@
 pub mod authorize;
+pub mod google_login;
 pub mod login;
 pub mod token;
 

@@ -21,6 +21,10 @@
 # client-secret = # Actions Console -> Account Linking -> Client Secret. 
 # project-id =    # Project ID set during creation.
 
+# Google login configuration. If not defined, Google login will be disabled.
+# [google-login]
+# client-id =     # Client ID assigned by Google.
+
 
 # Define a new structure.
 # [[structures]]

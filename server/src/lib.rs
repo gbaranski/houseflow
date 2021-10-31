@@ -51,6 +51,7 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
             Router::new()
                 .route("/authorize", get(oauth::authorize::handle))
                 .route("/login", post(oauth::login::handle))
+                .route("/google_login", post(oauth::google_login::handle))
                 .route("/token", post(oauth::token::handle)),
         )
         .nest(
@@ -99,6 +100,7 @@ mod test_utils {
     use houseflow_config::defaults;
     use houseflow_config::server::Config;
     use houseflow_config::server::Email;
+    use houseflow_config::server::GoogleLogin;
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
     use houseflow_types::code::VerificationCode;
@@ -145,6 +147,9 @@ mod test_utils {
                 client_id: String::from("client-id"),
                 client_secret: String::from("client-secret"),
                 project_id: String::from("project-id"),
+            }),
+            google_login: Some(GoogleLogin {
+                client_id: String::from("google-login-client-id"),
             }),
             structures,
             rooms,
