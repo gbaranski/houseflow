@@ -1,7 +1,9 @@
 <html>
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OAuth login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 </head>
+<body>
 <div>
     <h1>Login</h1>
     <form action="#" method="POST" id="form">
@@ -18,9 +20,9 @@
     form.action = window.location.origin + "/oauth/login" + window.location.search;
     function showVerificationCodeInput() {
         const verificationCodeInput = form.querySelector("input[name = verification-code]");
-	verificationCodeInput.hidden = false;
-	verificationCodeInput.disabled = false;
+        verificationCodeInput.hidden = false;
+        verificationCodeInput.disabled = false;
     }
 </script>
-
+</body>
 </html>
