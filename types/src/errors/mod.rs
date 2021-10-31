@@ -83,3 +83,17 @@ impl From<validator::ValidationErrors> for ServerError {
         Self::ValidationError(errors.to_string())
     }
 }
+
+#[cfg(feature = "askama")]
+impl From<askama::Error> for InternalError {
+    fn from(e: askama::Error) -> Self {
+        Self::Template(e.to_string())
+    }
+}
+
+#[cfg(feature = "askama")]
+impl From<askama::Error> for ServerError {
+    fn from(e: askama::Error) -> Self {
+        Self::InternalError(e.into())
+    }
+}

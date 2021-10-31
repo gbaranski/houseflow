@@ -1,6 +1,7 @@
 use super::verify_redirect_uri;
 use super::AuthorizationRequestQuery;
 use crate::State;
+use askama::Template;
 use axum::extract::Extension;
 use axum::extract::Query;
 use axum::response::Html;
@@ -8,13 +9,15 @@ use houseflow_types::errors::InternalError;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::ServerError;
 
-const AUTHORIZE_PAGE: &str = include_str!("authorize.html");
+#[derive(Template)]
+#[template(path = "authorize.html")]
+struct AuthorizeTemplate {}
 
 #[tracing::instrument(name = "Authorization", skip(state), err)]
 pub async fn handle(
     Extension(state): Extension<State>,
     Query(request): Query<AuthorizationRequestQuery>,
-) -> Result<Html<&'static str>, ServerError> {
+) -> Result<Html<String>, ServerError> {
     let google_config = state
         .config
         .google
@@ -26,5 +29,6 @@ pub async fn handle(
     verify_redirect_uri(&request.redirect_uri, &google_config.project_id)
         .map_err(|err| OAuthError::InvalidRequest(Some(err.to_string())))?;
 
-    Ok(Html(AUTHORIZE_PAGE))
+    let template = AuthorizeTemplate {};
+    Ok(Html(template.render()?))
 }
