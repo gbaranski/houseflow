@@ -40,7 +40,6 @@ pub mod serde_token_expiration {
         where
             E: de::Error,
         {
-            use std::convert::TryInto;
             let v: i64 = v.try_into().map_err(|err| {
                 serde::de::Error::custom(&format!("u64 to i64 cast fail: {}", err))
             })?;

@@ -7,7 +7,7 @@ repository = "https://github.com/gbaranski/houseflow/tree/master/google-smart-ho
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
 keywords = ["google", "api", "smart-home", "houseflow"]
 license = "GPL-3.0-or-later"
-edition = "2018"
+edition = "2021"
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

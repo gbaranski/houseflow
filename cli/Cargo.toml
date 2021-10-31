@@ -7,7 +7,7 @@ homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"
 keywords = ["iot", "home-automation", "smart-home", "cli"]
 license = "GPL-3.0-or-later"
-edition = "2018"
+edition = "2021"
 resolver = "2"
 
 [dependencies]

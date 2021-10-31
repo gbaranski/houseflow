@@ -7,7 +7,7 @@ repository = "https://github.com/gbaranski/houseflow"
 keywords = ["iot", "home-automation", "smart-home"]
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
 license = "GPL-3.0-or-later"
-edition = "2018"
+edition = "2021"
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

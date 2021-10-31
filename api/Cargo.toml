@@ -6,7 +6,7 @@ homepage = "https://github.com/gbaranski/houseflow"
 repository = "https://github.com/gbaranski/houseflow"
 authors = ["Grzegorz Baranski <root@gbaranski.com>"]
 license = "GPL-3.0-or-later"
-edition = "2018"
+edition = "2021"
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
