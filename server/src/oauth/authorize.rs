@@ -3,6 +3,7 @@ use super::AuthorizationRequestQuery;
 use crate::State;
 use axum::extract::Extension;
 use axum::extract::Query;
+use houseflow_types::errors::InternalError;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::ServerError;
 
@@ -13,7 +14,11 @@ pub async fn handle(
     Extension(state): Extension<State>,
     Query(request): Query<AuthorizationRequestQuery>,
 ) -> Result<http::Response<axum::body::Body>, ServerError> {
-    let google_config = state.config.google.as_ref().unwrap();
+    let google_config = state
+        .config
+        .google
+        .as_ref()
+        .ok_or_else(|| InternalError::Other("Google Home API not configured".to_string()))?;
     if *request.client_id != *google_config.client_id {
         return Err(OAuthError::InvalidClient(Some(String::from("invalid client id"))).into());
     }
