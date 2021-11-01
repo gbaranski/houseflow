@@ -5,6 +5,7 @@ use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
 use houseflow_types::client::Client;
+use houseflow_types::errors::InternalError;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::ServerError;
 use houseflow_types::token::AccessToken;
@@ -135,9 +136,11 @@ pub async fn handle(
     Form(request): Form<Request>,
 ) -> Result<Json<Response>, ServerError> {
     let verify_client = |client_id, client_secret| -> Result<(), ServerError> {
-        if client_id != state.config.google.as_ref().unwrap().client_id
-            || client_secret != state.config.google.as_ref().unwrap().client_secret
-        {
+        let google_config =
+            state.config.google.as_ref().ok_or_else(|| {
+                InternalError::Other("Google Home API not configured".to_string())
+            })?;
+        if client_id != google_config.client_id || client_secret != google_config.client_secret {
             Err(OAuthError::InvalidClient(None).into())
         } else {
             Ok(())

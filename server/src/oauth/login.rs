@@ -9,6 +9,7 @@ use chrono::Utc;
 use houseflow_types::auth::login::Request;
 use houseflow_types::code::VerificationCode;
 use houseflow_types::errors::AuthError;
+use houseflow_types::errors::InternalError;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::ServerError;
 use houseflow_types::token::AuthorizationCode;
@@ -32,7 +33,11 @@ pub async fn handle(
 ) -> Result<http::Response<axum::body::Body>, ServerError> {
     validator::Validate::validate(&request)?;
 
-    let google_config = state.config.google.as_ref().unwrap();
+    let google_config = state
+        .config
+        .google
+        .as_ref()
+        .ok_or_else(|| InternalError::Other("Google Home API not configured".to_string()))?;
     if *query.client_id != *google_config.client_id {
         return Err(OAuthError::InvalidClient(Some(String::from("invalid client id"))).into());
     }
