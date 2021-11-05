@@ -26,8 +26,9 @@ serde_with = { version = "1.10.0", optional = true }
 regex = "1.5.4"
 
 [features]
-device = ["serde_with"]
 client = []
+device = ["serde_with"]
+hub = []
 server = []
 fs = []
 

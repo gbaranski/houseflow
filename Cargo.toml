@@ -4,6 +4,7 @@ members = [
   "cli",
   "config",
   "device",
+  "hub",
   "boards/anyos",
   "google-smart-home",
   "server",
