@@ -17,8 +17,8 @@ houseflow-config  = { path = "../config", version = "0.1.1", features = [ "devic
 tokio             = { version = "1.5", features = [ "macros", "sync", "time" ] }
 bytes             = "1.0"
 futures-util      = "0.3"
-tokio-tungstenite = { version = "0.14", features = ["rustls-tls"] }
-tungstenite       = { version = "0.13", features = ["rustls-tls"] }
+tokio-tungstenite = { version = "0.15", features = ["rustls"] }
+tungstenite       = { version = "0.16", features = ["rustls"] }
 http              = "0.2.4"
 anyhow            = "1.0"
 url               = "2.2"
