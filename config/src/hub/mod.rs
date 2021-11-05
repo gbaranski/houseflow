@@ -2,10 +2,8 @@ use crate::defaults;
 use houseflow_types::device;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_with::serde_as;
 use url::Url;
 
-#[serde_as]
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
