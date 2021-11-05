@@ -10,7 +10,6 @@ anyhow = "1.0.43"
 async-trait = "0.1.51"
 futures = "0.3.17"
 houseflow-config = { path = "../config/", features = ["hub", "fs"] }
-houseflow-device = { path = "../device/" }
 houseflow-types = { path = "../types/" }
 mijia = "0.5.0"
 serde = { version = "1.0.130", features = ["derive"] }

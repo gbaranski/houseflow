@@ -841,7 +841,6 @@ dependencies = [
  "async-trait",
  "futures",
  "houseflow-config",
- "houseflow-device",
  "houseflow-types",
  "mijia",
  "serde",
