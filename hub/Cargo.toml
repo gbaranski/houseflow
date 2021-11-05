@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.43"
 async-trait = "0.1.51"
+chrono = "0.4.19"
 futures = "0.3.17"
 houseflow-config = { path = "../config/", features = ["hub", "fs"] }
 houseflow-types = { path = "../types/" }
