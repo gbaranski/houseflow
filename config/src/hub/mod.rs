@@ -31,6 +31,7 @@ pub struct Device {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
+#[non_exhaustive]
 pub enum DeviceType {
     XiaomiMijia {
         // TODO: Make it strongly typed
