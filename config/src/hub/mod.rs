@@ -9,7 +9,6 @@ use url::Url;
 pub struct Config {
     #[serde(default)]
     pub server: Server,
-    pub credentials: Credentials,
     pub devices: Vec<Device>,
 }
 
@@ -22,15 +21,9 @@ pub struct Server {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Credentials {}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
 pub struct Device {
     /// ID of the device
     pub id: device::ID,
-    /// Password of the device in plain-text
-    pub password: device::Password,
     /// Type of the device, possibly with additional parameters
     #[serde(flatten)]
     pub r#type: DeviceType,
@@ -41,8 +34,9 @@ pub struct Device {
 pub enum DeviceType {
     XiaomiMijia {
         // TODO: Make it strongly typed
-        mac_address: String, 
-    }
+        #[serde(rename = "mac-address")]
+        mac_address: String,
+    },
 }
 
 impl crate::Config for Config {
@@ -75,9 +69,11 @@ impl Default for Server {
 #[cfg(test)]
 mod tests {
     use super::Config;
-    use super::Credentials;
+    use super::Device;
+    use super::DeviceType;
     use super::Server;
     use crate::Config as _;
+    use houseflow_types::device;
     use url::Url;
 
     #[test]
@@ -86,10 +82,18 @@ mod tests {
             server: Server {
                 url: Url::parse("wss://example.com:1234/hello/world").unwrap(),
             },
-            credentials: Credentials {},
-            devices: vec![],
+            devices: vec![Device {
+                id: device::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
+                r#type: DeviceType::XiaomiMijia {
+                    mac_address: "A4:C1:38:EF:77:51".to_string(),
+                },
+            }],
         };
 
+        std::env::set_var(
+            "SERVER_PORT",
+            expected.server.url.port().unwrap().to_string(),
+        );
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()
