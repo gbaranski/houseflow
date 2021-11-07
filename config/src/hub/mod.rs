@@ -43,7 +43,7 @@ pub enum DeviceType {
 impl crate::Config for Config {
     const DEFAULT_TOML: &'static str = include_str!("default.toml");
 
-    const DEFAULT_FILE: &'static str = "device.toml";
+    const DEFAULT_FILE: &'static str = "hub.toml";
 
     fn preprocess(&mut self) -> Result<(), String> {
         if self.server.url.port().is_none() {
