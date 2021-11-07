@@ -57,21 +57,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
 
 [[package]]
-name = "anyos"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "houseflow-config",
- "houseflow-device",
- "houseflow-types",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -809,28 +794,6 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "xdg",
-]
-
-[[package]]
-name = "houseflow-device"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64",
- "bytes",
- "futures-util",
- "houseflow-config",
- "houseflow-types",
- "http",
- "serde",
- "serde_json",
- "strum",
- "tokio",
- "tokio-tungstenite",
- "tracing",
- "tungstenite 0.16.0",
- "url",
 ]
 
 [[package]]
@@ -2009,9 +1972,8 @@ dependencies = [
  "futures-util",
  "log",
  "pin-project",
- "rustls 0.19.1",
  "tokio",
- "tungstenite 0.14.0",
+ "tungstenite",
 ]
 
 [[package]]
@@ -2178,26 +2140,6 @@ dependencies = [
  "httparse",
  "log",
  "rand",
- "sha-1",
- "thiserror",
- "url",
- "utf-8",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ad3713a14ae247f22a728a0456a545df14acf3867f905adff84be99e23b3ad1"
-dependencies = [
- "base64",
- "byteorder",
- "bytes",
- "http",
- "httparse",
- "log",
- "rand",
- "rustls 0.20.0",
  "sha-1",
  "thiserror",
  "url",
