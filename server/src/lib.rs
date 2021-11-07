@@ -72,11 +72,12 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
         .layer(axum::AddExtensionLayer::new(state))
         .layer(
             TraceLayer::new_for_http()
-                .make_span_with(|_request: &Request<Body>| {
+                .make_span_with(|request: &Request<Body>| {
                     tracing::debug_span!(
                         "Request",
                         status_code = tracing::field::Empty,
                         ms = tracing::field::Empty,
+                        path = tracing::field::display(request.uri().path()),
                     )
                 })
                 .on_response(|response: &Response<_>, latency: Duration, span: &Span| {
