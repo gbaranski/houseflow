@@ -10,6 +10,7 @@ pub struct Config {
     #[serde(default)]
     pub server: Server,
     pub credentials: Credentials,
+    pub devices: Vec<Device>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -21,11 +22,27 @@ pub struct Server {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Credentials {
+pub struct Credentials {}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Device {
     /// ID of the device
     pub id: device::ID,
     /// Password of the device in plain-text
     pub password: device::Password,
+    /// Type of the device, possibly with additional parameters
+    #[serde(flatten)]
+    pub r#type: DeviceType,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum DeviceType {
+    XiaomiMijia {
+        // TODO: Make it strongly typed
+        mac_address: String, 
+    }
 }
 
 impl crate::Config for Config {
@@ -61,8 +78,6 @@ mod tests {
     use super::Credentials;
     use super::Server;
     use crate::Config as _;
-    use houseflow_types::device;
-    use std::str::FromStr;
     use url::Url;
 
     #[test]
@@ -71,15 +86,10 @@ mod tests {
             server: Server {
                 url: Url::parse("wss://example.com:1234/hello/world").unwrap(),
             },
-            credentials: Credentials {
-                id: device::ID::from_str("546c8a4b71f04c78bd338069ad3b174b").unwrap(),
-                password: String::from("garage-password"),
-            },
+            credentials: Credentials {},
+            devices: vec![],
         };
 
-        std::env::set_var("DEVICE_ID", expected.credentials.id.to_string());
-        std::env::set_var("DEVICE_PASSWORD", &expected.credentials.password);
-        std::env::set_var("SERVER_HOST", expected.server.url.host_str().unwrap());
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()

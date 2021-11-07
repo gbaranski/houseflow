@@ -8,11 +8,11 @@ async fn main() -> Result<(), anyhow::Error> {
     let (_, session) = MijiaSession::new().await?;
     session.bt_session.start_discovery().await?;
     let mut stream = session.event_stream().await?;
-    tokio::spawn(async move {
-        while let Some(event) = stream.next().await {
-            println!("{:?}", event);
-        }
-    });
+    // tokio::spawn(async move {
+    //     while let Some(event) = stream.next().await {
+    //         println!("{:?}", event);
+    //     }
+    // });
     loop {
         println!("Sensors:");
         let sensors= session.get_sensors().await?;
