@@ -62,6 +62,7 @@ impl Hub {
                     tracing::info!(mac = %sensor.mac_address, id = %device.id, "connect failed due to {}", err);
                 } else {
                     tracing::info!(mac = %sensor.mac_address, id = %device.id, "successfully connected");
+                    session.start_notify_sensor(&sensor.id).await?;
                     devices.insert(sensor.id, device.id);
                 }
             } else {
