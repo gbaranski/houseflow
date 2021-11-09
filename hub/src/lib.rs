@@ -1,4 +1,5 @@
 use futures::StreamExt;
+use hap::server::Server;
 use houseflow_config::hub::Config;
 use houseflow_config::hub::DeviceType;
 use houseflow_types::device;
@@ -31,6 +32,61 @@ impl Hub {
                 };
             }
         });
+
+        // Setup Homekit
+        {
+            use hap::accessory::AccessoryCategory;
+            use hap::characteristic::CharacteristicCallbacks;
+            use hap::storage::FileStorage;
+            use hap::storage::Storage;
+            use hap::MacAddress;
+            use hap::Pin;
+
+            let mut storage = FileStorage::current_dir().await?;
+            let config = match storage.load_config().await {
+                Ok(mut config) => {
+                    config.redetermine_local_ip();
+                    storage.save_config(&config).await?;
+                    config
+                }
+                Err(_) => hap::Config {
+                    pin: Pin::new([1, 1, 1, 2, 2, 3, 3, 3])?,
+                    name: "Xiaomi Mijia Thermometer".into(),
+                    device_id: MacAddress::new([10, 20, 30, 40, 50, 60]),
+                    category: AccessoryCategory::Sensor,
+                    ..Default::default()
+                },
+            };
+
+            storage.save_config(&config).await?;
+            let server = hap::server::IpServer::new(config, storage).await?;
+
+            use hap::accessory::temperature_sensor::TemperatureSensorAccessory;
+            use hap::accessory::AccessoryInformation;
+
+            let mut thermometer = TemperatureSensorAccessory::new(
+                1,
+                AccessoryInformation {
+                    manufacturer: "Xiaomi".to_string(),
+                    model: "Mijia".to_string(),
+                    name: "Thermometer".to_string(),
+                    serial_number: "".to_string(),
+                    accessory_flags: None,
+                    application_matching_identifier: None,
+                    configured_name: None,
+                    firmware_revision: None,
+                    hardware_finish: None,
+                    hardware_revision: None,
+                    product_data: None,
+                    software_revision: None,
+                },
+            )?;
+            thermometer.temperature_sensor.current_temperature.on_read(Some(|| {
+                Ok(Some(23.5))
+            }));
+            server.add_accessory(thermometer).await?;
+            tokio::spawn(async move { server.run_handle().await.unwrap() });
+        }
 
         discover_xiaomi_mijia_fut.await?;
 
