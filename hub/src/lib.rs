@@ -52,7 +52,7 @@ impl Hub {
                 Err(_) => hap::Config {
                     pin: Pin::new([1, 1, 1, 2, 2, 3, 3, 3])?,
                     name: "Acme Lightbulb".into(),
-                    device_id: MacAddress::new([10, 20, 30, 40, 50, 60]),
+                    device_id: MacAddress::new([60, 50, 40, 30, 20, 10]),
                     category: AccessoryCategory::Lightbulb,
                     ..Default::default()
                 },
