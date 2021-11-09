@@ -51,9 +51,9 @@ impl Hub {
                 }
                 Err(_) => hap::Config {
                     pin: Pin::new([1, 1, 1, 2, 2, 3, 3, 3])?,
-                    name: "Xiaomi Mijia Thermometer".into(),
+                    name: "Acme Lightbulb".into(),
                     device_id: MacAddress::new([10, 20, 30, 40, 50, 60]),
-                    category: AccessoryCategory::Sensor,
+                    category: AccessoryCategory::Lightbulb,
                     ..Default::default()
                 },
             };
@@ -61,30 +61,24 @@ impl Hub {
             storage.save_config(&config).await?;
             let server = hap::server::IpServer::new(config, storage).await?;
 
-            use hap::accessory::temperature_sensor::TemperatureSensorAccessory;
+            use hap::accessory::lightbulb::LightbulbAccessory;
             use hap::accessory::AccessoryInformation;
 
-            let mut thermometer = TemperatureSensorAccessory::new(
-                1,
-                AccessoryInformation {
-                    manufacturer: "Xiaomi".to_string(),
-                    model: "Mijia".to_string(),
-                    name: "Thermometer".to_string(),
-                    serial_number: "".to_string(),
-                    accessory_flags: None,
-                    application_matching_identifier: None,
-                    configured_name: None,
-                    firmware_revision: None,
-                    hardware_finish: None,
-                    hardware_revision: None,
-                    product_data: None,
-                    software_revision: None,
-                },
-            )?;
-            thermometer.temperature_sensor.current_temperature.on_read(Some(|| {
-                Ok(Some(23.5))
+            let mut lightbulb = LightbulbAccessory::new(1, AccessoryInformation {
+                name: "Acme Lightbulb".into(),
+                ..Default::default()
+            })?;
+            lightbulb.lightbulb.power_state.on_read(Some(|| {
+                println!("power_state characteristic read");
+                Ok(None)
             }));
-            server.add_accessory(thermometer).await?;
+            
+            lightbulb.lightbulb.power_state.on_update(Some(|current_val: &bool, new_val: &bool| {
+                println!("power_state characteristic updated from {} to {}", current_val, new_val);
+                Ok(())
+            }));
+            server.add_accessory(lightbulb).await?;
+
             tokio::spawn(async move { server.run_handle().await.unwrap() });
         }
 
