@@ -18,20 +18,21 @@ impl Hub {
     }
 
     pub async fn run(self) -> Result<(), anyhow::Error> {
-        let discover_xiaomi_mijia_fut = tokio::spawn({
-            let this = self.clone();
-            async move {
-                tracing::info!("start discovering xiaomi mijia devices");
-                match this.discover_xiaomi_mijia().await {
-                    Ok(_) => {
-                        tracing::info!("discovering xiaomi mijia devices completed sucesfully")
-                    }
-                    Err(err) => {
-                        tracing::info!("discovering xiaomi mijia devices failed due to {}", err);
-                    }
-                };
-            }
-        });
+        // let discover_xiaomi_mijia_fut = tokio::spawn({
+        //     let this = self.clone();
+        //     async move {
+        //         tracing::info!("start discovering xiaomi mijia devices");
+        //         match this.discover_xiaomi_mijia().await {
+        //             Ok(_) => {
+        //                 tracing::info!("discovering xiaomi mijia devices completed sucesfully")
+        //             }
+        //             Err(err) => {
+        //                 tracing::info!("discovering xiaomi mijia devices failed due to {}", err);
+        //             }
+        //         };
+        //     }
+        // });
+        // discover_xiaomi_mijia_fut.await?;
 
         // Setup Homekit
         {
@@ -53,7 +54,7 @@ impl Hub {
                     pin: Pin::new([1, 1, 1, 2, 2, 3, 3, 3])?,
                     name: "Acme Lightbulb".into(),
                     device_id: MacAddress::new([60, 50, 40, 30, 20, 10]),
-                    category: AccessoryCategory::Lightbulb,
+                    category: AccessoryCategory::Sensor,
                     ..Default::default()
                 },
             };
@@ -61,28 +62,23 @@ impl Hub {
             storage.save_config(&config).await?;
             let server = hap::server::IpServer::new(config, storage).await?;
 
-            use hap::accessory::lightbulb::LightbulbAccessory;
+            use hap::accessory::temperature_sensor::TemperatureSensorAccessory;
             use hap::accessory::AccessoryInformation;
 
-            let mut lightbulb = LightbulbAccessory::new(1, AccessoryInformation {
+            let mut temperature_sensor = TemperatureSensorAccessory::new(1, AccessoryInformation {
                 name: "Acme Lightbulb".into(),
                 ..Default::default()
             })?;
-            lightbulb.lightbulb.power_state.on_read(Some(|| {
-                println!("power_state characteristic read");
-                Ok(None)
+            temperature_sensor.temperature_sensor.current_temperature.on_read(Some(|| {
+                println!("current_temperature characteristic read");
+                Ok(Some(23.5))
             }));
             
-            lightbulb.lightbulb.power_state.on_update(Some(|current_val: &bool, new_val: &bool| {
-                println!("power_state characteristic updated from {} to {}", current_val, new_val);
-                Ok(())
-            }));
-            server.add_accessory(lightbulb).await?;
+            server.add_accessory(temperature_sensor).await?;
 
-            tokio::spawn(async move { server.run_handle().await.unwrap() });
+            tokio::spawn(async move { server.run_handle().await.unwrap() }).await?;
         }
 
-        discover_xiaomi_mijia_fut.await?;
 
         Ok(())
     }
