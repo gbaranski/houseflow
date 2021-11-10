@@ -16,6 +16,7 @@ struct AuthorizeTemplate {
     client_id: String,
     redirect_uri: Url,
     state: String,
+    base_url: Url,
     google_login_client_id: Option<String>,
 }
 
@@ -39,6 +40,7 @@ pub async fn handle(
         client_id: request.client_id.to_owned(),
         redirect_uri: request.redirect_uri.to_owned(),
         state: request.state.to_owned(),
+        base_url: state.config.network.base_url.to_owned(),
         google_login_client_id: state
             .config
             .google_login

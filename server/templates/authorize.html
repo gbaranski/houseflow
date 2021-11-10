@@ -29,7 +29,7 @@
 {% when Some with (login_client_id) %}
 <div id="g_id_onload"
     data-client_id="{{ login_client_id }}"
-    data-login_uri="http://localhost/oauth/google_login"
+    data-login_uri="{{ base_url }}oauth/google_login"
     data-auto_prompt="false">
 </div>
 <div class="g_id_signin"

@@ -97,7 +97,6 @@ mod test_utils {
     use super::State;
     use crate::clerk::sled::Clerk;
     use axum::extract;
-    use houseflow_config::defaults;
     use houseflow_config::server::Config;
     use houseflow_config::server::Email;
     use houseflow_config::server::GoogleLogin;
@@ -129,10 +128,7 @@ mod test_utils {
         users: Vec<User>,
     ) -> extract::Extension<State> {
         let config = Config {
-            network: Network {
-                address: defaults::server_listen_address(),
-                port: defaults::server_port(),
-            },
+            network: Network::default(),
             secrets: Secrets {
                 refresh_key: String::from("refresh-key"),
                 access_key: String::from("access-key"),

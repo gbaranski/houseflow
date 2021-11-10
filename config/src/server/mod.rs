@@ -60,6 +60,9 @@ pub struct Network {
     /// Server port
     #[serde(default = "defaults::server_port")]
     pub port: u16,
+    /// Base public URL of server
+    #[serde(default = "defaults::base_url")]
+    pub base_url: Url,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -201,6 +204,7 @@ impl Default for Network {
         Self {
             address: defaults::server_listen_address(),
             port: defaults::server_port(),
+            base_url: defaults::base_url(),
         }
     }
 }
@@ -305,6 +309,7 @@ mod tests {
             network: Network {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
                 port: 1234,
+                base_url: Url::from_str("http://localhost:1234").unwrap(),
             },
             secrets: Secrets {
                 refresh_key: String::from("some-refresh-key"),
