@@ -99,7 +99,7 @@ mod utils {
         let response = request.send().await?;
         let status_code = response.status();
         let bytes = response.bytes().await?;
-        let result = if response.status().is_success() {
+        let result = if status_code.is_success() {
             let parsed =
                 serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
                     error: Box::new(err),
@@ -108,7 +108,6 @@ mod utils {
                 })?;
             Ok(parsed)
         } else {
-            let bytes = response.bytes().await?;
             let parsed =
                 serde_json::from_slice(&bytes).map_err(|err| Error::InvalidResponseBody {
                     error: Box::new(err),
