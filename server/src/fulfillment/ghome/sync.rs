@@ -12,6 +12,8 @@ use houseflow_types::device::Type as DeviceType;
 use houseflow_types::errors::InternalError;
 use houseflow_types::errors::ServerError;
 use houseflow_types::user;
+use serde_json::Map;
+use serde_json::Value;
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload, ServerError> {
@@ -85,19 +87,46 @@ fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<Payloa
             || device.state == homie_controller::State::Sleeping
         {
             for node in device.nodes.values() {
-                google_home_devices.push(homie_node_to_google_home(&device.id, node));
+                if let Some(google_home_device) = homie_node_to_google_home(&device.id, node) {
+                    google_home_devices.push(google_home_device);
+                }
             }
         }
     }
     google_home_devices
 }
 
-fn homie_node_to_google_home(device_id: &str, node: &Node) -> PayloadDevice {
+fn homie_node_to_google_home(device_id: &str, node: &Node) -> Option<PayloadDevice> {
     let id = format!("{}/{}", device_id, node.id);
-    response::PayloadDevice {
+    let mut traits = vec![];
+    let mut attributes = Map::new();
+    let mut device_type = None;
+    if node.properties.contains_key("on") {
+        device_type = Some(GHomeDeviceType::Switch);
+        traits.push(GHomeDeviceTrait::OnOff);
+    }
+    if node.properties.contains_key("brightness") {
+        device_type = Some(GHomeDeviceType::Light);
+        traits.push(GHomeDeviceTrait::Brightness);
+    }
+    if node.properties.contains_key("temperature") {
+        device_type = Some(GHomeDeviceType::Thermostat);
+        traits.push(GHomeDeviceTrait::TemperatureSetting);
+        attributes.insert(
+            "availableThermostatModes".to_string(),
+            Value::Array(vec![Value::String("off".to_string())]),
+        );
+        attributes.insert(
+            "thermostatTemperatureUnit".to_string(),
+            Value::String("C".to_string()),
+        );
+        attributes.insert("queryOnlyTemperatureSetting".to_string(), Value::Bool(true));
+    }
+
+    Some(response::PayloadDevice {
         id: id.clone(),
-        device_type: GHomeDeviceType::Light,
-        traits: vec![GHomeDeviceTrait::OnOff],
+        device_type: device_type?,
+        traits,
         name: response::PayloadDeviceName {
             default_names: None,
             name: node.name.clone().unwrap_or_else(|| id.clone()),
@@ -107,8 +136,8 @@ fn homie_node_to_google_home(device_id: &str, node: &Node) -> PayloadDevice {
         will_report_state: false,
         notification_supported_by_agent: false,
         room_hint: None,
-        attributes: Default::default(),
+        attributes,
         custom_data: None,
         other_device_ids: None,
-    }
+    })
 }
