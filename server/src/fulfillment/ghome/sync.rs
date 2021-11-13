@@ -6,6 +6,7 @@ use google_smart_home::device::Type as GHomeDeviceType;
 use google_smart_home::sync::response;
 use google_smart_home::sync::response::PayloadDevice;
 use homie_controller::Device;
+use homie_controller::Node;
 use houseflow_types::device::Trait as DeviceTrait;
 use houseflow_types::device::Type as DeviceType;
 use houseflow_types::errors::InternalError;
@@ -78,24 +79,36 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
 }
 
 fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<PayloadDevice> {
-    devices
-        .values()
-        .map(|device| response::PayloadDevice {
-            id: device.id.clone(),
-            device_type: GHomeDeviceType::Light,
-            traits: vec![GHomeDeviceTrait::OnOff],
-            name: response::PayloadDeviceName {
-                default_names: None,
-                name: device.name.clone().unwrap_or_else(|| device.id.clone()),
-                nicknames: None,
-            },
-            device_info: None,
-            will_report_state: false,
-            notification_supported_by_agent: false,
-            room_hint: None,
-            attributes: Default::default(),
-            custom_data: None,
-            other_device_ids: None,
-        })
-        .collect()
+    let mut google_home_devices = vec![];
+    for device in devices.values() {
+        if device.state == homie_controller::State::Ready
+            || device.state == homie_controller::State::Sleeping
+        {
+            for node in device.nodes.values() {
+                google_home_devices.push(homie_node_to_google_home(&device.id, node));
+            }
+        }
+    }
+    google_home_devices
+}
+
+fn homie_node_to_google_home(device_id: &str, node: &Node) -> PayloadDevice {
+    let id = format!("{}/{}", device_id, node.id);
+    response::PayloadDevice {
+        id: id.clone(),
+        device_type: GHomeDeviceType::Light,
+        traits: vec![GHomeDeviceTrait::OnOff],
+        name: response::PayloadDeviceName {
+            default_names: None,
+            name: node.name.clone().unwrap_or_else(|| id.clone()),
+            nicknames: None,
+        },
+        device_info: None,
+        will_report_state: false,
+        notification_supported_by_agent: false,
+        room_hint: None,
+        attributes: Default::default(),
+        custom_data: None,
+        other_device_ids: None,
+    }
 }
