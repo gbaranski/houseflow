@@ -23,7 +23,7 @@ client-id = "google-client-id"
 client-secret = "google-client-secret"
 project-id = "google-project-id"
 
-[google-login]
+[logins.google]
 client-id = "google-login-client-id"
 
 [[structures]]

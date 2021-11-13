@@ -43,7 +43,8 @@ pub async fn handle(
         base_url: state.config.network.base_url.to_owned(),
         google_login_client_id: state
             .config
-            .google_login
+            .logins
+            .google
             .as_ref()
             .map(|c| c.client_id.to_owned()),
     };

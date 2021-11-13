@@ -100,6 +100,7 @@ mod test_utils {
     use houseflow_config::server::Config;
     use houseflow_config::server::Email;
     use houseflow_config::server::GoogleLogin;
+    use houseflow_config::server::Logins;
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
     use houseflow_types::code::VerificationCode;
@@ -144,9 +145,11 @@ mod test_utils {
                 client_secret: String::from("client-secret"),
                 project_id: String::from("project-id"),
             }),
-            google_login: Some(GoogleLogin {
-                client_id: String::from("google-login-client-id"),
-            }),
+            logins: Logins {
+                google: Some(GoogleLogin {
+                    client_id: String::from("google-login-client-id"),
+                }),
+            },
             structures,
             rooms,
             devices,

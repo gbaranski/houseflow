@@ -49,7 +49,8 @@ pub async fn handle(
         .ok_or_else(|| InternalError::Other("Google Home API not configured".to_string()))?;
     let google_login_config = state
         .config
-        .google_login
+        .logins
+        .google
         .as_ref()
         .ok_or_else(|| InternalError::Other("Google login not configured".to_string()))?;
     verify_oauth_query(&query, google_config)?;

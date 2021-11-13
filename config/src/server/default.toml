@@ -23,7 +23,7 @@
 # project-id =    # Project ID set during creation.
 
 # Google login configuration. If not defined, Google login will be disabled.
-# [google-login]
+# [logins.google]
 # client-id =     # Client ID assigned by Google.
 
 
