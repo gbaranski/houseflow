@@ -1,10 +1,15 @@
 use axum_server::tls_rustls;
+use homie_controller::HomieController;
 use houseflow_config::defaults;
 use houseflow_config::server::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_server::clerk::sled::Clerk;
+use houseflow_server::homie::get_mqtt_options;
+use houseflow_server::homie::spawn_homie_poller;
 use houseflow_server::mailer;
+use rustls::ClientConfig;
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -43,12 +48,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }),
         scheme => panic!("unexpected email URL scheme: {}", scheme),
     };
+
+    let mut homie_controllers = HashMap::new();
+    let mut join_handles = Vec::new();
+    let tls_client_config = get_tls_client_config();
+    for user in &config.users {
+        if let Some(homie_config) = &user.homie {
+            let mqtt_options = get_mqtt_options(
+                homie_config,
+                if homie_config.use_tls {
+                    Some(tls_client_config.clone())
+                } else {
+                    None
+                },
+            );
+            let (controller, event_loop) =
+                HomieController::new(mqtt_options, &homie_config.homie_prefix);
+            let controller = Arc::new(controller);
+
+            let handle = spawn_homie_poller(
+                controller.clone(),
+                event_loop,
+                homie_config.reconnect_interval,
+            );
+            controller.start().await?;
+            join_handles.push(handle);
+            homie_controllers.insert(user.id, controller);
+        }
+    }
+
     let clerk = Clerk::new(defaults::clerk_path())?;
     let state = houseflow_server::State {
         config: Arc::new(config),
         sessions: Default::default(),
         mailer: Arc::new(mailer),
         clerk: Arc::new(clerk),
+        homie_controllers: Arc::new(homie_controllers),
     };
 
     let address = SocketAddr::new(state.config.network.address, state.config.network.port);
@@ -77,4 +112,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn get_tls_client_config() -> Arc<ClientConfig> {
+    let mut client_config = ClientConfig::new();
+    client_config.root_store =
+        rustls_native_certs::load_native_certs().expect("Failed to load platform certificates.");
+    Arc::new(client_config)
 }

@@ -380,6 +380,7 @@ mod tests {
                     username: String::from("gbaranski"),
                     email: String::from("root@gbaranski.com"),
                     admin: false,
+                    homie: None,
                 }
             ].to_vec(),
             permissions: [
@@ -414,12 +415,14 @@ mod tests {
             username: String::from("gbaranski"),
             email: String::from("root@gbaranski.com"),
             admin: false,
+            homie: None,
         };
         let user_unauth = User {
             id: user::ID::new_v4(),
             username: String::from("stanbar"),
             email: String::from("stanbar@gbaranski.com"),
             admin: false,
+            homie: None,
         };
         let structure_auth = Structure {
             id: structure::ID::new_v4(),
