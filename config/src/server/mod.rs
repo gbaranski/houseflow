@@ -43,7 +43,7 @@ pub struct Config {
     /// Devices
     #[serde(default)]
     pub devices: Vec<Device>,
-    /// Devices
+    /// Users
     #[serde(default)]
     pub users: Vec<User>,
     /// User -> Structure permission
