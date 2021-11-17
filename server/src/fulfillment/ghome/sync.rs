@@ -70,7 +70,11 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
             .collect::<Result<Vec<_>, _>>()?
     };
 
-    tracing::info!("Synced {} devices", user_devices.len());
+    tracing::info!(
+        "Synced {} devices: {}",
+        user_devices.len(),
+        serde_json::to_string_pretty(&user_devices).unwrap(),
+    );
 
     Ok(response::Payload {
         agent_user_id: user_id.to_string(),
