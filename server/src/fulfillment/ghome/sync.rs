@@ -106,7 +106,9 @@ fn homie_node_to_google_home(device_id: &str, node: &Node) -> Option<PayloadDevi
         traits.push(GHomeDeviceTrait::OnOff);
     }
     if node.properties.contains_key("brightness") {
-        device_type = Some(GHomeDeviceType::Light);
+        if node.properties.contains_key("on") {
+            device_type = Some(GHomeDeviceType::Light);
+        }
         traits.push(GHomeDeviceTrait::Brightness);
     }
     if node.properties.contains_key("temperature") {
