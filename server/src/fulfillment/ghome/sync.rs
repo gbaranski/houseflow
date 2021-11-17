@@ -87,7 +87,7 @@ fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<Payloa
             || device.state == homie_controller::State::Sleeping
         {
             for node in device.nodes.values() {
-                if let Some(google_home_device) = homie_node_to_google_home(&device.id, node) {
+                if let Some(google_home_device) = homie_node_to_google_home(device, node) {
                     google_home_devices.push(google_home_device);
                 }
             }
@@ -96,8 +96,8 @@ fn homie_devices_to_google_home(devices: &HashMap<String, Device>) -> Vec<Payloa
     google_home_devices
 }
 
-fn homie_node_to_google_home(device_id: &str, node: &Node) -> Option<PayloadDevice> {
-    let id = format!("{}/{}", device_id, node.id);
+fn homie_node_to_google_home(device: &Device, node: &Node) -> Option<PayloadDevice> {
+    let id = format!("{}/{}", device.id, node.id);
     let mut traits = vec![];
     let mut attributes = Map::new();
     let mut device_type = None;
@@ -125,14 +125,16 @@ fn homie_node_to_google_home(device_id: &str, node: &Node) -> Option<PayloadDevi
         attributes.insert("queryOnlyTemperatureSetting".to_string(), Value::Bool(true));
     }
 
+    let device_name = device.name.clone().unwrap_or_else(|| device.id.clone());
+    let node_name = node.name.clone().unwrap_or_else(|| node.id.clone());
     Some(response::PayloadDevice {
-        id: id.clone(),
+        id,
         device_type: device_type?,
         traits,
         name: response::PayloadDeviceName {
             default_names: None,
-            name: node.name.clone().unwrap_or_else(|| id.clone()),
-            nicknames: None,
+            name: format!("{} {}", device_name, node_name),
+            nicknames: Some(vec![node_name]),
         },
         device_info: None,
         will_report_state: false,
