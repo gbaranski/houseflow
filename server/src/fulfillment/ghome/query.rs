@@ -13,10 +13,8 @@ pub async fn handle(
     user_id: user::ID,
     payload: &request::Payload,
 ) -> Result<response::Payload, InternalError> {
-    let user_id = &user_id;
-
     let responses = payload.devices.iter().map(|device| async {
-        let response = get_lighthouse_device(&state, user_id, device).await?;
+        let response = get_lighthouse_device(&state, &user_id, device).await?;
         Ok::<_, InternalError>((device.id.to_owned(), response))
     });
     let devices = futures::future::try_join_all(responses)
