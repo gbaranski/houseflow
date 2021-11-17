@@ -65,6 +65,7 @@ pub fn spawn_homie_poller(
 
 async fn handle_homie_event(_controller: &HomieController, event: Event) {
     match event {
+        Event::PropertyValueChanged { .. } => {}
         _ => tracing::info!("Homie event {:?}", event),
     }
 }
