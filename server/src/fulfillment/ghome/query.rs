@@ -18,7 +18,7 @@ pub async fn handle(
     let user_id = &user_id;
 
     let responses = payload.devices.iter().map(|device| async move {
-        let response = (|| async {
+        async {
             let device_id = device::ID::from_str(&device.id).expect("invalid device ID");
             if config.get_permission(&device_id, user_id).is_none() {
                 return Ok::<_, InternalError>(response::PayloadDevice {
@@ -55,17 +55,17 @@ pub async fn handle(
                 }
             };
 
-            tracing::info!(state = %serde_json::to_string(&response.state).unwrap(), "Queried device state");
+            tracing::info!(state = %serde_json::to_string(&response.state).unwrap(),
+                "Queried device state");
 
             Ok(response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
                 state: response.state,
             })
-        })();
-        response
-            .await
-            .map(|response| (device.id.to_owned(), response))
+        }
+        .await
+        .map(|response| (device.id.to_owned(), response))
     });
     Ok(response::Payload {
         error_code: None,
