@@ -20,7 +20,8 @@ pub fn get_mqtt_options(
 ) -> MqttOptions {
     let mut mqtt_options = MqttOptions::new(&config.client_id, &config.host, config.port);
     mqtt_options.set_keep_alive(5);
-    mqtt_options.set_clean_session(false);
+    // TODO: This is needs to be false for the initial connection to work, but what about reconnection?
+    mqtt_options.set_clean_session(true);
 
     if let (Some(username), Some(password)) = (&config.username, &config.password) {
         mqtt_options.set_credentials(username, password);
