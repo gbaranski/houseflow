@@ -33,6 +33,7 @@ async fn get_lighthouse_device(
     user_id: &user::ID,
     device: &request::PayloadDevice,
 ) -> Result<response::PayloadDevice, InternalError> {
+    // TODO: Return error rather than panicking.
     let device_id = device::ID::from_str(&device.id).expect("invalid device ID");
 
     if state.config.get_permission(&device_id, user_id).is_none() {
