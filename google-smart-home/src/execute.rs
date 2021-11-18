@@ -7,7 +7,7 @@ pub mod request {
     use super::*;
 
     /// EXECUTE request payload.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Payload {
         /// List of device target and command pairs.
@@ -15,7 +15,7 @@ pub mod request {
     }
 
     /// Set of commands to execute on the attached device targets.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadCommand {
         /// List of target devices.
@@ -36,7 +36,7 @@ pub mod request {
     }
 
     /// Device command.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadCommandExecution {
         /// The command to execute, usually with accompanying parameters.

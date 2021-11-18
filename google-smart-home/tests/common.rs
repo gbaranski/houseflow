@@ -1,5 +1,5 @@
 pub fn two_way_serde<
-    T: std::fmt::Debug + Eq + serde::ser::Serialize + serde::de::DeserializeOwned,
+    T: std::fmt::Debug + PartialEq + serde::ser::Serialize + serde::de::DeserializeOwned,
 >(
     json: &str,
     expected: T,

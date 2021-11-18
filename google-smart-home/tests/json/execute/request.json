@@ -30,6 +30,19 @@
                 "params": {
                   "on": true
                 }
+              },
+              {
+                "command": "action.devices.commands.ColorAbsolute",
+                "params": {
+                  "color": {
+                    "name": "magenta",
+                    "spectrumHSV": {
+                      "hue": 300,
+                      "saturation": 1,
+                      "value": 1
+                    }
+                  }
+                }
               }
             ]
           }
