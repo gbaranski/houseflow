@@ -1,4 +1,5 @@
 mod execute;
+mod homie;
 mod query;
 mod sync;
 

@@ -1,3 +1,4 @@
+use super::homie::get_homie_device_by_id;
 use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
@@ -47,57 +48,52 @@ fn get_homie_device(
     devices: &HashMap<String, Device>,
     request_device: &request::PayloadDevice,
 ) -> response::PayloadDevice {
-    let id_parts: Vec<_> = request_device.id.split('/').collect();
-    if let [device_id, node_id] = id_parts.as_slice() {
-        if let Some(device) = devices.get(*device_id) {
-            if device.state == homie_controller::State::Ready
-                || device.state == homie_controller::State::Sleeping
-            {
-                if let Some(node) = device.nodes.get(*node_id) {
-                    let mut state = Map::new();
+    if let Some((device, node)) = get_homie_device_by_id(devices, &request_device.id) {
+        if device.state == homie_controller::State::Ready
+            || device.state == homie_controller::State::Sleeping
+        {
+            let mut state = Map::new();
 
-                    if let Some(on) = node.properties.get("on") {
-                        if let Ok(value) = on.value() {
-                            state.insert("on".to_string(), Value::Bool(value));
-                        }
-                    }
-                    if let Some(brightness) = node.properties.get("brightness") {
-                        if let Ok(value) = brightness.value::<i64>() {
-                            // TODO: Scale to percentage.
-                            state.insert("brightness".to_string(), Value::Number(value.into()));
-                        }
-                    }
-                    if let Some(on) = node.properties.get("temperature") {
-                        if let Ok(value) = on.value::<f64>() {
-                            if let Some(finite_number) = Number::from_f64(value) {
-                                state.insert(
-                                    "thermostatTemperatureAmbient".to_string(),
-                                    Value::Number(finite_number),
-                                );
-                            }
-                        }
-                    }
-
-                    return response::PayloadDevice {
-                        state,
-                        status: response::PayloadDeviceStatus::Success,
-                        error_code: None,
-                    };
+            if let Some(on) = node.properties.get("on") {
+                if let Ok(value) = on.value() {
+                    state.insert("on".to_string(), Value::Bool(value));
                 }
-            } else {
-                return response::PayloadDevice {
-                    state: Default::default(),
-                    status: response::PayloadDeviceStatus::Offline,
-                    error_code: Some("offline".to_string()),
-                };
+            }
+            if let Some(brightness) = node.properties.get("brightness") {
+                if let Ok(value) = brightness.value::<i64>() {
+                    // TODO: Scale to percentage.
+                    state.insert("brightness".to_string(), Value::Number(value.into()));
+                }
+            }
+            if let Some(on) = node.properties.get("temperature") {
+                if let Ok(value) = on.value::<f64>() {
+                    if let Some(finite_number) = Number::from_f64(value) {
+                        state.insert(
+                            "thermostatTemperatureAmbient".to_string(),
+                            Value::Number(finite_number),
+                        );
+                    }
+                }
+            }
+
+            response::PayloadDevice {
+                state,
+                status: response::PayloadDeviceStatus::Success,
+                error_code: None,
+            }
+        } else {
+            response::PayloadDevice {
+                state: Default::default(),
+                status: response::PayloadDeviceStatus::Offline,
+                error_code: Some("offline".to_string()),
             }
         }
-    }
-
-    response::PayloadDevice {
-        status: response::PayloadDeviceStatus::Error,
-        state: Default::default(),
-        error_code: Some("deviceNotFound".to_string()),
+    } else {
+        response::PayloadDevice {
+            status: response::PayloadDeviceStatus::Error,
+            state: Default::default(),
+            error_code: Some("deviceNotFound".to_string()),
+        }
     }
 }
 
