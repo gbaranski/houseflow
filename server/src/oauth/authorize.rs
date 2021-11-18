@@ -8,6 +8,7 @@ use axum::response::Html;
 use houseflow_types::errors::InternalError;
 use houseflow_types::errors::OAuthError;
 use houseflow_types::errors::ServerError;
+use http::HeaderMap;
 use url::Url;
 
 #[derive(Template)]
@@ -24,6 +25,7 @@ struct AuthorizeTemplate {
 pub async fn handle(
     Extension(state): Extension<State>,
     Query(request): Query<AuthorizationRequestQuery>,
+    headers: HeaderMap,
 ) -> Result<Html<String>, ServerError> {
     let google_config = state
         .config
@@ -40,7 +42,7 @@ pub async fn handle(
         client_id: request.client_id.to_owned(),
         redirect_uri: request.redirect_uri.to_owned(),
         state: request.state.to_owned(),
-        base_url: state.config.network.base_url.to_owned(),
+        base_url: state.config.get_base_url(),
         google_login_client_id: state
             .config
             .logins

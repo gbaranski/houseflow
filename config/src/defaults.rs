@@ -20,10 +20,6 @@ pub const fn server_port() -> u16 {
     6001
 }
 
-pub fn base_url() -> Url {
-    Url::parse("http://localhost:6001").unwrap()
-}
-
 pub const fn server_port_tls() -> u16 {
     6002
 }

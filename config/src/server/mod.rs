@@ -60,9 +60,9 @@ pub struct Network {
     /// Server port
     #[serde(default = "defaults::server_port")]
     pub port: u16,
-    /// Base public URL of server
-    #[serde(default = "defaults::base_url")]
-    pub base_url: Url,
+    /// Base public URL of server, if different to the listen address and port.
+    #[serde(default)]
+    pub base_url: Option<Url>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -211,7 +211,7 @@ impl Default for Network {
         Self {
             address: defaults::server_listen_address(),
             port: defaults::server_port(),
-            base_url: defaults::base_url(),
+            base_url: None,
         }
     }
 }
@@ -281,6 +281,17 @@ impl Config {
             .collect::<Vec<_>>();
         devices
     }
+
+    pub fn get_base_url(&self) -> Url {
+        self.network.base_url.clone().unwrap_or_else(|| {
+            let scheme = if self.tls.is_some() { "https" } else { "http" };
+            Url::parse(&format!(
+                "{}://{}:{}",
+                scheme, self.network.address, self.network.port
+            ))
+            .unwrap()
+        })
+    }
 }
 
 #[cfg(test)]
@@ -310,7 +321,7 @@ mod tests {
             network: Network {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
                 port: 1234,
-                base_url: Url::from_str("http://localhost:1234").unwrap(),
+                base_url: Some(Url::from_str("http://localhost:1234").unwrap()),
             },
             secrets: Secrets {
                 refresh_key: String::from("some-refresh-key"),
