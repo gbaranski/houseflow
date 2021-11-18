@@ -2,7 +2,6 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Hash)]
-#[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub enum Trait {
     #[serde(rename = "action.devices.traits.OnOff")]
