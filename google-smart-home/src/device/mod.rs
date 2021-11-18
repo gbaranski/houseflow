@@ -1,3 +1,4 @@
+pub mod commands;
 mod traits;
 mod types;
 
@@ -14,21 +15,4 @@ pub enum Command {
     OnOff(commands::OnOff),
     #[serde(rename = "action.devices.commands.OpenClose")]
     OpenClose(commands::OpenClose),
-}
-
-pub mod commands {
-    use serde::Deserialize;
-    use serde::Serialize;
-
-    #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct OnOff {
-        pub on: bool,
-    }
-
-    #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct OpenClose {
-        pub open_percent: u8,
-    }
 }
