@@ -2,6 +2,8 @@ use crate::State;
 use google_smart_home::device::commands as ghome_commands;
 use google_smart_home::device::Command as GHomeCommand;
 use google_smart_home::execute::request;
+use google_smart_home::execute::request::PayloadCommandDevice;
+use google_smart_home::execute::request::PayloadCommandExecution;
 use google_smart_home::execute::response;
 use houseflow_types::device;
 use houseflow_types::device::commands;
@@ -20,9 +22,22 @@ pub async fn handle(
         .iter()
         .flat_map(|cmd| cmd.execution.iter().zip(cmd.devices.iter()));
 
+    let commands = execute_lighthouse_devices(&state, &user_id, requests).await?;
+
+    Ok(response::Payload {
+        error_code: None,
+        debug_string: None,
+        commands,
+    })
+}
+
+async fn execute_lighthouse_devices(
+    state: &State,
+    user_id: &user::ID,
+    requests: impl Iterator<Item = (&PayloadCommandExecution, &PayloadCommandDevice)>,
+) -> Result<Vec<response::PayloadCommand>, InternalError> {
     let sessions = &state.sessions;
     let config = &state.config;
-    let user_id = &user_id;
 
     let responses = requests.map(|(execution, device)| async move {
         let device_id = device::ID::from_str(&device.id).expect("invalid device ID");
@@ -95,10 +110,5 @@ pub async fn handle(
             },
         })
     });
-
-    Ok(response::Payload {
-        error_code: None,
-        debug_string: None,
-        commands: futures::future::try_join_all(responses).await?,
-    })
+    futures::future::try_join_all(responses).await
 }
