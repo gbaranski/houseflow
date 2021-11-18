@@ -1,3 +1,4 @@
+use super::homie::get_homie_device_by_id;
 use crate::State;
 use google_smart_home::device::commands as ghome_commands;
 use google_smart_home::device::Command as GHomeCommand;
@@ -5,10 +6,13 @@ use google_smart_home::execute::request;
 use google_smart_home::execute::request::PayloadCommandDevice;
 use google_smart_home::execute::request::PayloadCommandExecution;
 use google_smart_home::execute::response;
+use homie_controller::Device;
+use homie_controller::HomieController;
 use houseflow_types::device;
 use houseflow_types::device::commands;
 use houseflow_types::errors::InternalError;
 use houseflow_types::user;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 #[tracing::instrument(name = "Execute", skip(state), err)]
@@ -22,13 +26,81 @@ pub async fn handle(
         .iter()
         .flat_map(|cmd| cmd.execution.iter().zip(cmd.devices.iter()));
 
-    let commands = execute_lighthouse_devices(&state, &user_id, requests).await?;
+    let commands = if let Some(homie_controller) = state.homie_controllers.get(&user_id) {
+        execute_homie_devices(homie_controller, &homie_controller.devices(), requests).await
+    } else {
+        execute_lighthouse_devices(&state, &user_id, requests).await?
+    };
 
     Ok(response::Payload {
         error_code: None,
         debug_string: None,
         commands,
     })
+}
+
+async fn execute_homie_devices<'a>(
+    controller: &HomieController,
+    devices: &HashMap<String, Device>,
+    requests: impl Iterator<Item = (&'a PayloadCommandExecution, &'a PayloadCommandDevice)>,
+) -> Vec<response::PayloadCommand> {
+    let mut responses = vec![];
+    for (execution, device) in requests {
+        responses.push(execute_homie_device(controller, devices, execution, device).await);
+    }
+    responses
+}
+
+async fn execute_homie_device(
+    controller: &HomieController,
+    devices: &HashMap<String, Device>,
+    execution: &PayloadCommandExecution,
+    command_device: &PayloadCommandDevice,
+) -> response::PayloadCommand {
+    let ids = vec![command_device.id.to_owned()];
+
+    if let Some((device, node)) = get_homie_device_by_id(devices, &command_device.id) {
+        // TODO: Check if device is offline?
+        match &execution.command {
+            GHomeCommand::OnOff(onoff) => {
+                if let Some(on) = node.properties.get("on") {
+                    return if controller
+                        .set(&device.id, &node.id, "on", onoff.on)
+                        .await
+                        .is_err()
+                    {
+                        response::PayloadCommand {
+                            ids,
+                            status: response::PayloadCommandStatus::Error,
+                            states: Default::default(),
+                            error_code: Some("transientError".to_string()),
+                        }
+                    } else {
+                        response::PayloadCommand {
+                            ids,
+                            status: response::PayloadCommandStatus::Pending,
+                            states: Default::default(),
+                            error_code: None,
+                        }
+                    };
+                }
+            }
+            _ => {}
+        }
+        response::PayloadCommand {
+            ids,
+            status: response::PayloadCommandStatus::Error,
+            states: Default::default(),
+            error_code: Some("actionNotAvailable".to_string()),
+        }
+    } else {
+        response::PayloadCommand {
+            ids,
+            status: response::PayloadCommandStatus::Error,
+            states: Default::default(),
+            error_code: Some("deviceNotFound".to_string()),
+        }
+    }
 }
 
 async fn execute_lighthouse_devices(
