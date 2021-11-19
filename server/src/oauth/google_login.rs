@@ -73,5 +73,5 @@ pub async fn handle(
         query,
         user.id,
         &state.config.secrets,
-    ))
+    )?)
 }

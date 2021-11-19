@@ -72,16 +72,16 @@ async fn on_refresh_token_grant(
         OAuthError::InvalidGrant(Some(format!("invalid refresh token: {}", err.to_string())))
     })?;
 
-    tracing::info!(user_id = %refresh_token.sub, "Refresh token grant");
+    tracing::info!(user_id = %refresh_token.claims.sub, "Refresh token grant");
 
     let expires_in = Client::GoogleHome.access_token_duration();
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: refresh_token.sub,
+            sub: refresh_token.claims.sub,
             exp: Utc::now() + expires_in,
         },
-    );
+    )?;
 
     Ok(Response {
         access_token: access_token.to_string(),
@@ -103,24 +103,24 @@ async fn on_authorization_code_grant(state: State, code: String) -> Result<Respo
         )))
     })?;
 
-    tracing::info!(user_id = %code.sub, "Authorization code grant");
+    tracing::info!(user_id = %code.claims.sub, "Authorization code grant");
 
     let expires_in = Duration::minutes(10);
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         AccessTokenPayload {
-            sub: code.sub,
+            sub: code.claims.sub,
             exp: Utc::now() + expires_in,
         },
-    );
+    )?;
 
     let refresh_token = RefreshToken::new(
         state.config.secrets.refresh_key.as_bytes(),
         RefreshTokenPayload {
-            sub: code.sub,
+            sub: code.claims.sub,
             exp: None,
         },
-    );
+    )?;
 
     Ok(Response {
         access_token: access_token.to_string(),

@@ -52,14 +52,14 @@ pub async fn handle(
                     sub: user.id,
                     exp: Some(Utc::now() + Duration::days(7)),
                 },
-            );
+            )?;
             let access_token = AccessToken::new(
                 state.config.secrets.access_key.as_bytes(),
                 AccessTokenPayload {
                     sub: user.id,
                     exp: Utc::now() + Duration::minutes(10),
                 },
-            );
+            )?;
             tracing::event!(Level::INFO, user_id = %user.id, "Logged in");
             Response::LoggedIn {
                 access_token: access_token.encode(),
@@ -149,7 +149,7 @@ mod tests {
             AccessToken::decode(state.config.secrets.access_key.as_bytes(), &at).unwrap(),
             RefreshToken::decode(state.config.secrets.refresh_key.as_bytes(), &rt).unwrap(),
         );
-        assert_eq!(at.sub, rt.sub);
+        assert_eq!(at.claims.sub, rt.claims.sub);
     }
 
     #[tokio::test]

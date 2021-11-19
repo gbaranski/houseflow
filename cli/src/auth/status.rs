@@ -40,10 +40,10 @@ impl crate::Command for Command {
             get_token_expiration(Some(&access_token.exp)),
             get_token_expiration(refresh_token.exp.as_ref()),
         );
-        let censored = || "*".repeat(32);
+        let censored = "*".repeat(32);
         let (access_token, refresh_token) = match self.show_token {
-            true => (access_token.to_string(), refresh_token.to_string()),
-            false => (censored(), censored()),
+            true => (&tokens.access, &tokens.refresh),
+            false => (&censored, &censored),
         };
 
         println!("✔ Logged in");

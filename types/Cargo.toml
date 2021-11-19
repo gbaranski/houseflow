@@ -29,9 +29,8 @@ rusqlite = { version = "0.25", optional = true }
 
 validator = { version = "0.13.0", features = ["derive"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"], optional = true }
-ring = { version = "0.16.20", optional = true }
-base64 = { version = "0.13.0", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
+jsonwebtoken = { version = "7.2.0", optional = true }
 
 askama = { version = "0.10.5", optional = true }
 
@@ -43,7 +42,7 @@ uuid = { version = "0.8.2", features = ["v4", "serde"] }
 
 [features]
 axum = ["axum_crate", "http", "http-body", "hyper"]
-token          = [ "ring", "chrono", "base64" ]
+token          = [ "chrono", "jsonwebtoken" ]
 auth           = [ "token", "validator" ]
 fulfillment    = [ "token", "lighthouse" ]
 lighthouse     = [ ]

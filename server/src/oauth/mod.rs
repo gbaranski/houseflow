@@ -8,6 +8,7 @@ use chrono::Utc;
 use houseflow_config::server::Google;
 use houseflow_config::server::Secrets;
 use houseflow_types::errors::OAuthError;
+use houseflow_types::errors::TokenError;
 use houseflow_types::token::AuthorizationCode;
 use houseflow_types::token::AuthorizationCodePayload;
 use houseflow_types::user::ID as UserID;
@@ -113,7 +114,7 @@ fn grant_authorization_code(
     query: AuthorizationRequestQuery,
     user_id: UserID,
     secrets: &Secrets,
-) -> http::Response<axum::body::Body> {
+) -> Result<http::Response<axum::body::Body>, TokenError> {
     let authorization_code_payload = AuthorizationCodePayload {
         sub: user_id,
         exp: Utc::now() + Duration::minutes(10),
@@ -121,7 +122,7 @@ fn grant_authorization_code(
     let authorization_code = AuthorizationCode::new(
         secrets.authorization_code_key.as_bytes(),
         authorization_code_payload,
-    );
+    )?;
     let mut redirect_uri = query.redirect_uri;
     redirect_uri.set_query(Some(&format!(
         "code={}&state={}",
@@ -130,11 +131,11 @@ fn grant_authorization_code(
 
     tracing::info!(%user_id, "Authorization code granted");
 
-    http::Response::builder()
+    Ok(http::Response::builder()
         .status(http::StatusCode::SEE_OTHER)
         .header("Location", redirect_uri.to_string())
         .body(axum::body::Body::empty())
-        .unwrap()
+        .unwrap())
 }
 
 #[cfg(test)]
