@@ -49,16 +49,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         clerk: Arc::new(clerk),
     };
 
-    let address_with_port = |port| std::net::SocketAddr::new(state.config.network.address, port);
-    let (address, tls_address) = (
-        address_with_port(defaults::server_port()),
-        address_with_port(defaults::server_port_tls()),
-    );
+    let address_with_port = |address, port| std::net::SocketAddr::new(address, port);
+    let address = address_with_port(state.config.network.address, state.config.network.port);
 
     if let Some(tls) = &state.config.tls {
         let fut = axum_server::bind(address).serve(houseflow_server::app(state.clone()));
         tracing::info!("Starting server at {}", address);
 
+        let tls_address = address_with_port(tls.address, tls.port);
         let tls_fut = axum_server::bind_rustls(tls_address)
             .certificate_file(&tls.certificate)
             .private_key_file(&tls.private_key)
