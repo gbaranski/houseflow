@@ -79,6 +79,12 @@ impl axum_crate::response::IntoResponse for ServerError {
     }
 }
 
+impl From<TokenError> for ServerError {
+    fn from(e: TokenError) -> Self {
+        Self::AuthError(e.into())
+    }
+}
+
 #[cfg(feature = "validator")]
 impl From<validator::ValidationErrors> for ServerError {
     fn from(errors: validator::ValidationErrors) -> Self {

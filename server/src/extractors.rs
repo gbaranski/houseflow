@@ -9,6 +9,7 @@ use houseflow_types::token::AccessTokenPayload;
 use houseflow_types::token::RefreshTokenPayload;
 use houseflow_types::token::Token;
 use houseflow_types::user;
+use jsonwebtoken::TokenData;
 use serde::de;
 use serde::ser;
 
@@ -22,17 +23,17 @@ impl axum::extract::FromRequest<Body> for UserID {
         req: &mut axum::extract::RequestParts<Body>,
     ) -> Result<Self, Self::Rejection> {
         let AccessToken(access_token) = AccessToken::from_request(req).await?;
-        Ok(Self(access_token.sub))
+        Ok(Self(access_token.claims.sub))
     }
 }
 
-pub struct RefreshToken(pub Token<RefreshTokenPayload>);
-pub struct AccessToken(pub Token<AccessTokenPayload>);
+pub struct RefreshToken(pub TokenData<RefreshTokenPayload>);
+pub struct AccessToken(pub TokenData<AccessTokenPayload>);
 
 async fn from_request<P>(
     req: &mut axum::extract::RequestParts<Body>,
     get_key_fn: impl FnOnce(&Secrets) -> &str,
-) -> Result<Token<P>, AuthError>
+) -> Result<TokenData<P>, AuthError>
 where
     P: ser::Serialize + de::DeserializeOwned,
 {
@@ -41,7 +42,9 @@ where
         .headers()
         .unwrap()
         .get(http::header::AUTHORIZATION)
-        .ok_or(TokenError::MissingHeader)?
+        .ok_or(TokenError {
+            description: "MissingHeader".to_string(),
+        })?
         .to_str()
         .map_err(|err| AuthError::InvalidAuthorizationHeader(err.to_string()))?;
 
@@ -53,8 +56,10 @@ where
         return Err(AuthError::InvalidAuthorizationHeader(schema.to_string()));
     }
 
-    let token = Token::<P>::decode(get_key_fn(&state.config.secrets).as_bytes(), token)?;
-    Ok(token)
+    Ok(Token::<P>::decode(
+        get_key_fn(&state.config.secrets).as_bytes(),
+        token,
+    )?)
 }
 
 #[async_trait]

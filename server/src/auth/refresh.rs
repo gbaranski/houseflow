@@ -18,15 +18,15 @@ pub async fn handle(
     Json(_request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
     let access_token_payload = AccessTokenPayload {
-        sub: refresh_token.sub,
+        sub: refresh_token.claims.sub,
         exp: Utc::now() + Duration::minutes(10),
     };
     let access_token = AccessToken::new(
         state.config.secrets.access_key.as_bytes(),
         access_token_payload,
-    );
+    )?;
 
-    tracing::event!(Level::INFO, user_id = %refresh_token.sub, "Refreshed token");
+    tracing::event!(Level::INFO, user_id = %refresh_token.claims.sub, "Refreshed token");
 
     Ok(Json(Response {
         refresh_token: None,
@@ -38,6 +38,8 @@ pub async fn handle(
 mod tests {
     use crate::test_utils::*;
     use axum::Json;
+    use houseflow_types::token::RefreshToken;
+    use houseflow_types::token::RefreshTokenPayload;
     use tokio::sync::mpsc;
 
     #[tokio::test]
@@ -51,16 +53,17 @@ mod tests {
             vec![],
             vec![user.clone()],
         );
-        let refresh_token = houseflow_types::token::RefreshToken::new(
+        let refresh_token = RefreshToken::new(
             state.config.secrets.refresh_key.as_bytes(),
-            houseflow_types::token::RefreshTokenPayload {
+            RefreshTokenPayload {
                 sub: user.id.clone(),
                 exp: None,
             },
-        );
+        )
+        .unwrap();
         let Json(response) = super::handle(
             state.clone(),
-            crate::extractors::RefreshToken(refresh_token.clone()),
+            crate::extractors::RefreshToken(refresh_token.clone().into()),
             Json(super::Request {}),
         )
         .await
@@ -70,6 +73,6 @@ mod tests {
             &response.access_token,
         )
         .unwrap();
-        assert_eq!(access_token.sub, refresh_token.sub);
+        assert_eq!(access_token.claims.sub, refresh_token.sub);
     }
 }

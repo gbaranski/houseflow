@@ -57,7 +57,7 @@ pub async fn handle(
                 .into());
             }
 
-            grant_authorization_code(query, user.id, &state.config.secrets)
+            grant_authorization_code(query, user.id, &state.config.secrets)?
         }
         None => {
             if state.clerk.count_verification_codes_for_user(&user.id)? > VERIFICATION_CODE_LIMIT {

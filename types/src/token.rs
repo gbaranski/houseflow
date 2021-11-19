@@ -1,42 +1,42 @@
 use crate::errors::TokenError as Error;
 use chrono::DateTime;
 use chrono::Utc;
+use jsonwebtoken::dangerous_insecure_decode_with_validation;
+use jsonwebtoken::{
+    dangerous_insecure_decode, decode, encode, Algorithm, DecodingKey, EncodingKey, Header,
+    TokenData, Validation,
+};
 use serde::de;
 use serde::ser;
 use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
-pub type Signature = Vec<u8>;
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[non_exhaustive]
-pub enum Algorithm {
-    /// HMAC using SHA-256
-    HS256,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Header {
-    alg: Algorithm,
-}
-
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq)]
 pub struct Token<P: ser::Serialize + de::DeserializeOwned> {
     header: Header,
     payload: P,
-    signature: Signature,
+    encoded: String,
+}
+
+impl<P: ser::Serialize + de::DeserializeOwned> From<Token<P>> for TokenData<P> {
+    fn from(token: Token<P>) -> Self {
+        Self {
+            header: token.header,
+            claims: token.payload,
+        }
+    }
 }
 
 impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<P> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.encode())
+        f.write_str(&self.encoded)
     }
 }
 
 impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Debug for Token<P> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.encode())
+        f.write_str(&self.encoded)
     }
 }
 
@@ -79,148 +79,62 @@ struct BasePayload {
     exp: Option<DateTime<Utc>>,
 }
 
-fn base64_encode(val: &[u8]) -> String {
-    base64::encode_config(&val, base64::URL_SAFE_NO_PAD)
-}
-
-fn base64_decode(val: &str) -> Result<Vec<u8>, base64::DecodeError> {
-    base64::decode_config(val, base64::URL_SAFE_NO_PAD)
-}
-
-fn encode_part<T: ser::Serialize>(val: &T) -> String {
-    let string = serde_json::to_string(val).unwrap();
-    base64_encode(string.as_bytes())
-}
-
-fn decode_part<T: de::DeserializeOwned>(val: &str) -> Result<T, Error> {
-    let json_bytes = base64_decode(val).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
-    let json =
-        String::from_utf8(json_bytes).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
-    serde_json::from_str(&json).map_err(|err| Error::InvalidJSON(err.to_string()))
-}
-
-use ring::hmac;
-
 impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
-    pub fn new(key: &[u8], payload: P) -> Self {
+    pub fn new(key: &[u8], payload: P) -> Result<Self, Error> {
         const ALGORITHM: Algorithm = Algorithm::HS256; // that can be changed in the future
-        const HEADER: Header = Header { alg: ALGORITHM };
 
-        let raw_header = encode_part(&HEADER);
-        let raw_payload = encode_part(&payload);
-        let message = [raw_header, raw_payload].join(".");
-        let signature: Signature = match ALGORITHM {
-            Algorithm::HS256 => {
-                let key = hmac::Key::new(hmac::HMAC_SHA256, key);
-                Vec::from(hmac::sign(&key, message.as_bytes()).as_ref())
-            }
-        };
+        let header = Header::new(ALGORITHM);
+        let encoded = encode(&header, &payload, &EncodingKey::from_secret(key))?;
 
-        Self {
-            header: HEADER,
+        Ok(Self {
+            header,
             payload,
-            signature,
-        }
+            encoded,
+        })
     }
 
     pub fn encode(&self) -> String {
-        let raw_header = encode_part(&self.header);
-        let raw_payload = encode_part(&self.payload);
-        let raw_signature = base64_encode(&self.signature);
-        [raw_header, raw_payload, raw_signature].join(".")
+        self.encoded.clone()
     }
 
+    /// Validate the expiry (if it is present) but not the signature.
     pub fn decode_unsafe(token: &str) -> Result<Self, Error> {
-        let mut iter = token.split('.');
-        let raw_header = iter.next().ok_or(Error::MissingHeader)?;
-        let raw_payload = iter.next().ok_or(Error::MissingPayload)?;
-        let raw_signature = iter.next().ok_or(Error::MissingSignature)?;
-
-        let header = decode_part::<Header>(raw_header)?;
-        let signature =
-            base64_decode(raw_signature).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
-
-        let payload_base = decode_part::<BasePayload>(raw_payload)?;
-        validate(&payload_base)?;
-        let payload = decode_part::<P>(raw_payload)?;
-        let token = Token {
-            header,
-            payload,
-            signature,
+        // Hack to allow tokens without "exp", but validate it if it is present.
+        let unvalidated_data: TokenData<BasePayload> = dangerous_insecure_decode(token)?;
+        let validation = Validation {
+            validate_exp: unvalidated_data.claims.exp.is_some(),
+            ..Validation::default()
         };
 
-        Ok(token)
+        let data = dangerous_insecure_decode_with_validation(token, &validation)?;
+        Ok(Self {
+            header: data.header,
+            payload: data.claims,
+            encoded: token.to_owned(),
+        })
     }
 
+    /// Don't validate anything.
     pub fn decode_unsafe_novalidate(token: &str) -> Result<Self, Error> {
-        let mut iter = token.split('.');
-        let raw_header = iter.next().ok_or(Error::MissingHeader)?;
-        let raw_payload = iter.next().ok_or(Error::MissingPayload)?;
-        let raw_signature = iter.next().ok_or(Error::MissingSignature)?;
-
-        let header = decode_part::<Header>(raw_header)?;
-        let signature =
-            base64_decode(raw_signature).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
-
-        let payload = decode_part::<P>(raw_payload)?;
-        let token = Token {
-            header,
-            payload,
-            signature,
-        };
-
-        Ok(token)
+        let data = dangerous_insecure_decode(token)?;
+        Ok(Self {
+            header: data.header,
+            payload: data.claims,
+            encoded: token.to_owned(),
+        })
     }
 
-    pub fn decode(key: &[u8], token: &str) -> Result<Self, Error> {
-        let mut iter = token.split('.');
-        let raw_header = iter.next().ok_or(Error::MissingHeader)?;
-        let raw_payload = iter.next().ok_or(Error::MissingPayload)?;
-        let raw_signature = iter.next().ok_or(Error::MissingSignature)?;
-
-        let header = decode_part::<Header>(raw_header)?;
-        let signature =
-            base64_decode(raw_signature).map_err(|err| Error::InvalidEncoding(err.to_string()))?;
-
-        let is_signature_valid = match header.alg {
-            Algorithm::HS256 => {
-                let key = hmac::Key::new(hmac::HMAC_SHA256, key);
-                hmac::verify(
-                    &key,
-                    [raw_header, raw_payload].join(".").as_bytes(),
-                    &signature,
-                )
-                .is_ok()
-            }
-        };
-        if !is_signature_valid {
-            return Err(Error::InvalidSignature);
-        }
-
-        let payload_base = decode_part::<BasePayload>(raw_payload)?;
-        validate(&payload_base)?;
-        let payload = decode_part::<P>(raw_payload)?;
-        let token = Token {
-            header,
-            payload,
-            signature,
+    /// Validate the signature, and the expiry if it is present.
+    pub fn decode(key: &[u8], token: &str) -> Result<TokenData<P>, Error> {
+        // Hack to allow tokens without "exp", but validate it if it is present.
+        let unvalidated_data: TokenData<BasePayload> = dangerous_insecure_decode(token)?;
+        let validation = Validation {
+            validate_exp: unvalidated_data.claims.exp.is_some(),
+            ..Validation::default()
         };
 
-        Ok(token)
+        Ok(decode(token, &DecodingKey::from_secret(key), &validation)?)
     }
-}
-
-fn validate(base_payload: &BasePayload) -> Result<(), Error> {
-    if let Some(exp) = base_payload.exp {
-        let difference = Utc::now().timestamp() - exp.timestamp();
-        if difference > 0 {
-            return Err(Error::Expired {
-                seconds: difference as u64,
-            });
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
@@ -245,10 +159,11 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: Utc::now().round_subsecs(0) + chrono::Duration::hours(1),
             };
-            let token = AccessToken::new(&key, payload);
+            let token = AccessToken::new(&key, payload).unwrap();
             let encoded = token.encode();
             let decoded = AccessToken::decode(&key, &encoded).unwrap();
-            assert_eq!(token, decoded);
+            assert_eq!(token.header, decoded.header);
+            assert_eq!(token.payload, decoded.claims);
         }
 
         #[test]
@@ -259,13 +174,13 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: Utc::now() - expired_by,
             };
-            let token = AccessToken::new(&key, payload);
+            let token = AccessToken::new(&key, payload).unwrap();
             let encoded = token.encode();
             let err = Token::<AccessTokenPayload>::decode(&key, &encoded).unwrap_err();
             assert_eq!(
                 err,
-                Error::Expired {
-                    seconds: expired_by.num_seconds() as u64
+                Error {
+                    description: "ExpiredSignature".to_string(),
                 }
             );
         }
@@ -278,10 +193,15 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: Utc::now() - chrono::Duration::hours(1),
             };
-            let token = AccessToken::new(&valid_key, payload);
+            let token = AccessToken::new(&valid_key, payload).unwrap();
             let encoded = token.encode();
             let err = AccessToken::decode(&invalid_key, &encoded).unwrap_err();
-            assert_eq!(err, Error::InvalidSignature);
+            assert_eq!(
+                err,
+                Error {
+                    description: "InvalidSignature".to_string()
+                }
+            );
         }
     }
 
@@ -295,10 +215,11 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
             };
-            let token = RefreshToken::new(&key, payload);
+            let token = RefreshToken::new(&key, payload).unwrap();
             let encoded = token.encode();
             let decoded = RefreshToken::decode(&key, &encoded).unwrap();
-            assert_eq!(token, decoded);
+            assert_eq!(token.header, decoded.header);
+            assert_eq!(token.payload, decoded.claims);
         }
 
         #[test]
@@ -308,10 +229,11 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: None,
             };
-            let token = RefreshToken::new(&key, payload);
+            let token = RefreshToken::new(&key, payload).unwrap();
             let encoded = token.encode();
             let decoded = RefreshToken::decode(&key, &encoded).unwrap();
-            assert_eq!(token, decoded);
+            assert_eq!(token.header, decoded.header);
+            assert_eq!(token.payload, decoded.claims);
         }
 
         #[test]
@@ -322,13 +244,13 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: Some(Utc::now() - expired_by),
             };
-            let token = Token::new(&key, payload);
+            let token = Token::new(&key, payload).unwrap();
             let encoded = token.encode();
             let err = RefreshToken::decode(&key, &encoded).unwrap_err();
             assert_eq!(
                 err,
-                Error::Expired {
-                    seconds: expired_by.num_seconds() as u64
+                Error {
+                    description: "ExpiredSignature".to_string()
                 }
             );
         }
@@ -341,10 +263,15 @@ mod tests {
                 sub: Uuid::new_v4(),
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
             };
-            let token = RefreshToken::new(&valid_key, payload);
+            let token = RefreshToken::new(&valid_key, payload).unwrap();
             let encoded = token.encode();
             let err = RefreshToken::decode(&invalid_key, &encoded).unwrap_err();
-            assert_eq!(err, Error::InvalidSignature);
+            assert_eq!(
+                err,
+                Error {
+                    description: "InvalidSignature".to_string()
+                }
+            );
         }
     }
 }
