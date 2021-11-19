@@ -1,7 +1,11 @@
 use houseflow_config::hub::Config;
 use houseflow_config::Config as _;
-use houseflow_hub::Hub;
 use houseflow_config::Error as ConfigError;
+use houseflow_hub::providers::MasterProvider;
+use houseflow_hub::providers::MijiaProvider;
+use houseflow_hub::services::HapService;
+use houseflow_hub::services::MasterService;
+use houseflow_hub::Hub;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -27,6 +31,25 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let hub = Hub::new(config);
+    let services = {
+        let mut services = vec![];
+        if let Some(hap_config) = config.providers.hap.as_ref() {
+            services.push(Box::new(HapService::new(hap_config).await?) as _);
+        }
+        services
+    };
+    let providers = {
+        let mut providers = vec![];
+        if let Some(mijia_config) = config.services.mijia {
+            providers
+                .push(Box::new(MijiaProvider::new(mijia_config, config.accessories.clone()).await?) as _);
+        }
+        providers
+    };
+    let hub = Hub::new(
+        MasterService::new(services),
+        MasterProvider::new(providers),
+    )
+    .await?;
     hub.run().await
 }

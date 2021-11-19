@@ -5,5 +5,6 @@ url = "wss://example.com:${SERVER_PORT}/hello/world"
 
 [[devices]]
 id = "37c6a8bd-264c-4653-a641-c9b574207be5"
+name = "Thermometer"
 type = "xiaomi-mijia"
 mac-address = "A4:C1:38:EF:77:51"

@@ -9,7 +9,9 @@ use url::Url;
 pub struct Config {
     #[serde(default)]
     pub server: Server,
-    pub devices: Vec<Device>,
+    pub accessories: Vec<Accessory>,
+    pub providers: Providers,
+    pub services: Services,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -21,24 +23,53 @@ pub struct Server {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Device {
+pub struct Accessory {
     /// ID of the device
     pub id: device::ID,
-    /// Type of the device, possibly with additional parameters
+    /// Name of the device
+    pub name: String,
+    /// Type of the accessory, possibly with additional parameters
     #[serde(flatten)]
-    pub r#type: DeviceType,
+    pub r#type: AccessoryType,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 #[non_exhaustive]
-pub enum DeviceType {
+pub enum AccessoryType {
     XiaomiMijia {
-        // TODO: Make it strongly typed
+        // TODO: Make it strictly typed
         #[serde(rename = "mac-address")]
         mac_address: String,
     },
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Providers {
+    #[serde(default)]
+    pub hap: Option<HapProvider>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct HapProvider {
+    // TODO: Make it strictly typed
+    pub pin: String,
+    /// Name of the bridge
+    pub name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Services {
+    #[serde(default)]
+    pub mijia: Option<MijiaService>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct MijiaService {}
 
 impl crate::Config for Config {
     const DEFAULT_TOML: &'static str = include_str!("default.toml");
@@ -69,10 +100,14 @@ impl Default for Server {
 
 #[cfg(test)]
 mod tests {
+    use super::Accessory;
+    use super::AccessoryType;
     use super::Config;
-    use super::Device;
-    use super::DeviceType;
+    use super::HapProvider;
+    use super::MijiaService;
+    use super::Providers;
     use super::Server;
+    use super::Services;
     use crate::Config as _;
     use houseflow_types::device;
     use url::Url;
@@ -83,12 +118,22 @@ mod tests {
             server: Server {
                 url: Url::parse("wss://example.com:1234/hello/world").unwrap(),
             },
-            devices: vec![Device {
+            accessories: vec![Accessory {
                 id: device::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
-                r#type: DeviceType::XiaomiMijia {
+                name: String::from("Thermometer"),
+                r#type: AccessoryType::XiaomiMijia {
                     mac_address: "A4:C1:38:EF:77:51".to_string(),
                 },
             }],
+            providers: Providers {
+                hap: Some(HapProvider {
+                    pin: "12345678".to_string(),
+                    name: "My Home".to_string(),
+                }),
+            },
+            services: Services {
+                mijia: Some(MijiaService {}),
+            },
         };
 
         std::env::set_var(
