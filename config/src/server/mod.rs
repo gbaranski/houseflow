@@ -79,6 +79,12 @@ pub struct Secrets {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Tls {
+    /// Server address
+    #[serde(default = "defaults::server_listen_address")]
+    pub address: std::net::IpAddr,
+    /// Server port
+    #[serde(default = "defaults::server_port")]
+    pub port: u16,
     /// Path to the TLS certificate
     pub certificate: std::path::PathBuf,
     /// Path to the TLS private key
@@ -325,6 +331,8 @@ mod tests {
             tls: Some(Tls {
                 certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
                 private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
+                address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 2, 3, 4)),
+                port: 4321,
             }),
             email: Email {
                 url: Url::from_str("smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666").unwrap(),
