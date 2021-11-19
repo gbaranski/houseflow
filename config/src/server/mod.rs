@@ -284,12 +284,12 @@ impl Config {
 
     pub fn get_base_url(&self) -> Url {
         self.network.base_url.clone().unwrap_or_else(|| {
-            let scheme = if self.tls.is_some() { "https" } else { "http" };
-            Url::parse(&format!(
-                "{}://{}:{}",
-                scheme, self.network.address, self.network.port
-            ))
-            .unwrap()
+            let (scheme, address, port) = if let Some(tls) = &self.tls {
+                ("https", &tls.address, &tls.port)
+            } else {
+                ("http", &self.network.address, &self.network.port)
+            };
+            Url::parse(&format!("{}://{}:{}", scheme, address, port)).unwrap()
         })
     }
 }
