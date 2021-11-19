@@ -14,6 +14,7 @@ resolver = "2"
 
 [dependencies]
 houseflow-types = { path="../types", version="0.1.1", features=[
+    "askama",
     "axum",
     "token",
     "auth",
@@ -22,6 +23,7 @@ houseflow-types = { path="../types", version="0.1.1", features=[
 ] }
 houseflow-config = { path="../config", version="0.1.1", features=["server", "fs"] }
 google-smart-home = { path = "../google-smart-home" }
+askama = "0.10.5"
 tokio = { version="1.5", features=["sync", "time", "macros", "rt-multi-thread"] }
 validator = "0.13.0"
 thiserror = "1.0"
@@ -51,6 +53,7 @@ lettre = { version = "0.10.0-rc.3", default-features = false, features = ["smtp-
 base64 = "0.13.0"
 bincode = "1.3.3"
 axum-server = { version = "0.2.5", features = ["tls-rustls"] }
+jsonwebtoken-google = "0.1.2"
 urlencoding = "2.1.0"
 
 [dev-dependencies]

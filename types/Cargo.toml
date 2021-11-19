@@ -33,6 +33,8 @@ ring = { version = "0.16.20", optional = true }
 base64 = { version = "0.13.0", optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 
+askama = { version = "0.10.5", optional = true }
+
 axum_crate = { package = "axum", version = "0.2.0", optional = true }
 http = { version = "0.2.4", optional = true }
 http-body = { version = "0.4.2", optional = true }

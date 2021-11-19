@@ -1,6 +1,7 @@
 [network]
 address = "0.0.0.0"
 port = 1234
+base-url = "http://localhost:1234"
 
 [secrets]
 refresh-key = "${REFRESH_KEY}"
@@ -21,6 +22,9 @@ from = "houseflow@gbaranski.com"
 client-id = "google-client-id"
 client-secret = "google-client-secret"
 project-id = "google-project-id"
+
+[logins.google]
+client-id = "google-login-client-id"
 
 [[structures]]
 id = "bd7feab5033940e296ed7fcdc700ba65"

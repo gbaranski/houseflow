@@ -31,6 +31,9 @@ pub struct Config {
     /// Configuration of the Google 3rd party client
     #[serde(default)]
     pub google: Option<Google>,
+    /// Configuration for login options
+    #[serde(default)]
+    pub logins: Logins,
     /// Structures
     #[serde(default)]
     pub structures: Vec<Structure>,
@@ -57,6 +60,9 @@ pub struct Network {
     /// Server port
     #[serde(default = "defaults::server_port")]
     pub port: u16,
+    /// Base public URL of server, if different to the listen address and port.
+    #[serde(default)]
+    pub base_url: Option<Url>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -73,12 +79,6 @@ pub struct Secrets {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Tls {
-    /// Server address
-    #[serde(default = "defaults::server_listen_address")]
-    pub address: std::net::IpAddr,
-    /// Server port
-    #[serde(default = "defaults::server_port_tls")]
-    pub port: u16,
     /// Path to the TLS certificate
     pub certificate: std::path::PathBuf,
     /// Path to the TLS private key
@@ -103,6 +103,20 @@ pub struct Google {
     pub client_secret: String,
     /// Google Project ID
     pub project_id: String,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Logins {
+    /// Configuration for Google login.
+    pub google: Option<GoogleLogin>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct GoogleLogin {
+    /// OAuth2 Client ID identifying your service to Google.
+    pub client_id: String,
 }
 
 impl crate::Config for Config {
@@ -191,6 +205,7 @@ impl Default for Network {
         Self {
             address: defaults::server_listen_address(),
             port: defaults::server_port(),
+            base_url: None,
         }
     }
 }
@@ -260,16 +275,22 @@ impl Config {
             .collect::<Vec<_>>();
         devices
     }
+
+    pub fn get_base_url(&self) -> Url {
+        self.network.base_url.clone().unwrap_or_else(|| {
+            let scheme = if self.tls.is_some() { "https" } else { "http" };
+            Url::parse(&format!(
+                "{}://{}:{}",
+                scheme, self.network.address, self.network.port
+            ))
+            .unwrap()
+        })
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Config;
-    use super::Email;
-    use super::Google;
-    use super::Network;
-    use super::Secrets;
-    use super::Tls;
+    use super::*;
     use crate::Config as _;
 
     use semver::Version;
@@ -294,6 +315,7 @@ mod tests {
             network: Network {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
                 port: 1234,
+                base_url: Some(Url::from_str("http://localhost:1234").unwrap()),
             },
             secrets: Secrets {
                 refresh_key: String::from("some-refresh-key"),
@@ -303,8 +325,6 @@ mod tests {
             tls: Some(Tls {
                 certificate: std::path::PathBuf::from_str("/etc/certificate").unwrap(),
                 private_key: std::path::PathBuf::from_str("/etc/private-key").unwrap(),
-                address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 2, 3, 4)),
-                port: 4321,
             }),
             email: Email {
                 url: Url::from_str("smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666").unwrap(),
@@ -315,6 +335,11 @@ mod tests {
                 client_secret: String::from("google-client-secret"),
                 project_id: String::from("google-project-id"),
             }),
+            logins: Logins {
+                google: Some(GoogleLogin {
+                    client_id: String::from("google-login-client-id"),
+                })
+            },
             structures: [Structure {
                 id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
                 name: String::from("Zukago"),
@@ -477,6 +502,7 @@ mod tests {
                 from: String::new(),
             },
             google: Default::default(),
+            logins: Default::default(),
             structures: [structure_auth.clone(), structure_unauth.clone()].to_vec(),
             rooms: [
                 room_auth_one,

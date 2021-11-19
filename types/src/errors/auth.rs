@@ -30,4 +30,10 @@ pub enum Error {
     /// User does not have permission to a device
     #[error("user does not have permission to a specified device")]
     NoDevicePermission,
+    /// Invalid Google JWT
+    #[error("invalid Google JWT: {0}")]
+    InvalidGoogleJwt(String),
+    /// The CSRF token cookie was missing, or didn't match the token in the request.
+    #[error("Missing or invalid CSRF token")]
+    InvalidCsrfToken,
 }

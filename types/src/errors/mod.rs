@@ -60,6 +60,8 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::RefreshTokenBlacklisted => StatusCode::UNAUTHORIZED,
                 AuthError::NoDevicePermission => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidVerificationCode(_) => StatusCode::UNAUTHORIZED,
+                AuthError::InvalidGoogleJwt(_) => StatusCode::UNAUTHORIZED,
+                AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },
             Self::OAuthError(_) => StatusCode::BAD_REQUEST,
             Self::FulfillmentError(ref err) => match err {
@@ -81,5 +83,19 @@ impl axum_crate::response::IntoResponse for ServerError {
 impl From<validator::ValidationErrors> for ServerError {
     fn from(errors: validator::ValidationErrors) -> Self {
         Self::ValidationError(errors.to_string())
+    }
+}
+
+#[cfg(feature = "askama")]
+impl From<askama::Error> for InternalError {
+    fn from(e: askama::Error) -> Self {
+        Self::Template(e.to_string())
+    }
+}
+
+#[cfg(feature = "askama")]
+impl From<askama::Error> for ServerError {
+    fn from(e: askama::Error) -> Self {
+        Self::InternalError(e.into())
     }
 }

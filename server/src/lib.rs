@@ -51,6 +51,7 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
             Router::new()
                 .route("/authorize", get(oauth::authorize::handle))
                 .route("/login", post(oauth::login::handle))
+                .route("/google_login", post(oauth::google_login::handle))
                 .route("/token", post(oauth::token::handle)),
         )
         .nest(
@@ -96,9 +97,10 @@ mod test_utils {
     use super::State;
     use crate::clerk::sled::Clerk;
     use axum::extract;
-    use houseflow_config::defaults;
     use houseflow_config::server::Config;
     use houseflow_config::server::Email;
+    use houseflow_config::server::GoogleLogin;
+    use houseflow_config::server::Logins;
     use houseflow_config::server::Network;
     use houseflow_config::server::Secrets;
     use houseflow_types::code::VerificationCode;
@@ -127,10 +129,7 @@ mod test_utils {
         users: Vec<User>,
     ) -> extract::Extension<State> {
         let config = Config {
-            network: Network {
-                address: defaults::server_listen_address(),
-                port: defaults::server_port(),
-            },
+            network: Network::default(),
             secrets: Secrets {
                 refresh_key: String::from("refresh-key"),
                 access_key: String::from("access-key"),
@@ -146,6 +145,11 @@ mod test_utils {
                 client_secret: String::from("client-secret"),
                 project_id: String::from("project-id"),
             }),
+            logins: Logins {
+                google: Some(GoogleLogin {
+                    client_id: String::from("google-login-client-id"),
+                }),
+            },
             structures,
             rooms,
             devices,

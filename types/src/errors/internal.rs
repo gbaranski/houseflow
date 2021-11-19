@@ -9,4 +9,6 @@ pub enum Error {
     Mailer(String),
     #[error("other: {0}")]
     Other(String),
+    #[error("rendering template: {0}")]
+    Template(String),
 }

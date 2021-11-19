@@ -1,0 +1,46 @@
+<html>
+<head>
+    <title>OAuth login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script>
+        function showVerificationCodeInput() {
+            const verificationCodeInput = document.getElementById("verification-code");
+            verificationCodeInput.hidden = false;
+            verificationCodeInput.disabled = false;
+        }
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div>
+    <h1>Login</h1>
+    <form method="POST" id="form"
+        action="login?client_id={{ client_id }}&redirect_uri={{ redirect_uri }}&state={{ state }}&response_type=code">
+        <input type="email" autocomplete="email" name="email" placeholder="Email" required />
+        <br />
+        <input type="text" disabled hidden name="verification-code" id="verification-code"
+            placeholder="Verification code received from E-Mail." />
+        <br />
+        <input type="submit"/>
+    </form>
+    <a href="javascript:showVerificationCodeInput()">Already have verification code?</a>
+</div>
+{% match google_login_client_id %}
+{% when Some with (login_client_id) %}
+<div id="g_id_onload"
+    data-client_id="{{ login_client_id }}"
+    data-login_uri="{{ base_url }}oauth/google_login?client_id={{ client_id }}&redirect_uri={{ redirect_uri }}&state={{ state }}&response_type=code"
+    data-auto_prompt="false">
+</div>
+<div class="g_id_signin"
+    data-type="standard"
+    data-size="large"
+    data-theme="outline"
+    data-text="sign_in_with"
+    data-shape="rectangular"
+    data-logo_alignment="left">
+</div>
+{% when None %}
+{% endmatch %}
+</body>
+</html>

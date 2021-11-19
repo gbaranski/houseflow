@@ -1,7 +1,16 @@
 pub mod authorize;
+pub mod google_login;
 pub mod login;
 pub mod token;
 
+use chrono::Duration;
+use chrono::Utc;
+use houseflow_config::server::Google;
+use houseflow_config::server::Secrets;
+use houseflow_types::errors::OAuthError;
+use houseflow_types::token::AuthorizationCode;
+use houseflow_types::token::AuthorizationCodePayload;
+use houseflow_types::user::ID as UserID;
 use serde::Deserialize;
 use serde::Serialize;
 use url::Url;
@@ -36,6 +45,20 @@ fn default_user_locale() -> String {
 
 const GOOGLE_OAUTH_REDIRECT_URL: &str = "oauth-redirect.googleusercontent.com";
 const GOOGLE_SANDBOX_OAUTH_REDIRECT_URL: &str = "oauth-redirect-sandbox.googleusercontent.com";
+
+fn verify_oauth_query(
+    query: &AuthorizationRequestQuery,
+    google_config: &Google,
+) -> Result<(), OAuthError> {
+    if *query.client_id != *google_config.client_id {
+        return Err(OAuthError::InvalidClient(Some(
+            "invalid client id".to_string(),
+        )));
+    }
+    verify_redirect_uri(&query.redirect_uri, &google_config.project_id)
+        .map_err(|err| OAuthError::InvalidRequest(Some(err.to_string())))?;
+    Ok(())
+}
 
 fn verify_redirect_uri(
     redirect_uri: &Url,
@@ -82,6 +105,36 @@ pub enum InvalidRedirectURIError {
     InvalidPath,
     #[error("invalid project id")]
     InvalidProjectID,
+}
+
+/// The given user has successfully authenticated, so grant them an OAuth authentication code by
+/// redirecting to the redirect_uri.
+fn grant_authorization_code(
+    query: AuthorizationRequestQuery,
+    user_id: UserID,
+    secrets: &Secrets,
+) -> http::Response<axum::body::Body> {
+    let authorization_code_payload = AuthorizationCodePayload {
+        sub: user_id,
+        exp: Utc::now() + Duration::minutes(10),
+    };
+    let authorization_code = AuthorizationCode::new(
+        secrets.authorization_code_key.as_bytes(),
+        authorization_code_payload,
+    );
+    let mut redirect_uri = query.redirect_uri;
+    redirect_uri.set_query(Some(&format!(
+        "code={}&state={}",
+        authorization_code, query.state
+    )));
+
+    tracing::info!(%user_id, "Authorization code granted");
+
+    http::Response::builder()
+        .status(http::StatusCode::SEE_OTHER)
+        .header("Location", redirect_uri.to_string())
+        .body(axum::body::Body::empty())
+        .unwrap()
 }
 
 #[cfg(test)]
