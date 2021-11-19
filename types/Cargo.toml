@@ -13,28 +13,28 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hex            = "0.4"
-rand           = "0.8"
-thiserror      = "1.0"
-bytes          = "1"
-semver         = { version = "1.0.3", features = ["serde"] }
+hex = "0.4"
+rand = "0.8"
+thiserror = "1.0"
+bytes = "1"
+semver = { version = "1.0.3", features = ["serde"] }
 
 
-strum          = { version = "0.21.0", features = ["derive"] }
+strum = { version = "0.23.0", features = ["derive"] }
 
-serde          = { version = "1.0", features = ["derive"] }
-serde_json     = { version = "1.0.64" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.64" }
 
-rusqlite = { version = "0.25", optional = true } 
+rusqlite = { version = "0.26.1", optional = true }
 
-validator = { version = "0.13.0", features = ["derive"], optional = true }
+validator = { version = "0.14.0", features = ["derive"], optional = true }
 chrono = { version = "0.4.19", features = ["serde"], optional = true }
 url = { version = "2.2.2", features = ["serde"] }
 jsonwebtoken = { version = "7.2.0", optional = true }
 
 askama = { version = "0.10.5", optional = true }
 
-axum_crate = { package = "axum", version = "0.2.0", optional = true }
+axum_crate = { package = "axum", version = "0.3.4", optional = true }
 http = { version = "0.2.4", optional = true }
 http-body = { version = "0.4.2", optional = true }
 hyper = { version = "0.14.11", optional = true }
@@ -42,7 +42,7 @@ uuid = { version = "0.8.2", features = ["v4", "serde"] }
 
 [features]
 axum = ["axum_crate", "http", "http-body", "hyper"]
-token          = [ "chrono", "jsonwebtoken" ]
-auth           = [ "token", "validator" ]
-fulfillment    = [ "token", "lighthouse" ]
-lighthouse     = [ ]
+token = ["chrono", "jsonwebtoken"]
+auth = ["token", "validator"]
+fulfillment = ["token", "lighthouse"]
+lighthouse = []

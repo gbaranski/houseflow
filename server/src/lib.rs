@@ -26,9 +26,9 @@ pub struct State {
     pub sessions: Arc<DashMap<device::ID, lighthouse::Session>>,
 }
 
-pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
-    use axum::handler::get;
-    use axum::handler::post;
+pub fn app(state: State) -> Router<hyper::Body> {
+    use axum::routing::get;
+    use axum::routing::post;
     use http::Request;
     use http::Response;
     use hyper::Body;
@@ -43,8 +43,7 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
             Router::new()
                 .route("/login", post(auth::login::handle))
                 .route("/refresh", post(auth::refresh::handle))
-                .route("/whoami", get(auth::whoami::handle))
-                .boxed(),
+                .route("/whoami", get(auth::whoami::handle)),
         )
         .nest(
             "/oauth",
@@ -88,7 +87,6 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
                     tracing::debug!("response processed")
                 }),
         )
-        .boxed()
 }
 
 #[cfg(test)]

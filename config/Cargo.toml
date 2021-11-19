@@ -12,14 +12,16 @@ resolver = "2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-houseflow-types = { path = "../types/", version = "0.1.1", features = ["token"] }
+houseflow-types = { path = "../types/", version = "0.1.1", features = [
+    "token",
+] }
 hex = "0.4.3"
 rand = "0.8.4"
 serde = { version = "1.0.126", features = ["derive"] }
 thiserror = "1.0.25"
 xdg = "2.2.0"
 url = { version = "2.2.2", features = ["serde"] }
-tracing-subscriber = "0.2.19"
+tracing-subscriber = "0.3.1"
 tracing = "0.1.26"
 toml = { version = "0.5.8" }
 serde_with = { version = "1.10.0", optional = true }

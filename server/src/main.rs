@@ -1,3 +1,4 @@
+use axum_server::tls_rustls;
 use houseflow_config::defaults;
 use houseflow_config::server::Config;
 use houseflow_config::Config as _;
@@ -53,14 +54,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let address = address_with_port(state.config.network.address, state.config.network.port);
 
     if let Some(tls) = &state.config.tls {
-        let fut = axum_server::bind(address).serve(houseflow_server::app(state.clone()));
+        let fut = axum_server::bind(address)
+            .serve(houseflow_server::app(state.clone()).into_make_service());
         tracing::info!("Starting server at {}", address);
 
         let tls_address = address_with_port(tls.address, tls.port);
-        let tls_fut = axum_server::bind_rustls(tls_address)
-            .certificate_file(&tls.certificate)
-            .private_key_file(&tls.private_key)
-            .serve(houseflow_server::app(state));
+        let tls_config =
+            tls_rustls::RustlsConfig::from_pem_file(&tls.certificate, &tls.private_key).await?;
+        let tls_fut = axum_server::bind_rustls(tls_address, tls_config)
+            .serve(houseflow_server::app(state).into_make_service());
         tracing::info!("Starting TLS server at {}", tls_address);
 
         tokio::select! {
@@ -68,7 +70,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             val = tls_fut => val?
         };
     } else {
-        let fut = axum_server::bind(address).serve(houseflow_server::app(state));
+        let fut =
+            axum_server::bind(address).serve(houseflow_server::app(state).into_make_service());
         tracing::info!("Starting server at {}", address);
         fut.await?;
     }

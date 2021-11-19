@@ -17,14 +17,14 @@ houseflow-config  = { path = "../config", version = "0.1.1", features = [ "devic
 tokio             = { version = "1.5", features = [ "macros", "sync", "time" ] }
 bytes             = "1.0"
 futures-util      = "0.3"
-tokio-tungstenite = { version = "0.14", features = ["rustls-tls"] }
-tungstenite       = { version = "0.13", features = ["rustls-tls"] }
+tokio-tungstenite = { version = "0.16.0", features = ["rustls-tls-webpki-roots"] }
+tungstenite       = { version = "0.16.0", features = ["rustls-tls-webpki-roots"] }
 http              = "0.2.4"
 anyhow            = "1.0"
 url               = "2.2"
 async-trait = "0.1.50"
 serde = "1.0.126"
 serde_json = "1.0.64"
-strum = { version = "0.21.0", features = ["derive"] }
+strum = { version = "0.23.0", features = ["derive"] }
 tracing = "0.1.26"
 base64 = "0.13.0"

@@ -11,14 +11,21 @@ edition = "2021"
 resolver = "2"
 
 [dependencies]
-houseflow-api = { version="0.1.1", path="../api", features=["auth", "fulfillment", "sync"] }
-houseflow-config = { version="0.1.1", path="../config", features=["client", "fs"] }
-houseflow-types = { version="0.1.1", path="../types", features=["token"] }
+houseflow-api = { version = "0.1.1", path = "../api", features = [
+    "auth",
+    "fulfillment",
+    "sync",
+] }
+houseflow-config = { version = "0.1.1", path = "../config", features = [
+    "client",
+    "fs",
+] }
+houseflow-types = { version = "0.1.1", path = "../types", features = ["token"] }
 
-szafka = { version="0.3.0" }
-dialoguer = { version="0.8.0" }
-url = { version="2.2.2", features=["serde"] }
-strum = { version="0.21.0", features=["derive"] }
+szafka = { version = "0.3.0" }
+dialoguer = { version = "0.9.0" }
+url = { version = "2.2.2", features = ["serde"] }
+strum = { version = "0.23.0", features = ["derive"] }
 anyhow = "1.0.40"
 xdg = "2.2.0"
 serde = "1.0"
@@ -30,5 +37,5 @@ serde_json = "1.0.64"
 semver = { version = "1.0.3" }
 chrono = "0.4.19"
 tracing = "0.1.26"
-tracing-subscriber = "0.2.19"
+tracing-subscriber = "0.3.1"
 Inflector = "0.11.4"

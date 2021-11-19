@@ -97,7 +97,7 @@ pub enum Error {
 pub fn init_logging(hide_timestamp: bool) {
     const LOG_ENV: &str = "HOUSEFLOW_LOG";
     use std::str::FromStr;
-    use tracing_subscriber::EnvFilter;
+    use tracing::Level;
 
     let env_filter = match std::env::var(LOG_ENV) {
         Ok(env) => env,
@@ -107,16 +107,16 @@ pub fn init_logging(hide_timestamp: bool) {
             LOG_ENV
         ),
     };
-    let env_filter = EnvFilter::from_str(&env_filter)
+    let level = Level::from_str(&env_filter)
         .unwrap_or_else(|err| panic!("invalid `{}` environment variable {}", LOG_ENV, err));
 
     if hide_timestamp {
         tracing_subscriber::fmt()
-            .with_env_filter(env_filter)
+            .with_max_level(level)
             .without_time()
             .init()
     } else {
-        tracing_subscriber::fmt().with_env_filter(env_filter).init()
+        tracing_subscriber::fmt().with_max_level(level).init()
     };
 }
 

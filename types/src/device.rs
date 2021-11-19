@@ -2,7 +2,6 @@ use crate::room;
 use semver::Version;
 use serde::Deserialize;
 use serde::Serialize;
-use std::convert::TryFrom;
 use strum::EnumString;
 use strum::EnumVariantNames;
 use strum::IntoStaticStr;
@@ -60,14 +59,6 @@ pub struct Device {
 pub enum Trait {
     OnOff,
     OpenClose,
-}
-
-impl TryFrom<&str> for Trait {
-    type Error = strum::ParseError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        std::str::FromStr::from_str(value)
-    }
 }
 
 /// Type of the device
