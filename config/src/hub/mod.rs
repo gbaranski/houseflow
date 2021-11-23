@@ -1,5 +1,6 @@
 use crate::defaults;
-use houseflow_types::device;
+use houseflow_types::accessory;
+use houseflow_types::hub;
 use serde::Deserialize;
 use serde::Serialize;
 use url::Url;
@@ -7,11 +8,21 @@ use url::Url;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
+    pub credentials: Credentials,
     #[serde(default)]
     pub server: Server,
     pub accessories: Vec<Accessory>,
     pub providers: Providers,
     pub services: Services,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Credentials {
+    /// ID of the hub
+    pub id: hub::ID,
+    /// Password of the hub in plain-text
+    pub password: hub::Password,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -24,20 +35,29 @@ pub struct Server {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Accessory {
-    /// ID of the device
-    pub id: device::ID,
-    /// Name of the device
+    /// ID of the accessory
+    pub id: accessory::ID,
+    /// Name of the accessory
     pub name: String,
+    /// Name of the room that the accessory is in
+    pub room_name: String,
     /// Type of the accessory, possibly with additional parameters
     #[serde(flatten)]
     pub r#type: AccessoryType,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "kebab-case")]
+#[serde(tag = "manufacturer", rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum AccessoryType {
-    XiaomiMijia {
+    XiaomiMijia(XiaomiMijiaAccessoryType)
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "model", rename_all = "kebab-case")]
+#[non_exhaustive]
+pub enum XiaomiMijiaAccessoryType {
+    HygroThermometer {
         // TODO: Make it strictly typed
         #[serde(rename = "mac-address")]
         mac_address: String,
@@ -100,35 +120,34 @@ impl Default for Server {
 
 #[cfg(test)]
 mod tests {
-    use super::Accessory;
-    use super::AccessoryType;
-    use super::Config;
-    use super::HapProvider;
-    use super::MijiaService;
-    use super::Providers;
-    use super::Server;
-    use super::Services;
+    use super::*;
     use crate::Config as _;
-    use houseflow_types::device;
+    use houseflow_types::accessory;
+    use houseflow_types::hub;
     use url::Url;
 
     #[test]
     fn test_example() {
         let expected = Config {
+            credentials: Credentials {
+                id: hub::ID::parse_str("345469C1-6C6F-461A-AB60-E21578D5A608").unwrap(),
+                password: hub::Password::from("some-password"),
+            },
             server: Server {
                 url: Url::parse("wss://example.com:1234/hello/world").unwrap(),
             },
             accessories: vec![Accessory {
-                id: device::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
+                id: accessory::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
                 name: String::from("Thermometer"),
-                r#type: AccessoryType::XiaomiMijia {
-                    mac_address: "A4:C1:38:EF:77:51".to_string(),
-                },
+                r#type: AccessoryType::XiaomiMijia(XiaomiMijiaAccessoryType::HygroThermometer {
+                    mac_address: String::from("A4:C1:38:EF:77:51"),
+                }),
+                room_name: "Bedroom".to_string(),
             }],
             providers: Providers {
                 hap: Some(HapProvider {
                     pin: "12345678".to_string(),
-                    name: "My Home".to_string(),
+                    name: "Awesome Hub".to_string(),
                 }),
             },
             services: Services {

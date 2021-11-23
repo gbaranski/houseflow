@@ -3,8 +3,20 @@
 [server]
 url = "wss://example.com:${SERVER_PORT}/hello/world"
 
-[[devices]]
+[credentials]
+id = "345469C1-6C6F-461A-AB60-E21578D5A608"
+password = "some-password"
+
+[[accessories]]
 id = "37c6a8bd-264c-4653-a641-c9b574207be5"
 name = "Thermometer"
-type = "xiaomi-mijia"
+room-name = "Bedroom"
+manufacturer = "xiaomi-mijia"
+model = "hygro-thermometer"
 mac-address = "A4:C1:38:EF:77:51"
+
+[providers.hap]
+pin = "12345678"
+name = "Awesome Hub"
+
+[services.mijia]
