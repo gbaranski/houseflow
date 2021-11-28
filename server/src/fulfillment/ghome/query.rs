@@ -1,7 +1,7 @@
 use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
-use houseflow_types::device;
+use houseflow_types::accessory;
 use houseflow_types::errors::InternalError;
 use houseflow_types::lighthouse;
 use houseflow_types::user;
@@ -19,7 +19,7 @@ pub async fn handle(
 
     let responses = payload.devices.iter().map(|device| async move {
         let response = (|| async {
-            let device_id = device::ID::from_str(&device.id).expect("invalid device ID");
+            let device_id = accessory::ID::from_str(&device.id).expect("invalid device ID");
             if config.get_permission(&device_id, user_id).is_none() {
                 return Ok::<_, InternalError>(response::PayloadDevice {
                     status: response::PayloadDeviceStatus::Error,
@@ -38,10 +38,9 @@ pub async fn handle(
                 }
             };
 
-            let request = lighthouse::query::Frame {};
             let response = match tokio::time::timeout(
-                crate::fulfillment::EXECUTE_TIMEOUT,
-                session.query(request),
+                crate::fulfillment::QUERY_TIMEOUT,
+                session.accessory_query(lighthouse::AccessoryQueryFrame {}),
             )
             .await
             {

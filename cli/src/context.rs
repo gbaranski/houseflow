@@ -2,7 +2,7 @@ use anyhow::Context;
 use houseflow_api::Client;
 use houseflow_config::client::Config;
 use houseflow_config::Config as _;
-use houseflow_types::device::Device;
+use houseflow_types::accessory::Accessory;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::RefreshToken;
 use serde::Deserialize;
@@ -21,7 +21,7 @@ pub struct CommandContext {
     config: Option<Config>,
     client: Option<Client>,
     pub tokens: Szafka<Tokens>,
-    pub devices: Szafka<Vec<Device>>,
+    pub devices: Szafka<Vec<Accessory>>,
 }
 
 impl CommandContext {

@@ -31,19 +31,6 @@ id = "baafebaa0708441782cf17470dd98392"
 structure-id = "bd7feab5033940e296ed7fcdc700ba65"
 name = "Bedroom"
 
-[[devices]]
-id = "aa9936b052cb4718b77c87961d14c79c"
-room-id = "baafebaa0708441782cf17470dd98392"
-password-hash = "$argon2i$v=19$m=4096,t=3,p=1$oWC2oDYLWUkx46MehdPiuw$3ibEvJypruiJ1kk4IczUPgbgLKiMOJ6nO+OqiA1Ez6U"
-type = "light"
-traits = ["on-off"]
-name = "Night Lamp"
-will-push-state = true
-model = "alice"
-hw-version = "0.1.0"
-sw-version = "0.1.0"
-attributes = {}
-
 [[users]]
 id = "861ccceaa3e349138ce2498768dbfe09"
 username = "gbaranski"

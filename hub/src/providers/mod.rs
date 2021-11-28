@@ -1,18 +1,24 @@
 mod mijia;
 
+
 pub use self::mijia::MijiaProvider;
 
 use std::pin::Pin;
+use crate::AccessoryState;
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::Future;
+use houseflow_types::accessory::ID as AccessoryID;
 
-pub struct Accessory {}
+pub enum Event {
+    Connected(AccessoryID),
+    StateUpdate(AccessoryState),
+}
 
 #[async_trait]
 pub trait Provider {
     async fn run(&self) -> Result<(), Error>;
-    async fn discover(&self) -> Result<Option<Accessory>, Error>;
+    async fn next_event(&self) -> Result<Option<Event>, Error>;
     fn name(&self) -> &'static str;
 }
 
@@ -52,10 +58,10 @@ impl<'s> MasterProvider {
 #[async_trait]
 impl Provider for MasterProvider {
     async fn run(&self) -> Result<(), Error> {
-        todo!()
+        self.execute_for_all(|provider| provider.run()).await
     }
 
-    async fn discover(&self) -> Result<Option<Accessory>, Error> {
+    async fn next_event(&self) -> Result<Option<Event>, Error> {
         todo!()
     }
 

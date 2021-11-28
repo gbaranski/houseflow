@@ -1,38 +1,84 @@
-pub mod execute;
-pub mod execute_response;
-pub mod query;
-pub mod state;
-
-pub type FrameID = u16;
-
+use crate::accessory;
+use crate::accessory::Accessory;
 use serde::Deserialize;
 use serde::Serialize;
+
+pub type FrameID = u16;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(tag = "type", rename_all = "kebab-case")]
-#[repr(u8)]
-pub enum Frame {
-    /// Packet which will received from device to share its state
-    State(state::Frame),
-
-    /// Packet which will be send to get current state from device
-    Query(query::Frame),
-
-    /// Packet which will be send to execute some action on client side
-    Execute(execute::Frame),
-
-    /// Packet which will be send as a response to Execute request from server
-    ExecuteResponse(execute_response::Frame),
+pub enum ServerFrame {
+    #[serde(rename = "hub/query")]
+    HubQuery(HubQueryFrame),
+    #[serde(rename = "accessory/execute")]
+    AccessoryExecute(AccessoryExecuteFrame),
+    #[serde(rename = "accessory/query")]
+    AccessoryQuery(AccessoryQueryFrame),
 }
 
-impl Frame {
+impl ServerFrame {
     pub fn name(&self) -> &'static str {
         match self {
-            Self::State(_) => "state",
-            Self::Query(_) => "query",
-            Self::Execute(_) => "execute",
-            Self::ExecuteResponse(_) => "execute-response",
+            Self::HubQuery(_) => "hub/query",
+            Self::AccessoryExecute(_) => "accessory/execute",
+            Self::AccessoryQuery(_) => "accessory/query",
         }
     }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum HubFrame {
+    #[serde(rename = "hub/update")]
+    HubUpdate(HubUpdateFrame),
+    #[serde(rename = "accessory/execute-result")]
+    AccessoryExecuteResult(AccessoryExecuteResultFrame),
+    #[serde(rename = "accessory/update")]
+    AccessoryUpdate(AccessoryUpdateFrame),
+}
+
+impl HubFrame {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::HubUpdate(_) => "hub/update",
+            Self::AccessoryExecuteResult(_) => "accessory/execute-result",
+            Self::AccessoryUpdate(_) => "accessory/update",
+        }
+    }
+}
+
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct HubQueryFrame {}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct HubUpdateFrame {
+    pub accessories: Vec<Accessory>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AccessoryExecuteFrame {
+    pub id: FrameID,
+    #[serde(flatten)]
+    pub command: accessory::Command,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AccessoryExecuteResultFrame {
+    pub id: FrameID,
+    #[serde(flatten)]
+    pub status: accessory::Status,
+    #[serde(default)]
+    pub state: serde_json::Map<String, serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AccessoryQueryFrame {}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AccessoryUpdateFrame {
+    #[serde(default)]
+    pub state: serde_json::Map<String, serde_json::Value>,
 }

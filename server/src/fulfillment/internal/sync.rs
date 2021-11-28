@@ -2,10 +2,11 @@ use crate::extractors::UserID;
 use crate::State;
 use axum::extract::Extension;
 use axum::Json;
-use houseflow_types::device::Device;
+use futures::future::join_all;
 use houseflow_types::errors::ServerError;
 use houseflow_types::fulfillment::sync::Request;
 use houseflow_types::fulfillment::sync::Response;
+use houseflow_types::lighthouse;
 use tracing::Level;
 
 #[tracing::instrument(name = "Sync", skip(state, _request), err)]
@@ -14,25 +15,27 @@ pub async fn handle(
     Json(_request): Json<Request>,
     UserID(user_id): UserID,
 ) -> Result<Json<Response>, ServerError> {
-    let devices = state
-        .config
-        .get_user_devices(&user_id)
+    let user_hubs = state.config.get_user_hubs(&user_id);
+    let accessories = user_hubs.iter().map(|hub| async {
+        let hub = state.sessions.get(&hub.id).unwrap();
+        let response = hub.hub_query(lighthouse::HubQueryFrame {}).await?;
+        Ok::<_, ServerError>(response.accessories)
+    });
+    let accessories = join_all(accessories)
+        .await
         .into_iter()
-        .map(|device_id| state.config.get_device(&device_id).unwrap())
-        .map(|device| Device {
-            password_hash: None,
-            ..device
-        })
+        .map(Result::unwrap) // TODO: Remove this unwrap
+        .flatten();
+    let accessory_ids = accessories
+        .clone()
+        .map(|accessory| accessory.id)
         .collect::<Vec<_>>();
 
-    let device_ids = devices
-        .iter()
-        .map(|device| device.id.to_string())
-        .collect::<Vec<_>>();
+    tracing::event!(Level::INFO, ?accessory_ids, "Synchronized accessories");
 
-    tracing::event!(Level::INFO, devices = ?device_ids, "Synchronized devices");
-
-    let response = Response { devices };
+    let response = Response {
+        accessories: accessories.collect(),
+    };
 
     Ok(Json(response))
 }

@@ -3,9 +3,6 @@ pub mod defaults;
 #[cfg(any(test, feature = "client"))]
 pub mod client;
 
-#[cfg(any(test, feature = "device"))]
-pub mod device;
-
 #[cfg(any(test, feature = "hub"))]
 pub mod hub;
 

@@ -1,8 +1,9 @@
+use houseflow_config::hub::manufacturers;
 pub use houseflow_config::hub::HapProvider as HapConfig;
 
-use super::AccessoryState;
 use super::AdditionalAccessoryInfo;
 use super::Service;
+use crate::AccessoryState;
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::lock::Mutex;
@@ -19,7 +20,7 @@ use hap::MacAddress;
 use hap::Pin;
 use houseflow_config::hub::Accessory;
 use houseflow_config::hub::AccessoryType;
-use houseflow_types::device::ID as DeviceID;
+use houseflow_types::accessory;
 use mac_address::get_mac_address;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
@@ -28,7 +29,7 @@ use tokio::sync::RwLock;
 
 pub struct HapService {
     ip_server: IpServer,
-    accessory_pointers: RwLock<HashMap<DeviceID, Arc<Mutex<Box<dyn HapAccessory>>>>>,
+    accessory_pointers: RwLock<HashMap<accessory::ID, Arc<Mutex<Box<dyn HapAccessory>>>>>,
 }
 
 impl HapService {
@@ -78,17 +79,19 @@ impl Service for HapService {
     async fn connected(
         &self,
         configured_accessory: &Accessory,
-        _additional_device_info: &AdditionalAccessoryInfo,
+        _additional_accessory_info: &AdditionalAccessoryInfo,
     ) -> Result<(), Error> {
         let accessory = match &configured_accessory.r#type {
-            AccessoryType::XiaomiMijia { mac_address: _ } => {
+            AccessoryType::XiaomiMijia(manufacturers::XiaomiMijia::HygroThermometer {
+                mac_address,
+            }) => {
                 let temperature_sensor = TemperatureSensorAccessory::new(
-                    id_to_u64(&configured_accessory.id),
+                    uuid_to_u64(&configured_accessory.id),
                     AccessoryInformation {
                         manufacturer: String::from("Xiaomi"),
                         model: String::from("Temperature Sensor"),
                         name: String::from("Mijia Thermometer"),
-                        serial_number: String::from("12345"),
+                        serial_number: mac_address.to_owned(),
                         accessory_flags: None,
                         application_matching_identifier: None,
                         configured_name: Some(configured_accessory.name.clone()),
@@ -110,7 +113,7 @@ impl Service for HapService {
         Ok(())
     }
 
-    async fn update_state(&self, id: &DeviceID, state: &AccessoryState) -> Result<(), Error> {
+    async fn update_state(&self, id: &accessory::ID, state: &AccessoryState) -> Result<(), Error> {
         let accessory_pointers = self.accessory_pointers.read().await;
         let accessory = accessory_pointers.get(id).unwrap();
         let mut accessory = accessory.lock().await;
@@ -132,7 +135,7 @@ impl Service for HapService {
         Ok(())
     }
 
-    async fn disconnected(&self, id: &DeviceID) -> Result<(), Error> {
+    async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error> {
         let mut accessory_pointers = self.accessory_pointers.write().await;
         accessory_pointers.remove(&id);
         Ok(())
@@ -143,6 +146,6 @@ impl Service for HapService {
     }
 }
 
-pub fn id_to_u64(id: &DeviceID) -> u64 {
-    u64::from_be_bytes(id.as_bytes()[..8].try_into().unwrap())
+pub fn uuid_to_u64(id: &uuid::Uuid) -> u64 {
+    (id.as_u128() % u64::max_value() as u128) as u64
 }

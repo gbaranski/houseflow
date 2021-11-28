@@ -13,7 +13,7 @@ use context::Tokens;
 use houseflow_config::client::Config;
 use houseflow_config::Config as _;
 use houseflow_types::code::VerificationCode;
-use houseflow_types::device;
+use houseflow_types::accessory;
 use std::path::Path;
 use std::str::FromStr;
 use strum::VariantNames;
@@ -60,7 +60,7 @@ fn main() -> anyhow::Result<()> {
         ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
             ("execute", matches) => {
                 let json = serde_json::json!({
-                    "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, device::Command::VARIANTS), "command").context("get command")?,
+                    "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, accessory::Command::VARIANTS), "command").context("get command")?,
                     "params": get_value::<serde_json::Value, _, _>(matches, get_input, "params").context("get params")?
                 });
                 let command = serde_json::from_value(json).context("parse into command")?;

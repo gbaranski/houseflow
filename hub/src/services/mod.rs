@@ -3,21 +3,16 @@ mod hap;
 pub use self::hap::HapConfig;
 pub use self::hap::HapService;
 
+use crate::AccessoryState;
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::Future;
 use houseflow_config::hub::Accessory;
-use houseflow_types::device::ID as DeviceID;
+use houseflow_types::accessory;
 use std::pin::Pin;
 
 #[derive(Debug, Clone)]
 pub struct AdditionalAccessoryInfo {}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub enum AccessoryState {
-    XiaomiMijia { temperature: f32 },
-}
 
 #[async_trait]
 pub trait Service {
@@ -27,8 +22,8 @@ pub trait Service {
         configured_accessory: &Accessory,
         additional_accessory_info: &AdditionalAccessoryInfo,
     ) -> Result<(), Error>;
-    async fn update_state(&self, id: &DeviceID, state: &AccessoryState) -> Result<(), Error>;
-    async fn disconnected(&self, id: &DeviceID) -> Result<(), Error>;
+    async fn update_state(&self, id: &accessory::ID, state: &AccessoryState) -> Result<(), Error>;
+    async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error>;
     fn name(&self) -> &'static str;
 }
 
@@ -82,12 +77,12 @@ impl Service for MasterService {
         .await
     }
 
-    async fn update_state(&self, id: &DeviceID, state: &AccessoryState) -> Result<(), Error> {
+    async fn update_state(&self, id: &accessory::ID, state: &AccessoryState) -> Result<(), Error> {
         self.execute_for_all(move |service| service.update_state(id, state))
             .await
     }
 
-    async fn disconnected(&self, id: &DeviceID) -> Result<(), Error> {
+    async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error> {
         self.execute_for_all(move |service| service.disconnected(id))
             .await
     }

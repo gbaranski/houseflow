@@ -21,8 +21,8 @@ pub async fn handle(
     tracing::info!(username = %user.username, email = %user.email);
 
     Ok(Json(Response {
-        username: user.username,
-        email: user.email,
+        username: user.username.clone(),
+        email: user.email.clone(),
     }))
 }
 
@@ -37,7 +37,6 @@ mod tests {
         let user = get_user();
         let state = get_state(
             &mpsc::unbounded_channel().0,
-            vec![],
             vec![],
             vec![],
             vec![],

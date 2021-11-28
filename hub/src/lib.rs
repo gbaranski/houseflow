@@ -4,6 +4,12 @@ pub mod providers;
 use providers::Provider;
 use services::Service;
 
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum AccessoryState {
+    XiaomiMijia { temperature: f32 },
+}
+
 pub struct Hub<S: Service, P: Provider> {
     service: S,
     provider: P,

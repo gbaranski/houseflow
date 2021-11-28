@@ -3,10 +3,11 @@ use anyhow::Error;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
 use futures::StreamExt;
+use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::Accessory;
-use houseflow_config::hub::MijiaService as Config;
 use houseflow_config::hub::AccessoryType;
-use houseflow_types::device::ID as AccessoryID;
+use houseflow_config::hub::MijiaService as Config;
+use houseflow_types::accessory::ID as AccessoryID;
 use mijia::bluetooth::DeviceId as BluetoothDeviceID;
 use mijia::{MijiaEvent, MijiaSession};
 use std::collections::HashMap;
@@ -19,7 +20,10 @@ pub struct MijiaProvider {
 }
 
 impl MijiaProvider {
-    pub async fn new(_config: Config, configured_accessories: Vec<Accessory>) -> Result<Self, Error> {
+    pub async fn new(
+        _config: Config,
+        configured_accessories: Vec<Accessory>,
+    ) -> Result<Self, Error> {
         let (_, mijia_session) = MijiaSession::new().await?;
         Ok(Self {
             connected_accessories: Default::default(),
@@ -32,16 +36,19 @@ impl MijiaProvider {
         &self,
         bluetooth_device_id: &BluetoothDeviceID,
     ) -> Option<AccessoryID> {
-        self.connected_accessories.load().get(bluetooth_device_id).cloned()
+        self.connected_accessories
+            .load()
+            .get(bluetooth_device_id)
+            .cloned()
     }
 
-    fn accessory_by_mac_address(&self, mac_address: &str) -> Option<&Accessory> {
+    fn accessory_by_mac_address(&self, expected_mac_address: &str) -> Option<&Accessory> {
         self.configured_accessories.iter().find(|accessory| {
-            if let AccessoryType::XiaomiMijia {
-                mac_address: accessory_mac_address,
-            } = &accessory.r#type
+            if let AccessoryType::XiaomiMijia(manufacturers::XiaomiMijia::HygroThermometer {
+                mac_address,
+            }) = &accessory.r#type
             {
-                accessory_mac_address == mac_address
+                expected_mac_address == mac_address
             } else {
                 false
             }
@@ -122,7 +129,7 @@ impl Provider for MijiaProvider {
         Ok(())
     }
 
-    async fn discover(&self) -> Result<Option<super::Accessory>, Error> {
+    async fn next_event(&self) -> Result<Option<super::Event>, Error> {
         todo!()
     }
 

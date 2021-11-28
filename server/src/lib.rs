@@ -10,7 +10,7 @@ mod oauth;
 use axum::Router;
 use dashmap::DashMap;
 use houseflow_config::server::Config;
-use houseflow_types::device;
+use houseflow_types::hub;
 use mailer::Mailer;
 use std::sync::Arc;
 
@@ -23,7 +23,7 @@ pub struct State {
     pub clerk: Arc<dyn clerk::Clerk>,
     pub mailer: Arc<dyn Mailer>,
     pub config: Arc<Config>,
-    pub sessions: Arc<DashMap<device::ID, lighthouse::Session>>,
+    pub sessions: Arc<DashMap<hub::ID, lighthouse::Session>>,
 }
 
 pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
@@ -56,13 +56,13 @@ pub fn app(state: State) -> Router<axum::routing::BoxRoute> {
         .nest(
             "/fulfillment",
             Router::new()
-                .nest(
-                    "/internal",
-                    Router::new()
-                        .route("/execute", post(fulfillment::internal::execute::handle))
-                        .route("/query", post(fulfillment::internal::query::handle))
-                        .route("/sync", get(fulfillment::internal::sync::handle)),
-                )
+                // .nest(
+                //     "/internal",
+                //     Router::new()
+                //         .route("/execute", post(fulfillment::internal::execute::handle))
+                //         .route("/query", post(fulfillment::internal::query::handle))
+                //         .route("/sync", get(fulfillment::internal::sync::handle)),
+                // )
                 .route("/google-home", post(fulfillment::ghome::handle)),
         )
         .nest(
@@ -105,23 +105,18 @@ mod test_utils {
     use tokio::sync::mpsc;
     use url::Url;
 
-    use houseflow_types::device;
     use houseflow_types::permission;
-    use houseflow_types::room;
     use houseflow_types::structure;
     use houseflow_types::user;
 
-    use device::Device;
     use permission::Permission;
-    use room::Room;
     use structure::Structure;
     use user::User;
 
     pub fn get_state(
         tx: &mpsc::UnboundedSender<VerificationCode>,
         structures: Vec<Structure>,
-        rooms: Vec<Room>,
-        devices: Vec<Device>,
+        hubs: Vec<houseflow_config::server::Hub>,
         permissions: Vec<Permission>,
         users: Vec<User>,
     ) -> extract::Extension<State> {
@@ -146,10 +141,9 @@ mod test_utils {
                 project_id: String::from("project-id"),
             }),
             structures,
-            rooms,
-            devices,
             users,
             permissions,
+            hubs,
         };
 
         let sessions = Default::default();
@@ -174,39 +168,4 @@ mod test_utils {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn get_structure() -> Structure {
-        Structure {
-            id: structure::ID::new_v4(),
-            name: "test-home".to_string(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_room(structure: &Structure) -> Room {
-        Room {
-            id: room::ID::new_v4(),
-            structure_id: structure.id.clone(),
-            name: "test-garage".to_string(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn get_device(room: &Room) -> Device {
-        use semver::Version;
-
-        Device {
-            id: device::ID::new_v4(),
-            room_id: room.id.clone(),
-            password_hash: Some("$argon2i$v=19$m=4096,t=3,p=1$Zcm15qxfZSBqL9K6S9G5mNIGgz7qmna7TlPPN+t9mqA$ECoZv8pF6Ew6gjh8b9d2oe4QtQA3DO5PIfuWvK2h3OU".into()),
-            device_type: device::Type::Gate,
-            traits: vec![],
-            name: String::from("SuperTestingGate"),
-            will_push_state: true,
-            model: String::from("gate-1200"),
-            hw_version: Version::new(1, 0, 0),
-            sw_version: Version::new(1, 0, 1),
-            attributes: Default::default(),
-        }
-    }
 }

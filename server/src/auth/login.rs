@@ -115,7 +115,6 @@ mod tests {
             vec![],
             vec![],
             vec![],
-            vec![],
             vec![user.clone()],
         );
         let Json(response) = super::handle(
@@ -160,7 +159,6 @@ mod tests {
             vec![],
             vec![],
             vec![],
-            vec![],
             vec![user.clone()],
         );
         let verification_code: VerificationCode = rand::random();
@@ -182,7 +180,6 @@ mod tests {
         let user = get_user();
         let state = get_state(
             &mpsc::unbounded_channel().0,
-            vec![],
             vec![],
             vec![],
             vec![],
@@ -217,7 +214,6 @@ mod tests {
         let user = get_user();
         let state = get_state(
             &mpsc::unbounded_channel().0,
-            vec![],
             vec![],
             vec![],
             vec![],

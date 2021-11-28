@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "api",
-  "cli",
+  # "cli",
   "config",
   "hub",
   "google-smart-home",

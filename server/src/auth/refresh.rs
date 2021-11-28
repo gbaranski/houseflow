@@ -48,7 +48,6 @@ mod tests {
             vec![],
             vec![],
             vec![],
-            vec![],
             vec![user.clone()],
         );
         let refresh_token = houseflow_types::token::RefreshToken::new(

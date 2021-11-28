@@ -19,16 +19,16 @@ pub async fn handle(
 ) -> Result<Json<Response>, ServerError> {
     if state
         .config
-        .get_permission(&request.device_id, &user_id)
+        .get_permission(&request.structure_id, &user_id)
         .is_none()
     {
-        return Err(AuthError::NoDevicePermission.into());
+        return Err(AuthError::NoStructurePermission.into());
     }
 
     let session = state
         .sessions
         .get(&request.device_id)
-        .ok_or(FulfillmentError::DeviceNotConnected)?
+        .ok_or(FulfillmentError::HubNotConnected)?
         .clone();
 
     let before = Instant::now();

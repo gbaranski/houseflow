@@ -1,13 +1,13 @@
 use std::time::Instant;
 
 use crate::CommandContext;
-use houseflow_types::device;
+use houseflow_types::accessory;
 use houseflow_types::fulfillment::execute;
 use houseflow_types::lighthouse;
 
 pub struct Command {
-    pub device_id: device::ID,
-    pub command: device::Command,
+    pub device_id: accessory::ID,
+    pub command: accessory::Command,
     pub params: serde_json::Map<String, serde_json::Value>,
 }
 
@@ -50,13 +50,13 @@ impl crate::Command for Command {
         let response = ctx.client()?.execute(&access_token, &request)??;
 
         match response.frame.status {
-            device::Status::Success => {
+            accessory::Status::Success => {
                 println!(
                     "✔ Device responded with success after {}ms!",
                     Instant::now().duration_since(before).as_millis()
                 )
             }
-            device::Status::Error(err) => {
+            accessory::Status::Error(err) => {
                 println!("❌ Device responded with error! Error: {}", err)
             }
         };
