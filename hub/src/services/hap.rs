@@ -117,21 +117,20 @@ impl Service for HapService {
         let accessory_pointers = self.accessory_pointers.read().await;
         let accessory = accessory_pointers.get(id).unwrap();
         let mut accessory = accessory.lock().await;
-        match state {
-            AccessoryState::XiaomiMijia { temperature } => {
-                let temperature_sensor_service = accessory
-                    .get_mut_service(HapType::TemperatureSensor)
-                    .unwrap();
-                let current_temperature_characteristic = temperature_sensor_service
-                    .get_mut_characteristic(HapType::CurrentTemperature)
-                    .unwrap();
-                current_temperature_characteristic
-                    .set_value(JsonValue::Number(
-                        serde_json::Number::from_f64(*temperature as f64).unwrap(),
-                    ))
-                    .await?;
-            }
+        if let Some(temperature) = state.temperature {
+            let temperature_sensor_service = accessory
+                .get_mut_service(HapType::TemperatureSensor)
+                .unwrap();
+            let current_temperature_characteristic = temperature_sensor_service
+                .get_mut_characteristic(HapType::CurrentTemperature)
+                .unwrap();
+            current_temperature_characteristic
+                .set_value(JsonValue::Number(
+                    serde_json::Number::from_f64(temperature as f64).unwrap(),
+                ))
+                .await?;
         }
+        // TODO: Use other state fields
         Ok(())
     }
 

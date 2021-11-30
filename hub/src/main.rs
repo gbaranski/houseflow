@@ -38,17 +38,20 @@ async fn main() -> Result<(), anyhow::Error> {
         }
         services
     };
-    let providers = {
+    let (providers, provider_events) = {
         let mut providers = vec![];
+        let (event_sender, event_receiver) = tokio::sync::mpsc::unbounded_channel();
         if let Some(mijia_config) = config.services.mijia {
-            providers
-                .push(Box::new(MijiaProvider::new(mijia_config, config.accessories.clone()).await?) as _);
+            providers.push(Box::new(
+                MijiaProvider::new(mijia_config, config.accessories.clone(), event_sender).await?,
+            ) as _);
         }
-        providers
+        (providers, event_receiver)
     };
     let hub = Hub::new(
         MasterService::new(services),
         MasterProvider::new(providers),
+        provider_events,
     )
     .await?;
     hub.run().await

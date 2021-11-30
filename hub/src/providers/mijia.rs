@@ -1,4 +1,8 @@
+use crate::AccessoryState;
+
 use super::Provider;
+use super::EventSender;
+use super::Event;
 use anyhow::Error;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
@@ -16,6 +20,7 @@ use std::sync::Arc;
 pub struct MijiaProvider {
     connected_accessories: ArcSwap<HashMap<BluetoothDeviceID, AccessoryID>>,
     configured_accessories: Vec<Accessory>,
+    events: EventSender,
     mijia_session: MijiaSession,
 }
 
@@ -23,12 +28,14 @@ impl MijiaProvider {
     pub async fn new(
         _config: Config,
         configured_accessories: Vec<Accessory>,
+        events: EventSender,
     ) -> Result<Self, Error> {
         let (_, mijia_session) = MijiaSession::new().await?;
         Ok(Self {
             connected_accessories: Default::default(),
             configured_accessories,
             mijia_session,
+            events,
         })
     }
 
@@ -66,6 +73,7 @@ impl MijiaProvider {
             .bt_session
             .connect(bluetooth_device_id)
             .await?;
+
         tracing::info!("connected");
         self.mijia_session
             .start_notify_sensor(bluetooth_device_id)
@@ -76,7 +84,8 @@ impl MijiaProvider {
             self.connected_accessories
                 .store(Arc::new(new_connected_accessories));
         }
-        todo!()
+        self.events.send(Event::Connected(accessory.to_owned())).unwrap();
+        Ok(())
     }
 }
 
@@ -106,7 +115,14 @@ impl Provider for MijiaProvider {
                 }
                 MijiaEvent::Readings { id, readings } => {
                     let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
+
                     tracing::info!("readings from {} = {}", accessory_id, readings);
+                    self.events.send(Event::StateUpdate(accessory_id, AccessoryState {
+                        temperature: Some(readings.temperature),
+                        humidity: Some(readings.humidity),
+                        battery_percent: Some(readings.battery_percent),
+                        battery_voltage: Some(readings.battery_voltage),
+                    })).unwrap();
                 }
                 MijiaEvent::HistoryRecord { id, record } => {
                     let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
@@ -127,10 +143,6 @@ impl Provider for MijiaProvider {
             };
         }
         Ok(())
-    }
-
-    async fn next_event(&self) -> Result<Option<super::Event>, Error> {
-        todo!()
     }
 
     fn name(&self) -> &'static str {

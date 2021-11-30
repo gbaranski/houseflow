@@ -1,24 +1,28 @@
 mod mijia;
 
-
 pub use self::mijia::MijiaProvider;
 
-use std::pin::Pin;
 use crate::AccessoryState;
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::Future;
 use houseflow_types::accessory::ID as AccessoryID;
+use std::pin::Pin;
+use houseflow_config::hub::Accessory;
+use tokio::sync::mpsc;
 
+#[derive(Debug, Clone)]
 pub enum Event {
-    Connected(AccessoryID),
-    StateUpdate(AccessoryState),
+    Connected(Accessory),
+    StateUpdate(AccessoryID, AccessoryState),
 }
+
+pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
+pub type EventSender = mpsc::UnboundedSender<Event>;
 
 #[async_trait]
 pub trait Provider {
     async fn run(&self) -> Result<(), Error>;
-    async fn next_event(&self) -> Result<Option<Event>, Error>;
     fn name(&self) -> &'static str;
 }
 
@@ -31,10 +35,10 @@ impl<'s> MasterProvider {
         Self { slave_providers }
     }
 
-
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s dyn Provider) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
+        f: impl Fn(&'s dyn Provider) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
+            + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
@@ -59,10 +63,6 @@ impl<'s> MasterProvider {
 impl Provider for MasterProvider {
     async fn run(&self) -> Result<(), Error> {
         self.execute_for_all(|provider| provider.run()).await
-    }
-
-    async fn next_event(&self) -> Result<Option<Event>, Error> {
-        todo!()
     }
 
     fn name(&self) -> &'static str {
