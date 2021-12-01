@@ -21,3 +21,4 @@ serde_json = "1.0.67"
 tokio = { version = "1.11.0", features = ["macros", "rt-multi-thread", "sync"] }
 tracing = "0.1.26"
 uuid = { version = "0.8.2", features = ["v4"] }
+xdg = "2.4.0"

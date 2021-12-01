@@ -39,7 +39,8 @@ pub struct HapService {
 
 impl HapService {
     pub async fn new(config: &HapConfig) -> Result<Self, Error> {
-        let mut storage = FileStorage::current_dir().await?;
+        let mut storage =
+            FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
         let config = match storage.load_config().await {
             Ok(mut config) => {
                 config.redetermine_local_ip();
