@@ -9,6 +9,7 @@ use async_trait::async_trait;
 use atomic::AtomicU64;
 use atomic::Ordering;
 use futures::lock::Mutex;
+use hap::accessory::humidity_sensor::HumiditySensorAccessory;
 use hap::accessory::temperature_sensor::TemperatureSensorAccessory;
 use hap::accessory::AccessoryCategory;
 use hap::accessory::AccessoryInformation;
@@ -96,7 +97,6 @@ impl Service for HapService {
                 match accessory_type {
                     Manufacturer::HygroThermometer { mac_address } => {
                         let mut temperature_sensor = TemperatureSensorAccessory::new(
-                            // uuid_to_u64(&configured_accessory.id),
                             self.last_accessory_instace_id
                                 .fetch_add(1, Ordering::Relaxed),
                             AccessoryInformation {
