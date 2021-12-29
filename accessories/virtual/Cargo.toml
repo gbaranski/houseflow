@@ -6,3 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+houseflow-api = { path = "../../api", features = ["hive"] }
+houseflow-config = { path = "../../config", features = ["accessory", "fs"] }
+houseflow-types = { path = "../../types" }
+houseflow-accessory-hal = { path = "../hal" }
+
+anyhow = "1.0.52"
+tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }
+tracing = "0.1.29"
+url = "2.2.2"
+async-trait = "0.1.52"

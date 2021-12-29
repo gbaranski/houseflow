@@ -27,6 +27,7 @@ regex = "1.5.4"
 [features]
 client = []
 hub = []
+accessory = []
 server = []
 fs = []
 

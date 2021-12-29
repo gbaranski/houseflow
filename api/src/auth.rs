@@ -1,11 +1,11 @@
-use crate::Client;
+use crate::ServerClient;
 use crate::Error;
 use houseflow_types::errors::ServerError;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::RefreshToken;
 use houseflow_types::auth;
 
-impl Client {
+impl ServerClient {
     pub async fn login(
         &self,
         request: &auth::login::Request,

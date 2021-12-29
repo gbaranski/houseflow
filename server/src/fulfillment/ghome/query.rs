@@ -59,7 +59,7 @@ pub async fn handle(
             Ok(response::PayloadDevice {
                 status: response::PayloadDeviceStatus::Success,
                 error_code: None,
-                state: response.state,
+                state: serde_json::json!({}).as_object().unwrap().clone(), // TODO: implement states
             })
         })();
         response

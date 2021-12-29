@@ -1,10 +1,10 @@
 use crate::Error;
-use crate::Client;
+use crate::ServerClient;
 use houseflow_types::errors::ServerError;
 use houseflow_types::fulfillment;
 use houseflow_types::token::AccessToken;
 
-impl Client {
+impl ServerClient {
     pub async fn sync(
         &self,
         access_token: &AccessToken,

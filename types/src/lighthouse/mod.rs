@@ -27,7 +27,7 @@ impl ServerFrame {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum HubFrame {
@@ -65,20 +65,20 @@ pub struct AccessoryExecuteFrame {
     pub command: accessory::Command,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AccessoryExecuteResultFrame {
     pub id: FrameID,
     #[serde(flatten)]
     pub status: accessory::Status,
     #[serde(default)]
-    pub state: serde_json::Map<String, serde_json::Value>,
+    pub state: accessory::State,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccessoryQueryFrame {}
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AccessoryUpdateFrame {
     #[serde(default)]
-    pub state: serde_json::Map<String, serde_json::Value>,
+    pub state: accessory::State,
 }

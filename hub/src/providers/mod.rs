@@ -1,37 +1,52 @@
+mod hive;
 mod mijia;
 
+pub use self::hive::HiveProvider;
 pub use self::mijia::MijiaProvider;
 
-use crate::AccessoryState;
 use anyhow::Error;
 use async_trait::async_trait;
-use futures::Future;
-use houseflow_types::accessory::ID as AccessoryID;
-use std::pin::Pin;
+use futures::{Future, FutureExt};
 use houseflow_config::hub::Accessory;
+use houseflow_types::accessory;
+use std::pin::Pin;
 use tokio::sync::mpsc;
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    Connected(Accessory),
-    StateUpdate(AccessoryID, AccessoryState),
+    Connected {
+        accessory: Accessory,
+    },
+    Disconnected {
+        accessory_id: accessory::ID,
+    },
+    State {
+        accessory_id: accessory::ID,
+        state: accessory::State,
+    },
 }
 
 pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
 pub type EventSender = mpsc::UnboundedSender<Event>;
 
 #[async_trait]
-pub trait Provider {
+pub trait Provider: Send + Sync {
     async fn run(&self) -> Result<(), Error>;
+    async fn execute(
+        &self,
+        accessory_id: accessory::ID,
+        command: accessory::Command,
+    ) -> Result<(accessory::Status, accessory::State), Error>;
+    async fn is_connected(&self, accessory_id: &accessory::ID) -> bool;
     fn name(&self) -> &'static str;
 }
 
 pub struct MasterProvider {
-    slave_providers: Vec<Box<dyn Provider + Send + Sync>>,
+    slave_providers: Vec<Box<dyn Provider>>,
 }
 
 impl<'s> MasterProvider {
-    pub fn new(slave_providers: Vec<Box<dyn Provider + Send + Sync>>) -> Self {
+    pub fn new(slave_providers: Vec<Box<dyn Provider>>) -> Self {
         Self { slave_providers }
     }
 
@@ -62,7 +77,41 @@ impl<'s> MasterProvider {
 #[async_trait]
 impl Provider for MasterProvider {
     async fn run(&self) -> Result<(), Error> {
-        self.execute_for_all(|provider| provider.run()).await
+        self.execute_for_all(|provider| {
+            async move {
+                tracing::info!("starting provider `{}`", provider.name());
+                provider.run().await
+            }
+            .boxed()
+        })
+        .await
+    }
+
+    async fn execute(
+        &self,
+        accessory_id: accessory::ID,
+        command: accessory::Command,
+    ) -> Result<(accessory::Status, accessory::State), Error> {
+        let futures = self
+            .slave_providers
+            .iter()
+            .map(|provider| async move { (provider, provider.is_connected(&accessory_id).await) });
+        let results = futures::future::join_all(futures).await;
+        let provider = results
+            .iter()
+            .find_map(|(provider, is_connected)| if *is_connected { Some(provider) } else { None })
+            .unwrap();
+
+        provider.execute(accessory_id, command).await
+    }
+
+    async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {
+        let futures = self
+            .slave_providers
+            .iter()
+            .map(|provider| provider.is_connected(accessory_id));
+        let results: Vec<_> = futures::future::join_all(futures).await;
+        results.iter().any(|v| *v == true)
     }
 
     fn name(&self) -> &'static str {

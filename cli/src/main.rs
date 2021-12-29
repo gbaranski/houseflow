@@ -1,8 +1,7 @@
 mod cli;
 mod context;
-
 mod auth;
-mod fulfillment;
+// mod fulfillment;
 
 use anyhow::Context;
 use cli::get_input;
@@ -17,12 +16,15 @@ use houseflow_types::accessory;
 use std::path::Path;
 use std::str::FromStr;
 use strum::VariantNames;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait Command {
-    fn run(self, ctx: CommandContext) -> anyhow::Result<()>;
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()>;
 }
 
-fn main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     houseflow_config::init_logging(true);
     let config_default_path = Config::default_path();
     let config_default_path = config_default_path.to_str().unwrap();
@@ -39,13 +41,13 @@ fn main() -> anyhow::Result<()> {
                     .value_of("code")
                     .map(|str| VerificationCode::from_str(str).unwrap()),
             }
-            .run(ctx),
-            ("logout", _) => auth::logout::Command {}.run(ctx),
-            ("refresh", _) => auth::refresh::Command {}.run(ctx),
+            .run(ctx).await,
+            ("logout", _) => auth::logout::Command {}.run(ctx).await,
+            ("refresh", _) => auth::refresh::Command {}.run(ctx).await,
             ("status", matches) => auth::status::Command {
                 show_token: matches.is_present("show-token"),
             }
-            .run(ctx),
+            .run(ctx).await,
             _ => unreachable!(),
         },
         ("completions", matches) => {
@@ -57,32 +59,32 @@ fn main() -> anyhow::Result<()> {
             app.gen_completions_to(bin_name, shell, &mut std::io::stdout());
             Ok(())
         }
-        ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
-            ("execute", matches) => {
-                let json = serde_json::json!({
-                    "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, accessory::Command::VARIANTS), "command").context("get command")?,
-                    "params": get_value::<serde_json::Value, _, _>(matches, get_input, "params").context("get params")?
-                });
-                let command = serde_json::from_value(json).context("parse into command")?;
-                fulfillment::execute::Command {
-                    device_id: get_value(matches, get_input, "device-id")?,
-                    command,
-                    params: serde_json::from_str(
-                        &matches
-                            .value_of("params")
-                            .map(std::string::ToString::to_string)
-                            .unwrap(),
-                    )?,
-                }
-                .run(ctx)
-            }
-            ("query", matches) => fulfillment::query::Command {
-                device_id: get_value(matches, get_input, "device-id")?,
-            }
-            .run(ctx),
-            ("sync", _) => fulfillment::sync::Command {}.run(ctx),
-            _ => todo!(),
-        },
+        // ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
+        //     ("execute", matches) => {
+        //         let json = serde_json::json!({
+        //             "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, accessory::Command::VARIANTS), "command").context("get command")?,
+        //             "params": get_value::<serde_json::Value, _, _>(matches, get_input, "params").context("get params")?
+        //         });
+        //         let command = serde_json::from_value(json).context("parse into command")?;
+        //         fulfillment::execute::Command {
+        //             device_id: get_value(matches, get_input, "device-id")?,
+        //             command,
+        //             params: serde_json::from_str(
+        //                 &matches
+        //                     .value_of("params")
+        //                     .map(std::string::ToString::to_string)
+        //                     .unwrap(),
+        //             )?,
+        //         }
+        //         .run(ctx)
+        //     }
+        //     ("query", matches) => fulfillment::query::Command {
+        //         device_id: get_value(matches, get_input, "device-id")?,
+        //     }
+        //     .run(ctx),
+        //     ("sync", _) => fulfillment::sync::Command {}.run(ctx),
+        //     _ => todo!(),
+        // },
         _ => unreachable!(),
     }?;
     Ok::<(), anyhow::Error>(())

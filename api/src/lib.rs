@@ -4,6 +4,9 @@ pub mod auth;
 #[cfg(feature = "fulfillment")]
 pub mod fulfillment;
 
+#[cfg(feature = "hive")]
+pub mod hive;
+
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
 pub enum Error {
@@ -22,22 +25,23 @@ use houseflow_config::client::Config;
 use houseflow_types::token::Token;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
-
 use url::Url;
 
 #[derive(Debug, Clone)]
-pub struct Client {
+pub struct ServerClient {
     client: reqwest::Client,
     config: Config,
     auth_url: Url,
     fulfillment_url: Url,
+    lighthouse_url: Url,
 }
 
-impl Client {
+impl ServerClient {
     pub fn new(config: Config) -> Self {
         Self {
             auth_url: config.server.url.join("auth/").unwrap(),
             fulfillment_url: config.server.url.join("fulfillment/internal").unwrap(),
+            lighthouse_url: config.server.url.join("lighthouse/").unwrap(),
             config,
             client: Default::default(),
         }

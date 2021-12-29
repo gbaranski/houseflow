@@ -11,8 +11,11 @@ pub struct Config {
     pub credentials: Credentials,
     #[serde(default)]
     pub server: Server,
+    #[serde(default)]
     pub accessories: Vec<Accessory>,
+    #[serde(default)]
     pub providers: Providers,
+    #[serde(default)]
     pub services: Services,
 }
 
@@ -78,32 +81,38 @@ pub mod manufacturers {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Providers {
     #[serde(default)]
-    pub hap: Option<HapProvider>,
+    pub hive: Option<HiveProvider>,
+    #[serde(default)]
+    pub mijia: Option<MijiaProvider>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct HapProvider {
+pub struct HiveProvider {}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct MijiaProvider {}
+
+#[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Services {
+    #[serde(default)]
+    pub hap: Option<HapService>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct HapService {
     // TODO: Make it strictly typed
     pub pin: String,
     /// Name of the bridge
     pub name: String,
 }
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Services {
-    #[serde(default)]
-    pub mijia: Option<MijiaService>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct MijiaService {}
 
 impl crate::Config for Config {
     const DEFAULT_TOML: &'static str = include_str!("default.toml");
@@ -159,13 +168,14 @@ mod tests {
                 room_name: "Bedroom".to_string(),
             }],
             providers: Providers {
-                hap: Some(HapProvider {
+                mijia: Some(MijiaProvider {}),
+                hive: Some(HiveProvider {}),
+            },
+            services: Services {
+                hap: Some(HapService {
                     pin: "12345678".to_string(),
                     name: "Awesome Hub".to_string(),
                 }),
-            },
-            services: Services {
-                mijia: Some(MijiaService {}),
             },
         };
 

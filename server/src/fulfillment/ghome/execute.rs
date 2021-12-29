@@ -94,13 +94,13 @@ pub async fn handle(
             accessory::Status::Success => response::PayloadCommand {
                 ids,
                 status: response::PayloadCommandStatus::Success,
-                states: response.state,
+                states: serde_json::json!({}).as_object().unwrap().clone(), // TODO: implement states
                 error_code: None,
             },
             accessory::Status::Error(error) => response::PayloadCommand {
                 ids,
                 status: response::PayloadCommandStatus::Error,
-                states: response.state,
+                states: serde_json::json!({}).as_object().unwrap().clone(), // TODO: implement states
                 error_code: Some(error.to_string()),
             },
         })

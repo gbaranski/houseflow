@@ -1,6 +1,7 @@
 use houseflow_config::hub::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
+use houseflow_hub::providers::HiveProvider;
 use houseflow_hub::providers::MasterProvider;
 use houseflow_hub::providers::MijiaProvider;
 use houseflow_hub::services::HapService;
@@ -31,28 +32,33 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let services = {
+    let (services, service_events) = {
         let mut services = vec![];
-        if let Some(hap_config) = config.providers.hap.as_ref() {
-            services.push(Box::new(HapService::new(hap_config).await?) as _);
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        if let Some(hap_config) = config.services.hap.as_ref() {
+            services.push(Box::new(HapService::new(hap_config, tx).await?) as _);
         }
-        services
+        (services, rx)
     };
     let (providers, provider_events) = {
         let mut providers = vec![];
-        let (event_sender, event_receiver) = tokio::sync::mpsc::unbounded_channel();
-        if let Some(mijia_config) = config.services.mijia {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        if let Some(mijia_config) = config.providers.mijia {
             providers.push(Box::new(
-                MijiaProvider::new(mijia_config, config.accessories.clone(), event_sender).await?,
+                MijiaProvider::new(mijia_config, config.accessories.clone(), tx.clone()).await?,
             ) as _);
         }
-        (providers, event_receiver)
+        if let Some(hive_config) = config.providers.hive {
+            providers.push(Box::new(
+                HiveProvider::new(hive_config, config.accessories.clone(), tx.clone()).await?,
+            ) as _)
+        }
+        (providers, rx)
     };
     let hub = Hub::new(
         MasterService::new(services),
         MasterProvider::new(providers),
-        provider_events,
     )
     .await?;
-    hub.run().await
+    hub.run(provider_events, service_events).await
 }

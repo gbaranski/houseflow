@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use serde::Serialize;
+use strum::EnumVariantNames;
 use uuid::Uuid;
 
 pub type ID = Uuid;
@@ -57,7 +58,7 @@ pub enum Trait {
     OpenClose,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, EnumVariantNames)]
 #[non_exhaustive]
 #[serde(tag = "command", content = "params", rename_all = "kebab-case")]
 pub enum Command {
@@ -113,4 +114,15 @@ pub enum Status {
     Success,
     /// Target device is unable to perform the command.
     Error(Error),
+}
+
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct State {
+    pub temperature: Option<f32>,
+    pub humidity: Option<u8>,
+    pub on: Option<bool>,
+    pub open_percent: Option<u8>,
+    pub battery_percent: Option<u16>,
+    pub battery_voltage: Option<f32>,
 }

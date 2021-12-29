@@ -1,6 +1,7 @@
 pub mod accessory;
 pub mod client;
 pub mod hub;
+pub mod hive;
 pub mod permission;
 pub mod room;
 pub mod structure;

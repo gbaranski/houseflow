@@ -11,7 +11,7 @@ edition = "2021"
 resolver = "2"
 
 [dependencies]
-houseflow-api = { version="0.1.1", path="../api", features=["auth", "fulfillment", "sync"] }
+houseflow-api = { version="0.1.1", path="../api", features=["auth", "fulfillment"] }
 houseflow-config = { version="0.1.1", path="../config", features=["client", "fs"] }
 houseflow-types = { version="0.1.1", path="../types", features=["token"] }
 
@@ -32,3 +32,5 @@ chrono = "0.4.19"
 tracing = "0.1.26"
 tracing-subscriber = "0.2.19"
 Inflector = "0.11.4"
+async-trait = "0.1.52"
+tokio = { version = "1.14.0", features = ["rt-multi-thread", "macros"] }

@@ -1,8 +1,6 @@
-use crate::AccessoryState;
-
-use super::Provider;
-use super::EventSender;
 use super::Event;
+use super::EventSender;
+use super::Provider;
 use anyhow::Error;
 use arc_swap::ArcSwap;
 use async_trait::async_trait;
@@ -10,7 +8,8 @@ use futures::StreamExt;
 use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::Accessory;
 use houseflow_config::hub::AccessoryType;
-use houseflow_config::hub::MijiaService as Config;
+use houseflow_config::hub::MijiaProvider as Config;
+use houseflow_types::accessory;
 use houseflow_types::accessory::ID as AccessoryID;
 use mijia::bluetooth::DeviceId as BluetoothDeviceID;
 use mijia::{MijiaEvent, MijiaSession};
@@ -49,6 +48,21 @@ impl MijiaProvider {
             .cloned()
     }
 
+    fn bluetooth_device_id_by_accessory_id(
+        &self,
+        accessory_id: &accessory::ID,
+    ) -> Option<BluetoothDeviceID> {
+        self.connected_accessories.load().iter().find_map(
+            |(current_bluetooth_device_id, current_accessory_id)| {
+                if current_accessory_id == accessory_id {
+                    Some(current_bluetooth_device_id.clone())
+                } else {
+                    None
+                }
+            },
+        )
+    }
+
     fn accessory_by_mac_address(&self, expected_mac_address: &str) -> Option<&Accessory> {
         self.configured_accessories.iter().find(|accessory| {
             if let AccessoryType::XiaomiMijia(manufacturers::XiaomiMijia::HygroThermometer {
@@ -84,7 +98,11 @@ impl MijiaProvider {
             self.connected_accessories
                 .store(Arc::new(new_connected_accessories));
         }
-        self.events.send(Event::Connected(accessory.to_owned())).unwrap();
+        self.events
+            .send(Event::Connected {
+                accessory: accessory.to_owned(),
+            })
+            .unwrap();
         Ok(())
     }
 }
@@ -117,12 +135,19 @@ impl Provider for MijiaProvider {
                     let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
 
                     tracing::info!("readings from {} = {}", accessory_id, readings);
-                    self.events.send(Event::StateUpdate(accessory_id, AccessoryState {
-                        temperature: Some(readings.temperature),
-                        humidity: Some(readings.humidity),
-                        battery_percent: Some(readings.battery_percent),
-                        battery_voltage: Some(readings.battery_voltage),
-                    })).unwrap();
+                    self.events
+                        .send(Event::State {
+                            accessory_id,
+                            state: accessory::State {
+                                temperature: Some(readings.temperature),
+                                humidity: Some(readings.humidity),
+                                on: None,
+                                open_percent: None,
+                                battery_percent: Some(readings.battery_percent),
+                                battery_voltage: Some(readings.battery_voltage as f32 / 1000.0),
+                            },
+                        })
+                        .unwrap();
                 }
                 MijiaEvent::HistoryRecord { id, record } => {
                     let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
@@ -143,6 +168,19 @@ impl Provider for MijiaProvider {
             };
         }
         Ok(())
+    }
+
+    async fn execute(
+        &self,
+        _accessory_id: accessory::ID,
+        _command: accessory::Command,
+    ) -> Result<(accessory::Status, accessory::State), Error> {
+        unreachable!("cannot execute commands on Xiaomi Mijia devices")
+    }
+
+    async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {
+        self.bluetooth_device_id_by_accessory_id(&accessory_id)
+            .is_some()
     }
 
     fn name(&self) -> &'static str {

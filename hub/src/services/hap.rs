@@ -1,19 +1,18 @@
-use houseflow_config::hub::manufacturers;
-pub use houseflow_config::hub::HapProvider as HapConfig;
-
-use super::AdditionalAccessoryInfo;
+use super::Event;
+use super::EventSender;
 use super::Service;
-use crate::AccessoryState;
 use anyhow::Error;
 use async_trait::async_trait;
 use atomic::AtomicU64;
 use atomic::Ordering;
 use futures::lock::Mutex;
-use hap::accessory::humidity_sensor::HumiditySensorAccessory;
+use futures::FutureExt;
+use hap::accessory::garage_door_opener::GarageDoorOpenerAccessory;
 use hap::accessory::temperature_sensor::TemperatureSensorAccessory;
 use hap::accessory::AccessoryCategory;
 use hap::accessory::AccessoryInformation;
 use hap::accessory::HapAccessory;
+use hap::characteristic::AsyncCharacteristicCallbacks;
 use hap::characteristic::CharacteristicCallbacks;
 use hap::server::IpServer;
 use hap::server::Server;
@@ -22,8 +21,10 @@ use hap::storage::Storage;
 use hap::HapType;
 use hap::MacAddress;
 use hap::Pin;
+use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::Accessory;
 use houseflow_config::hub::AccessoryType;
+pub use houseflow_config::hub::HapService as HapConfig;
 use houseflow_types::accessory;
 use mac_address::get_mac_address;
 use serde_json::Value as JsonValue;
@@ -36,10 +37,11 @@ pub struct HapService {
     ip_server: IpServer,
     accessory_pointers: RwLock<HashMap<accessory::ID, Arc<Mutex<Box<dyn HapAccessory>>>>>,
     last_accessory_instace_id: AtomicU64,
+    events: EventSender,
 }
 
 impl HapService {
-    pub async fn new(config: &HapConfig) -> Result<Self, Error> {
+    pub async fn new(config: &HapConfig, events: EventSender) -> Result<Self, Error> {
         let mut storage =
             FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
         let config = match storage.load_config().await {
@@ -73,6 +75,7 @@ impl HapService {
             ip_server: IpServer::new(config, storage).await?,
             accessory_pointers: Default::default(),
             last_accessory_instace_id: AtomicU64::from(1),
+            events,
         })
     }
 }
@@ -84,26 +87,25 @@ impl Service for HapService {
         Ok(())
     }
 
-    async fn connected(
-        &self,
-        configured_accessory: &Accessory,
-        _additional_accessory_info: &AdditionalAccessoryInfo,
-    ) -> Result<(), Error> {
-        let accessory = match &configured_accessory.r#type {
+    async fn connected(&self, configured_accessory: &Accessory) -> Result<(), Error> {
+        let accessory_instance_id = self
+            .last_accessory_instace_id
+            .fetch_add(1, Ordering::Relaxed);
+
+        let accessory_ptr = match &configured_accessory.r#type {
             AccessoryType::XiaomiMijia(accessory_type) => {
                 use manufacturers::XiaomiMijia as Manufacturer;
 
                 let manufacturer = "Xiaomi Mijia".to_string();
                 match accessory_type {
-                    Manufacturer::HygroThermometer { mac_address } => {
+                    Manufacturer::HygroThermometer { mac_address: _ } => {
                         let mut temperature_sensor = TemperatureSensorAccessory::new(
-                            self.last_accessory_instace_id
-                                .fetch_add(1, Ordering::Relaxed),
+                            accessory_instance_id,
                             AccessoryInformation {
                                 manufacturer,
                                 model: "LYWSD03MMC".to_string(), // TODO: ensure that this one is okay
                                 name: "Thermometer".to_string(),
-                                serial_number: mac_address.to_owned(),
+                                serial_number: configured_accessory.id.to_string(),
                                 accessory_flags: None,
                                 application_matching_identifier: None,
                                 // configured_name: Some(configured_accessory.name.clone()), For some reason it causes the Home app to break
@@ -120,20 +122,92 @@ impl Service for HapService {
                             .current_temperature
                             .on_read(Some(|| Ok(None)));
 
-                        temperature_sensor
+                        self.ip_server.add_accessory(temperature_sensor).await?
                     }
+                    _ => unimplemented!(),
+                }
+            }
+            AccessoryType::Houseflow(accessory_type) => {
+                use manufacturers::Houseflow as Manufacturer;
+
+                let manufacturer = "Houseflow".to_string();
+                match accessory_type {
+                    Manufacturer::Garage => {
+                        let mut garage_door_opener = GarageDoorOpenerAccessory::new(
+                            accessory_instance_id,
+                            AccessoryInformation {
+                                manufacturer,
+                                model: "houseflow-garage".to_string(), // TODO: ensure that this one is okay
+                                name: "Garage".to_string(),
+                                serial_number: configured_accessory.id.to_string(),
+                                accessory_flags: None,
+                                application_matching_identifier: None,
+                                // configured_name: Some(configured_accessory.name.clone()), For some reason it causes the Home app to break
+                                configured_name: None,
+                                firmware_revision: None,
+                                hardware_finish: None,
+                                hardware_revision: None,
+                                product_data: None,
+                                software_revision: None,
+                            },
+                        )?;
+                        garage_door_opener
+                            .garage_door_opener
+                            .current_door_state
+                            .on_read(Some(|| Ok(None)));
+
+                        let events = self.events.clone();
+
+                        let accessory_id = configured_accessory.id;
+                        garage_door_opener
+                            .garage_door_opener
+                            .target_door_state
+                            .on_update_async(Some(move |current: u8, new: u8| {
+                                let events = events.clone();
+
+                                async move {
+                                    println!("garage_door_opener target door state characteristic updated from {} to {}", current, new);
+                                    events
+                                        .send(Event::Execute(
+                                            accessory_id,
+                                            accessory::Command::OpenClose(
+                                                accessory::commands::OpenClose {
+                                                    open_percent: if new == 1 {
+                                                        100
+                                                    } else if new == 0 {
+                                                        0
+                                                    } else {
+                                                        unreachable!()
+                                                    },
+                                                },
+                                            ),
+                                        ))
+                                        .unwrap();
+                                    Ok(())
+                                }
+                                .boxed()
+                            }));
+
+                        tracing::info!("registering new garage door opener accessory");
+                        self.ip_server.add_accessory(garage_door_opener).await?
+                    }
+                    Manufacturer::Gate => todo!(),
                     _ => unimplemented!(),
                 }
             }
             _ => unimplemented!(),
         };
-        let accessory_ptr = self.ip_server.add_accessory(accessory).await?;
         let mut accessory_pointers = self.accessory_pointers.write().await;
         accessory_pointers.insert(configured_accessory.id, accessory_ptr);
         Ok(())
     }
 
-    async fn update_state(&self, id: &accessory::ID, state: &AccessoryState) -> Result<(), Error> {
+    async fn update_state(
+        &self,
+        id: &accessory::ID,
+        state: &accessory::State,
+    ) -> Result<(), Error> {
+        tracing::debug!("updating state of {} to {:?}", id, state);
         let accessory_pointers = self.accessory_pointers.read().await;
         let accessory = accessory_pointers.get(id).unwrap();
         let mut accessory = accessory.lock().await;
@@ -148,6 +222,25 @@ impl Service for HapService {
                 .set_value(JsonValue::Number(
                     serde_json::Number::from_f64(temperature as f64).unwrap(),
                 ))
+                .await?;
+        }
+        if let Some(open_percent) = state.open_percent {
+            let garage_door_opener_service = accessory
+                .get_mut_service(HapType::GarageDoorOpener)
+                .unwrap();
+            let current_door_state_characteristic = garage_door_opener_service
+                .get_mut_characteristic(HapType::CurrentDoorState)
+                .unwrap();
+            current_door_state_characteristic
+                .set_value(JsonValue::Number(serde_json::Number::from(
+                    if open_percent == 100 {
+                        1
+                    } else if open_percent == 0 {
+                        0
+                    } else {
+                        unreachable!()
+                    },
+                )))
                 .await?;
         }
         // TODO: Use other state fields

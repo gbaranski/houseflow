@@ -1,5 +1,5 @@
 use anyhow::Context;
-use houseflow_api::Client;
+use houseflow_api::ServerClient;
 use houseflow_config::client::Config;
 use houseflow_config::Config as _;
 use houseflow_types::accessory::Accessory;
@@ -19,7 +19,7 @@ pub struct Tokens {
 pub struct CommandContext {
     config_path: std::path::PathBuf,
     config: Option<Config>,
-    client: Option<Client>,
+    server_client: Option<ServerClient>,
     pub tokens: Szafka<Tokens>,
     pub devices: Szafka<Vec<Accessory>>,
 }
@@ -29,7 +29,7 @@ impl CommandContext {
         let ctx = CommandContext {
             config_path,
             config: None,
-            client: None,
+            server_client: None,
             tokens: Szafka::new(houseflow_config::defaults::data_home().join("tokens")),
             devices: Szafka::new(houseflow_config::defaults::data_home().join("devices")),
         };
@@ -52,19 +52,19 @@ impl CommandContext {
         }
     }
 
-    pub fn client(&mut self) -> anyhow::Result<&Client> {
-        match self.client {
+    pub fn server_client(&mut self) -> anyhow::Result<&ServerClient> {
+        match self.server_client {
             Some(ref api) => Ok(api),
             None => {
                 let config = self.config()?;
-                let client = Client::new(config.clone());
-                self.client = Some(client);
-                Ok(self.client.as_ref().unwrap())
+                let client = ServerClient::new(config.clone());
+                self.server_client = Some(client);
+                Ok(self.server_client.as_ref().unwrap())
             }
         }
     }
 
-    pub fn access_token(&mut self) -> anyhow::Result<AccessToken> {
+    pub async fn access_token(&mut self) -> anyhow::Result<AccessToken> {
         let tokens = match self.tokens.get() {
             Ok(tokens) => tokens,
             Err(szafka::Error::OpenFileError(err)) => match err.kind() {
@@ -90,7 +90,7 @@ impl CommandContext {
                 tracing::debug!("token verify returned error: {}", err);
                 tracing::debug!("cached access token is expired, fetching new one");
                 let raw_fetched_access_token =
-                    self.client()?.refresh_token(&refresh_token)??.access_token;
+                    self.server_client()?.refresh_token(&refresh_token).await??.access_token;
                 let fetched_access_token = AccessToken::decode_unsafe(&raw_fetched_access_token)?;
                 let tokens = Tokens {
                     refresh: tokens.refresh,

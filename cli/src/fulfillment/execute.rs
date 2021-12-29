@@ -1,5 +1,5 @@
 use std::time::Instant;
-
+use async_trait::async_trait;
 use crate::CommandContext;
 use houseflow_types::accessory;
 use houseflow_types::fulfillment::execute;
@@ -11,9 +11,10 @@ pub struct Command {
     pub params: serde_json::Map<String, serde_json::Value>,
 }
 
+#[async_trait]
 impl crate::Command for Command {
-    fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
-        let access_token = ctx.access_token()?;
+    async fn run(self, mut ctx: CommandContext) -> anyhow::Result<()> {
+        let access_token = ctx.access_token().await?;
         let devices = match ctx.devices.get() {
             Ok(devices) => devices,
             Err(szafka::Error::OpenFileError(err)) => match err.kind() {
@@ -47,7 +48,7 @@ impl crate::Command for Command {
         };
 
         let before = Instant::now();
-        let response = ctx.client()?.execute(&access_token, &request)??;
+        let response = ctx.server_client()?.execute(&access_token, &request).await??;
 
         match response.frame.status {
             accessory::Status::Success => {
