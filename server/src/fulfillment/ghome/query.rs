@@ -1,4 +1,5 @@
 use super::homie::get_homie_device_by_id;
+use super::homie::property_value_to_percentage;
 use crate::State;
 use google_smart_home::query::request;
 use google_smart_home::query::response;
@@ -60,9 +61,8 @@ fn get_homie_device(
                 }
             }
             if let Some(brightness) = node.properties.get("brightness") {
-                if let Ok(value) = brightness.value::<i64>() {
-                    // TODO: Scale to percentage.
-                    state.insert("brightness".to_string(), Value::Number(value.into()));
+                if let Some(percentage) = property_value_to_percentage(brightness) {
+                    state.insert("brightness".to_string(), Value::Number(percentage.into()));
                 }
             }
             if let Some(on) = node.properties.get("temperature") {

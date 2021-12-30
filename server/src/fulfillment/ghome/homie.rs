@@ -1,6 +1,9 @@
+use homie_controller::Datatype;
 use homie_controller::Device;
 use homie_controller::Node;
+use homie_controller::Property;
 use std::collections::HashMap;
+use std::ops::RangeInclusive;
 
 /// Given an ID of the form `"device_id/node_id"`, looks up the corresponding Homie node (if any).
 pub fn get_homie_device_by_id<'a>(
@@ -17,4 +20,35 @@ pub fn get_homie_device_by_id<'a>(
     }
 
     None
+}
+
+/// Scales the value of the given property to a percentage.
+pub fn property_value_to_percentage(property: &Property) -> Option<u8> {
+    match property.datatype? {
+        Datatype::Integer => {
+            let value: i64 = property.value().ok()?;
+            let range: RangeInclusive<i64> = property.range().ok()?;
+            let percentage = (value - range.start()) * 100 / (range.end() - range.start());
+            let percentage = cap(percentage, 0, 100);
+            Some(percentage as u8)
+        }
+        Datatype::Float => {
+            let value: f64 = property.value().ok()?;
+            let range: RangeInclusive<f64> = property.range().ok()?;
+            let percentage = (value - range.start()) * 100.0 / (range.end() - range.start());
+            let percentage = cap(percentage, 0.0, 100.0);
+            Some(percentage as u8)
+        }
+        _ => None,
+    }
+}
+
+fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
+    if value < min {
+        min
+    } else if value > max {
+        max
+    } else {
+        value
+    }
 }
