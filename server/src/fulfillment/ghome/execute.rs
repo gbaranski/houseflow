@@ -10,6 +10,8 @@ use google_smart_home::execute::request::PayloadCommandExecution;
 use google_smart_home::execute::response;
 use homie_controller::Device;
 use homie_controller::HomieController;
+use homie_controller::Node;
+use homie_controller::Value;
 use houseflow_types::device;
 use houseflow_types::device::commands;
 use houseflow_types::errors::InternalError;
@@ -66,25 +68,7 @@ async fn execute_homie_device(
         match &execution.command {
             GHomeCommand::OnOff(onoff) => {
                 if let Some(on) = node.properties.get("on") {
-                    return if controller
-                        .set(&device.id, &node.id, "on", onoff.on)
-                        .await
-                        .is_err()
-                    {
-                        response::PayloadCommand {
-                            ids,
-                            status: response::PayloadCommandStatus::Error,
-                            states: Default::default(),
-                            error_code: Some("transientError".to_string()),
-                        }
-                    } else {
-                        response::PayloadCommand {
-                            ids,
-                            status: response::PayloadCommandStatus::Pending,
-                            states: Default::default(),
-                            error_code: None,
-                        }
-                    };
+                    return set_value(controller, device, node, "on", onoff.on, ids).await;
                 }
             }
             GHomeCommand::BrightnessAbsolute(brightness_absolute) => {
@@ -92,50 +76,14 @@ async fn execute_homie_device(
                     if let Some(value) =
                         percentage_to_property_value(brightness, brightness_absolute.brightness)
                     {
-                        return if controller
-                            .set(&device.id, &node.id, "brightness", value)
-                            .await
-                            .is_err()
-                        {
-                            response::PayloadCommand {
-                                ids,
-                                status: response::PayloadCommandStatus::Error,
-                                states: Default::default(),
-                                error_code: Some("transientError".to_string()),
-                            }
-                        } else {
-                            response::PayloadCommand {
-                                ids,
-                                status: response::PayloadCommandStatus::Pending,
-                                states: Default::default(),
-                                error_code: None,
-                            }
-                        };
+                        return set_value(controller, device, node, "brightness", value, ids).await;
                     }
                 }
             }
             GHomeCommand::ColorAbsolute(color_absolute) => {
                 if let Some(color) = node.properties.get("color") {
                     if let Some(value) = color_absolute_to_property_value(color, color_absolute) {
-                        return if controller
-                            .set(&device.id, &node.id, "color", value)
-                            .await
-                            .is_err()
-                        {
-                            response::PayloadCommand {
-                                ids,
-                                status: response::PayloadCommandStatus::Error,
-                                states: Default::default(),
-                                error_code: Some("transientError".to_string()),
-                            }
-                        } else {
-                            response::PayloadCommand {
-                                ids,
-                                status: response::PayloadCommandStatus::Pending,
-                                states: Default::default(),
-                                error_code: None,
-                            }
-                        };
+                        return set_value(controller, device, node, "color", value, ids).await;
                     }
                 }
             }
@@ -153,6 +101,35 @@ async fn execute_homie_device(
             status: response::PayloadCommandStatus::Error,
             states: Default::default(),
             error_code: Some("deviceNotFound".to_string()),
+        }
+    }
+}
+
+async fn set_value(
+    controller: &HomieController,
+    device: &Device,
+    node: &Node,
+    property_id: &str,
+    value: impl Value,
+    ids: Vec<String>,
+) -> response::PayloadCommand {
+    if controller
+        .set(&device.id, &node.id, property_id, value)
+        .await
+        .is_err()
+    {
+        response::PayloadCommand {
+            ids,
+            status: response::PayloadCommandStatus::Error,
+            states: Default::default(),
+            error_code: Some("transientError".to_string()),
+        }
+    } else {
+        response::PayloadCommand {
+            ids,
+            status: response::PayloadCommandStatus::Pending,
+            states: Default::default(),
+            error_code: None,
         }
     }
 }
