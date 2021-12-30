@@ -1,4 +1,5 @@
 use super::homie::get_homie_device_by_id;
+use super::homie::property_value_to_color;
 use super::homie::property_value_to_number;
 use super::homie::property_value_to_percentage;
 use crate::State;
@@ -63,6 +64,11 @@ fn get_homie_device(
             if let Some(brightness) = node.properties.get("brightness") {
                 if let Some(percentage) = property_value_to_percentage(brightness) {
                     state.insert("brightness".to_string(), Value::Number(percentage.into()));
+                }
+            }
+            if let Some(color) = node.properties.get("color") {
+                if let Some(color_value) = property_value_to_color(color) {
+                    state.insert("color".to_string(), Value::Object(color_value));
                 }
             }
             if let Some(temperature) = node.properties.get("temperature") {

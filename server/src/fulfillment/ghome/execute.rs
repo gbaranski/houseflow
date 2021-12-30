@@ -1,3 +1,4 @@
+use super::homie::color_absolute_to_property_value;
 use super::homie::get_homie_device_by_id;
 use super::homie::percentage_to_property_value;
 use crate::State;
@@ -93,6 +94,31 @@ async fn execute_homie_device(
                     {
                         return if controller
                             .set(&device.id, &node.id, "brightness", value)
+                            .await
+                            .is_err()
+                        {
+                            response::PayloadCommand {
+                                ids,
+                                status: response::PayloadCommandStatus::Error,
+                                states: Default::default(),
+                                error_code: Some("transientError".to_string()),
+                            }
+                        } else {
+                            response::PayloadCommand {
+                                ids,
+                                status: response::PayloadCommandStatus::Pending,
+                                states: Default::default(),
+                                error_code: None,
+                            }
+                        };
+                    }
+                }
+            }
+            GHomeCommand::ColorAbsolute(color_absolute) => {
+                if let Some(color) = node.properties.get("color") {
+                    if let Some(value) = color_absolute_to_property_value(color, color_absolute) {
+                        return if controller
+                            .set(&device.id, &node.id, "color", value)
                             .await
                             .is_err()
                         {
