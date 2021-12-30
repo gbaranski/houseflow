@@ -43,6 +43,24 @@ pub fn property_value_to_percentage(property: &Property) -> Option<u8> {
     }
 }
 
+/// Converts a percentage to the appropriately scaled property value of the given property, if it has
+/// a range specified.
+pub fn percentage_to_property_value(property: &Property, percentage: u8) -> Option<String> {
+    match property.datatype? {
+        Datatype::Integer => {
+            let range: RangeInclusive<i64> = property.range().ok()?;
+            let value = range.start() + percentage as i64 * (range.end() - range.start()) / 100;
+            Some(format!("{}", value))
+        }
+        Datatype::Float => {
+            let range: RangeInclusive<f64> = property.range().ok()?;
+            let value = range.start() + percentage as f64 * (range.end() - range.start()) / 100.0;
+            Some(format!("{}", value))
+        }
+        _ => None,
+    }
+}
+
 fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
     if value < min {
         min

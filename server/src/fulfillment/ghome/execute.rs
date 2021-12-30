@@ -1,4 +1,5 @@
 use super::homie::get_homie_device_by_id;
+use super::homie::percentage_to_property_value;
 use crate::State;
 use google_smart_home::device::commands as ghome_commands;
 use google_smart_home::device::Command as GHomeCommand;
@@ -83,6 +84,33 @@ async fn execute_homie_device(
                             error_code: None,
                         }
                     };
+                }
+            }
+            GHomeCommand::BrightnessAbsolute(brightness_absolute) => {
+                if let Some(brightness) = node.properties.get("brightness") {
+                    if let Some(value) =
+                        percentage_to_property_value(brightness, brightness_absolute.brightness)
+                    {
+                        return if controller
+                            .set(&device.id, &node.id, "brightness", value)
+                            .await
+                            .is_err()
+                        {
+                            response::PayloadCommand {
+                                ids,
+                                status: response::PayloadCommandStatus::Error,
+                                states: Default::default(),
+                                error_code: Some("transientError".to_string()),
+                            }
+                        } else {
+                            response::PayloadCommand {
+                                ids,
+                                status: response::PayloadCommandStatus::Pending,
+                                states: Default::default(),
+                                error_code: None,
+                            }
+                        };
+                    }
                 }
             }
             _ => {}
