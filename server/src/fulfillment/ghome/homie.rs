@@ -2,6 +2,7 @@ use homie_controller::Datatype;
 use homie_controller::Device;
 use homie_controller::Node;
 use homie_controller::Property;
+use serde_json::Number;
 use std::collections::HashMap;
 use std::ops::RangeInclusive;
 
@@ -56,6 +57,21 @@ pub fn percentage_to_property_value(property: &Property, percentage: u8) -> Opti
             let range: RangeInclusive<f64> = property.range().ok()?;
             let value = range.start() + percentage as f64 * (range.end() - range.start()) / 100.0;
             Some(format!("{}", value))
+        }
+        _ => None,
+    }
+}
+
+/// Converts the property value to a JSON number if it is an appropriate type.
+pub fn property_value_to_number(property: &Property) -> Option<Number> {
+    match property.datatype? {
+        Datatype::Integer => {
+            let value: i64 = property.value().ok()?;
+            Some(value.into())
+        }
+        Datatype::Float => {
+            let value = property.value().ok()?;
+            Number::from_f64(value)
         }
         _ => None,
     }

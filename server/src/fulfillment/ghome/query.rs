@@ -1,4 +1,5 @@
 use super::homie::get_homie_device_by_id;
+use super::homie::property_value_to_number;
 use super::homie::property_value_to_percentage;
 use crate::State;
 use google_smart_home::query::request;
@@ -9,7 +10,6 @@ use houseflow_types::errors::InternalError;
 use houseflow_types::lighthouse;
 use houseflow_types::user;
 use serde_json::Map;
-use serde_json::Number;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -65,14 +65,12 @@ fn get_homie_device(
                     state.insert("brightness".to_string(), Value::Number(percentage.into()));
                 }
             }
-            if let Some(on) = node.properties.get("temperature") {
-                if let Ok(value) = on.value::<f64>() {
-                    if let Some(finite_number) = Number::from_f64(value) {
-                        state.insert(
-                            "thermostatTemperatureAmbient".to_string(),
-                            Value::Number(finite_number),
-                        );
-                    }
+            if let Some(temperature) = node.properties.get("temperature") {
+                if let Some(finite_number) = property_value_to_number(temperature) {
+                    state.insert(
+                        "thermostatTemperatureAmbient".to_string(),
+                        Value::Number(finite_number),
+                    );
                 }
             }
 
