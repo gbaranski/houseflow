@@ -73,6 +73,14 @@ fn get_homie_device(
                     );
                 }
             }
+            if let Some(humidity) = node.properties.get("humidity") {
+                if let Some(finite_number) = property_value_to_number(humidity) {
+                    state.insert(
+                        "thermostatHumidityAmbient".to_string(),
+                        Value::Number(finite_number),
+                    );
+                }
+            }
 
             response::PayloadDevice {
                 state,
