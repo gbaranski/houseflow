@@ -9,6 +9,14 @@ The server currently supports two type of clients:
 - Internal, e.g CLI app
 - Google Home
 
+## Backends
+
+Devices may come from one of two sources, configured per user:
+
+- Lighthouse, a custom protocol defined by Houseflow.
+- [Homie](docs/homie.md), a [convention for IoT devices](https://homieiot.github.io/) defined on top
+  of MQTT.
+
 ## Code organisation
 
 The main modules and directories are:
