@@ -8,6 +8,7 @@ use google_smart_home::execute::request;
 use google_smart_home::execute::request::PayloadCommandDevice;
 use google_smart_home::execute::request::PayloadCommandExecution;
 use google_smart_home::execute::response;
+use homie_controller::Datatype;
 use homie_controller::Device;
 use homie_controller::HomieController;
 use homie_controller::Node;
@@ -68,7 +69,9 @@ async fn execute_homie_device(
         match &execution.command {
             GHomeCommand::OnOff(onoff) => {
                 if let Some(on) = node.properties.get("on") {
-                    return set_value(controller, device, node, "on", onoff.on, ids).await;
+                    if on.datatype == Some(Datatype::Boolean) {
+                        return set_value(controller, device, node, "on", onoff.on, ids).await;
+                    }
                 }
             }
             GHomeCommand::BrightnessAbsolute(brightness_absolute) => {
