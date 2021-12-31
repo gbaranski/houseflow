@@ -1,7 +1,7 @@
 mod hap;
 
 pub use self::hap::HapConfig;
-pub use self::hap::HapService;
+pub use self::hap::HapController;
 
 use anyhow::Error;
 use async_trait::async_trait;
@@ -21,7 +21,7 @@ pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
 pub type EventSender = mpsc::UnboundedSender<Event>;
 
 #[async_trait]
-pub trait Service: Send + Sync {
+pub trait Controller: Send + Sync {
     async fn run(&self) -> Result<(), Error>;
     async fn connected(&self, configured_accessory: &Accessory) -> Result<(), Error>;
     async fn update_state(&self, id: &accessory::ID, state: &accessory::State)
@@ -30,32 +30,32 @@ pub trait Service: Send + Sync {
     fn name(&self) -> &'static str;
 }
 
-pub struct MasterService {
-    slave_services: Vec<Box<dyn Service + Send + Sync>>,
+pub struct MasterController {
+    slave_controllers: Vec<Box<dyn Controller + Send + Sync>>,
 }
 
-impl<'s> MasterService {
-    pub fn new(slave_services: Vec<Box<dyn Service + Send + Sync>>) -> Self {
-        Self { slave_services }
+impl<'s> MasterController {
+    pub fn new(slave_controllers: Vec<Box<dyn Controller + Send + Sync>>) -> Self {
+        Self { slave_controllers }
     }
 
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s dyn Service) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
+        f: impl Fn(&'s dyn Controller) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
 
-        let (service_names, futures): (Vec<_>, FuturesOrdered<_>) = self
-            .slave_services
+        let (controller_names, futures): (Vec<_>, FuturesOrdered<_>) = self
+            .slave_controllers
             .iter()
-            .map(|service| (service.name(), f(service.as_ref())))
+            .map(|controller| (controller.name(), f(controller.as_ref())))
             .unzip();
         let results: Vec<Result<(), Error>> = futures.collect().await;
-        for (result, service) in results.iter().zip(service_names.iter()) {
+        for (result, controller) in results.iter().zip(controller_names.iter()) {
             match result {
-                Ok(_) => tracing::debug!(service, "task completed"),
-                Err(err) => tracing::error!(service, "task failed due to {}", err),
+                Ok(_) => tracing::debug!(controller, "task completed"),
+                Err(err) => tracing::error!(controller, "task failed due to {}", err),
             };
         }
         Ok(())
@@ -63,12 +63,12 @@ impl<'s> MasterService {
 }
 
 #[async_trait]
-impl Service for MasterService {
+impl Controller for MasterController {
     async fn run(&self) -> Result<(), Error> {
-        self.execute_for_all(|service| {
+        self.execute_for_all(|controller| {
             async move {
-                tracing::info!("starting service `{}`", service.name());
-                service.run().await
+                tracing::info!("starting controller `{}`", controller.name());
+                controller.run().await
             }
             .boxed()
         })
@@ -77,7 +77,7 @@ impl Service for MasterService {
     }
 
     async fn connected(&self, configured_accessory: &Accessory) -> Result<(), Error> {
-        self.execute_for_all(move |service| service.connected(configured_accessory))
+        self.execute_for_all(move |controller| controller.connected(configured_accessory))
             .await
     }
 
@@ -86,12 +86,12 @@ impl Service for MasterService {
         id: &accessory::ID,
         state: &accessory::State,
     ) -> Result<(), Error> {
-        self.execute_for_all(move |service| service.update_state(id, state))
+        self.execute_for_all(move |controller| controller.update_state(id, state))
             .await
     }
 
     async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error> {
-        self.execute_for_all(move |service| service.disconnected(id))
+        self.execute_for_all(move |controller| controller.disconnected(id))
             .await
     }
 

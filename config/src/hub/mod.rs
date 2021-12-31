@@ -16,7 +16,7 @@ pub struct Config {
     #[serde(default)]
     pub providers: Providers,
     #[serde(default)]
-    pub services: Services,
+    pub controllers: Controllers,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -100,14 +100,14 @@ pub struct MijiaProvider {}
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Services {
+pub struct Controllers {
     #[serde(default)]
-    pub hap: Option<HapService>,
+    pub hap: Option<HapController>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct HapService {
+pub struct HapController {
     // TODO: Make it strictly typed
     pub pin: String,
     /// Name of the bridge
@@ -171,8 +171,8 @@ mod tests {
                 mijia: Some(MijiaProvider {}),
                 hive: Some(HiveProvider {}),
             },
-            services: Services {
-                hap: Some(HapService {
+            controllers: Controllers {
+                hap: Some(HapController {
                     pin: "12345678".to_string(),
                     name: "Awesome Hub".to_string(),
                 }),

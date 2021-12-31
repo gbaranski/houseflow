@@ -15,8 +15,8 @@ manufacturer = "xiaomi-mijia"
 model = "hygro-thermometer"
 mac-address = "A4:C1:38:EF:77:51"
 
-[providers.hap]
+[controllers.hap]
 pin = "12345678"
 name = "Awesome Hub"
 
-[services.mijia]
+[providers.mijia]

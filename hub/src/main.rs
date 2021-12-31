@@ -4,8 +4,8 @@ use houseflow_config::Error as ConfigError;
 use houseflow_hub::providers::HiveProvider;
 use houseflow_hub::providers::MasterProvider;
 use houseflow_hub::providers::MijiaProvider;
-use houseflow_hub::services::HapService;
-use houseflow_hub::services::MasterService;
+use houseflow_hub::controllers::HapController;
+use houseflow_hub::controllers::MasterController;
 use houseflow_hub::Hub;
 
 #[tokio::main]
@@ -32,13 +32,13 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let (services, service_events) = {
-        let mut services = vec![];
+    let (controllers, controller_events) = {
+        let mut controllers = vec![];
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        if let Some(hap_config) = config.services.hap.as_ref() {
-            services.push(Box::new(HapService::new(hap_config, tx).await?) as _);
+        if let Some(hap_config) = config.controllers.hap.as_ref() {
+            controllers.push(Box::new(HapController::new(hap_config, tx).await?) as _);
         }
-        (services, rx)
+        (controllers, rx)
     };
     let (providers, provider_events) = {
         let mut providers = vec![];
@@ -56,9 +56,9 @@ async fn main() -> Result<(), anyhow::Error> {
         (providers, rx)
     };
     let hub = Hub::new(
-        MasterService::new(services),
+        MasterController::new(controllers),
         MasterProvider::new(providers),
     )
     .await?;
-    hub.run(provider_events, service_events).await
+    hub.run(provider_events, controller_events).await
 }

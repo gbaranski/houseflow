@@ -1,6 +1,6 @@
 use super::Event;
 use super::EventSender;
-use super::Service;
+use super::Controller;
 use anyhow::Error;
 use async_trait::async_trait;
 use atomic::AtomicU64;
@@ -24,7 +24,7 @@ use hap::Pin;
 use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::Accessory;
 use houseflow_config::hub::AccessoryType;
-pub use houseflow_config::hub::HapService as HapConfig;
+pub use houseflow_config::hub::HapController as HapConfig;
 use houseflow_types::accessory;
 use mac_address::get_mac_address;
 use serde_json::Value as JsonValue;
@@ -33,14 +33,14 @@ use std::sync::atomic;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-pub struct HapService {
+pub struct HapController {
     ip_server: IpServer,
     accessory_pointers: RwLock<HashMap<accessory::ID, Arc<Mutex<Box<dyn HapAccessory>>>>>,
     last_accessory_instace_id: AtomicU64,
     events: EventSender,
 }
 
-impl HapService {
+impl HapController {
     pub async fn new(config: &HapConfig, events: EventSender) -> Result<Self, Error> {
         let mut storage =
             FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
@@ -81,7 +81,7 @@ impl HapService {
 }
 
 #[async_trait]
-impl Service for HapService {
+impl Controller for HapController {
     async fn run(&self) -> Result<(), Error> {
         self.ip_server.run_handle().await?;
         Ok(())

@@ -1,29 +1,29 @@
 pub mod providers;
-pub mod services;
+pub mod controllers;
 
 use providers::Provider;
-use services::Service;
+use controllers::Controller;
 
-pub struct Hub<S: Service, P: Provider> {
-    service: S,
+pub struct Hub<C: Controller, P: Provider> {
+    controller: C,
     provider: P,
 }
 
-impl<S: Service + 'static, P: Provider + 'static> Hub<S, P> {
-    pub async fn new(service: S, provider: P) -> Result<Self, anyhow::Error> {
-        Ok(Self { service, provider })
+impl<C: Controller + 'static, P: Provider + 'static> Hub<C, P> {
+    pub async fn new(controller: C, provider: P) -> Result<Self, anyhow::Error> {
+        Ok(Self { controller, provider })
     }
 
     pub async fn run(
         self,
         provider_events: providers::EventReceiver,
-        service_events: services::EventReceiver,
+        controller_events: controllers::EventReceiver,
     ) -> Result<(), anyhow::Error> {
         tokio::select! {
-            v = self.service.run() => v?,
+            v = self.controller.run() => v?,
             v = self.provider.run() => v?,
             v = self.read_provider_events(provider_events) => v?,
-            v = self.read_service_events(service_events) => v?,
+            v = self.read_controller_events(controller_events) => v?,
         }
 
         Ok(())
@@ -36,32 +36,32 @@ impl<S: Service + 'static, P: Provider + 'static> Hub<S, P> {
         while let Some(event) = provider_events.recv().await {
             match event {
                 providers::Event::Connected { accessory } => {
-                    self.service.connected(&accessory).await?;
+                    self.controller.connected(&accessory).await?;
                 }
                 providers::Event::Disconnected { accessory_id } => {
-                    self.service.disconnected(&accessory_id).await?
+                    self.controller.disconnected(&accessory_id).await?
                 }
                 providers::Event::State {
                     accessory_id,
                     state,
                 } => {
-                    self.service.update_state(&accessory_id, &state).await?;
+                    self.controller.update_state(&accessory_id, &state).await?;
                 }
             }
         }
         Ok(())
     }
 
-    async fn read_service_events(
+    async fn read_controller_events(
         &self,
-        mut service_events: services::EventReceiver,
+        mut controller_events: controllers::EventReceiver,
     ) -> Result<(), anyhow::Error> {
-        while let Some(event) = service_events.recv().await {
+        while let Some(event) = controller_events.recv().await {
             match event {
-                services::Event::Execute(accessory, command) => {
+                controllers::Event::Execute(accessory, command) => {
                     let (status, state) = self.provider.execute(accessory, command).await?;
                     tracing::info!("executed on {} with status {} and state {:?}", accessory, status, state);
-                    self.service.update_state(&accessory, &state).await?;
+                    self.controller.update_state(&accessory, &state).await?;
                 }
             }
         }
