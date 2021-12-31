@@ -157,7 +157,88 @@ fn cap<N: Copy + PartialOrd>(value: N, min: N, max: N) -> N {
 
 #[cfg(test)]
 mod tests {
+    use google_smart_home::device::commands::{Color, Hsv};
+    use serde_json::json;
+
     use super::*;
+
+    #[test]
+    fn percentage_integer() {
+        let property = Property {
+            id: "brightness".to_string(),
+            name: Some("Brightness".to_string()),
+            datatype: Some(Datatype::Integer),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("10:20".to_string()),
+            value: Some("13".to_string()),
+        };
+
+        assert_eq!(property_value_to_percentage(&property), Some(30));
+        assert_eq!(
+            percentage_to_property_value(&property, 70),
+            Some("17".to_string())
+        );
+    }
+
+    #[test]
+    fn percentage_float() {
+        let property = Property {
+            id: "brightness".to_string(),
+            name: Some("Brightness".to_string()),
+            datatype: Some(Datatype::Float),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("1.0:2.0".to_string()),
+            value: Some("1.3".to_string()),
+        };
+
+        assert_eq!(property_value_to_percentage(&property), Some(30));
+        assert_eq!(
+            percentage_to_property_value(&property, 70),
+            Some("1.7".to_string())
+        );
+    }
+
+    #[test]
+    fn number_integer() {
+        let property = Property {
+            id: "number".to_string(),
+            name: Some("Number".to_string()),
+            datatype: Some(Datatype::Integer),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: None,
+            value: Some("42".to_string()),
+        };
+
+        assert_eq!(
+            property_value_to_number(&property).unwrap().as_u64(),
+            Some(42)
+        );
+    }
+
+    #[test]
+    fn number_float() {
+        let property = Property {
+            id: "number".to_string(),
+            name: Some("Number".to_string()),
+            datatype: Some(Datatype::Float),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: None,
+            value: Some("42.2".to_string()),
+        };
+
+        assert_eq!(
+            property_value_to_number(&property).unwrap().as_f64(),
+            Some(42.2)
+        );
+    }
 
     #[test]
     fn color_rgb() {
@@ -172,10 +253,64 @@ mod tests {
             value: Some("17,34,51".to_string()),
         };
 
-        let json_value = property_value_to_color(&property).unwrap();
         assert_eq!(
-            json_value.get("spectrumRgb"),
+            property_value_to_color(&property)
+                .unwrap()
+                .get("spectrumRgb"),
             Some(&Value::Number(0x112233.into()))
+        );
+        assert_eq!(
+            color_absolute_to_property_value(
+                &property,
+                &ColorAbsolute {
+                    color: Color {
+                        name: None,
+                        value: ColorValue::Rgb {
+                            spectrum_rgb: 0x445566
+                        }
+                    }
+                }
+            ),
+            Some("68,85,102".to_string())
+        );
+    }
+
+    #[test]
+    fn color_hsv() {
+        let property = Property {
+            id: "color".to_string(),
+            name: Some("Colour".to_string()),
+            datatype: Some(Datatype::Color),
+            settable: true,
+            retained: true,
+            unit: None,
+            format: Some("hsv".to_string()),
+            value: Some("280,50,60".to_string()),
+        };
+
+        assert_eq!(
+            property_value_to_color(&property)
+                .unwrap()
+                .get("spectrumHsv"),
+            Some(&json!({"hue": 280, "saturation": 0.5, "value": 0.6}))
+        );
+        assert_eq!(
+            color_absolute_to_property_value(
+                &property,
+                &ColorAbsolute {
+                    color: Color {
+                        name: None,
+                        value: ColorValue::Hsv {
+                            spectrum_hsv: Hsv {
+                                hue: 290.0,
+                                saturation: 0.2,
+                                value: 0.3
+                            }
+                        }
+                    }
+                }
+            ),
+            Some("290,20,30".to_string())
         );
     }
 }
