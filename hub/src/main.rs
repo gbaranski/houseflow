@@ -38,6 +38,10 @@ async fn main() -> Result<(), anyhow::Error> {
         if let Some(hap_config) = config.controllers.hap.as_ref() {
             controllers.push(Box::new(HapController::new(hap_config, tx).await?) as _);
         }
+        if controllers.is_empty() {
+            tracing::warn!("No controllers configured");
+        }
+
         (controllers, rx)
     };
     let (providers, provider_events) = {
@@ -52,6 +56,9 @@ async fn main() -> Result<(), anyhow::Error> {
             providers.push(Box::new(
                 HiveProvider::new(hive_config, config.accessories.clone(), tx.clone()).await?,
             ) as _)
+        }
+        if providers.is_empty() {
+            tracing::warn!("No providers configured");
         }
         (providers, rx)
     };

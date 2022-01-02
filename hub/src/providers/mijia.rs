@@ -10,6 +10,10 @@ use houseflow_config::hub::Accessory;
 use houseflow_config::hub::AccessoryType;
 use houseflow_config::hub::MijiaProvider as Config;
 use houseflow_types::accessory;
+use houseflow_types::accessory::characteristics;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
+use houseflow_types::accessory::services::ServiceDiscriminants;
 use houseflow_types::accessory::ID as AccessoryID;
 use mijia::bluetooth::DeviceId as BluetoothDeviceID;
 use mijia::{MijiaEvent, MijiaSession};
@@ -136,16 +140,25 @@ impl Provider for MijiaProvider {
 
                     tracing::info!("readings from {} = {}", accessory_id, readings);
                     self.events
-                        .send(Event::State {
+                        .send(Event::CharacteristicUpdate {
                             accessory_id,
-                            state: accessory::State {
-                                temperature: Some(readings.temperature),
-                                humidity: Some(readings.humidity),
-                                on: None,
-                                open_percent: None,
-                                battery_percent: Some(readings.battery_percent),
-                                battery_voltage: Some(readings.battery_voltage as f32 / 1000.0),
-                            },
+                            service_name: ServiceDiscriminants::TemperatureSensor,
+                            characteristic: Characteristic::CurrentTemperature(
+                                characteristics::CurrentTemperature {
+                                    temperature: readings.temperature,
+                                },
+                            ),
+                        })
+                        .unwrap();
+                    self.events
+                        .send(Event::CharacteristicUpdate {
+                            accessory_id,
+                            service_name: ServiceDiscriminants::HumiditySensor,
+                            characteristic: Characteristic::CurrentHumidity(
+                                characteristics::CurrentHumidity {
+                                    humidity: readings.humidity as f32,
+                                },
+                            ),
                         })
                         .unwrap();
                 }
@@ -170,12 +183,40 @@ impl Provider for MijiaProvider {
         Ok(())
     }
 
-    async fn execute(
+    async fn write_characteristic(
         &self,
-        _accessory_id: accessory::ID,
-        _command: accessory::Command,
-    ) -> Result<(accessory::Status, accessory::State), Error> {
-        unreachable!("cannot execute commands on Xiaomi Mijia devices")
+        accessory_id: &accessory::ID,
+        service_name: &accessory::services::ServiceDiscriminants,
+        characteristic: &accessory::characteristics::Characteristic,
+    ) -> Result<Result<(), accessory::Error>, Error> {
+        Ok(Err(accessory::Error::CharacteristicReadOnly))
+    }
+
+    async fn read_characteristic(
+        &self,
+        accessory_id: &accessory::ID,
+        service_name: &accessory::services::ServiceDiscriminants,
+        characteristic_name: &accessory::characteristics::CharacteristicDiscriminants,
+    ) -> Result<Result<Characteristic, accessory::Error>, Error> {
+        match service_name {
+            accessory::services::ServiceDiscriminants::TemperatureSensor => todo!(),
+            accessory::services::ServiceDiscriminants::HumiditySensor => todo!(),
+            _ => return Ok(Err(accessory::Error::ServiceNotSupported)),
+        };
+
+        let characteristic = match characteristic_name {
+            CharacteristicDiscriminants::CurrentTemperature => {
+                Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
+                    temperature: 10.5,
+                })
+            }
+            CharacteristicDiscriminants::CurrentHumidity => {
+                Characteristic::CurrentHumidity(characteristics::CurrentHumidity { humidity: 50.0 })
+            }
+            _ => return Ok(Err(accessory::Error::CharacteristicNotSupported)),
+        };
+
+        Ok(Ok(characteristic))
     }
 
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {

@@ -1,6 +1,6 @@
+use super::Controller;
 use super::Event;
 use super::EventSender;
-use super::Controller;
 use anyhow::Error;
 use async_trait::async_trait;
 use atomic::AtomicU64;
@@ -26,6 +26,8 @@ use houseflow_config::hub::Accessory;
 use houseflow_config::hub::AccessoryType;
 pub use houseflow_config::hub::HapController as HapConfig;
 use houseflow_types::accessory;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::services::ServiceDiscriminants;
 use mac_address::get_mac_address;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
@@ -168,10 +170,10 @@ impl Controller for HapController {
                                 async move {
                                     println!("garage_door_opener target door state characteristic updated from {} to {}", current, new);
                                     events
-                                        .send(Event::Execute(
+                                        .send(Event::WriteCharacteristic{
                                             accessory_id,
-                                            accessory::Command::OpenClose(
-                                                accessory::commands::OpenClose {
+                                            service_name: accessory::services::ServiceDiscriminants::GarageDoorOpener,
+                                            characteristic: accessory::characteristics::Characteristic::TargetDoorState(accessory::characteristics::TargetDoorState{
                                                     open_percent: if new == 1 {
                                                         100
                                                     } else if new == 0 {
@@ -179,9 +181,8 @@ impl Controller for HapController {
                                                     } else {
                                                         unreachable!()
                                                     },
-                                                },
-                                            ),
-                                        ))
+                                            }),
+                                        })
                                         .unwrap();
                                     Ok(())
                                 }
@@ -202,48 +203,76 @@ impl Controller for HapController {
         Ok(())
     }
 
-    async fn update_state(
+    async fn update(
         &self,
-        id: &accessory::ID,
-        state: &accessory::State,
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic: &Characteristic,
     ) -> Result<(), Error> {
-        tracing::debug!("updating state of {} to {:?}", id, state);
+        tracing::debug!(%accessory_id, ?service_name, ?characteristic, "updating state");
         let accessory_pointers = self.accessory_pointers.read().await;
-        let accessory = accessory_pointers.get(id).unwrap();
+        let accessory = accessory_pointers.get(accessory_id).unwrap();
         let mut accessory = accessory.lock().await;
-        if let Some(temperature) = state.temperature {
-            let temperature_sensor_service = accessory
+        let service = match service_name {
+            ServiceDiscriminants::TemperatureSensor => accessory
                 .get_mut_service(HapType::TemperatureSensor)
-                .unwrap();
-            let current_temperature_characteristic = temperature_sensor_service
-                .get_mut_characteristic(HapType::CurrentTemperature)
-                .unwrap();
-            current_temperature_characteristic
-                .set_value(JsonValue::Number(
-                    serde_json::Number::from_f64(temperature as f64).unwrap(),
-                ))
-                .await?;
-        }
-        if let Some(open_percent) = state.open_percent {
-            let garage_door_opener_service = accessory
+                .unwrap(),
+            ServiceDiscriminants::HumiditySensor => {
+                accessory.get_mut_service(HapType::HumiditySensor).unwrap()
+            }
+            ServiceDiscriminants::GarageDoorOpener => accessory
                 .get_mut_service(HapType::GarageDoorOpener)
-                .unwrap();
-            let current_door_state_characteristic = garage_door_opener_service
-                .get_mut_characteristic(HapType::CurrentDoorState)
-                .unwrap();
-            current_door_state_characteristic
-                .set_value(JsonValue::Number(serde_json::Number::from(
-                    if open_percent == 100 {
-                        1
-                    } else if open_percent == 0 {
-                        0
-                    } else {
-                        unreachable!()
-                    },
-                )))
-                .await?;
+                .unwrap(),
+        };
+        match characteristic {
+            accessory::characteristics::Characteristic::CurrentTemperature(current_temperature) => {
+                service
+                    .get_mut_characteristic(HapType::CurrentTemperature)
+                    .unwrap()
+                    .set_value(JsonValue::Number(
+                        serde_json::Number::from_f64(current_temperature.temperature as f64)
+                            .unwrap(),
+                    ))
+            }
+            accessory::characteristics::Characteristic::CurrentHumidity(current_humidity) => {
+                service
+                    .get_mut_characteristic(HapType::CurrentRelativeHumidity)
+                    .unwrap()
+                    .set_value(JsonValue::Number(
+                        serde_json::Number::from_f64(current_humidity.humidity as f64).unwrap(),
+                    ))
+            }
+            accessory::characteristics::Characteristic::CurrentDoorState(current_door_state) => {
+                service
+                    .get_mut_characteristic(HapType::CurrentDoorState)
+                    .unwrap()
+                    .set_value(JsonValue::Number(serde_json::Number::from(
+                        if current_door_state.open_percent == 100 {
+                            1
+                        } else if current_door_state.open_percent == 0 {
+                            0
+                        } else {
+                            unimplemented!()
+                        },
+                    )))
+            }
+            _ => return Ok(()),
+            // accessory::characteristics::Characteristic::TargetDoorState(target_door_state) => {
+            //     service
+            //         .get_mut_characteristic(HapType::TargetDoorState)
+            //         .unwrap()
+            //         .set_value(JsonValue::Number(serde_json::Number::from(
+            //             if target_door_state.open_percent == 100 {
+            //                 1
+            //             } else if target_door_state.open_percent == 0 {
+            //                 0
+            //             } else {
+            //                 unimplemented!()
+            //             },
+            //         )))
+            // }
         }
-        // TODO: Use other state fields
+        .await?;
         Ok(())
     }
 

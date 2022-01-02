@@ -9,6 +9,9 @@ use futures::StreamExt;
 use houseflow_config::hub::Accessory;
 use houseflow_config::hub::HiveProvider as Config;
 use houseflow_types::accessory;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
+use houseflow_types::accessory::services::ServiceDiscriminants;
 use houseflow_types::hive;
 use messages::prelude::*;
 use std::collections::HashMap;
@@ -57,9 +60,17 @@ struct Disconnected {
 }
 
 #[derive(Debug)]
-struct Execute {
+struct WriteCharacteristic {
     accessory_id: accessory::ID,
-    command: accessory::Command,
+    service_name: accessory::services::ServiceDiscriminants,
+    characteristic: accessory::characteristics::Characteristic,
+}
+
+#[derive(Debug)]
+struct ReadCharacteristic {
+    accessory_id: accessory::ID,
+    service_name: accessory::services::ServiceDiscriminants,
+    characteristic_name: accessory::characteristics::CharacteristicDiscriminants,
 }
 
 #[derive(Debug)]
@@ -115,13 +126,44 @@ impl Handler<Disconnected> for HiveProviderActor {
 }
 
 #[async_trait]
-impl Handler<Execute> for HiveProviderActor {
-    type Result = Result<(accessory::Status, accessory::State), Error>;
+impl Handler<WriteCharacteristic> for HiveProviderActor {
+    type Result = Result<Result<(), accessory::Error>, Error>;
 
-    async fn handle(&mut self, input: Execute, _context: &Context<Self>) -> Self::Result {
+    async fn handle(
+        &mut self,
+        input: WriteCharacteristic,
+        _context: &Context<Self>,
+    ) -> Self::Result {
         let oneshot = {
             let session = self.sessions.get_mut(&input.accessory_id).unwrap();
-            session.send(input.command).await??
+            session
+                .send(SessionWriteCharacteristic {
+                    service_name: input.service_name,
+                    characteristic: input.characteristic,
+                })
+                .await??
+        };
+        Ok(oneshot.await?)
+    }
+}
+
+#[async_trait]
+impl Handler<ReadCharacteristic> for HiveProviderActor {
+    type Result = Result<Result<Characteristic, accessory::Error>, Error>;
+
+    async fn handle(
+        &mut self,
+        input: ReadCharacteristic,
+        _context: &Context<Self>,
+    ) -> Self::Result {
+        let oneshot = {
+            let session = self.sessions.get_mut(&input.accessory_id).unwrap();
+            session
+                .send(SessionReadCharacteristic {
+                    service_name: input.service_name,
+                    characteristic_name: input.characteristic_name,
+                })
+                .await??
         };
         Ok(oneshot.await?)
     }
@@ -184,16 +226,35 @@ impl Provider for HiveProvider {
         }
     }
 
-    async fn execute(
+    async fn write_characteristic(
         &self,
-        accessory_id: accessory::ID,
-        command: accessory::Command,
-    ) -> Result<(accessory::Status, accessory::State), Error> {
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic: &Characteristic,
+    ) -> Result<Result<(), accessory::Error>, Error> {
         self.address
             .clone()
-            .send(Execute {
-                accessory_id,
-                command,
+            .send(WriteCharacteristic {
+                accessory_id: *accessory_id,
+                service_name: service_name.to_owned(),
+                characteristic: characteristic.to_owned(),
+            })
+            .await
+            .unwrap()
+    }
+
+    async fn read_characteristic(
+        &self,
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic_name: &CharacteristicDiscriminants,
+    ) -> Result<Result<Characteristic, accessory::Error>, Error> {
+        self.address
+            .clone()
+            .send(ReadCharacteristic {
+                accessory_id: *accessory_id,
+                service_name: service_name.to_owned(),
+                characteristic_name: characteristic_name.to_owned(),
             })
             .await
             .unwrap()
@@ -215,7 +276,12 @@ impl Provider for HiveProvider {
 }
 pub struct SessionActor {
     accessory_id: accessory::ID,
-    execute_results: HashMap<hive::FrameID, oneshot::Sender<(accessory::Status, accessory::State)>>,
+    characteristic_write_results:
+        HashMap<hive::FrameID, oneshot::Sender<Result<(), accessory::Error>>>,
+    characteristic_read_results: HashMap<
+        hive::FrameID,
+        oneshot::Sender<Result<accessory::characteristics::Characteristic, accessory::Error>>,
+    >,
     tx: SplitSink<WebSocketStream<TcpStream>, tungstenite::Message>,
 }
 
@@ -238,19 +304,30 @@ impl Handler<tungstenite::Message> for SessionActor {
                 tracing::debug!(?frame, "[->] ... frame");
 
                 match frame {
-                    hive::AccessoryFrame::State(frame) => Ok(Some(Event::State {
-                        accessory_id: self.accessory_id,
-                        state: frame.state,
-                    })),
-                    hive::AccessoryFrame::ExecuteResult(frame) => {
-                        tracing::info!("execute result = {:?}", frame);
-                        self.execute_results
+                    hive::AccessoryFrame::CharacteristicReadResponse(frame) => {
+                        self.characteristic_read_results
                             .remove(&frame.id)
                             .unwrap()
-                            .send((frame.status, frame.state))
+                            .send(frame.result.into())
                             .unwrap();
                         Ok(None)
                     }
+                    hive::AccessoryFrame::CharacteristicWriteResponse(frame) => {
+                        self.characteristic_write_results
+                            .remove(&frame.id)
+                            .unwrap()
+                            .send(frame.result.into())
+                            .unwrap();
+                        Ok(None)
+                    }
+                    hive::AccessoryFrame::CharacteristicUpdate(frame) => {
+                        Ok(Some(Event::CharacteristicUpdate {
+                            accessory_id: self.accessory_id,
+                            service_name: frame.service_name,
+                            characteristic: frame.characteristic,
+                        }))
+
+                    },
                 }
             }
             tungstenite::Message::Binary(bytes) => {
@@ -278,24 +355,63 @@ impl Handler<tungstenite::Message> for SessionActor {
     }
 }
 
+#[derive(Debug)]
+struct SessionReadCharacteristic {
+    service_name: accessory::services::ServiceDiscriminants,
+    characteristic_name: accessory::characteristics::CharacteristicDiscriminants,
+}
+
+#[derive(Debug)]
+struct SessionWriteCharacteristic {
+    service_name: accessory::services::ServiceDiscriminants,
+    characteristic: accessory::characteristics::Characteristic,
+}
+
 #[async_trait]
-impl Handler<accessory::Command> for SessionActor {
-    type Result = Result<oneshot::Receiver<(accessory::Status, accessory::State)>, Error>;
+impl Handler<SessionReadCharacteristic> for SessionActor {
+    type Result = Result<oneshot::Receiver<Result<Characteristic, accessory::Error>>, Error>;
 
     async fn handle(
         &mut self,
-        input: accessory::Command,
+        input: SessionReadCharacteristic,
         _context: &Context<Self>,
     ) -> Self::Result {
         let frame_id = rand::random();
-        let frame = hive::HubFrame::Execute(hive::ExecuteFrame {
+        let frame = hive::HubFrame::CharacteristicRead(hive::CharacteristicRead {
             id: frame_id,
-            command: input.to_owned(),
+            service_name: input.service_name,
+            characteristic_name: input.characteristic_name,
         });
         let text = serde_json::to_string(&frame)?;
         let message = tungstenite::Message::Text(text);
         let (response_tx, response_rx) = oneshot::channel();
-        self.execute_results.insert(frame_id, response_tx);
+        self.characteristic_read_results
+            .insert(frame_id, response_tx);
+        self.tx.send(message).await?;
+        Ok(response_rx)
+    }
+}
+
+#[async_trait]
+impl Handler<SessionWriteCharacteristic> for SessionActor {
+    type Result = Result<oneshot::Receiver<Result<(), accessory::Error>>, Error>;
+
+    async fn handle(
+        &mut self,
+        input: SessionWriteCharacteristic,
+        _context: &Context<Self>,
+    ) -> Self::Result {
+        let frame_id = rand::random();
+        let frame = hive::HubFrame::CharacteristicWrite(hive::CharacteristicWrite {
+            id: frame_id,
+            service_name: input.service_name,
+            characteristic: input.characteristic,
+        });
+        let text = serde_json::to_string(&frame)?;
+        let message = tungstenite::Message::Text(text);
+        let (response_tx, response_rx) = oneshot::channel();
+        self.characteristic_write_results
+            .insert(frame_id, response_tx);
         self.tx.send(message).await?;
         Ok(response_rx)
     }
@@ -309,7 +425,8 @@ impl SessionActor {
         Self {
             accessory_id,
             tx,
-            execute_results: Default::default(),
+            characteristic_write_results: Default::default(),
+            characteristic_read_results: Default::default(),
         }
     }
 }

@@ -1,8 +1,8 @@
-pub mod providers;
 pub mod controllers;
+pub mod providers;
 
-use providers::Provider;
 use controllers::Controller;
+use providers::Provider;
 
 pub struct Hub<C: Controller, P: Provider> {
     controller: C,
@@ -11,7 +11,10 @@ pub struct Hub<C: Controller, P: Provider> {
 
 impl<C: Controller + 'static, P: Provider + 'static> Hub<C, P> {
     pub async fn new(controller: C, provider: P) -> Result<Self, anyhow::Error> {
-        Ok(Self { controller, provider })
+        Ok(Self {
+            controller,
+            provider,
+        })
     }
 
     pub async fn run(
@@ -41,11 +44,14 @@ impl<C: Controller + 'static, P: Provider + 'static> Hub<C, P> {
                 providers::Event::Disconnected { accessory_id } => {
                     self.controller.disconnected(&accessory_id).await?
                 }
-                providers::Event::State {
+                providers::Event::CharacteristicUpdate {
                     accessory_id,
-                    state,
+                    service_name,
+                    characteristic,
                 } => {
-                    self.controller.update_state(&accessory_id, &state).await?;
+                    self.controller
+                        .update(&accessory_id, &service_name, &characteristic)
+                        .await?
                 }
             }
         }
@@ -58,10 +64,46 @@ impl<C: Controller + 'static, P: Provider + 'static> Hub<C, P> {
     ) -> Result<(), anyhow::Error> {
         while let Some(event) = controller_events.recv().await {
             match event {
-                controllers::Event::Execute(accessory, command) => {
-                    let (status, state) = self.provider.execute(accessory, command).await?;
-                    tracing::info!("executed on {} with status {} and state {:?}", accessory, status, state);
-                    self.controller.update_state(&accessory, &state).await?;
+                controllers::Event::WriteCharacteristic {
+                    accessory_id,
+                    service_name,
+                    characteristic,
+                } => {
+                    self.provider
+                        .write_characteristic(&accessory_id, &service_name, &characteristic)
+                        .await?
+                        .map_err(|err| {
+                            anyhow::anyhow!("writing characteristic failed with {}", err)
+                        })?;
+                    tracing::info!(
+                        %accessory_id,
+                        %service_name,
+                        ?characteristic,
+                        "wrote characteristic"
+                    );
+                    self.controller
+                        .update(&accessory_id, &service_name, &characteristic)
+                        .await?;
+                }
+                controllers::Event::ReadCharacteristic {
+                    accessory_id,
+                    service_name,
+                    characteristic_name,
+                } => {
+                    let characteristic = self
+                        .provider
+                        .read_characteristic(&accessory_id, &service_name, &characteristic_name)
+                        .await?
+                        .unwrap();
+                    tracing::info!(
+                        %accessory_id,
+                        %service_name,
+                        %characteristic_name,
+                        "read characteristic = {:?}", characteristic
+                    );
+                    self.controller
+                        .update(&accessory_id, &service_name, &characteristic)
+                        .await?;
                 }
             }
         }

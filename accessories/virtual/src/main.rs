@@ -31,8 +31,9 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing::debug!("Config: {:#?}", config);
     let hub_url = Url::parse("ws://127.0.0.1:8080").unwrap();
     let hive_session = Session::new(hub_url, config.credentials);
-    let accessory = VirtualAccessory::new();
-    hive_session.run(&accessory).await?;
+    let (event_sender, event_receiver) = tokio::sync::mpsc::unbounded_channel();
+    let accessory = VirtualAccessory::new(event_sender);
+    hive_session.run(&accessory, event_receiver).await?;
 
     Ok(())
 }

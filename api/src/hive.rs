@@ -3,12 +3,14 @@ use futures::Sink;
 use futures::SinkExt;
 use futures::StreamExt;
 use houseflow_accessory_hal::Accessory;
+use houseflow_accessory_hal::AccessoryEvent;
+use houseflow_accessory_hal::AccessoryEventReceiver;
 use houseflow_config::accessory::Credentials;
 use houseflow_types::hive;
 use houseflow_types::hive::AccessoryFrame;
-use houseflow_types::hive::ExecuteResultFrame;
+use houseflow_types::hive::CharacteristicReadResponse;
+use houseflow_types::hive::CharacteristicWriteResponse;
 use houseflow_types::hive::HubFrame;
-use houseflow_types::hive::StateFrame;
 use reqwest::Url;
 use std::borrow::Cow;
 use std::time::Duration;
@@ -30,8 +32,8 @@ pub enum Event {
     AccessoryFrame(hive::AccessoryFrame),
 }
 
-pub type EventSender = mpsc::Sender<Event>;
-pub type EventReceiver = mpsc::Receiver<Event>;
+pub type EventSender = mpsc::UnboundedSender<Event>;
+pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
 
 pub struct Session {
     heartbeat: Mutex<Instant>,
@@ -44,11 +46,15 @@ impl Session {
         Self {
             heartbeat: Mutex::new(Instant::now()),
             hub_url,
-            credentials
+            credentials,
         }
     }
 
-    pub async fn run(self, accessory: &impl Accessory) -> Result<(), anyhow::Error> {
+    pub async fn run(
+        self,
+        accessory: &impl Accessory,
+        accessory_events: AccessoryEventReceiver,
+    ) -> Result<(), anyhow::Error> {
         let url = self.hub_url.join("/ws").unwrap();
 
         let http_request = http::Request::builder()
@@ -64,20 +70,44 @@ impl Session {
             .unwrap();
 
         let (stream, _) = tokio_tungstenite::connect_async(http_request).await?;
-        let (event_sender, event_receiver) = mpsc::channel::<Event>(8);
+        let (event_sender, event_receiver) = mpsc::unbounded_channel::<Event>();
         let (stream_sender, stream_receiver) = stream.split();
 
         tokio::select! {
             v = self.stream_read(stream_receiver, event_sender.clone(), accessory) => { v }
             v = self.stream_write(stream_sender, event_receiver) => { v }
-            v = self.heartbeat(event_sender.clone()) => { 
+            v = self.accessory_events_read(accessory_events, event_sender.clone()) => { v }
+            v = self.heartbeat(event_sender.clone()) => {
                 event_sender.send(Event::Close(Some(tungstenite::protocol::CloseFrame{
                     code: tungstenite::protocol::frame::coding::CloseCode::Error,
                     reason: Cow::from("heartbeat timeout"),
-                }))).await?;
+                })))?;
                 v
              }
         }
+    }
+
+    async fn accessory_events_read(
+        &self,
+        mut accessory_events: AccessoryEventReceiver,
+        events: EventSender,
+    ) -> Result<(), anyhow::Error> {
+        while let Some(event) = accessory_events.recv().await {
+            match event {
+                AccessoryEvent::CharacteristicUpdate {
+                    service_name,
+                    characteristic,
+                } => {
+                    events.send(Event::AccessoryFrame(AccessoryFrame::CharacteristicUpdate(
+                        hive::CharacteristicUpdate {
+                            service_name,
+                            characteristic,
+                        },
+                    )))?;
+                }
+            };
+        }
+        Ok(())
     }
 
     async fn stream_read<S, A>(
@@ -98,27 +128,29 @@ impl Session {
                     let frame: HubFrame = serde_json::from_str(&text)?;
                     tracing::debug!("Parsed frame: {:?}", frame);
                     match frame {
-                        HubFrame::Execute(frame) => {
-                            let status = accessory.execute(frame.command).await?;
-                            let state = accessory.state().await?;
-                            let frame = ExecuteResultFrame {
+                        HubFrame::CharacteristicRead(frame) => {
+                            let result = accessory
+                                .read_characteristic(frame.service_name, frame.characteristic_name)
+                                .await;
+                            let frame = CharacteristicReadResponse {
                                 id: frame.id,
-                                status,
-                                state,
+                                result: result.into(),
                             };
-                            let frame = AccessoryFrame::ExecuteResult(frame);
-                            let event = Event::AccessoryFrame(frame);
-                            events.send(event).await.expect("failed sending event");
-                        }
-                        HubFrame::Query(_) => {
-                            let state = accessory.state().await?;
-                            let frame = StateFrame { state };
-                            let frame = AccessoryFrame::State(frame);
+                            let frame = AccessoryFrame::CharacteristicReadResponse(frame);
                             let response_event = Event::AccessoryFrame(frame);
-                            events
-                                .send(response_event)
-                                .await
-                                .expect("failed sending event");
+                            events.send(response_event).unwrap()
+                        }
+                        HubFrame::CharacteristicWrite(frame) => {
+                            let result = accessory
+                                .write_characteristic(frame.service_name, frame.characteristic)
+                                .await;
+                            let frame = CharacteristicWriteResponse {
+                                id: frame.id,
+                                result: result.into(),
+                            };
+                            let frame = AccessoryFrame::CharacteristicWriteResponse(frame);
+                            let event = Event::AccessoryFrame(frame);
+                            events.send(event).unwrap()
                         }
                         _ => {
                             panic!("Unexpected frame received")
@@ -132,7 +164,6 @@ impl Session {
                     tracing::debug!("received ping, payload: {:?}", payload);
                     events
                         .send(Event::Pong)
-                        .await
                         .expect("message receiver half is down");
                 }
                 WebsocketMessage::Pong(payload) => {
@@ -175,7 +206,7 @@ impl Session {
                     tracing::debug!("sending close frame: {:?}", frame);
                     stream.send(WebsocketMessage::Close(frame)).await?;
                     stream.close().await?;
-                },
+                }
             }
         }
         Ok(())
@@ -183,13 +214,13 @@ impl Session {
 
     async fn heartbeat(&self, events: EventSender) -> anyhow::Result<()> {
         let mut interval = tokio::time::interval(PING_INTERVAL);
-            interval.tick().await;
+        interval.tick().await;
         loop {
             interval.tick().await;
             if Instant::now().duration_since(*self.heartbeat.lock().await) > PING_TIMEOUT {
                 return Err(anyhow!("server heartbeat failed"));
             } else {
-                events.send(Event::Ping).await?;
+                events.send(Event::Ping)?;
             }
         }
     }

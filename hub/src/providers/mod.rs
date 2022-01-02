@@ -9,6 +9,9 @@ use async_trait::async_trait;
 use futures::{Future, FutureExt};
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
+use houseflow_types::accessory::services::ServiceDiscriminants;
 use std::pin::Pin;
 use tokio::sync::mpsc;
 
@@ -20,9 +23,10 @@ pub enum Event {
     Disconnected {
         accessory_id: accessory::ID,
     },
-    State {
+    CharacteristicUpdate {
         accessory_id: accessory::ID,
-        state: accessory::State,
+        service_name: ServiceDiscriminants,
+        characteristic: Characteristic,
     },
 }
 
@@ -32,11 +36,18 @@ pub type EventSender = mpsc::UnboundedSender<Event>;
 #[async_trait]
 pub trait Provider: Send + Sync {
     async fn run(&self) -> Result<(), Error>;
-    async fn execute(
+    async fn write_characteristic(
         &self,
-        accessory_id: accessory::ID,
-        command: accessory::Command,
-    ) -> Result<(accessory::Status, accessory::State), Error>;
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic: &Characteristic,
+    ) -> Result<Result<(), accessory::Error>, Error>;
+    async fn read_characteristic(
+        &self,
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic_name: &CharacteristicDiscriminants,
+    ) -> Result<Result<Characteristic, accessory::Error>, Error>;
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool;
     fn name(&self) -> &'static str;
 }
@@ -87,11 +98,12 @@ impl Provider for MasterProvider {
         .await
     }
 
-    async fn execute(
+    async fn write_characteristic(
         &self,
-        accessory_id: accessory::ID,
-        command: accessory::Command,
-    ) -> Result<(accessory::Status, accessory::State), Error> {
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic: &Characteristic,
+    ) -> Result<Result<(), accessory::Error>, Error> {
         let futures = self
             .slave_providers
             .iter()
@@ -102,7 +114,27 @@ impl Provider for MasterProvider {
             .find_map(|(provider, is_connected)| if *is_connected { Some(provider) } else { None })
             .unwrap();
 
-        provider.execute(accessory_id, command).await
+        provider.write_characteristic(accessory_id, service_name, characteristic).await
+    }
+
+    async fn read_characteristic(
+        &self,
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic_name: &CharacteristicDiscriminants,
+    ) -> Result<Result<Characteristic, accessory::Error>, Error> {
+        let futures = self
+            .slave_providers
+            .iter()
+            .map(|provider| async move { (provider, provider.is_connected(&accessory_id).await) });
+        let results = futures::future::join_all(futures).await;
+        let provider = results
+            .iter()
+            .find_map(|(provider, is_connected)| if *is_connected { Some(provider) } else { None })
+            .unwrap();
+
+        provider.read_characteristic(accessory_id, service_name, characteristic_name).await
+
     }
 
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {

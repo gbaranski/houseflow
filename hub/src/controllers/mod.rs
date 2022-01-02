@@ -9,12 +9,24 @@ use futures::Future;
 use futures::FutureExt;
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
 use std::pin::Pin;
 use tokio::sync::mpsc;
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    Execute(accessory::ID, accessory::Command),
+    WriteCharacteristic {
+        accessory_id: accessory::ID,
+        service_name: ServiceDiscriminants,
+        characteristic: Characteristic,
+    },
+    ReadCharacteristic {
+        accessory_id: accessory::ID,
+        service_name: ServiceDiscriminants,
+        characteristic_name: CharacteristicDiscriminants,
+    },
 }
 
 pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
@@ -24,8 +36,12 @@ pub type EventSender = mpsc::UnboundedSender<Event>;
 pub trait Controller: Send + Sync {
     async fn run(&self) -> Result<(), Error>;
     async fn connected(&self, configured_accessory: &Accessory) -> Result<(), Error>;
-    async fn update_state(&self, id: &accessory::ID, state: &accessory::State)
-        -> Result<(), Error>;
+    async fn update(
+        &self,
+        accessory_id: &accessory::ID,
+        service_name: &accessory::services::ServiceDiscriminants,
+        characteristic: &accessory::characteristics::Characteristic,
+    ) -> Result<(), Error>;
     async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error>;
     fn name(&self) -> &'static str;
 }
@@ -41,7 +57,8 @@ impl<'s> MasterController {
 
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s dyn Controller) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
+        f: impl Fn(&'s dyn Controller) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
+            + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
@@ -81,12 +98,13 @@ impl Controller for MasterController {
             .await
     }
 
-    async fn update_state(
+    async fn update(
         &self,
-        id: &accessory::ID,
-        state: &accessory::State,
+        accessory_id: &accessory::ID,
+        service_name: &ServiceDiscriminants,
+        characteristic: &Characteristic,
     ) -> Result<(), Error> {
-        self.execute_for_all(move |controller| controller.update_state(id, state))
+        self.execute_for_all(move |controller| controller.update(accessory_id, service_name, characteristic))
             .await
     }
 
