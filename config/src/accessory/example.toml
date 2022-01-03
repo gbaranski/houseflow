@@ -1,7 +1,7 @@
 # Houseflow hub configuration
 
-[server]
-url = "wss://example.com:${SERVER_PORT}/hello/world"
+[hub]
+url = "wss://example.com:${HUB_PORT}/hello/world"
 
 [credentials]
 id = "345469C1-6C6F-461A-AB60-E21578D5A608"
