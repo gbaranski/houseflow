@@ -5,6 +5,7 @@ use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_server::clerk::sled::Clerk;
 use houseflow_server::mailer;
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -50,15 +51,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         clerk: Arc::new(clerk),
     };
 
-    let address_with_port = |address, port| std::net::SocketAddr::new(address, port);
-    let address = address_with_port(state.config.network.address, state.config.network.port);
+    let address = SocketAddr::new(state.config.network.address, state.config.network.port);
 
     if let Some(tls) = &state.config.tls {
         let fut = axum_server::bind(address)
             .serve(houseflow_server::app(state.clone()).into_make_service());
         tracing::info!("Starting server at {}", address);
 
-        let tls_address = address_with_port(tls.address, tls.port);
+        let tls_address = SocketAddr::new(tls.address, tls.port);
         let tls_config =
             tls_rustls::RustlsConfig::from_pem_file(&tls.certificate, &tls.private_key).await?;
         let tls_fut = axum_server::bind_rustls(tls_address, tls_config)

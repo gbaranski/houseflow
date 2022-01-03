@@ -1,4 +1,5 @@
 use crate::Error;
+use houseflow_config::client::Config;
 use houseflow_types::auth;
 use houseflow_types::errors::ServerError;
 use houseflow_types::fulfillment;
@@ -8,19 +9,15 @@ use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct Client {
-    config: Config,
     auth_url: Url,
     fulfillment_url: Url,
 }
-
-use houseflow_config::client::Config;
 
 impl Client {
     pub fn new(config: Config) -> Self {
         Self {
             auth_url: config.server.url.join("auth/").unwrap(),
             fulfillment_url: config.server.url.join("fulfillment/internal").unwrap(),
-            config,
         }
     }
 }

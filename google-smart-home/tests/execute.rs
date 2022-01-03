@@ -42,9 +42,25 @@ fn execute_request() {
                         },
                     ]
                     .to_vec(),
-                    execution: [request::PayloadCommandExecution {
-                        command: Command::OnOff(commands::OnOff { on: true }),
-                    }]
+                    execution: [
+                        request::PayloadCommandExecution {
+                            command: Command::OnOff(commands::OnOff { on: true }),
+                        },
+                        request::PayloadCommandExecution {
+                            command: Command::ColorAbsolute(commands::ColorAbsolute {
+                                color: commands::Color {
+                                    name: Some("magenta".to_string()),
+                                    value: commands::ColorValue::Hsv {
+                                        spectrum_hsv: commands::Hsv {
+                                            hue: 300.0,
+                                            saturation: 1.0,
+                                            value: 1.0,
+                                        },
+                                    },
+                                },
+                            }),
+                        },
+                    ]
                     .to_vec(),
                 }]
                 .to_vec(),
