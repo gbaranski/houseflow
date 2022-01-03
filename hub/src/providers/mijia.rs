@@ -141,7 +141,10 @@ impl Provider for MijiaProvider {
                 }
                 MijiaEvent::Readings { id, readings } => {
                     let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
-
+                    {
+                        let mut last_readings = self.last_readings.lock().await;
+                        last_readings.insert(accessory_id, readings.clone());
+                    }
                     tracing::info!("readings from {} = {}", accessory_id, readings);
                     self.events
                         .send(Event::CharacteristicUpdate {
@@ -173,6 +176,14 @@ impl Provider for MijiaProvider {
                 MijiaEvent::Disconnected { id } => {
                     let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
                     tracing::info!("{} disconnected", accessory_id);
+                    self.events
+                        .send(Event::Disconnected { accessory_id })
+                        .unwrap();
+
+                    {
+                        let mut last_readings = self.last_readings.lock().await;
+                        last_readings.remove(&accessory_id);
+                    }
                     {
                         let mut new_connected_accessories =
                             self.connected_accessories.load().as_ref().clone();
