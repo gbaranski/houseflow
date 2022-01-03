@@ -79,11 +79,11 @@ impl<T> From<std::result::Result<T, Error>> for Result<T> {
     }
 }
 
-impl<T> Into<std::result::Result<T, Error>> for Result<T> {
-    fn into(self) -> std::result::Result<T, Error> {
-        match self {
-            Self::Ok(value) => Ok(value),
-            Self::Err(error) => Err(error),
+impl<T> From<Result<T>> for std::result::Result<T, Error> {
+    fn from(value: Result<T>) -> std::result::Result<T, Error> {
+        match value {
+            Result::Ok(value) => Ok(value),
+            Result::Err(error) => Err(error),
         }
     }
 }
