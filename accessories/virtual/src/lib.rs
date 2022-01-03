@@ -74,32 +74,32 @@ impl Accessory for VirtualAccessory {
     async fn read_characteristic(
         &self,
         service_name: ServiceName,
-        characteristic_name: characteristics::CharacteristicDiscriminants,
+        characteristic_name: characteristics::CharacteristicName,
     ) -> Result<Characteristic, Error> {
         let services = self.services.lock().await;
         match services.get(&service_name) {
             Some(service) => match (service, characteristic_name) {
                 (
                     Service::TemperatureSensor(sensor),
-                    characteristics::CharacteristicDiscriminants::CurrentTemperature,
+                    characteristics::CharacteristicName::CurrentTemperature,
                 ) => Ok(Characteristic::CurrentTemperature(
                     sensor.current_temperature.clone(),
                 )),
                 (
                     Service::HumiditySensor(sensor),
-                    characteristics::CharacteristicDiscriminants::CurrentHumidity,
+                    characteristics::CharacteristicName::CurrentHumidity,
                 ) => Ok(Characteristic::CurrentHumidity(
                     sensor.current_humidity.clone(),
                 )),
                 (
                     Service::GarageDoorOpener(sensor),
-                    characteristics::CharacteristicDiscriminants::CurrentDoorState,
+                    characteristics::CharacteristicName::CurrentDoorState,
                 ) => Ok(Characteristic::CurrentDoorState(
                     sensor.current_door_state.clone(),
                 )),
                 (
                     Service::GarageDoorOpener(sensor),
-                    characteristics::CharacteristicDiscriminants::TargetDoorState,
+                    characteristics::CharacteristicName::TargetDoorState,
                 ) => Ok(Characteristic::TargetDoorState(
                     sensor.target_door_state.clone(),
                 )),

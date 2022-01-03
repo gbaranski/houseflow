@@ -3,7 +3,7 @@ use serde::Serialize;
 use crate::accessory;
 use crate::accessory::characteristics::Characteristic;
 use crate::accessory::services::ServiceName;
-use crate::accessory::characteristics::CharacteristicDiscriminants;
+use crate::accessory::characteristics::CharacteristicName;
 
 pub type FrameID = u16;
 
@@ -33,7 +33,7 @@ pub struct CharacteristicUpdate {
 pub struct CharacteristicRead {
     pub id: FrameID,
     pub service_name: ServiceName,
-    pub characteristic_name: CharacteristicDiscriminants,
+    pub characteristic_name: CharacteristicName,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

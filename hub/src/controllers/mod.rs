@@ -11,7 +11,7 @@ use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::ServiceName;
-use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
+use houseflow_types::accessory::characteristics::CharacteristicName;
 use std::pin::Pin;
 use tokio::sync::mpsc;
 
@@ -25,7 +25,7 @@ pub enum Event {
     ReadCharacteristic {
         accessory_id: accessory::ID,
         service_name: ServiceName,
-        characteristic_name: CharacteristicDiscriminants,
+        characteristic_name: CharacteristicName,
     },
 }
 

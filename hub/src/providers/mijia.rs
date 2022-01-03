@@ -195,7 +195,7 @@ impl Provider for MijiaProvider {
         &self,
         _accessory_id: &accessory::ID,
         _service_name: &accessory::services::ServiceName,
-        _characteristic_name: &accessory::characteristics::CharacteristicDiscriminants,
+        _characteristic_name: &accessory::characteristics::CharacteristicName,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
         todo!()
         // match service_name {
@@ -205,12 +205,12 @@ impl Provider for MijiaProvider {
         // };
 
         // let characteristic = match characteristic_name {
-        //     CharacteristicDiscriminants::CurrentTemperature => {
+        //     CharacteristicName::CurrentTemperature => {
         //         Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
         //             temperature: 10.5,
         //         })
         //     }
-        //     CharacteristicDiscriminants::CurrentHumidity => {
+        //     CharacteristicName::CurrentHumidity => {
         //         Characteristic::CurrentHumidity(characteristics::CurrentHumidity { humidity: 50.0 })
         //     }
         //     _ => return Ok(Err(accessory::Error::CharacteristicNotSupported)),

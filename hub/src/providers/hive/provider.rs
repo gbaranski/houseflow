@@ -12,7 +12,7 @@ use houseflow_config::hub::Accessory;
 use houseflow_config::hub::HiveProvider as Config;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
+use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 use std::collections::HashMap;
 
@@ -48,7 +48,7 @@ pub(super) mod messages {
     pub struct ReadCharacteristic {
         pub accessory_id: accessory::ID,
         pub service_name: accessory::services::ServiceName,
-        pub characteristic_name: accessory::characteristics::CharacteristicDiscriminants,
+        pub characteristic_name: accessory::characteristics::CharacteristicName,
     }
 
     #[derive(Debug)]
@@ -240,7 +240,7 @@ impl Provider for HiveProvider {
         &self,
         accessory_id: &accessory::ID,
         service_name: &ServiceName,
-        characteristic_name: &CharacteristicDiscriminants,
+        characteristic_name: &CharacteristicName,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
         self.address
             .clone()

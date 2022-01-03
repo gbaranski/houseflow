@@ -128,6 +128,7 @@ pub mod characteristics {
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants)]
     #[strum_discriminants(derive(Serialize, Deserialize, strum::Display))]
+    #[strum_discriminants(name(CharacteristicName))]
     #[serde(tag = "name", rename_all = "kebab-case")]
     pub enum Characteristic {
         CurrentTemperature(CurrentTemperature),

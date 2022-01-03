@@ -10,7 +10,7 @@ use futures::{Future, FutureExt};
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
+use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 use std::pin::Pin;
 use tokio::sync::mpsc;
@@ -46,7 +46,7 @@ pub trait Provider: Send + Sync {
         &self,
         accessory_id: &accessory::ID,
         service_name: &ServiceName,
-        characteristic_name: &CharacteristicDiscriminants,
+        characteristic_name: &CharacteristicName,
     ) -> Result<Result<Characteristic, accessory::Error>, Error>;
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool;
     fn name(&self) -> &'static str;
@@ -121,7 +121,7 @@ impl Provider for MasterProvider {
         &self,
         accessory_id: &accessory::ID,
         service_name: &ServiceName,
-        characteristic_name: &CharacteristicDiscriminants,
+        characteristic_name: &CharacteristicName,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
         let futures = self
             .slave_providers

@@ -20,7 +20,7 @@ pub(super) mod messages {
     #[derive(Debug)]
     pub struct ReadCharacteristic {
         pub service_name: accessory::services::ServiceName,
-        pub characteristic_name: accessory::characteristics::CharacteristicDiscriminants,
+        pub characteristic_name: accessory::characteristics::CharacteristicName,
     }
 
     #[derive(Debug)]
