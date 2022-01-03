@@ -7,14 +7,13 @@ use axum::extract::ws::WebSocketUpgrade;
 use axum::extract::Extension;
 use axum::extract::TypedHeader;
 use axum::response::IntoResponse;
-use houseflow_types::device;
 use houseflow_types::errors::AuthError;
 use houseflow_types::errors::LighthouseError;
 use houseflow_types::errors::ServerError;
-use std::str::FromStr;
+use houseflow_types::hub;
 use tracing::Instrument;
 
-pub struct DeviceCredentials(device::ID, device::Password);
+pub struct HubCredentials(hub::ID, hub::Password);
 
 fn verify_password(hash: &str, password: &str) -> Result<(), AuthError> {
     match argon2::verify_encoded(hash, password.as_bytes()).unwrap() {
@@ -24,7 +23,7 @@ fn verify_password(hash: &str, password: &str) -> Result<(), AuthError> {
 }
 
 #[async_trait]
-impl axum::extract::FromRequest<Body> for DeviceCredentials {
+impl axum::extract::FromRequest<Body> for HubCredentials {
     type Rejection = ServerError;
 
     async fn from_request(
@@ -34,42 +33,43 @@ impl axum::extract::FromRequest<Body> for DeviceCredentials {
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await
                 .map_err(|err| AuthError::InvalidAuthorizationHeader(err.to_string()))?;
-        let device_id = device::ID::from_str(authorization.username()).map_err(|err| {
-            AuthError::InvalidAuthorizationHeader(format!("invalid device id: {}", err))
+        let hub_id = hub::ID::parse_str(authorization.username()).map_err(|err| {
+            AuthError::InvalidAuthorizationHeader(format!("invalid hub id: {}", err))
         })?;
 
-        Ok(Self(device_id, authorization.password().to_owned()))
+        Ok(Self(hub_id, authorization.password().to_owned()))
     }
 }
 
-#[tracing::instrument(name = "WebSocket", skip(websocket, state, device_password), err)]
+#[tracing::instrument(name = "WebSocket", skip(websocket, state, hub_password), err)]
 pub async fn handle(
     websocket: WebSocketUpgrade,
     Extension(state): Extension<State>,
     Extension(socket_address): Extension<std::net::SocketAddr>,
-    DeviceCredentials(device_id, device_password): DeviceCredentials,
+    HubCredentials(hub_id, hub_password): HubCredentials,
 ) -> Result<impl IntoResponse, ServerError> {
-    let device = state
+    let hub = state
         .config
-        .get_device(&device_id)
-        .ok_or(AuthError::DeviceNotFound)?;
-    verify_password(device.password_hash.as_ref().unwrap(), &device_password)?;
-    if state.sessions.contains_key(&device.id) {
+        .get_hub(&hub_id)
+        .ok_or(AuthError::HubNotFound)?
+        .to_owned();
+    verify_password(&hub.password_hash, &hub_password)?;
+    if state.sessions.contains_key(&hub.id) {
         return Err(LighthouseError::AlreadyConnected.into());
     }
 
     Ok(websocket.on_upgrade(move |stream|  {
-        let span = tracing::span!(tracing::Level::INFO, "WebSocket", address = %socket_address, device_id = %device.id);
+        let span = tracing::span!(tracing::Level::INFO, "WebSocket", address = %socket_address, hub_id = %hub.id);
         async move {
             let session_internals = SessionInternals::new();
             let session = Session::new(&session_internals);
-            tracing::info!("Device connected");
-            state.sessions.insert(device.id, session.clone());
+            tracing::info!("Hub connected");
+            state.sessions.insert(hub.id, session.clone());
             match session.run(stream, session_internals).await {
                 Ok(_) => tracing::info!("Connection closed"),
                 Err(err) => tracing::error!("Connection closed with error: {}", err),
             }
-            state.sessions.remove(&device.id);
+            state.sessions.remove(&hub.id);
         }.instrument(span)
     }))
 }

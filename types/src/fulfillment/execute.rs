@@ -1,16 +1,15 @@
-use crate::device;
-use crate::lighthouse;
+use crate::accessory;
 use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Request {
-    pub device_id: device::ID,
-    #[serde(flatten)]
-    pub frame: lighthouse::execute::Frame,
+    pub device_id: accessory::ID,
+    pub command: accessory::Command,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Response {
-    pub frame: lighthouse::execute_response::Frame,
+    pub status: accessory::Status,
+    pub state: serde_json::Map<String, serde_json::Value>,
 }

@@ -1,10 +1,8 @@
 use axum::extract::ws::Message as WebSocketMessage;
 use houseflow_types::errors::InternalError;
-use houseflow_types::lighthouse::execute;
-use houseflow_types::lighthouse::execute_response;
-use houseflow_types::lighthouse::query;
-use houseflow_types::lighthouse::state;
-use houseflow_types::lighthouse::Frame;
+use houseflow_types::lighthouse;
+use houseflow_types::lighthouse::HubFrame;
+use houseflow_types::lighthouse::ServerFrame;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -19,16 +17,10 @@ const PING_TIMEOUT: Duration = Duration::from_secs(10);
 pub enum SessionError {
     #[error("websocket error: {0}")]
     WebsocketError(axum::Error),
-
     #[error("json error: {0}")]
     JsonError(#[from] serde_json::Error),
-
-    #[error("frame `{frame_name}` was not expected in this context")]
-    UnexpectedFrame { frame_name: &'static str },
-
     #[error("send message over channel failed")]
     SendOverChannelError(String),
-
     #[error("heartbeat failed")]
     HeartbeatFailed,
 }
@@ -47,21 +39,19 @@ impl<T> From<tokio::sync::mpsc::error::SendError<T>> for SessionError {
 
 #[derive(Debug, Clone)]
 enum ServerMessage {
-    Execute(execute::Frame),
-    Query(query::Frame),
+    Frame(ServerFrame),
     Ping(Vec<u8>),
 }
 
 #[derive(Debug, Clone)]
-enum DeviceMessage {
-    ExecuteResponse(execute_response::Frame),
-    State(state::Frame),
+enum HubMessage {
+    Frame(HubFrame),
 }
 
 #[derive(Debug, Clone)]
 pub struct Session {
     server_messages: mpsc::UnboundedSender<ServerMessage>,
-    device_messages: broadcast::Sender<DeviceMessage>,
+    hub_messages: broadcast::Sender<HubMessage>,
     last_heartbeat: Arc<Mutex<Instant>>,
 }
 
@@ -72,9 +62,9 @@ pub struct SessionInternals {
         mpsc::UnboundedSender<ServerMessage>,
         mpsc::UnboundedReceiver<ServerMessage>,
     ),
-    device_messages: (
-        broadcast::Sender<DeviceMessage>,
-        broadcast::Receiver<DeviceMessage>,
+    hub_messages: (
+        broadcast::Sender<HubMessage>,
+        broadcast::Receiver<HubMessage>,
     ),
 }
 
@@ -82,7 +72,7 @@ impl Default for SessionInternals {
     fn default() -> Self {
         Self {
             server_messages: mpsc::unbounded_channel(),
-            device_messages: broadcast::channel(512),
+            hub_messages: broadcast::channel(512),
         }
     }
 }
@@ -100,7 +90,7 @@ impl Session {
     pub fn new(internals: &SessionInternals) -> Self {
         Self {
             server_messages: internals.server_messages.0.clone(),
-            device_messages: internals.device_messages.0.clone(),
+            hub_messages: internals.hub_messages.0.clone(),
             last_heartbeat: Arc::new(Mutex::new(Instant::now())),
         }
     }
@@ -135,22 +125,8 @@ impl Session {
             match message {
                 WebSocketMessage::Text(text) => {
                     tracing::debug!("Text message received: `{}`", text);
-                    let frame = serde_json::from_str::<Frame>(&text)?;
-                    match frame {
-                        Frame::State(state) => {
-                            self.device_messages.send(DeviceMessage::State(state))?;
-                        }
-                        Frame::ExecuteResponse(execute_response) => {
-                            self.device_messages
-                                .send(DeviceMessage::ExecuteResponse(execute_response))?;
-                        }
-                        Frame::Query(_) | Frame::Execute(_) => {
-                            return Err(SessionError::UnexpectedFrame {
-                                frame_name: frame.name(),
-                            })
-                        }
-                        _ => unimplemented!(),
-                    };
+                    let frame = serde_json::from_str::<HubFrame>(&text)?;
+                    self.hub_messages.send(HubMessage::Frame(frame))?;
                 }
                 WebSocketMessage::Binary(_) => todo!(),
                 WebSocketMessage::Ping(_) => {
@@ -179,11 +155,9 @@ impl Session {
     {
         while let Some(request) = internals.server_messages.1.recv().await {
             let message = match request {
-                ServerMessage::Execute(frame) => {
-                    WebSocketMessage::Text(serde_json::to_string(&Frame::Execute(frame))?)
-                }
-                ServerMessage::Query(frame) => {
-                    WebSocketMessage::Text(serde_json::to_string(&Frame::Query(frame))?)
+                ServerMessage::Frame(frame) => {
+                    let text = serde_json::to_string(&frame)?;
+                    WebSocketMessage::Text(text)
                 }
                 ServerMessage::Ping(bytes) => WebSocketMessage::Ping(bytes),
             };
@@ -208,14 +182,14 @@ impl Session {
         }
     }
 
-    pub async fn execute(
+    pub async fn accessory_execute(
         &self,
-        frame: execute::Frame,
-    ) -> Result<execute_response::Frame, InternalError> {
-        let mut subscriber = self.device_messages.subscribe();
+        frame: lighthouse::AccessoryExecuteFrame,
+    ) -> Result<lighthouse::AccessoryExecuteResultFrame, InternalError> {
+        let mut subscriber = self.hub_messages.subscribe();
         let frame_id = frame.id;
         self.server_messages
-            .send(ServerMessage::Execute(frame))
+            .send(ServerMessage::Frame(ServerFrame::AccessoryExecute(frame)))
             .map_err(|err| InternalError::Other(err.to_string()))?;
 
         loop {
@@ -223,27 +197,45 @@ impl Session {
                 .recv()
                 .await
                 .map_err(|err| InternalError::Other(err.to_string()))?;
-            if let DeviceMessage::ExecuteResponse(execute_response) = response {
-                if execute_response.id == frame_id {
-                    break Ok::<_, InternalError>(execute_response);
+            if let HubMessage::Frame(HubFrame::AccessoryExecuteResult(result)) = response
+            {
+                if result.id == frame_id {
+                    break Ok::<_, InternalError>(result);
                 }
             }
         }
     }
 
-    pub async fn query(&self, frame: query::Frame) -> Result<state::Frame, InternalError> {
-        let mut subscriber = self.device_messages.subscribe();
+    pub async fn accessory_query(&self, frame: lighthouse::AccessoryQueryFrame) -> Result<lighthouse::AccessoryUpdateFrame, InternalError> {
+        let mut subscriber = self.hub_messages.subscribe();
         self.server_messages
-            .send(ServerMessage::Query(frame))
+            .send(ServerMessage::Frame(ServerFrame::AccessoryQuery(frame)))
             .map_err(|err| InternalError::Other(err.to_string()))?;
 
         loop {
-            if let DeviceMessage::State(state) = subscriber
+            if let HubMessage::Frame(HubFrame::AccessoryUpdate(frame)) = subscriber
                 .recv()
                 .await
                 .map_err(|err| InternalError::Other(err.to_string()))?
             {
-                return Ok(state);
+                return Ok(frame);
+            }
+        }
+    }
+
+    pub async fn hub_query(&self, frame: lighthouse::HubQueryFrame) -> Result<lighthouse::HubUpdateFrame, InternalError> {
+        let mut subscriber = self.hub_messages.subscribe();
+        self.server_messages
+            .send(ServerMessage::Frame(ServerFrame::HubQuery(frame)))
+            .map_err(|err| InternalError::Other(err.to_string()))?;
+
+        loop {
+            if let HubMessage::Frame(HubFrame::HubUpdate(frame)) = subscriber
+                .recv()
+                .await
+                .map_err(|err| InternalError::Other(err.to_string()))?
+            {
+                return Ok(frame);
             }
         }
     }

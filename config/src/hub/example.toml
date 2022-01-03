@@ -1,0 +1,15 @@
+# Houseflow hub configuration
+
+[[accessories]]
+id = "37c6a8bd-264c-4653-a641-c9b574207be5"
+name = "Thermometer"
+room-name = "Bedroom"
+manufacturer = "xiaomi-mijia"
+model = "hygro-thermometer"
+mac-address = "A4:C1:38:EF:77:51"
+
+[controllers.hap]
+pin = "12345678"
+name = "Awesome Hub"
+
+[providers.mijia]

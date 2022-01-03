@@ -1,7 +1,7 @@
 use clap::AppSettings;
 use clap::Arg;
 use clap::SubCommand;
-use houseflow_types::device;
+use houseflow_types::accessory;
 use strum::VariantNames;
 
 fn sync() -> clap::App<'static, 'static> {
@@ -34,7 +34,7 @@ fn execute() -> clap::App<'static, 'static> {
                 .long("command")
                 .required(true)
                 .takes_value(true)
-                .possible_values(device::Command::VARIANTS),
+                .possible_values(accessory::Command::VARIANTS),
         )
         .arg(
             Arg::with_name("params")

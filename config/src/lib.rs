@@ -1,13 +1,16 @@
 pub mod defaults;
 
+#[cfg(any(test, feature = "client"))]
+pub mod client;
+
+#[cfg(any(test, feature = "hub"))]
+pub mod hub;
+
 #[cfg(any(test, feature = "server"))]
 pub mod server;
 
-#[cfg(any(test, feature = "device"))]
-pub mod device;
-
-#[cfg(any(test, feature = "client"))]
-pub mod client;
+#[cfg(any(test, feature = "accessory"))]
+pub mod accessory;
 
 pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     const DEFAULT_TOML: &'static str;

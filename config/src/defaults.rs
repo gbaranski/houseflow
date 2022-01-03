@@ -2,6 +2,11 @@ use std::net::IpAddr;
 use std::net::Ipv4Addr;
 use url::Url;
 
+pub fn hub_websocket_url() -> Url {
+    let url = format!("ws://localhost:{}", server_port());
+    Url::parse(&url).unwrap()
+}
+
 pub fn server_websocket_url() -> Url {
     let url = format!("ws://localhost:{}", server_port());
     Url::parse(&url).unwrap()

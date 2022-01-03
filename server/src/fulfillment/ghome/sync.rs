@@ -1,71 +1,83 @@
 use crate::State;
-use google_smart_home::device::Trait as GHomeDeviceTrait;
-use google_smart_home::device::Type as GHomeDeviceType;
+use futures::future::join_all;
+use google_smart_home::device;
 use google_smart_home::sync::response;
-use houseflow_types::device::Trait as DeviceTrait;
-use houseflow_types::device::Type as DeviceType;
-use houseflow_types::errors::InternalError;
+use houseflow_types::accessory;
+use houseflow_types::accessory::manufacturers;
 use houseflow_types::errors::ServerError;
+use houseflow_types::lighthouse;
 use houseflow_types::user;
+use serde_json::json;
 
 #[tracing::instrument(name = "Sync", skip(state), err)]
 pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload, ServerError> {
-    let user_devices = state.config.get_user_devices(&user_id);
-
-    let user_devices = user_devices
+    let user_hubs = state.config.get_user_hubs(&user_id);
+    let accessories = user_hubs.iter().map(|hub| async {
+        let hub = state.sessions.get(&hub.id).unwrap();
+        let response = hub.hub_query(lighthouse::HubQueryFrame {}).await?;
+        Ok::<_, ServerError>(response.accessories)
+    });
+    let accessories = join_all(accessories)
+        .await
         .into_iter()
-        .map(|device_id| state.config.get_device(&device_id).unwrap())
-        .map(|device| {
-            let room = state
-                .config
-                .get_room(&device.room_id)
-                .ok_or_else(|| InternalError::Other("couldn't find matching room".to_string()))?;
-            let payload = response::PayloadDevice {
-                id: device.id.to_string(),
-                device_type: match device.device_type {
-                    DeviceType::Garage => GHomeDeviceType::Garage,
-                    DeviceType::Gate => GHomeDeviceType::Gate,
-                    DeviceType::Light => GHomeDeviceType::Light,
-                    _ => todo!(),
+        .map(Result::unwrap) // TODO: Remove this unwrap
+        .flatten();
+    let devices = accessories
+        .map(|accessory| {
+            let (r#type, traits, attributes) = match accessory.r#type {
+                accessory::Type::XiaomiMijia(accessory_type) => match accessory_type {
+                    manufacturers::XiaomiMijia::HygroThermometer => (
+                        device::Type::Thermostat,
+                        vec![device::Trait::TemperatureControl],
+                        json!({"queryOnlyTemperatureControl": true}),
+                    ),
+                    _ => unimplemented!(),
                 },
-                traits: device
-                    .traits
-                    .iter()
-                    .map(|t| match t {
-                        DeviceTrait::OnOff => GHomeDeviceTrait::OnOff,
-                        DeviceTrait::OpenClose => GHomeDeviceTrait::OpenClose,
-                        _ => todo!(),
-                    })
-                    .collect(),
+                accessory::Type::Houseflow(accessory_type) => match accessory_type {
+                    manufacturers::Houseflow::Garage => (
+                        device::Type::Garage,
+                        vec![device::Trait::OpenClose],
+                        json!({}),
+                    ),
+                    manufacturers::Houseflow::Gate => (
+                        device::Type::Garage,
+                        vec![device::Trait::OpenClose],
+                        json!({}),
+                    ),
+                    _ => unimplemented!(),
+                },
+                _ => unimplemented!(),
+            };
+
+            response::PayloadDevice {
+                id: accessory.id.to_string(),
+                device_type: r#type,
+                traits,
                 name: response::PayloadDeviceName {
                     default_names: None,
-                    name: device.name,
+                    name: accessory.name,
                     nicknames: None,
                 },
-                will_report_state: device.will_push_state,
+                will_report_state: false,
                 notification_supported_by_agent: false, // not sure about that
-                room_hint: Some(room.name),
+                room_hint: Some(accessory.room_name),
                 device_info: Some(response::PayloadDeviceInfo {
                     manufacturer: Some("houseflow".to_string()),
                     model: None,
-                    hw_version: Some(device.hw_version.to_string()),
-                    sw_version: Some(device.sw_version.to_string()),
+                    hw_version: None,
+                    sw_version: None,
                 }),
-                attributes: device.attributes,
+                attributes: attributes.as_object().unwrap().clone(),
                 custom_data: None,
                 other_device_ids: None,
-            };
-
-            Ok::<_, ServerError>(payload)
+            }
         })
-        .collect::<Result<Vec<_>, _>>()?;
-
-    tracing::info!("Synced {} devices", user_devices.len());
+        .collect::<Vec<_>>();
 
     Ok(response::Payload {
         agent_user_id: user_id.to_string(),
         error_code: None,
         debug_string: None,
-        devices: user_devices,
+        devices,
     })
 }

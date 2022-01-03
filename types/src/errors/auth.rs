@@ -18,9 +18,9 @@ pub enum Error {
     /// When client tries to authenticate, but user with given credentails have not been found
     #[error("user not found")]
     UserNotFound,
-    /// When device tries to authenticate, but device with given credentails have not been found
+    /// When hub tries to authenticate, but hub with given credentails has not been found
     #[error("device not found")]
-    DeviceNotFound,
+    HubNotFound,
     /// Occurs when user tries to register, but user with given credentials already exists
     #[error("user already exists")]
     UserAlreadyExists,
@@ -36,4 +36,7 @@ pub enum Error {
     /// The CSRF token cookie was missing, or didn't match the token in the request.
     #[error("Missing or invalid CSRF token")]
     InvalidCsrfToken,
+    /// User does not have permission to a structure
+    #[error("user does not have permission to a specified structure")]
+    NoStructurePermission,
 }

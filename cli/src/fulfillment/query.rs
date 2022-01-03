@@ -1,10 +1,10 @@
 use crate::CommandContext;
-use houseflow_types::device;
+use houseflow_types::accessory;
 use houseflow_types::fulfillment::query;
 use houseflow_types::lighthouse;
 
 pub struct Command {
-    pub device_id: device::ID,
+    pub device_id: accessory::ID,
 }
 
 impl crate::Command for Command {

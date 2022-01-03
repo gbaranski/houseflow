@@ -1,9 +1,11 @@
 use crate::CommandContext;
+use async_trait::async_trait;
 
 pub struct Command {}
 
+#[async_trait]
 impl crate::Command for Command {
-    fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
+    async fn run(self, ctx: CommandContext) -> anyhow::Result<()> {
         ctx.tokens.remove()?;
         tracing::info!("✔ Succesfully logged out");
 

@@ -50,7 +50,6 @@ mod tests {
             vec![],
             vec![],
             vec![],
-            vec![],
             vec![user.clone()],
         );
         let refresh_token = RefreshToken::new(

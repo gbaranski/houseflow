@@ -1,0 +1,29 @@
+[package]
+name = "houseflow-hub"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.43"
+arc-swap = "1.5.0"
+async-trait = "0.1.51"
+axum = { version = "0.4.3", features = ["ws", "headers"] }
+chrono = "0.4.19"
+futures = "0.3.17"
+hap = "0.1.0-pre.14"
+houseflow-config = { path = "../config/", features = ["hub", "fs"] }
+houseflow-types = { path = "../types/" }
+mac_address = "1.1.2"
+messages = "0.3.0"
+mijia = "0.5.0"
+rand = "0.8.4"
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.67"
+tokio = { version = "1.11.0", features = ["macros", "rt-multi-thread", "sync"] }
+tracing = "0.1.26"
+uuid = { version = "0.8.2", features = ["v4"] }
+xdg = "2.4.0"
+
+[features]

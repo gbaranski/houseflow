@@ -1,4 +1,4 @@
-use crate::device::Device;
+use crate::accessory::Accessory;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -7,5 +7,5 @@ pub struct Request {}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Response {
-    pub devices: Vec<Device>,
+    pub accessories: Vec<Accessory>,
 }
