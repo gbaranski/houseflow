@@ -10,7 +10,8 @@ impl ServerClient {
         access_token: &AccessToken,
     ) -> Result<Result<fulfillment::sync::Response, ServerError>, Error> {
         let url = self.fulfillment_url.join("sync").unwrap();
-        self.get_with_token(url, &fulfillment::sync::Request {}, access_token).await
+        self.get_with_token(url, &fulfillment::sync::Request {}, access_token)
+            .await
     }
 
     pub async fn execute(

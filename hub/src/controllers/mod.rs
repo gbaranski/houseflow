@@ -10,8 +10,8 @@ use futures::FutureExt;
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::characteristics::CharacteristicName;
+use houseflow_types::accessory::services::ServiceName;
 use std::pin::Pin;
 use tokio::sync::mpsc;
 
@@ -104,8 +104,10 @@ impl Controller for MasterController {
         service_name: &ServiceName,
         characteristic: &Characteristic,
     ) -> Result<(), Error> {
-        self.execute_for_all(move |controller| controller.update(accessory_id, service_name, characteristic))
-            .await
+        self.execute_for_all(move |controller| {
+            controller.update(accessory_id, service_name, characteristic)
+        })
+        .await
     }
 
     async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error> {

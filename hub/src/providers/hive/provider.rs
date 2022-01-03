@@ -196,10 +196,7 @@ impl HiveProvider {
         let actor = HiveProviderActor::new(_config, configured_accessories);
         let address = actor.spawn();
 
-        Ok(Self {
-            address,
-            events,
-        })
+        Ok(Self { address, events })
     }
 }
 

@@ -1,15 +1,11 @@
 mod connect;
-mod session;
 mod provider;
+mod session;
 
 use crate::providers::EventSender;
 pub use provider::HiveProvider;
 
-
-pub fn app(
-    hive_provider: provider::Address,
-    events: EventSender,
-) -> axum::Router {
+pub fn app(hive_provider: provider::Address, events: EventSender) -> axum::Router {
     use axum::routing::get;
 
     axum::Router::new()

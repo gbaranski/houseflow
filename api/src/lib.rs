@@ -47,7 +47,11 @@ impl ServerClient {
         }
     }
 
-    pub(crate) async fn post<B, E>(&self, url: Url, body: &impl Serialize) -> Result<Result<B, E>, Error>
+    pub(crate) async fn post<B, E>(
+        &self,
+        url: Url,
+        body: &impl Serialize,
+    ) -> Result<Result<B, E>, Error>
     where
         B: DeserializeOwned,
         E: DeserializeOwned,
@@ -57,7 +61,11 @@ impl ServerClient {
     }
 
     #[allow(dead_code)]
-    pub(crate) async fn get<B, E>(&self, url: Url, body: &impl Serialize) -> Result<Result<B, E>, Error>
+    pub(crate) async fn get<B, E>(
+        &self,
+        url: Url,
+        body: &impl Serialize,
+    ) -> Result<Result<B, E>, Error>
     where
         B: DeserializeOwned,
         E: DeserializeOwned,

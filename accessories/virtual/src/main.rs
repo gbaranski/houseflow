@@ -1,5 +1,5 @@
-use houseflow_api::hive::Session;
 use houseflow_accessory_virtual::VirtualAccessory;
+use houseflow_api::hive::Session;
 use houseflow_config::accessory::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;

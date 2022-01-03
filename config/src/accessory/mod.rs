@@ -74,10 +74,7 @@ mod tests {
             },
         };
 
-        std::env::set_var(
-            "HUB_PORT",
-            expected.hub.url.port().unwrap().to_string(),
-        );
+        std::env::set_var("HUB_PORT", expected.hub.url.port().unwrap().to_string());
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()

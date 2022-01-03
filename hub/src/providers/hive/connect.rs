@@ -1,7 +1,7 @@
-use crate::providers::EventSender;
-use crate::providers::Event;
 use super::provider;
 use super::session;
+use crate::providers::Event;
+use crate::providers::EventSender;
 use async_trait::async_trait;
 use axum::body::Body;
 use axum::extract::Extension;

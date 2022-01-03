@@ -1,9 +1,9 @@
-use crate::ServerClient;
 use crate::Error;
+use crate::ServerClient;
+use houseflow_types::auth;
 use houseflow_types::errors::ServerError;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::RefreshToken;
-use houseflow_types::auth;
 
 impl ServerClient {
     pub async fn login(
@@ -19,7 +19,8 @@ impl ServerClient {
         refresh_token: &RefreshToken,
     ) -> Result<Result<auth::token::Response, ServerError>, Error> {
         let url = self.auth_url.join("refresh").unwrap();
-        self.post_with_token(url, &auth::token::Request {}, refresh_token).await
+        self.post_with_token(url, &auth::token::Request {}, refresh_token)
+            .await
     }
 
     pub async fn whoami(
@@ -27,6 +28,7 @@ impl ServerClient {
         access_token: &AccessToken,
     ) -> Result<Result<auth::whoami::Response, ServerError>, Error> {
         let url = self.auth_url.join("whoami").unwrap();
-        self.get_with_token(url, &auth::whoami::Request {}, access_token).await
+        self.get_with_token(url, &auth::whoami::Request {}, access_token)
+            .await
     }
 }

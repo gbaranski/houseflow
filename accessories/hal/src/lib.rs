@@ -1,18 +1,17 @@
+use accessory::Error;
 use async_trait::async_trait;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
-use accessory::Error;
 use tokio::sync::mpsc;
-
 
 #[derive(Debug, Clone)]
 pub enum AccessoryEvent {
-    CharacteristicUpdate{
+    CharacteristicUpdate {
         service_name: ServiceName,
         characteristic: Characteristic,
-    }
+    },
 }
 
 pub type AccessoryEventSender = mpsc::UnboundedSender<AccessoryEvent>;

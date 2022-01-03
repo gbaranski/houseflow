@@ -114,7 +114,9 @@ impl Provider for MasterProvider {
             .find_map(|(provider, is_connected)| if *is_connected { Some(provider) } else { None })
             .unwrap();
 
-        provider.write_characteristic(accessory_id, service_name, characteristic).await
+        provider
+            .write_characteristic(accessory_id, service_name, characteristic)
+            .await
     }
 
     async fn read_characteristic(
@@ -133,8 +135,9 @@ impl Provider for MasterProvider {
             .find_map(|(provider, is_connected)| if *is_connected { Some(provider) } else { None })
             .unwrap();
 
-        provider.read_characteristic(accessory_id, service_name, characteristic_name).await
-
+        provider
+            .read_characteristic(accessory_id, service_name, characteristic_name)
+            .await
     }
 
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {

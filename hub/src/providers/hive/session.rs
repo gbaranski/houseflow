@@ -1,16 +1,16 @@
 use crate::providers::Event;
+use ::messages::prelude::*;
 use anyhow::Error;
 use async_trait::async_trait;
+use axum::extract::ws;
+use axum::extract::ws::WebSocket;
 use futures::stream::SplitSink;
 use futures::SinkExt;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::hive;
-use ::messages::prelude::*;
 use std::collections::HashMap;
 use tokio::sync::oneshot;
-use axum::extract::ws;
-use axum::extract::ws::WebSocket;
 
 pub type Address = ::messages::prelude::Address<Session>;
 
@@ -48,11 +48,7 @@ impl Actor for Session {}
 impl Handler<ws::Message> for Session {
     type Result = Result<Option<Event>, Error>;
 
-    async fn handle(
-        &mut self,
-        message: ws::Message,
-        context: &Context<Self>,
-    ) -> Self::Result {
+    async fn handle(&mut self, message: ws::Message, context: &Context<Self>) -> Self::Result {
         match message {
             ws::Message::Text(text) => {
                 tracing::debug!(?text, "[->] text ...");
@@ -91,9 +87,7 @@ impl Handler<ws::Message> for Session {
             }
             ws::Message::Ping(bytes) => {
                 tracing::debug!(?bytes, "[->] ping");
-                self.tx
-                    .send(ws::Message::Pong(bytes.clone()))
-                    .await?;
+                self.tx.send(ws::Message::Pong(bytes.clone())).await?;
                 tracing::debug!(?bytes, "[<-] pong");
                 Ok(None)
             }
@@ -161,10 +155,7 @@ impl Handler<messages::WriteCharacteristic> for Session {
 }
 
 impl Session {
-    pub fn new(
-        accessory_id: accessory::ID,
-        tx: SplitSink<WebSocket, ws::Message>,
-    ) -> Self {
+    pub fn new(accessory_id: accessory::ID, tx: SplitSink<WebSocket, ws::Message>) -> Self {
         Self {
             accessory_id,
             tx,

@@ -1,9 +1,9 @@
-use serde::Deserialize;
-use serde::Serialize;
 use crate::accessory;
 use crate::accessory::characteristics::Characteristic;
-use crate::accessory::services::ServiceName;
 use crate::accessory::characteristics::CharacteristicName;
+use crate::accessory::services::ServiceName;
+use serde::Deserialize;
+use serde::Serialize;
 
 pub type FrameID = u16;
 

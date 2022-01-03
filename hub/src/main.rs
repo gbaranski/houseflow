@@ -1,11 +1,11 @@
 use houseflow_config::hub::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
+use houseflow_hub::controllers::HapController;
+use houseflow_hub::controllers::MasterController;
 use houseflow_hub::providers::HiveProvider;
 use houseflow_hub::providers::MasterProvider;
 use houseflow_hub::providers::MijiaProvider;
-use houseflow_hub::controllers::HapController;
-use houseflow_hub::controllers::MasterController;
 use houseflow_hub::Hub;
 
 #[tokio::main]

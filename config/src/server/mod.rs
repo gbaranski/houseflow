@@ -316,7 +316,7 @@ mod tests {
             logins: Logins {
                 google: Some(GoogleLogin {
                     client_id: String::from("google-login-client-id"),
-                })
+                }),
             },
             structures: [Structure {
                 id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
