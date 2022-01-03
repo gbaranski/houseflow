@@ -121,7 +121,7 @@ mod tests {
             }],
             providers: Providers {
                 mijia: Some(MijiaProvider {}),
-                hive: Some(HiveProvider {}),
+                hive: None,
             },
             controllers: Controllers {
                 hap: Some(HapController {
