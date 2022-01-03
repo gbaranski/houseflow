@@ -1,12 +1,5 @@
 # Houseflow hub configuration
 
-[server]
-url = "wss://example.com:${SERVER_PORT}/hello/world"
-
-[credentials]
-id = "345469C1-6C6F-461A-AB60-E21578D5A608"
-password = "some-password"
-
 [[accessories]]
 id = "37c6a8bd-264c-4653-a641-c9b574207be5"
 name = "Thermometer"
