@@ -29,16 +29,16 @@ pub struct Config {
     #[serde(default)]
     pub google: Option<Google>,
     /// Structures
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub structures: Vec<Structure>,
     /// Hubs
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub hubs: Vec<Hub>,
     /// Users
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub users: Vec<User>,
     /// User -> Structure permission
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub permissions: Vec<Permission>,
 }
 
