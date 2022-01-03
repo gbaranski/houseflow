@@ -12,7 +12,6 @@ use houseflow_config::hub::MijiaProvider as Config;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
 use houseflow_types::accessory::services::ServiceDiscriminants;
 use houseflow_types::accessory::ID as AccessoryID;
 use mijia::bluetooth::DeviceId as BluetoothDeviceID;
@@ -185,38 +184,39 @@ impl Provider for MijiaProvider {
 
     async fn write_characteristic(
         &self,
-        accessory_id: &accessory::ID,
-        service_name: &accessory::services::ServiceDiscriminants,
-        characteristic: &accessory::characteristics::Characteristic,
+        _accessory_id: &accessory::ID,
+        _service_name: &accessory::services::ServiceDiscriminants,
+        _characteristic: &accessory::characteristics::Characteristic,
     ) -> Result<Result<(), accessory::Error>, Error> {
         Ok(Err(accessory::Error::CharacteristicReadOnly))
     }
 
     async fn read_characteristic(
         &self,
-        accessory_id: &accessory::ID,
-        service_name: &accessory::services::ServiceDiscriminants,
-        characteristic_name: &accessory::characteristics::CharacteristicDiscriminants,
+        _accessory_id: &accessory::ID,
+        _service_name: &accessory::services::ServiceDiscriminants,
+        _characteristic_name: &accessory::characteristics::CharacteristicDiscriminants,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
-        match service_name {
-            accessory::services::ServiceDiscriminants::TemperatureSensor => todo!(),
-            accessory::services::ServiceDiscriminants::HumiditySensor => todo!(),
-            _ => return Ok(Err(accessory::Error::ServiceNotSupported)),
-        };
+        todo!()
+        // match service_name {
+        //     accessory::services::ServiceDiscriminants::TemperatureSensor => todo!(),
+        //     accessory::services::ServiceDiscriminants::HumiditySensor => todo!(),
+        //     _ => return Ok(Err(accessory::Error::ServiceNotSupported)),
+        // };
 
-        let characteristic = match characteristic_name {
-            CharacteristicDiscriminants::CurrentTemperature => {
-                Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
-                    temperature: 10.5,
-                })
-            }
-            CharacteristicDiscriminants::CurrentHumidity => {
-                Characteristic::CurrentHumidity(characteristics::CurrentHumidity { humidity: 50.0 })
-            }
-            _ => return Ok(Err(accessory::Error::CharacteristicNotSupported)),
-        };
+        // let characteristic = match characteristic_name {
+        //     CharacteristicDiscriminants::CurrentTemperature => {
+        //         Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
+        //             temperature: 10.5,
+        //         })
+        //     }
+        //     CharacteristicDiscriminants::CurrentHumidity => {
+        //         Characteristic::CurrentHumidity(characteristics::CurrentHumidity { humidity: 50.0 })
+        //     }
+        //     _ => return Ok(Err(accessory::Error::CharacteristicNotSupported)),
+        // };
 
-        Ok(Ok(characteristic))
+        // Ok(Ok(characteristic))
     }
 
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {

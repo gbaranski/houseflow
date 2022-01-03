@@ -55,7 +55,7 @@ impl Session {
         accessory: &impl Accessory,
         accessory_events: AccessoryEventReceiver,
     ) -> Result<(), anyhow::Error> {
-        let url = self.hub_url.join("/ws").unwrap();
+        let url = self.hub_url.join("/websocket").unwrap();
 
         let http_request = http::Request::builder()
             .uri(url.to_string())
@@ -63,7 +63,7 @@ impl Session {
                 http::header::AUTHORIZATION,
                 format!(
                     "Basic {}",
-                    base64::encode(format!("{}:{}", self.credentials.id, self.credentials.id))
+                    base64::encode(format!("{}:{}", self.credentials.id, self.credentials.password))
                 ),
             )
             .body(())

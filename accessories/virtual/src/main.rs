@@ -8,7 +8,7 @@ use url::Url;
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     houseflow_config::init_logging(false);
-    let config_path = std::env::var("HOUSEFLOW_HUB_CONFIG")
+    let config_path = std::env::var("HOUSEFLOW_ACCESSORY_CONFIG")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| Config::default_path());
 
