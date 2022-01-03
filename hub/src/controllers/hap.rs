@@ -27,7 +27,7 @@ use houseflow_config::hub::AccessoryType;
 pub use houseflow_config::hub::HapController as HapConfig;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::services::ServiceName;
 use mac_address::get_mac_address;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
@@ -172,7 +172,7 @@ impl Controller for HapController {
                                     events
                                         .send(Event::WriteCharacteristic{
                                             accessory_id,
-                                            service_name: accessory::services::ServiceDiscriminants::GarageDoorOpener,
+                                            service_name: accessory::services::ServiceName::GarageDoorOpener,
                                             characteristic: accessory::characteristics::Characteristic::TargetDoorState(accessory::characteristics::TargetDoorState{
                                                     open_percent: if new == 1 {
                                                         100
@@ -206,7 +206,7 @@ impl Controller for HapController {
     async fn update(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic: &Characteristic,
     ) -> Result<(), Error> {
         tracing::debug!(%accessory_id, ?service_name, ?characteristic, "updating state");
@@ -214,13 +214,13 @@ impl Controller for HapController {
         let accessory = accessory_pointers.get(accessory_id).unwrap();
         let mut accessory = accessory.lock().await;
         let service = match service_name {
-            ServiceDiscriminants::TemperatureSensor => accessory
+            ServiceName::TemperatureSensor => accessory
                 .get_mut_service(HapType::TemperatureSensor)
                 .unwrap(),
-            ServiceDiscriminants::HumiditySensor => {
+            ServiceName::HumiditySensor => {
                 accessory.get_mut_service(HapType::HumiditySensor).unwrap()
             }
-            ServiceDiscriminants::GarageDoorOpener => accessory
+            ServiceName::GarageDoorOpener => accessory
                 .get_mut_service(HapType::GarageDoorOpener)
                 .unwrap(),
         };

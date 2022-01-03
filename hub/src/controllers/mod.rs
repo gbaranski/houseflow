@@ -10,7 +10,7 @@ use futures::FutureExt;
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
 use std::pin::Pin;
 use tokio::sync::mpsc;
@@ -19,12 +19,12 @@ use tokio::sync::mpsc;
 pub enum Event {
     WriteCharacteristic {
         accessory_id: accessory::ID,
-        service_name: ServiceDiscriminants,
+        service_name: ServiceName,
         characteristic: Characteristic,
     },
     ReadCharacteristic {
         accessory_id: accessory::ID,
-        service_name: ServiceDiscriminants,
+        service_name: ServiceName,
         characteristic_name: CharacteristicDiscriminants,
     },
 }
@@ -39,7 +39,7 @@ pub trait Controller: Send + Sync {
     async fn update(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &accessory::services::ServiceDiscriminants,
+        service_name: &accessory::services::ServiceName,
         characteristic: &accessory::characteristics::Characteristic,
     ) -> Result<(), Error>;
     async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error>;
@@ -101,7 +101,7 @@ impl Controller for MasterController {
     async fn update(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic: &Characteristic,
     ) -> Result<(), Error> {
         self.execute_for_all(move |controller| controller.update(accessory_id, service_name, characteristic))

@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use crate::accessory;
 use crate::accessory::characteristics::Characteristic;
-use crate::accessory::services::ServiceDiscriminants;
+use crate::accessory::services::ServiceName;
 use crate::accessory::characteristics::CharacteristicDiscriminants;
 
 pub type FrameID = u16;
@@ -25,21 +25,21 @@ pub enum AccessoryFrame {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CharacteristicUpdate {
-    pub service_name: ServiceDiscriminants,
+    pub service_name: ServiceName,
     pub characteristic: Characteristic,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CharacteristicRead {
     pub id: FrameID,
-    pub service_name: ServiceDiscriminants,
+    pub service_name: ServiceName,
     pub characteristic_name: CharacteristicDiscriminants,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CharacteristicWrite {
     pub id: FrameID,
-    pub service_name: ServiceDiscriminants,
+    pub service_name: ServiceName,
     pub characteristic: Characteristic,
 }
 

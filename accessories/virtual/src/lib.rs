@@ -5,7 +5,7 @@ use houseflow_accessory_hal::AccessoryEventSender;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::Service;
-use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::Error;
 use houseflow_types::accessory::{characteristics, services};
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ use std::time::Duration;
 use tokio::sync::Mutex;
 
 pub struct VirtualAccessory {
-    services: Mutex<HashMap<ServiceDiscriminants, Service>>,
+    services: Mutex<HashMap<ServiceName, Service>>,
     events: AccessoryEventSender,
 }
 
@@ -21,7 +21,7 @@ impl VirtualAccessory {
     pub fn new(events: AccessoryEventSender) -> Self {
         let mut services = HashMap::new();
         services.insert(
-            ServiceDiscriminants::GarageDoorOpener,
+            ServiceName::GarageDoorOpener,
             Service::GarageDoorOpener(services::GarageDoorOpener {
                 current_door_state: characteristics::CurrentDoorState { open_percent: 100 },
                 target_door_state: characteristics::TargetDoorState { open_percent: 100 },
@@ -39,7 +39,7 @@ impl VirtualAccessory {
 impl Accessory for VirtualAccessory {
     async fn write_characteristic(
         &self,
-        service_name: ServiceDiscriminants,
+        service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), Error> {
         let mut services = self.services.lock().await;
@@ -73,7 +73,7 @@ impl Accessory for VirtualAccessory {
 
     async fn read_characteristic(
         &self,
-        service_name: ServiceDiscriminants,
+        service_name: ServiceName,
         characteristic_name: characteristics::CharacteristicDiscriminants,
     ) -> Result<Characteristic, Error> {
         let services = self.services.lock().await;

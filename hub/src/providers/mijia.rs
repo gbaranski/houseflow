@@ -12,7 +12,7 @@ use houseflow_config::hub::MijiaProvider as Config;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::ID as AccessoryID;
 use mijia::bluetooth::DeviceId as BluetoothDeviceID;
 use mijia::{MijiaEvent, MijiaSession};
@@ -141,7 +141,7 @@ impl Provider for MijiaProvider {
                     self.events
                         .send(Event::CharacteristicUpdate {
                             accessory_id,
-                            service_name: ServiceDiscriminants::TemperatureSensor,
+                            service_name: ServiceName::TemperatureSensor,
                             characteristic: Characteristic::CurrentTemperature(
                                 characteristics::CurrentTemperature {
                                     temperature: readings.temperature,
@@ -152,7 +152,7 @@ impl Provider for MijiaProvider {
                     self.events
                         .send(Event::CharacteristicUpdate {
                             accessory_id,
-                            service_name: ServiceDiscriminants::HumiditySensor,
+                            service_name: ServiceName::HumiditySensor,
                             characteristic: Characteristic::CurrentHumidity(
                                 characteristics::CurrentHumidity {
                                     humidity: readings.humidity as f32,
@@ -185,7 +185,7 @@ impl Provider for MijiaProvider {
     async fn write_characteristic(
         &self,
         _accessory_id: &accessory::ID,
-        _service_name: &accessory::services::ServiceDiscriminants,
+        _service_name: &accessory::services::ServiceName,
         _characteristic: &accessory::characteristics::Characteristic,
     ) -> Result<Result<(), accessory::Error>, Error> {
         Ok(Err(accessory::Error::CharacteristicReadOnly))
@@ -194,13 +194,13 @@ impl Provider for MijiaProvider {
     async fn read_characteristic(
         &self,
         _accessory_id: &accessory::ID,
-        _service_name: &accessory::services::ServiceDiscriminants,
+        _service_name: &accessory::services::ServiceName,
         _characteristic_name: &accessory::characteristics::CharacteristicDiscriminants,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
         todo!()
         // match service_name {
-        //     accessory::services::ServiceDiscriminants::TemperatureSensor => todo!(),
-        //     accessory::services::ServiceDiscriminants::HumiditySensor => todo!(),
+        //     accessory::services::ServiceName::TemperatureSensor => todo!(),
+        //     accessory::services::ServiceName::HumiditySensor => todo!(),
         //     _ => return Ok(Err(accessory::Error::ServiceNotSupported)),
         // };
 

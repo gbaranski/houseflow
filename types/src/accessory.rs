@@ -96,6 +96,7 @@ pub mod services {
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants)]
     #[strum_discriminants(derive(Hash, Serialize, Deserialize, strum::Display))]
+    #[strum_discriminants(name(ServiceName))]
     #[serde(tag = "name", rename_all = "kebab-case")]
     pub enum Service {
         TemperatureSensor(TemperatureSensor),

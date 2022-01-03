@@ -19,13 +19,13 @@ pub(super) mod messages {
 
     #[derive(Debug)]
     pub struct ReadCharacteristic {
-        pub service_name: accessory::services::ServiceDiscriminants,
+        pub service_name: accessory::services::ServiceName,
         pub characteristic_name: accessory::characteristics::CharacteristicDiscriminants,
     }
 
     #[derive(Debug)]
     pub struct WriteCharacteristic {
-        pub service_name: accessory::services::ServiceDiscriminants,
+        pub service_name: accessory::services::ServiceName,
         pub characteristic: accessory::characteristics::Characteristic,
     }
 }

@@ -11,7 +11,7 @@ use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
-use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::services::ServiceName;
 use std::pin::Pin;
 use tokio::sync::mpsc;
 
@@ -25,7 +25,7 @@ pub enum Event {
     },
     CharacteristicUpdate {
         accessory_id: accessory::ID,
-        service_name: ServiceDiscriminants,
+        service_name: ServiceName,
         characteristic: Characteristic,
     },
 }
@@ -39,13 +39,13 @@ pub trait Provider: Send + Sync {
     async fn write_characteristic(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic: &Characteristic,
     ) -> Result<Result<(), accessory::Error>, Error>;
     async fn read_characteristic(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic_name: &CharacteristicDiscriminants,
     ) -> Result<Result<Characteristic, accessory::Error>, Error>;
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool;
@@ -101,7 +101,7 @@ impl Provider for MasterProvider {
     async fn write_characteristic(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic: &Characteristic,
     ) -> Result<Result<(), accessory::Error>, Error> {
         let futures = self
@@ -120,7 +120,7 @@ impl Provider for MasterProvider {
     async fn read_characteristic(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic_name: &CharacteristicDiscriminants,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
         let futures = self

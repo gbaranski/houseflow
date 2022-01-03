@@ -13,7 +13,7 @@ use houseflow_config::hub::HiveProvider as Config;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicDiscriminants;
-use houseflow_types::accessory::services::ServiceDiscriminants;
+use houseflow_types::accessory::services::ServiceName;
 use std::collections::HashMap;
 
 pub type Address = ::messages::prelude::Address<HiveProviderActor>;
@@ -40,14 +40,14 @@ pub(super) mod messages {
     #[derive(Debug)]
     pub struct WriteCharacteristic {
         pub accessory_id: accessory::ID,
-        pub service_name: accessory::services::ServiceDiscriminants,
+        pub service_name: accessory::services::ServiceName,
         pub characteristic: accessory::characteristics::Characteristic,
     }
 
     #[derive(Debug)]
     pub struct ReadCharacteristic {
         pub accessory_id: accessory::ID,
-        pub service_name: accessory::services::ServiceDiscriminants,
+        pub service_name: accessory::services::ServiceName,
         pub characteristic_name: accessory::characteristics::CharacteristicDiscriminants,
     }
 
@@ -222,7 +222,7 @@ impl Provider for HiveProvider {
     async fn write_characteristic(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic: &Characteristic,
     ) -> Result<Result<(), accessory::Error>, Error> {
         self.address
@@ -239,7 +239,7 @@ impl Provider for HiveProvider {
     async fn read_characteristic(
         &self,
         accessory_id: &accessory::ID,
-        service_name: &ServiceDiscriminants,
+        service_name: &ServiceName,
         characteristic_name: &CharacteristicDiscriminants,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
         self.address
