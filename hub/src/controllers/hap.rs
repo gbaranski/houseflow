@@ -278,7 +278,8 @@ impl Controller for HapController {
 
     async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error> {
         let mut accessory_pointers = self.accessory_pointers.write().await;
-        accessory_pointers.remove(&id);
+        let accessory_pointer = accessory_pointers.remove(&id).unwrap();
+        self.ip_server.remove_accessory(&accessory_pointer).await?;
         Ok(())
     }
 
