@@ -12,16 +12,20 @@ use houseflow_config::hub::MijiaProvider as Config;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::ID as AccessoryID;
 use mijia::bluetooth::DeviceId as BluetoothDeviceID;
-use mijia::{MijiaEvent, MijiaSession};
+use mijia::MijiaEvent;
+use mijia::MijiaSession;
 use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 pub struct MijiaProvider {
     connected_accessories: ArcSwap<HashMap<BluetoothDeviceID, AccessoryID>>,
     configured_accessories: Vec<Accessory>,
+    last_readings: Mutex<HashMap<AccessoryID, mijia::Readings>>,
     events: EventSender,
     mijia_session: MijiaSession,
 }
@@ -36,6 +40,7 @@ impl MijiaProvider {
         Ok(Self {
             connected_accessories: Default::default(),
             configured_accessories,
+            last_readings: Default::default(),
             mijia_session,
             events,
         })
@@ -193,30 +198,44 @@ impl Provider for MijiaProvider {
 
     async fn read_characteristic(
         &self,
-        _accessory_id: &accessory::ID,
-        _service_name: &accessory::services::ServiceName,
-        _characteristic_name: &accessory::characteristics::CharacteristicName,
+        accessory_id: &accessory::ID,
+        service_name: &accessory::services::ServiceName,
+        characteristic_name: &accessory::characteristics::CharacteristicName,
     ) -> Result<Result<Characteristic, accessory::Error>, Error> {
-        todo!()
-        // match service_name {
-        //     accessory::services::ServiceName::TemperatureSensor => todo!(),
-        //     accessory::services::ServiceName::HumiditySensor => todo!(),
-        //     _ => return Ok(Err(accessory::Error::ServiceNotSupported)),
-        // };
+        let last_readings = self
+            .last_readings
+            .lock()
+            .await
+            .get(&accessory_id)
+            .unwrap()
+            .clone();
 
-        // let characteristic = match characteristic_name {
-        //     CharacteristicName::CurrentTemperature => {
-        //         Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
-        //             temperature: 10.5,
-        //         })
-        //     }
-        //     CharacteristicName::CurrentHumidity => {
-        //         Characteristic::CurrentHumidity(characteristics::CurrentHumidity { humidity: 50.0 })
-        //     }
-        //     _ => return Ok(Err(accessory::Error::CharacteristicNotSupported)),
-        // };
-
-        // Ok(Ok(characteristic))
+        let characteristic = match service_name {
+            accessory::services::ServiceName::TemperatureSensor => {
+                if *characteristic_name == CharacteristicName::CurrentTemperature {
+                    Ok(Characteristic::CurrentTemperature(
+                        characteristics::CurrentTemperature {
+                            temperature: last_readings.temperature,
+                        },
+                    ))
+                } else {
+                    Err(accessory::Error::CharacteristicNotSupported)
+                }
+            }
+            accessory::services::ServiceName::HumiditySensor => {
+                if *characteristic_name == CharacteristicName::CurrentHumidity {
+                    Ok(Characteristic::CurrentHumidity(
+                        characteristics::CurrentHumidity {
+                            humidity: last_readings.humidity as f32,
+                        },
+                    ))
+                } else {
+                    Err(accessory::Error::CharacteristicNotSupported)
+                }
+            }
+            _ => Err(accessory::Error::ServiceNotSupported),
+        };
+        Ok(characteristic)
     }
 
     async fn is_connected(&self, accessory_id: &accessory::ID) -> bool {
