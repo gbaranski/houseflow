@@ -63,7 +63,7 @@ pub async fn websocket_handler(
     websocket: axum::extract::ws::WebSocketUpgrade,
     Extension(mut hive_provider): Extension<provider::Address>,
     Extension(global_events): Extension<EventSender>,
-    DeviceCredentials(accessory_id, password): DeviceCredentials,
+    DeviceCredentials(accessory_id, _password): DeviceCredentials,
 ) -> Result<impl axum::response::IntoResponse, ConnectError> {
     let accessory = hive_provider
         .send(provider::messages::GetAccessoryConfiguration { accessory_id })
@@ -77,7 +77,10 @@ pub async fn websocket_handler(
     {
         return Err(ConnectError::AccessoryAlreadyConnected);
     }
-    // TODO: Verify password
+
+    // TODO: Verify password and remove following line
+    tracing::warn!("{} connected without password", accessory_id);
+
     Ok(websocket.on_upgrade(move |stream| async move {
         let (tx, mut rx) = stream.split();
         let mut session: session::Address = hive_provider
