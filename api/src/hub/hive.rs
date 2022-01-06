@@ -11,7 +11,7 @@ use houseflow_types::hive::AccessoryFrame;
 use houseflow_types::hive::CharacteristicReadResponse;
 use houseflow_types::hive::CharacteristicWriteResponse;
 use houseflow_types::hive::HubFrame;
-use reqwest::Url;
+use url::Url;
 use std::borrow::Cow;
 use std::time::Duration;
 use std::time::Instant;
