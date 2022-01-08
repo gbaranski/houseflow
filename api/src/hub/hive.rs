@@ -8,8 +8,8 @@ use houseflow_accessory_hal::AccessoryEventReceiver;
 use houseflow_config::accessory::Credentials;
 use houseflow_types::hive;
 use houseflow_types::hive::AccessoryFrame;
-use houseflow_types::hive::CharacteristicReadResponse;
-use houseflow_types::hive::CharacteristicWriteResponse;
+use houseflow_types::hive::CharacteristicReadResult;
+use houseflow_types::hive::CharateristicWriteResult;
 use houseflow_types::hive::HubFrame;
 use url::Url;
 use std::borrow::Cow;
@@ -135,11 +135,11 @@ impl Session {
                             let result = accessory
                                 .read_characteristic(frame.service_name, frame.characteristic_name)
                                 .await;
-                            let frame = CharacteristicReadResponse {
+                            let frame = CharacteristicReadResult {
                                 id: frame.id,
                                 result: result.into(),
                             };
-                            let frame = AccessoryFrame::CharacteristicReadResponse(frame);
+                            let frame = AccessoryFrame::CharacteristicReadResult(frame);
                             let response_event = Event::AccessoryFrame(frame);
                             events.send(response_event).unwrap()
                         }
@@ -147,11 +147,11 @@ impl Session {
                             let result = accessory
                                 .write_characteristic(frame.service_name, frame.characteristic)
                                 .await;
-                            let frame = CharacteristicWriteResponse {
+                            let frame = CharateristicWriteResult {
                                 id: frame.id,
                                 result: result.into(),
                             };
-                            let frame = AccessoryFrame::CharacteristicWriteResponse(frame);
+                            let frame = AccessoryFrame::CharacteristicWriteResult(frame);
                             let event = Event::AccessoryFrame(frame);
                             events.send(event).unwrap()
                         }

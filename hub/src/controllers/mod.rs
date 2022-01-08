@@ -1,73 +1,126 @@
 mod hap;
 
-pub use self::hap::HapConfig;
-pub use self::hap::HapController;
+use std::pin::Pin;
+
+pub use self::hap::HapController as Hap;
 
 use anyhow::Error;
-use async_trait::async_trait;
-use futures::Future;
-use futures::FutureExt;
+use futures::channel::oneshot;
+use futures::{Future, FutureExt};
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
-use std::pin::Pin;
 use tokio::sync::mpsc;
 
-#[derive(Debug, Clone)]
-pub enum Event {
-    WriteCharacteristic {
+#[derive(Clone)]
+pub struct ControllerHandle {
+    pub name: &'static str,
+    sender: mpsc::Sender<ActorMessage>,
+}
+
+impl ControllerHandle {
+    pub fn new(name: &'static str, sender: mpsc::Sender<ActorMessage>) -> Self {
+        Self { name, sender }
+    }
+
+    pub async fn wait_for_stop(&self) {
+        self.sender.closed().await;
+    }
+
+    pub async fn connected(&self, configured_accessory: Accessory) {
+        self.notify(|| ActorMessage::Connected {
+            configured_accessory,
+        })
+        .await
+    }
+
+    pub async fn disconnected(&self, accessory_id: accessory::ID) {
+        self.notify(|| ActorMessage::Disconnected { accessory_id })
+            .await
+    }
+
+    pub async fn updated(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) {
+        self.notify(|| ActorMessage::Updated {
+            accessory_id,
+            service_name,
+            characteristic,
+        })
+        .await
+    }
+}
+
+impl ControllerHandle {
+    async fn call<R>(&self, message_fn: impl FnOnce(oneshot::Sender<R>) -> ActorMessage) -> R {
+        let (tx, rx) = oneshot::channel();
+        let message = message_fn(tx);
+        tracing::debug!("calling {:?} on a controller named {}", message, self.name);
+        self.sender.send(message).await.unwrap();
+        rx.await.unwrap()
+    }
+
+    async fn notify(&self, message_fn: impl FnOnce() -> ActorMessage) {
+        let message = message_fn();
+        tracing::debug!("calling {:?} on a controller named {}", message, self.name);
+        self.sender.send(message).await.unwrap();
+    }
+}
+
+#[derive(Debug)]
+pub enum ActorMessage {
+    Connected {
+        configured_accessory: Accessory,
+    },
+    Disconnected {
+        accessory_id: accessory::ID,
+    },
+
+    Updated {
         accessory_id: accessory::ID,
         service_name: ServiceName,
         characteristic: Characteristic,
     },
-    ReadCharacteristic {
-        accessory_id: accessory::ID,
-        service_name: ServiceName,
-        characteristic_name: CharacteristicName,
-    },
 }
 
-pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
-pub type EventSender = mpsc::UnboundedSender<Event>;
-
-#[async_trait]
-pub trait Controller: Send + Sync {
-    async fn run(&self) -> Result<(), Error>;
-    async fn connected(&self, configured_accessory: &Accessory) -> Result<(), Error>;
-    async fn update(
-        &self,
-        accessory_id: &accessory::ID,
-        service_name: &accessory::services::ServiceName,
-        characteristic: &accessory::characteristics::Characteristic,
-    ) -> Result<(), Error>;
-    async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error>;
-    fn name(&self) -> &'static str;
+pub struct Master {
+    receiver: mpsc::Receiver<ActorMessage>,
+    slave_controllers: Vec<ControllerHandle>,
 }
 
-pub struct MasterController {
-    slave_controllers: Vec<Box<dyn Controller + Send + Sync>>,
-}
+impl<'s> Master {
+    pub fn new(receiver: mpsc::Receiver<ActorMessage>) -> Self {
+        Self {
+            receiver,
+            slave_controllers: vec![],
+        }
+    }
 
-impl<'s> MasterController {
-    pub fn new(slave_controllers: Vec<Box<dyn Controller + Send + Sync>>) -> Self {
-        Self { slave_controllers }
+    pub async fn run(&mut self) -> Result<(), Error> {
+        while let Some(msg) = self.receiver.recv().await {
+            self.handle_message(msg).await?;
+        }
+        Ok(())
     }
 
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s dyn Controller) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
+        f: impl Fn(&'s ControllerHandle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
             + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
 
-        let (controller_names, futures): (Vec<_>, FuturesOrdered<_>) = self
+        let (controller_names, futures): (Vec<&'static str>, FuturesOrdered<_>) = self
             .slave_controllers
             .iter()
-            .map(|controller| (controller.name(), f(controller.as_ref())))
+            .map(|controller| (controller.name, f(controller)))
             .unzip();
+
         let results: Vec<Result<(), Error>> = futures.collect().await;
         for (result, controller) in results.iter().zip(controller_names.iter()) {
             match result {
@@ -77,45 +130,55 @@ impl<'s> MasterController {
         }
         Ok(())
     }
-}
 
-#[async_trait]
-impl Controller for MasterController {
-    async fn run(&self) -> Result<(), Error> {
-        self.execute_for_all(|controller| {
-            async move {
-                tracing::info!("starting controller `{}`", controller.name());
-                controller.run().await
+    async fn handle_message(&mut self, message: ActorMessage) -> Result<(), Error> {
+        match message {
+            ActorMessage::Connected {
+                configured_accessory,
+            } => {
+                self.execute_for_all(|controller| {
+                    let configured_accessory = configured_accessory.to_owned();
+                    async move {
+                        controller.connected(configured_accessory).await;
+                        Ok(())
+                    }
+                    .boxed()
+                })
+                .await?;
             }
-            .boxed()
-        })
-        .await?;
+            ActorMessage::Disconnected { accessory_id } => {
+                self.execute_for_all(|controller| {
+                    async move {
+                        controller.disconnected(accessory_id).await;
+                        Ok(())
+                    }
+                    .boxed()
+                })
+                .await?;
+            }
+            ActorMessage::Updated {
+                accessory_id,
+                service_name,
+                characteristic,
+            } => {
+                self.execute_for_all(|controller| {
+                    let service_name = service_name.to_owned();
+                    let characteristic = characteristic.to_owned();
+                    async move {
+                        controller
+                            .updated(accessory_id, service_name, characteristic)
+                            .await;
+                        Ok(())
+                    }
+                    .boxed()
+                })
+                .await?;
+            }
+        }
         Ok(())
     }
 
-    async fn connected(&self, configured_accessory: &Accessory) -> Result<(), Error> {
-        self.execute_for_all(move |controller| controller.connected(configured_accessory))
-            .await
-    }
-
-    async fn update(
-        &self,
-        accessory_id: &accessory::ID,
-        service_name: &ServiceName,
-        characteristic: &Characteristic,
-    ) -> Result<(), Error> {
-        self.execute_for_all(move |controller| {
-            controller.update(accessory_id, service_name, characteristic)
-        })
-        .await
-    }
-
-    async fn disconnected(&self, id: &accessory::ID) -> Result<(), Error> {
-        self.execute_for_all(move |controller| controller.disconnected(id))
-            .await
-    }
-
-    fn name(&self) -> &'static str {
-        "master"
+    pub fn insert(&mut self, handle: ControllerHandle) {
+        self.slave_controllers.push(handle);
     }
 }

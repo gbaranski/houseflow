@@ -1,12 +1,11 @@
 use houseflow_config::hub::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
-use houseflow_hub::controllers::HapController;
-use houseflow_hub::controllers::MasterController;
-use houseflow_hub::providers::HiveProvider;
-use houseflow_hub::providers::MasterProvider;
-use houseflow_hub::providers::MijiaProvider;
+use houseflow_hub::controllers;
+use houseflow_hub::providers;
+use houseflow_hub::providers::ProviderName;
 use houseflow_hub::Hub;
+use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -32,40 +31,45 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let (controllers, controller_events) = {
-        let mut controllers = vec![];
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-        if let Some(hap_config) = config.controllers.hap.as_ref() {
-            controllers.push(Box::new(HapController::new(hap_config, tx).await?) as _);
-        }
-        if controllers.is_empty() {
-            tracing::warn!("No controllers configured");
-        }
 
-        (controllers, rx)
-    };
-    let (providers, provider_events) = {
-        let mut providers = vec![];
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    let (provider_tx, provider_rx) = mpsc::channel(8);
+    let mut master_provider = providers::Master::new(provider_rx);
+    let provider = providers::ProviderHandle::new(ProviderName::Master, provider_tx);
+
+    let (controller_tx, controller_rx) = mpsc::channel(8);
+    let mut master_controller = controllers::Master::new(controller_rx);
+    let controller = controllers::ControllerHandle::new("master", controller_tx);
+
+    {
+        // TODO: Simplify that
         if let Some(mijia_config) = config.providers.mijia {
-            providers.push(Box::new(
-                MijiaProvider::new(mijia_config, config.accessories.clone(), tx.clone()).await?,
-            ) as _);
+            let handle =
+                providers::Mijia::new(controller.clone(), mijia_config, config.accessories.clone())
+                    .await?;
+            master_provider.insert(handle);
         }
         if let Some(hive_config) = config.providers.hive {
-            providers.push(Box::new(
-                HiveProvider::new(hive_config, config.accessories.clone(), tx.clone()).await?,
-            ) as _)
+            let handle =
+                providers::Hive::new(controller.clone(), hive_config, config.accessories.clone());
+            master_provider.insert(handle.into());
         }
-        if providers.is_empty() {
-            tracing::warn!("No providers configured");
-        }
-        (providers, rx)
     };
-    let hub = Hub::new(
-        MasterController::new(controllers),
-        MasterProvider::new(providers),
-    )
-    .await?;
-    hub.run(provider_events, controller_events).await
+
+    {
+        if let Some(hap_config) = config.controllers.hap {
+            let handle = controllers::Hap::new(provider.clone(), hap_config).await?;
+            master_controller.insert(handle);
+        }
+    };
+
+    tokio::spawn(async move {
+        master_provider.run().await.unwrap();
+    });
+
+    tokio::spawn(async move {
+        master_controller.run().await.unwrap();
+    });
+
+    let hub = Hub::new(controller, provider).await?;
+    hub.run().await
 }

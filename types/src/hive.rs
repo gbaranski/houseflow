@@ -19,8 +19,8 @@ pub enum HubFrame {
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum AccessoryFrame {
     CharacteristicUpdate(CharacteristicUpdate),
-    CharacteristicReadResponse(CharacteristicReadResponse),
-    CharacteristicWriteResponse(CharacteristicWriteResponse),
+    CharacteristicReadResult(CharacteristicReadResult),
+    CharacteristicWriteResult(CharateristicWriteResult),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -44,13 +44,13 @@ pub struct CharacteristicWrite {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharacteristicReadResponse {
+pub struct CharacteristicReadResult {
     pub id: FrameID,
     pub result: accessory::Result<Characteristic>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharacteristicWriteResponse {
+pub struct CharateristicWriteResult {
     pub id: FrameID,
     pub result: accessory::Result<()>,
 }
