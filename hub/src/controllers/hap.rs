@@ -11,6 +11,7 @@ use hap::characteristic::AsyncCharacteristicCallbacks;
 use hap::characteristic::CharacteristicCallbacks;
 use hap::server::IpServer;
 use hap::server::Server;
+use hap::service::battery::BatteryService;
 use hap::service::humidity_sensor::HumiditySensorService;
 use hap::service::temperature_sensor::TemperatureSensorService;
 use hap::storage::FileStorage;
@@ -133,6 +134,8 @@ impl HapController {
                                         14,
                                         self.accessory_instance_id,
                                     ),
+                                    // humidity sensor service ends at IID 19, so we start counting at 20
+                                    battery: BatteryService::new(20, self.accessory_instance_id),
                                 };
                                 hygro_thermometer
                                     .temperature_sensor
@@ -142,6 +145,25 @@ impl HapController {
                                 hygro_thermometer
                                     .humidity_sensor
                                     .current_relative_humidity
+                                    .on_read(Some(|| Ok(None)));
+
+                                hygro_thermometer
+                                    .battery
+                                    .battery_level
+                                    .as_mut()
+                                    .unwrap()
+                                    .on_read(Some(|| Ok(None)));
+
+                                hygro_thermometer
+                                    .battery
+                                    .charging_state
+                                    .as_mut()
+                                    .unwrap()
+                                    .on_read(Some(|| Ok(Some(hap::characteristic::charging_state::Value::NotChargeable as u8))));
+
+                                hygro_thermometer
+                                    .battery
+                                    .status_low_battery
                                     .on_read(Some(|| Ok(None)));
 
                                 self.ip_server.add_accessory(hygro_thermometer).await?
@@ -230,38 +252,28 @@ impl HapController {
             } => {
                 let accessory = self.accessory_pointers.get(&accessory_id).unwrap();
                 let mut accessory = accessory.lock().await;
-                let service = match service_name {
-                    ServiceName::TemperatureSensor => accessory
-                        .get_mut_service(HapType::TemperatureSensor)
-                        .unwrap(),
-                    ServiceName::HumiditySensor => {
-                        accessory.get_mut_service(HapType::HumiditySensor).unwrap()
-                    }
-                    ServiceName::GarageDoorOpener => accessory
-                        .get_mut_service(HapType::GarageDoorOpener)
-                        .unwrap(),
+                let service_hap_type = match service_name {
+                    ServiceName::TemperatureSensor => HapType::TemperatureSensor,
+                    ServiceName::HumiditySensor => HapType::HumiditySensor,
+                    ServiceName::GarageDoorOpener => HapType::GarageDoorOpener,
+                    ServiceName::Battery => HapType::Battery,
                 };
+                let service = accessory.get_mut_service(service_hap_type).unwrap();
                 match characteristic {
-                    accessory::characteristics::Characteristic::CurrentTemperature(
-                        current_temperature,
-                    ) => service
+                    Characteristic::CurrentTemperature(current_temperature) => service
                         .get_mut_characteristic(HapType::CurrentTemperature)
                         .unwrap()
                         .set_value(JsonValue::Number(
                             serde_json::Number::from_f64(current_temperature.temperature as f64)
                                 .unwrap(),
-                        )),
-                    accessory::characteristics::Characteristic::CurrentHumidity(
-                        current_humidity,
-                    ) => service
+                        )).await?,
+                    Characteristic::CurrentHumidity(current_humidity) => service
                         .get_mut_characteristic(HapType::CurrentRelativeHumidity)
                         .unwrap()
                         .set_value(JsonValue::Number(
                             serde_json::Number::from_f64(current_humidity.humidity as f64).unwrap(),
-                        )),
-                    accessory::characteristics::Characteristic::CurrentDoorState(
-                        current_door_state,
-                    ) => service
+                        )).await?,
+                    Characteristic::CurrentDoorState(current_door_state) => service
                         .get_mut_characteristic(HapType::CurrentDoorState)
                         .unwrap()
                         .set_value(JsonValue::Number(serde_json::Number::from(
@@ -272,10 +284,26 @@ impl HapController {
                             } else {
                                 unimplemented!()
                             },
-                        ))),
-                    _ => return Ok(()),
-                }
-                .await?;
+                        ))).await?,
+                    Characteristic::TargetDoorState(_) => unimplemented!(),
+                    Characteristic::BatteryLevel(characteristics::BatteryLevel {
+                        battery_level_percent,
+                    }) => {
+                        service
+                            .get_mut_characteristic(HapType::BatteryLevel)
+                            .unwrap()
+                            .set_value(JsonValue::Number(serde_json::Number::from(
+                                battery_level_percent,
+                            ))).await?;
+                        service
+                            .get_mut_characteristic(HapType::StatusLowBattery)
+                            .unwrap()
+                            .set_value(JsonValue::Number(serde_json::Number::from(
+                                if battery_level_percent > 20 { 0 } else { 1 },
+                            ))).await?;
+                    }
+                    Characteristic::ChargingState(_) => todo!(),
+                };
             }
         };
         Ok(())
@@ -289,6 +317,7 @@ struct HygroThermometerAccessory {
     pub accessory_information: hap::service::accessory_information::AccessoryInformationService,
     pub temperature_sensor: hap::service::temperature_sensor::TemperatureSensorService,
     pub humidity_sensor: hap::service::humidity_sensor::HumiditySensorService,
+    pub battery: hap::service::battery::BatteryService,
 }
 
 impl hap::accessory::HapAccessory for HygroThermometerAccessory {
@@ -323,6 +352,7 @@ impl hap::accessory::HapAccessory for HygroThermometerAccessory {
             &self.accessory_information,
             &self.temperature_sensor,
             &self.humidity_sensor,
+            &self.battery,
         ]
     }
 
@@ -331,6 +361,7 @@ impl hap::accessory::HapAccessory for HygroThermometerAccessory {
             &mut self.accessory_information,
             &mut self.temperature_sensor,
             &mut self.humidity_sensor,
+            &mut self.battery,
         ]
     }
 }
