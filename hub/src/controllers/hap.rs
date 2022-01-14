@@ -117,7 +117,7 @@ impl HapController {
                                     accessory_information: AccessoryInformation {
                                         manufacturer,
                                         model: "LYWSD03MMC".to_string(), // TODO: ensure that this one is okay
-                                        name: "Thermometer".to_string(),
+                                        name: "HygroThermometer".to_string(),
                                         serial_number: configured_accessory.id.to_string(),
                                         ..Default::default()
                                     }
