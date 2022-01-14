@@ -102,6 +102,7 @@ pub mod services {
         TemperatureSensor(TemperatureSensor),
         HumiditySensor(HumiditySensor),
         GarageDoorOpener(GarageDoorOpener),
+        Battery(Battery),
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -119,6 +120,11 @@ pub mod services {
         pub current_door_state: characteristics::CurrentDoorState,
         pub target_door_state: characteristics::TargetDoorState,
     }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    pub struct Battery {
+        pub battery_level: characteristics::BatteryLevel,
+    }
 }
 
 pub mod characteristics {
@@ -135,6 +141,8 @@ pub mod characteristics {
         CurrentHumidity(CurrentHumidity),
         CurrentDoorState(CurrentDoorState),
         TargetDoorState(TargetDoorState),
+        BatteryLevel(BatteryLevel),
+        ChargingState(ChargingState),
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -155,5 +163,17 @@ pub mod characteristics {
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct TargetDoorState {
         pub open_percent: u8,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    pub struct BatteryLevel {
+        pub battery_level_percent: u8,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    pub enum ChargingState {
+        NotCharging,
+        Charging,
+        NotChargeable,
     }
 }
