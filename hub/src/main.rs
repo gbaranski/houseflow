@@ -1,4 +1,6 @@
 use houseflow_config::hub::Config;
+use houseflow_config::hub::Controllers;
+use houseflow_config::hub::Providers;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_hub::controllers;
@@ -41,26 +43,33 @@ async fn main() -> Result<(), anyhow::Error> {
     let controller = controllers::ControllerHandle::new("master", controller_tx);
 
     {
+        let Providers { hive, mijia } = config.providers;
         // TODO: Simplify that
-        if let Some(mijia_config) = config.providers.mijia {
-            let handle =
-                providers::Mijia::create(controller.clone(), mijia_config, config.accessories.clone())
-                    .await?;
+        if let Some(mijia_config) = mijia {
+            let handle = providers::Mijia::create(
+                controller.clone(),
+                mijia_config,
+                config.accessories.clone(),
+            )
+            .await?;
             master_provider.insert(handle);
         }
-        if let Some(hive_config) = config.providers.hive {
-            let handle =
-                providers::Hive::create(controller.clone(), hive_config, config.accessories.clone());
+        if let Some(hive_config) = hive {
+            let handle = providers::Hive::create(
+                controller.clone(),
+                hive_config,
+                config.accessories.clone(),
+            );
             master_provider.insert(handle.into());
         }
     };
 
-    {
-        if let Some(hap_config) = config.controllers.hap {
-            let handle = controllers::Hap::create(provider.clone(), hap_config).await?;
-            master_controller.insert(handle);
-        }
-    };
+    let Controllers { hap } = config.controllers;
+    // Insert configured controllers
+    if let Some(hap_config) = hap {
+        let handle = controllers::Hap::create(provider.clone(), hap_config).await?;
+        master_controller.insert(handle);
+    }
 
     tokio::spawn(async move {
         master_provider.run().await.unwrap();

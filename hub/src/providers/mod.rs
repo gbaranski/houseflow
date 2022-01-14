@@ -209,14 +209,14 @@ impl<'s> Master {
                     .iter()
                     .map(|provider| provider.is_connected(accessory_id));
                 let results: Vec<_> = futures::future::join_all(futures).await;
-                let is_connected = results.iter().any(|v| *v == true);
+                let is_connected = results.iter().any(|v| *v);
                 respond_to.send(is_connected).unwrap();
             }
             ProviderMessage::GetAccessoryConfiguration {
                 accessory_id,
                 respond_to,
             } => {
-                let provider = self.slave_providers.iter().next().unwrap(); // TODO: Do something else there
+                let provider = self.slave_providers.get(0).unwrap(); // TODO: Do something else there
                 let accessory_configuration =
                     provider.get_accessory_configuration(accessory_id).await;
                 respond_to.send(accessory_configuration).unwrap();

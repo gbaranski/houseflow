@@ -138,7 +138,7 @@ impl MijiaProvider {
             .start_notify_sensor(bluetooth_device_id)
             .await?;
         self.connected_accessories
-            .insert(bluetooth_device_id.clone(), accessory.id.clone());
+            .insert(bluetooth_device_id.clone(), accessory.id);
         self.controller.connected(accessory).await;
         Ok(())
     }
