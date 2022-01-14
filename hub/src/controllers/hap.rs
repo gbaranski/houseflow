@@ -260,31 +260,43 @@ impl HapController {
                 };
                 let service = accessory.get_mut_service(service_hap_type).unwrap();
                 match characteristic {
-                    Characteristic::CurrentTemperature(current_temperature) => service
-                        .get_mut_characteristic(HapType::CurrentTemperature)
-                        .unwrap()
-                        .set_value(JsonValue::Number(
-                            serde_json::Number::from_f64(current_temperature.temperature as f64)
+                    Characteristic::CurrentTemperature(current_temperature) => {
+                        service
+                            .get_mut_characteristic(HapType::CurrentTemperature)
+                            .unwrap()
+                            .set_value(JsonValue::Number(
+                                serde_json::Number::from_f64(
+                                    current_temperature.temperature as f64,
+                                )
                                 .unwrap(),
-                        )).await?,
-                    Characteristic::CurrentHumidity(current_humidity) => service
-                        .get_mut_characteristic(HapType::CurrentRelativeHumidity)
-                        .unwrap()
-                        .set_value(JsonValue::Number(
-                            serde_json::Number::from_f64(current_humidity.humidity as f64).unwrap(),
-                        )).await?,
-                    Characteristic::CurrentDoorState(current_door_state) => service
-                        .get_mut_characteristic(HapType::CurrentDoorState)
-                        .unwrap()
-                        .set_value(JsonValue::Number(serde_json::Number::from(
-                            if current_door_state.open_percent == 100 {
-                                1
-                            } else if current_door_state.open_percent == 0 {
-                                0
-                            } else {
-                                unimplemented!()
-                            },
-                        ))).await?,
+                            ))
+                            .await?
+                    }
+                    Characteristic::CurrentHumidity(current_humidity) => {
+                        service
+                            .get_mut_characteristic(HapType::CurrentRelativeHumidity)
+                            .unwrap()
+                            .set_value(JsonValue::Number(
+                                serde_json::Number::from_f64(current_humidity.humidity as f64)
+                                    .unwrap(),
+                            ))
+                            .await?
+                    }
+                    Characteristic::CurrentDoorState(current_door_state) => {
+                        service
+                            .get_mut_characteristic(HapType::CurrentDoorState)
+                            .unwrap()
+                            .set_value(JsonValue::Number(serde_json::Number::from(
+                                if current_door_state.open_percent == 100 {
+                                    1
+                                } else if current_door_state.open_percent == 0 {
+                                    0
+                                } else {
+                                    unimplemented!()
+                                },
+                            )))
+                            .await?
+                    }
                     Characteristic::TargetDoorState(_) => unimplemented!(),
                     Characteristic::BatteryLevel(characteristics::BatteryLevel {
                         battery_level_percent,
@@ -294,13 +306,15 @@ impl HapController {
                             .unwrap()
                             .set_value(JsonValue::Number(serde_json::Number::from(
                                 battery_level_percent,
-                            ))).await?;
+                            )))
+                            .await?;
                         service
                             .get_mut_characteristic(HapType::StatusLowBattery)
                             .unwrap()
                             .set_value(JsonValue::Number(serde_json::Number::from(
                                 if battery_level_percent > 20 { 0 } else { 1 },
-                            ))).await?;
+                            )))
+                            .await?;
                     }
                     Characteristic::ChargingState(_) => todo!(),
                 };

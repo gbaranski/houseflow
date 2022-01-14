@@ -11,7 +11,6 @@ use houseflow_types::hive::AccessoryFrame;
 use houseflow_types::hive::CharacteristicReadResult;
 use houseflow_types::hive::CharateristicWriteResult;
 use houseflow_types::hive::HubFrame;
-use url::Url;
 use std::borrow::Cow;
 use std::time::Duration;
 use std::time::Instant;
@@ -19,6 +18,7 @@ use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 use tokio_tungstenite::tungstenite;
 use tungstenite::Message as WebsocketMessage;
+use url::Url;
 
 const PING_TIMEOUT: Duration = Duration::from_secs(10);
 const PING_INTERVAL: Duration = Duration::from_secs(5);

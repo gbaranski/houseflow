@@ -153,27 +153,33 @@ impl MijiaProvider {
                 let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();
                 tracing::info!("readings from {} = {}", accessory_id, readings);
                 self.last_readings.insert(accessory_id, readings.clone());
-                self.controller.updated(
-                    accessory_id,
-                    ServiceName::TemperatureSensor,
-                    Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
-                        temperature: readings.temperature,
-                    }),
-                ).await;
-                self.controller.updated(
-                    accessory_id,
-                    ServiceName::HumiditySensor,
-                    Characteristic::CurrentHumidity(characteristics::CurrentHumidity {
-                        humidity: readings.humidity as f32,
-                    }),
-                ).await;
-                self.controller.updated(
-                    accessory_id,
-                    ServiceName::Battery,
-                    Characteristic::BatteryLevel(characteristics::BatteryLevel {
-                        battery_level_percent: readings.battery_percent as u8,
-                    }),
-                ).await;
+                self.controller
+                    .updated(
+                        accessory_id,
+                        ServiceName::TemperatureSensor,
+                        Characteristic::CurrentTemperature(characteristics::CurrentTemperature {
+                            temperature: readings.temperature,
+                        }),
+                    )
+                    .await;
+                self.controller
+                    .updated(
+                        accessory_id,
+                        ServiceName::HumiditySensor,
+                        Characteristic::CurrentHumidity(characteristics::CurrentHumidity {
+                            humidity: readings.humidity as f32,
+                        }),
+                    )
+                    .await;
+                self.controller
+                    .updated(
+                        accessory_id,
+                        ServiceName::Battery,
+                        Characteristic::BatteryLevel(characteristics::BatteryLevel {
+                            battery_level_percent: readings.battery_percent as u8,
+                        }),
+                    )
+                    .await;
             }
             MijiaEvent::HistoryRecord { id, record } => {
                 let accessory_id = self.accessory_id_by_bluetooth_device_id(&id).unwrap();

@@ -407,11 +407,13 @@ impl HiveSession {
                         let json = serde_json::from_str::<hive::AccessoryFrame>(&s)?;
                         match json {
                             hive::AccessoryFrame::CharacteristicUpdate(frame) => {
-                                self.controller.updated(
-                                    self.accessory_id,
-                                    frame.service_name,
-                                    frame.characteristic,
-                                ).await;
+                                self.controller
+                                    .updated(
+                                        self.accessory_id,
+                                        frame.service_name,
+                                        frame.characteristic,
+                                    )
+                                    .await;
                             }
                             hive::AccessoryFrame::CharacteristicReadResult(frame) => self
                                 .characteristic_read_results

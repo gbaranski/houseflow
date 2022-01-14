@@ -1,7 +1,6 @@
 pub mod controllers;
 pub mod providers;
 
-
 use controllers::ControllerHandle;
 use providers::ProviderHandle;
 
@@ -11,13 +10,15 @@ pub struct Hub {
 }
 
 impl Hub {
-    pub async fn new(controller: ControllerHandle, provider: ProviderHandle) -> Result<Self, anyhow::Error> {
+    pub async fn new(
+        controller: ControllerHandle,
+        provider: ProviderHandle,
+    ) -> Result<Self, anyhow::Error> {
         Ok(Self {
             controller,
             provider,
         })
     }
-
 
     pub async fn run(self) -> Result<(), anyhow::Error> {
         tokio::select! {
