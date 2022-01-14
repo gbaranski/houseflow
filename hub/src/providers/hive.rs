@@ -53,9 +53,9 @@ impl std::ops::Deref for HiveProviderHandle {
     }
 }
 
-impl Into<ProviderHandle> for HiveProviderHandle {
-    fn into(self) -> ProviderHandle {
-        self.handle
+impl From<HiveProviderHandle> for ProviderHandle {
+    fn from(val: HiveProviderHandle) -> Self {
+        val.handle
     }
 }
 
