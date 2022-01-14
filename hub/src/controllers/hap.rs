@@ -4,7 +4,6 @@ use crate::ProviderHandle;
 use futures::lock::Mutex;
 use futures::FutureExt;
 use hap::accessory::garage_door_opener::GarageDoorOpenerAccessory;
-use hap::accessory::temperature_sensor::TemperatureSensorAccessory;
 use hap::accessory::AccessoryCategory;
 use hap::accessory::AccessoryInformation;
 use hap::accessory::HapAccessory;
@@ -12,6 +11,8 @@ use hap::characteristic::AsyncCharacteristicCallbacks;
 use hap::characteristic::CharacteristicCallbacks;
 use hap::server::IpServer;
 use hap::server::Server;
+use hap::service::humidity_sensor::HumiditySensorService;
+use hap::service::temperature_sensor::TemperatureSensorService;
 use hap::storage::FileStorage;
 use hap::storage::Storage;
 use hap::HapType;
@@ -25,6 +26,8 @@ use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::ServiceName;
 use mac_address::get_mac_address;
+use serde::ser::SerializeStruct;
+use serde::Serialize;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -109,30 +112,39 @@ impl HapController {
                         let manufacturer = "Xiaomi Mijia".to_string();
                         match accessory_type {
                             Manufacturer::HygroThermometer { mac_address: _ } => {
-                                let mut temperature_sensor = TemperatureSensorAccessory::new(
-                                    self.accessory_instance_id,
-                                    AccessoryInformation {
+                                let mut hygro_thermometer = HygroThermometerAccessory {
+                                    id: self.accessory_instance_id,
+                                    accessory_information: AccessoryInformation {
                                         manufacturer,
                                         model: "LYWSD03MMC".to_string(), // TODO: ensure that this one is okay
                                         name: "Thermometer".to_string(),
                                         serial_number: configured_accessory.id.to_string(),
-                                        accessory_flags: None,
-                                        application_matching_identifier: None,
-                                        // configured_name: Some(configured_accessory.name.clone()), For some reason it causes the Home app to break
-                                        configured_name: None,
-                                        firmware_revision: None,
-                                        hardware_finish: None,
-                                        hardware_revision: None,
-                                        product_data: None,
-                                        software_revision: None,
-                                    },
-                                )?;
-                                temperature_sensor
+                                        ..Default::default()
+                                    }
+                                    .to_service(1, self.accessory_instance_id)
+                                    .unwrap(),
+                                    // accessory information service ends at IID 6, so we start counting at 7
+                                    temperature_sensor: TemperatureSensorService::new(
+                                        7,
+                                        self.accessory_instance_id,
+                                    ),
+                                    // teperature sensor service ends at IID 13, so we start counting at 14
+                                    humidity_sensor: HumiditySensorService::new(
+                                        14,
+                                        self.accessory_instance_id,
+                                    ),
+                                };
+                                hygro_thermometer
                                     .temperature_sensor
                                     .current_temperature
                                     .on_read(Some(|| Ok(None)));
 
-                                self.ip_server.add_accessory(temperature_sensor).await?
+                                hygro_thermometer
+                                    .humidity_sensor
+                                    .current_relative_humidity
+                                    .on_read(Some(|| Ok(None)));
+
+                                self.ip_server.add_accessory(hygro_thermometer).await?
                             }
                             _ => unimplemented!(),
                         }
@@ -267,5 +279,70 @@ impl HapController {
             }
         };
         Ok(())
+    }
+}
+
+#[derive(Debug, Default)]
+struct HygroThermometerAccessory {
+    id: u64,
+
+    pub accessory_information: hap::service::accessory_information::AccessoryInformationService,
+    pub temperature_sensor: hap::service::temperature_sensor::TemperatureSensorService,
+    pub humidity_sensor: hap::service::humidity_sensor::HumiditySensorService,
+}
+
+impl hap::accessory::HapAccessory for HygroThermometerAccessory {
+    fn get_id(&self) -> u64 {
+        self.id
+    }
+
+    fn set_id(&mut self, id: u64) {
+        self.id = id
+    }
+
+    fn get_service(&self, hap_type: HapType) -> Option<&dyn hap::service::HapService> {
+        for service in self.get_services() {
+            if service.get_type() == hap_type {
+                return Some(service);
+            }
+        }
+        None
+    }
+
+    fn get_mut_service(&mut self, hap_type: HapType) -> Option<&mut dyn hap::service::HapService> {
+        for service in self.get_mut_services() {
+            if service.get_type() == hap_type {
+                return Some(service);
+            }
+        }
+        None
+    }
+
+    fn get_services(&self) -> Vec<&dyn hap::service::HapService> {
+        vec![
+            &self.accessory_information,
+            &self.temperature_sensor,
+            &self.humidity_sensor,
+        ]
+    }
+
+    fn get_mut_services(&mut self) -> Vec<&mut dyn hap::service::HapService> {
+        vec![
+            &mut self.accessory_information,
+            &mut self.temperature_sensor,
+            &mut self.humidity_sensor,
+        ]
+    }
+}
+
+impl Serialize for HygroThermometerAccessory {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("HapAccessory", 2)?;
+        state.serialize_field("aid", &self.get_id())?;
+        state.serialize_field("services", &self.get_services())?;
+        state.end()
     }
 }
