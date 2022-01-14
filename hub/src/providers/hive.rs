@@ -87,7 +87,7 @@ pub struct HiveProvider {
 }
 
 impl HiveProvider {
-    pub fn new(
+    pub fn create(
         controller: ControllerHandle,
         _config: Config,
         configured_accessories: Vec<Accessory>,
@@ -283,7 +283,7 @@ pub async fn websocket_handler(
     tracing::warn!("{} connected without password", accessory_id);
 
     Ok(websocket.on_upgrade(move |stream| async move {
-        let session = HiveSession::new(accessory_id, stream, controller).await;
+        let session = HiveSession::create(accessory_id, stream, controller).await;
         let accessory_id = accessory.id;
         provider.connected(accessory, session.clone().into()).await;
         session.wait_for_stop().await;
@@ -333,14 +333,14 @@ impl std::ops::Deref for HiveSessionHandle {
     }
 }
 
-impl Into<SessionHandle> for HiveSessionHandle {
-    fn into(self) -> SessionHandle {
-        self.handle
+impl From<HiveSessionHandle> for SessionHandle {
+    fn from(val: HiveSessionHandle) -> Self {
+        val.handle
     }
 }
 
 impl HiveSession {
-    pub async fn new(
+    pub async fn create(
         accessory_id: accessory::ID,
         stream: WebSocket,
         controller: ControllerHandle,

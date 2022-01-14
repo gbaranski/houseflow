@@ -31,7 +31,7 @@ pub struct MijiaProvider {
 }
 
 impl MijiaProvider {
-    pub async fn new(
+    pub async fn create(
         controller: ControllerHandle,
         _config: Config,
         configured_accessories: Vec<Accessory>,

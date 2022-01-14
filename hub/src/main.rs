@@ -44,20 +44,20 @@ async fn main() -> Result<(), anyhow::Error> {
         // TODO: Simplify that
         if let Some(mijia_config) = config.providers.mijia {
             let handle =
-                providers::Mijia::new(controller.clone(), mijia_config, config.accessories.clone())
+                providers::Mijia::create(controller.clone(), mijia_config, config.accessories.clone())
                     .await?;
             master_provider.insert(handle);
         }
         if let Some(hive_config) = config.providers.hive {
             let handle =
-                providers::Hive::new(controller.clone(), hive_config, config.accessories.clone());
+                providers::Hive::create(controller.clone(), hive_config, config.accessories.clone());
             master_provider.insert(handle.into());
         }
     };
 
     {
         if let Some(hap_config) = config.controllers.hap {
-            let handle = controllers::Hap::new(provider.clone(), hap_config).await?;
+            let handle = controllers::Hap::create(provider.clone(), hap_config).await?;
             master_controller.insert(handle);
         }
     };

@@ -43,7 +43,7 @@ pub struct HapController {
 }
 
 impl HapController {
-    pub async fn new(
+    pub async fn create(
         provider: ProviderHandle,
         config: HapConfig,
     ) -> Result<ControllerHandle, anyhow::Error> {
