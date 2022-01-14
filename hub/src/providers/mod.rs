@@ -5,13 +5,11 @@ pub use self::hive::HiveProvider as Hive;
 pub use self::mijia::MijiaProvider as Mijia;
 
 use anyhow::Error;
-use futures::Future;
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
-use std::pin::Pin;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
@@ -93,12 +91,6 @@ impl ProviderHandle {
         tracing::debug!("calling {:?} on a controller named {}", message, self.name);
         self.sender.send(message).await.unwrap();
         rx.await.unwrap()
-    }
-
-    async fn notify(&self, message_fn: impl FnOnce() -> ProviderMessage) {
-        let message = message_fn();
-        tracing::debug!("calling {:?} on a controller named {}", message, self.name);
-        self.sender.send(message).await.unwrap();
     }
 }
 
@@ -229,29 +221,6 @@ impl<'s> Master {
                     provider.get_accessory_configuration(accessory_id).await;
                 respond_to.send(accessory_configuration).unwrap();
             }
-        }
-        Ok(())
-    }
-
-    async fn execute_for_all<'a>(
-        &'s self,
-        f: impl Fn(&'s ProviderHandle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
-            + 'a,
-    ) -> Result<(), Error> {
-        use futures::stream::FuturesOrdered;
-        use futures::StreamExt;
-
-        let (provider_names, futures): (Vec<_>, FuturesOrdered<_>) = self
-            .slave_providers
-            .iter()
-            .map(|provider| (provider.name.to_owned(), f(provider)))
-            .unzip();
-        let results: Vec<Result<(), Error>> = futures.collect().await;
-        for (result, provider) in results.iter().zip(provider_names.iter()) {
-            match result {
-                Ok(_) => tracing::debug!(%provider, "task completed"),
-                Err(err) => tracing::error!(%provider, "task failed due to {}", err),
-            };
         }
         Ok(())
     }

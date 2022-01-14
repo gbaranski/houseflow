@@ -5,7 +5,6 @@ use std::pin::Pin;
 pub use self::hap::HapController as Hap;
 
 use anyhow::Error;
-use futures::channel::oneshot;
 use futures::{Future, FutureExt};
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
@@ -56,17 +55,9 @@ impl ControllerHandle {
 }
 
 impl ControllerHandle {
-    async fn call<R>(&self, message_fn: impl FnOnce(oneshot::Sender<R>) -> ActorMessage) -> R {
-        let (tx, rx) = oneshot::channel();
-        let message = message_fn(tx);
-        tracing::debug!("calling {:?} on a controller named {}", message, self.name);
-        self.sender.send(message).await.unwrap();
-        rx.await.unwrap()
-    }
-
     async fn notify(&self, message_fn: impl FnOnce() -> ActorMessage) {
         let message = message_fn();
-        tracing::debug!("calling {:?} on a controller named {}", message, self.name);
+        tracing::debug!("notify {:?} on a controller named {}", message, self.name);
         self.sender.send(message).await.unwrap();
     }
 }
