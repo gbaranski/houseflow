@@ -134,8 +134,8 @@ impl HapController {
                                         14,
                                         self.accessory_instance_id,
                                     ),
-                                    // humidity sensor service ends at IID 19, so we start counting at 20
-                                    battery: BatteryService::new(20, self.accessory_instance_id),
+                                    // humidity sensor service ends at IID 20, so we start counting at 21
+                                    battery: BatteryService::new(21, self.accessory_instance_id),
                                 };
                                 hygro_thermometer
                                     .temperature_sensor
@@ -152,6 +152,11 @@ impl HapController {
                                     .battery_level
                                     .as_mut()
                                     .unwrap()
+                                    .on_read(Some(|| Ok(None)));
+
+                                hygro_thermometer
+                                    .battery
+                                    .status_low_battery
                                     .on_read(Some(|| Ok(None)));
 
                                 hygro_thermometer
