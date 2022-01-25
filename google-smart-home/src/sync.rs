@@ -17,7 +17,7 @@ pub mod response {
     use super::*;
 
     /// SYNC response
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Response {
         pub request_id: String,
@@ -25,7 +25,7 @@ pub mod response {
     }
 
     /// SYNC response payload.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Payload {
         /// Reflects the unique (and immutable) user ID on the agent's platform.
@@ -42,7 +42,7 @@ pub mod response {
     }
 
     /// Device execution result.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadDevice {
         /// The ID of the device in the developer's cloud.
@@ -71,7 +71,7 @@ pub mod response {
         pub device_info: Option<PayloadDeviceInfo>,
         /// Aligned with per-trait attributes described in each trait schema reference.
         #[serde(default)]
-        pub attributes: serde_json::Map<String, serde_json::Value>,
+        pub attributes: Attributes,
         /// Object defined by the developer which will be attached to future QUERY and EXECUTE requests, maximum of 512 bytes per device. Use this object to store additional information about the device your cloud service may need, such as the global region of the device. Data in this object has a few constraints: No sensitive information, including but not limited to Personally Identifiable Information.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub custom_data: Option<serde_json::Map<String, serde_json::Value>>,

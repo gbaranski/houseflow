@@ -29,7 +29,10 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
                     manufacturers::XiaomiMijia::HygroThermometer => (
                         device::Type::Thermostat,
                         vec![device::Trait::TemperatureControl],
-                        json!({"queryOnlyTemperatureControl": true}),
+                        response::Attributes {
+                            query_only_temperature_control: Some(true),
+                            ..Default::default()
+                        },
                     ),
                     _ => unimplemented!(),
                 },
@@ -37,12 +40,12 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
                     manufacturers::Houseflow::Garage => (
                         device::Type::Garage,
                         vec![device::Trait::OpenClose],
-                        json!({}),
+                        response::Attributes::default(),
                     ),
                     manufacturers::Houseflow::Gate => (
                         device::Type::Garage,
                         vec![device::Trait::OpenClose],
-                        json!({}),
+                        response::Attributes::default(),
                     ),
                     _ => unimplemented!(),
                 },
@@ -67,7 +70,7 @@ pub async fn handle(state: State, user_id: user::ID) -> Result<response::Payload
                     hw_version: None,
                     sw_version: None,
                 }),
-                attributes: attributes.as_object().unwrap().clone(),
+                attributes,
                 custom_data: None,
                 other_device_ids: None,
             }
