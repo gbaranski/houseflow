@@ -64,13 +64,11 @@ fn query_response() {
                         response::PayloadDevice {
                             status: response::PayloadDeviceStatus::Success,
                             error_code: None,
-                            state: json!({
-                                "on": true,
-                                "online": true,
-                            })
-                            .as_object()
-                            .unwrap()
-                            .clone(),
+                            state: response::State {
+                                online: true,
+                                on: Some(true),
+                                ..Default::default()
+                            },
                         },
                     ),
                     (
@@ -78,18 +76,13 @@ fn query_response() {
                         response::PayloadDevice {
                             status: response::PayloadDeviceStatus::Success,
                             error_code: None,
-                            state: json!({
-                                "on": true,
-                                "online": true,
-                                "brightness": 80,
-                                "color": {
-                                    "name": "cerulean",
-                                    "spectrumRGB": 31655
-                                },
-                            })
-                            .as_object()
-                            .unwrap()
-                            .clone(),
+                            state: response::State {
+                                online: true,
+                                on: Some(true),
+                                brightness: Some(80),
+                                color: Some(response::Color::SpectrumRgb(31655)),
+                                ..Default::default()
+                            },
                         },
                     ),
                 ]
