@@ -28,7 +28,7 @@ pub enum RequestInput {
     Disconnect,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(untagged, rename_all = "camelCase")]
 pub enum Response {
     Sync(sync::response::Response),

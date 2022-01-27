@@ -28,7 +28,7 @@ pub mod response {
     use super::*;
 
     /// QUERY response.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Response {
         pub request_id: String,
@@ -36,7 +36,7 @@ pub mod response {
     }
 
     /// QUERY response payload.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Payload {
         /// An error code for the entire transaction for auth failures and developer system unavailability.
@@ -53,7 +53,7 @@ pub mod response {
     }
 
     /// Device execution result.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadDevice {
         /// Result of the query operation.
@@ -64,7 +64,57 @@ pub mod response {
 
         /// Device state
         #[serde(default, flatten)]
-        pub state: serde_json::Map<String, serde_json::Value>,
+        pub state: State,
+    }
+
+    /// Device state.
+    #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct State {
+        // States common to all devices.
+        pub online: bool,
+
+        // States for OnOff trait.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub on: Option<bool>,
+
+        // States for Brightness trait.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub brightness: Option<u8>,
+
+        // States for ColorSetting trait.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub color: Option<Color>,
+
+        // States for TemperatureSetting trait.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub active_thermostat_mode: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub target_temp_reached_estimate_unix_timestamp_sec: Option<u64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_humidity_ambient: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_mode: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_temperature_ambient: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_temperature_setpoint: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_temperature_setpoint_high: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_temperature_setpoint_low: Option<f64>,
+    }
+
+    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum Color {
+        TemperatureK(u64),
+        SpectrumRgb(u32),
+        SpectrumHsv {
+            hue: f64,
+            saturation: f64,
+            value: f64,
+        },
     }
 
     /// Result of the query operation.

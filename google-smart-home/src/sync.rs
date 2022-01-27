@@ -17,7 +17,7 @@ pub mod response {
     use super::*;
 
     /// SYNC response
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Response {
         pub request_id: String,
@@ -25,7 +25,7 @@ pub mod response {
     }
 
     /// SYNC response payload.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct Payload {
         /// Reflects the unique (and immutable) user ID on the agent's platform.
@@ -42,7 +42,7 @@ pub mod response {
     }
 
     /// Device execution result.
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+    #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PayloadDevice {
         /// The ID of the device in the developer's cloud.
@@ -71,13 +71,66 @@ pub mod response {
         pub device_info: Option<PayloadDeviceInfo>,
         /// Aligned with per-trait attributes described in each trait schema reference.
         #[serde(default)]
-        pub attributes: serde_json::Map<String, serde_json::Value>,
+        pub attributes: Attributes,
         /// Object defined by the developer which will be attached to future QUERY and EXECUTE requests, maximum of 512 bytes per device. Use this object to store additional information about the device your cloud service may need, such as the global region of the device. Data in this object has a few constraints: No sensitive information, including but not limited to Personally Identifiable Information.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub custom_data: Option<serde_json::Map<String, serde_json::Value>>,
         /// List of alternate IDs used to identify a cloud synced device for local execution.
         #[serde(skip_serializing_if = "Option::is_none")]
         pub other_device_ids: Option<Vec<PayloadOtherDeviceID>>,
+    }
+
+    #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Attributes {
+        // Attributes for ColorSetting trait.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub color_model: Option<ColorModel>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub color_temperature_range: Option<ColorTemperatureRange>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub command_only_color_setting: Option<bool>,
+
+        // Attributes for TemperatureSetting trait.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub available_thermostat_modes: Option<Vec<String>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub buffer_range_celsius: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub command_only_temperature_setting: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub query_only_temperature_setting: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_temperature_range: Option<ThermostatTemperatureRange>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub thermostat_temperature_unit: Option<ThermostatTemperatureUnit>,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ColorTemperatureRange {
+        pub temperature_min_k: u64,
+        pub temperature_max_k: u64,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ColorModel {
+        Rgb,
+        Hsv,
+    }
+
+    #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ThermostatTemperatureRange {
+        pub min_threshold_celsius: f64,
+        pub max_threshold_celcius: f64,
+    }
+
+    #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+    pub enum ThermostatTemperatureUnit {
+        C,
+        F,
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -120,5 +173,25 @@ pub mod response {
         pub agent_id: Option<String>,
         /// Device ID defined by the agent. The device ID must be unique.
         pub device_id: String,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use serde_json::json;
+
+    #[test]
+    fn color_setting_attributes() {
+        let attributes = response::Attributes {
+            color_model: Some(response::ColorModel::Rgb),
+            command_only_color_setting: Some(true),
+            ..Default::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&attributes).unwrap(),
+            json!({"colorModel": "rgb", "commandOnlyColorSetting": true}).to_string()
+        );
     }
 }

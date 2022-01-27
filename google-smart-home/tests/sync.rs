@@ -91,17 +91,15 @@ fn sync_response() {
                             hw_version: Some(String::from("1.2")),
                             sw_version: Some(String::from("5.4")),
                         }),
-                        attributes: json!({
-                            "colorModel": "rgb",
-                            "colorTemperatureRange": {
-                                "temperatureMinK": 2000,
-                                "temperatureMaxK": 9000
-                            },
-                            "commandOnlyColorSetting": false
-                        })
-                        .as_object()
-                        .unwrap()
-                        .to_owned(),
+                        attributes: response::Attributes {
+                            color_model: Some(response::ColorModel::Rgb),
+                            color_temperature_range: Some(response::ColorTemperatureRange {
+                                temperature_min_k: 2000,
+                                temperature_max_k: 9000,
+                            }),
+                            command_only_color_setting: Some(false),
+                            ..Default::default()
+                        },
                         custom_data: Some(
                             json!({
                                 "fooValue": 12,
