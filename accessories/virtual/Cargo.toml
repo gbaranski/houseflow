@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 houseflow-api = { path = "../../api", features = ["hive"] }
-houseflow-config = { path = "../../config", features = ["accessory", "fs"] }
+houseflow-config = { path = "../../config", features = ["accessory", "fs", "log"] }
 houseflow-types = { path = "../../types" }
 houseflow-accessory-hal = { path = "../hal" }
 
