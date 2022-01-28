@@ -5,7 +5,7 @@ members = [
   "config",
   "hub",
   "google-smart-home",
-  # "server",
+  "server",
   "types",
   "accessories/hal",
   "accessories/virtual",
