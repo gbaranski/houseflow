@@ -11,7 +11,7 @@ use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    houseflow_config::init_logging(false);
+    houseflow_config::log::init();
     let config_path = std::env::var("HOUSEFLOW_HUB_CONFIG")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|_| Config::default_path());
