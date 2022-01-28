@@ -60,6 +60,7 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::RefreshTokenBlacklisted => StatusCode::UNAUTHORIZED,
                 AuthError::NoStructurePermission => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidVerificationCode(_) => StatusCode::UNAUTHORIZED,
+                AuthError::NoAccessoryPermission => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidGoogleJwt(_) => StatusCode::UNAUTHORIZED,
                 AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },

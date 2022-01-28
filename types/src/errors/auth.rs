@@ -27,9 +27,9 @@ pub enum Error {
     /// Refresh token is blacklisted
     #[error("refresh token is blacklisted")]
     RefreshTokenBlacklisted,
-    /// User does not have permission to a device
-    #[error("user does not have permission to a specified device")]
-    NoDevicePermission,
+    /// User does not have permission to a accessory
+    #[error("user does not have permission to a specified accessory")]
+    NoAccessoryPermission,
     /// Invalid Google JWT
     #[error("invalid Google JWT: {0}")]
     InvalidGoogleJwt(String),
