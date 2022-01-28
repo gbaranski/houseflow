@@ -1,9 +1,16 @@
 pub mod fake;
 pub mod smtp;
 
-use async_trait::async_trait;
 use houseflow_types::code::VerificationCode;
-use lettre::Message;
+use tokio::sync::oneshot;
+use tokio::sync::mpsc;
+
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display)]
+pub enum Name {
+    Master,
+    Fake,
+    Smtp,
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -11,30 +18,54 @@ pub enum Error {
     Smtp(#[from] lettre::transport::smtp::Error),
 }
 
-#[async_trait]
-pub trait Mailer: Send + Sync {
-    async fn send(&self, message: Message) -> Result<(), Error>;
+#[derive(Debug)]
+pub enum Message {
+    SendVerificationCode {
+        subject: String,
+        to: lettre::message::Mailbox,
+        code: VerificationCode,
+        respond_to: oneshot::Sender<Result<(), Error>>,
+    },
+}
 
-    async fn send_verification_code(
-        &self,
-        address: &str,
-        code: &VerificationCode,
-    ) -> Result<(), Error> {
-        let message = Message::builder()
-            .from(self.from_address().parse().unwrap())
-            .to(address.parse().unwrap())
-            .subject("Your Houseflow account: Access from new device")
-            .body(format!(
-                "Your verification code: {}. It will be valid for next 30 minutes. Hurry up!",
-                code
-            ))
-            .unwrap();
-        self.send(message).await?;
-        tracing::info!("Sent verification code to {}", address);
-        Ok(())
+#[derive(Debug, Clone)]
+pub struct Handle {
+    name: Name,
+    sender: mpsc::Sender<Message>,
+}
+
+impl Handle {
+    async fn call<R>(&self, message_fn: impl FnOnce(oneshot::Sender<R>) -> Message) -> R {
+        let (tx, rx) = oneshot::channel();
+        let message = message_fn(tx);
+        tracing::debug!("calling {:?} on a mailer named {}", message, self.name);
+        self.sender.send(message).await.unwrap();
+        rx.await.unwrap()
+    }
+}
+
+impl Handle {
+    pub fn new(name: Name, sender: mpsc::Sender<Message>) -> Self {
+        Self {
+            name,
+            sender
+        }
     }
 
-    fn from_address(&self) -> &str;
+    pub async fn send_verification_code(
+        &self,
+        subject: String,
+        to: lettre::message::Mailbox,
+        code: VerificationCode
+    ) -> Result<(), Error> {
+        self.call(|respond_to| Message::SendVerificationCode {
+            subject,
+            to,
+            code,
+            respond_to,
+        })
+        .await
+    }
 }
 
 impl From<Error> for houseflow_types::errors::ServerError {

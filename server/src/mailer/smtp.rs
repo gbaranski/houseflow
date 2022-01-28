@@ -1,25 +1,28 @@
-use super::Error;
-use async_trait::async_trait;
+use super::Handle;
+use super::Message;
+use super::Name;
 use lettre::transport::smtp::authentication::Credentials;
-use lettre::Message;
 use lettre::SmtpTransport;
 use lettre::Transport;
+use tokio::sync::mpsc;
 
 pub struct Config {
     pub host: String,
     pub port: u16,
     pub username: String,
     pub password: String,
-    pub from: String,
+    pub from: lettre::message::Mailbox,
 }
 
 pub struct Mailer {
-    transport: SmtpTransport,
+    receiver: mpsc::Receiver<Message>,
     config: Config,
+    transport: SmtpTransport,
 }
 
 impl Mailer {
-    pub fn new(config: Config) -> Self {
+    pub fn create(config: Config) -> Handle {
+        let (sender, receiver) = tokio::sync::mpsc::channel(8);
         let transport = lettre::SmtpTransport::relay(config.host.as_str())
             .unwrap()
             .port(config.port)
@@ -28,18 +31,48 @@ impl Mailer {
                 config.password.clone(),
             ))
             .build();
-        Self { transport, config }
+        let mut actor = Self {
+            receiver,
+            config,
+            transport,
+        };
+        let handle = Handle::new(Name::Smtp, sender);
+        tokio::spawn(async move { actor.run().await });
+        handle
     }
-}
 
-#[async_trait]
-impl super::Mailer for Mailer {
-    async fn send(&self, email: Message) -> Result<(), Error> {
-        self.transport.send(&email)?;
-        Ok(())
+    async fn run(&mut self) {
+        while let Some(message) = self.receiver.recv().await {
+            self.handle_message(message).await;
+        }
     }
 
-    fn from_address(&self) -> &str {
-        &self.config.from
+    async fn handle_message(&mut self, message: Message) {
+        match message {
+            Message::SendVerificationCode {
+                subject,
+                to,
+                code,
+                respond_to,
+            } => {
+                let body = format!(
+                    "Your verification code: {}. It will be valid for next 30 minutes. Hurry up!",
+                    code
+                );
+                let message = lettre::Message::builder()
+                    .from(self.config.from.to_owned())
+                    .to(to)
+                    .subject(subject)
+                    .body(body)
+                    .unwrap();
+
+                let response = self
+                    .transport
+                    .send(&message)
+                    .map(|_| ())
+                    .map_err(Into::into);
+                respond_to.send(response).unwrap();
+            }
+        }
     }
 }
