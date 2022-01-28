@@ -1,5 +1,8 @@
 pub mod defaults;
 
+#[cfg(any(test, feature = "log"))]
+pub mod log;
+
 #[cfg(any(test, feature = "client"))]
 pub mod client;
 
@@ -95,32 +98,6 @@ pub enum Error {
     TomlSerialize(#[from] toml::ser::Error),
     #[error("validation: {0}")]
     Validation(String),
-}
-
-pub fn init_logging(hide_timestamp: bool) {
-    const LOG_ENV: &str = "HOUSEFLOW_LOG";
-    use std::str::FromStr;
-    use tracing::Level;
-
-    let env_filter = match std::env::var(LOG_ENV) {
-        Ok(env) => env,
-        Err(std::env::VarError::NotPresent) => "info".to_string(),
-        Err(std::env::VarError::NotUnicode(_)) => panic!(
-            "{} environment variable is not valid unicode and can't be read",
-            LOG_ENV
-        ),
-    };
-    let level = Level::from_str(&env_filter)
-        .unwrap_or_else(|err| panic!("invalid `{}` environment variable {}", LOG_ENV, err));
-
-    if hide_timestamp {
-        tracing_subscriber::fmt()
-            .with_max_level(level)
-            .without_time()
-            .init()
-    } else {
-        tracing_subscriber::fmt().with_max_level(level).init()
-    };
 }
 
 #[allow(dead_code)]
