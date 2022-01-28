@@ -1,12 +1,12 @@
-use std::pin::Pin;
 use anyhow::Error;
 use futures::Future;
 use futures::FutureExt;
 use houseflow_types::accessory;
-use houseflow_types::accessory::Accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
+use houseflow_types::accessory::Accessory;
+use std::pin::Pin;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
@@ -106,8 +106,7 @@ impl<'s> Master {
 
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s Handle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
-            + 'a,
+        f: impl Fn(&'s Handle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
@@ -127,7 +126,6 @@ impl<'s> Master {
         }
         Ok(())
     }
-
 
     async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
         match message {

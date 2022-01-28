@@ -2,8 +2,8 @@ pub mod fake;
 pub mod smtp;
 
 use houseflow_types::code::VerificationCode;
-use tokio::sync::oneshot;
 use tokio::sync::mpsc;
+use tokio::sync::oneshot;
 
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display)]
 pub enum Name {
@@ -46,17 +46,14 @@ impl Handle {
 
 impl Handle {
     pub fn new(name: Name, sender: mpsc::Sender<Message>) -> Self {
-        Self {
-            name,
-            sender
-        }
+        Self { name, sender }
     }
 
     pub async fn send_verification_code(
         &self,
         subject: String,
         to: lettre::message::Mailbox,
-        code: VerificationCode
+        code: VerificationCode,
     ) -> Result<(), Error> {
         self.call(|respond_to| Message::SendVerificationCode {
             subject,

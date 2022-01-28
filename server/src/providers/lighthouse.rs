@@ -178,7 +178,11 @@ impl LighthouseProvider {
                 self.sessions.remove(&hub_id);
             }
             LighthouseMessage::GetHubConfiguration { hub_id, respond_to } => {
-                let hub = self.configured_hubs.iter().find(|hub| hub.id == hub_id).cloned();
+                let hub = self
+                    .configured_hubs
+                    .iter()
+                    .find(|hub| hub.id == hub_id)
+                    .cloned();
                 respond_to.send(hub).unwrap();
             }
             LighthouseMessage::AccessoryConnected { accessory } => {

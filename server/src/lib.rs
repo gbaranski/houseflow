@@ -1,8 +1,8 @@
-pub mod mailer;
 pub mod clerk;
+pub mod mailer;
 
-pub mod providers;
 pub mod controllers;
+pub mod providers;
 
 async fn health_check() -> &'static str {
     "I'm alive!"

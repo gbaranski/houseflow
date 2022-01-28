@@ -9,7 +9,6 @@ pub fn init() {
     init_with_config(Config::default());
 }
 
-
 pub fn init_with_config(config: Config) {
     use std::str::FromStr;
     use tracing::Level;

@@ -10,7 +10,9 @@ pub struct Mailer {
 }
 
 impl Mailer {
-    pub fn create(verification_code_sender: mpsc::Sender<(lettre::message::Mailbox, VerificationCode)>) -> Handle {
+    pub fn create(
+        verification_code_sender: mpsc::Sender<(lettre::message::Mailbox, VerificationCode)>,
+    ) -> Handle {
         let (sender, receiver) = tokio::sync::mpsc::channel(8);
         let mut actor = Self {
             receiver,
@@ -35,7 +37,10 @@ impl Mailer {
                 code,
                 respond_to,
             } => {
-                self.verification_code_sender.send((to, code)).await.unwrap();
+                self.verification_code_sender
+                    .send((to, code))
+                    .await
+                    .unwrap();
                 respond_to.send(Ok(())).unwrap();
             }
         }
