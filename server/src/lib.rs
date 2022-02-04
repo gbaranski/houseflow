@@ -10,6 +10,16 @@ async fn health_check() -> &'static str {
 
 pub fn app() -> axum::Router {
     use axum::routing::get;
+    use axum::Router;
 
-    axum::Router::new().route("/health-check", get(health_check))
+    Router::new()
+        .route("/health-check", get(health_check))
+        .nest(
+            "/controllers",
+            Router::new().nest("/meta", controllers::meta::app()),
+        )
+        .nest(
+            "/providers",
+            Router::new().nest("/lighthouse", providers::lighthouse::app()),
+        )
 }

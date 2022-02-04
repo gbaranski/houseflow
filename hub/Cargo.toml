@@ -10,12 +10,14 @@ anyhow = "1.0.43"
 arc-swap = "1.5.0"
 async-trait = "0.1.51"
 axum = { version = "0.4.3", features = ["ws", "headers"] }
+base64 = "0.13.0"
 chrono = "0.4.19"
 futures = "0.3.17"
 ghost_actor = "0.2.1"
 hap = "0.1.0-pre.14"
-houseflow-config = { path = "../config/", features = ["hub", "fs"] }
-houseflow-types = { path = "../types/" }
+houseflow-config = { path = "../config/", features = ["hub", "fs", "log"] }
+houseflow-types = { path = "../types/", features = ["lighthouse"] }
+http = "0.2.6"
 mac_address = "1.1.2"
 mijia = "0.5.0"
 rand = "0.8.4"
@@ -23,6 +25,7 @@ serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.67"
 strum = { version = "0.23.0", features = ["derive"] }
 tokio = { version = "1.11.0", features = ["macros", "rt-multi-thread", "sync"] }
+tokio-tungstenite = "0.16.1"
 tracing = "0.1.26"
 uuid = { version = "0.8.2", features = ["v4"] }
 xdg = "2.4.0"

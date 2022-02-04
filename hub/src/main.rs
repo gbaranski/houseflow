@@ -64,10 +64,17 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     };
 
-    let Controllers { hap } = config.controllers;
+    let Controllers { hap, lighthouse } = config.controllers;
     // Insert configured controllers
     if let Some(hap_config) = hap {
         let handle = controllers::Hap::create(provider.clone(), hap_config).await?;
+        master_controller.insert(handle);
+    }
+
+    if let Some(lighthouse_config) = lighthouse {
+        let handle =
+            controllers::Lighthouse::create(provider.clone(), config.hub.id, lighthouse_config)
+                .await?;
         master_controller.insert(handle);
     }
 

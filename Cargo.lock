@@ -183,35 +183,6 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "axum"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b4e96976b2022b23b2199168ff9b281e9ddc1aa795607d5cb7146868ca5c101"
-dependencies = [
- "async-trait",
- "bitflags",
- "bytes",
- "futures-util",
- "http",
- "http-body",
- "hyper",
- "matchit",
- "mime",
- "percent-encoding",
- "pin-project-lite",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "sync_wrapper",
- "tokio",
- "tokio-util",
- "tower",
- "tower-http 0.1.3",
- "tower-layer",
- "tower-service",
-]
-
-[[package]]
-name = "axum"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "310a147401c66e79fc78636e4db63ac68cd6acb9ece056de806ea173a15bce32"
@@ -240,7 +211,7 @@ dependencies = [
  "tokio-tungstenite",
  "tokio-util",
  "tower",
- "tower-http 0.2.1",
+ "tower-http",
  "tower-layer",
  "tower-service",
 ]
@@ -1111,9 +1082,9 @@ dependencies = [
 
 [[package]]
 name = "headers"
-version = "0.3.5"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4c4eb0471fcb85846d8b0690695ef354f9afb11cb03cac2e1d7c9253351afb0"
+checksum = "c84c647447a07ca16f5fbd05b633e535cc41a08d2d74ab1e08648df53be9cb89"
 dependencies = [
  "base64 0.13.0",
  "bitflags",
@@ -1262,13 +1233,15 @@ dependencies = [
  "anyhow",
  "arc-swap",
  "async-trait",
- "axum 0.4.4",
+ "axum",
+ "base64 0.13.0",
  "chrono",
  "futures",
  "ghost_actor",
  "hap",
  "houseflow-config",
  "houseflow-types",
+ "http",
  "mac_address",
  "mijia",
  "rand 0.8.4",
@@ -1276,6 +1249,7 @@ dependencies = [
  "serde_json",
  "strum",
  "tokio",
+ "tokio-tungstenite",
  "tracing",
  "uuid",
  "xdg",
@@ -1288,7 +1262,7 @@ dependencies = [
  "anyhow",
  "askama 0.11.0",
  "async-trait",
- "axum 0.4.4",
+ "axum",
  "axum-server",
  "bincode",
  "chrono",
@@ -1313,13 +1287,10 @@ name = "houseflow-types"
 version = "0.1.1"
 dependencies = [
  "askama 0.10.5",
- "axum 0.3.4",
+ "axum",
  "bytes",
  "chrono",
  "hex",
- "http",
- "http-body",
- "hyper",
  "jsonwebtoken",
  "rand 0.8.4",
  "rusqlite",
@@ -2940,22 +2911,6 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
-]
-
-[[package]]
-name = "tower-http"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81eca72647e58054bbfa41e6f297c23436f1c60aff6e5eb38455a0f9ca420bb5"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-util",
- "http",
- "http-body",
- "pin-project",
- "tower-layer",
- "tower-service",
 ]
 
 [[package]]

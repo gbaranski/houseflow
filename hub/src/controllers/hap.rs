@@ -1,4 +1,4 @@
-use super::ActorMessage;
+use super::Message as ControllerMessage;
 use super::ControllerHandle;
 use crate::ProviderHandle;
 use futures::lock::Mutex;
@@ -21,7 +21,7 @@ use hap::MacAddress;
 use hap::Pin;
 use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::AccessoryType;
-use houseflow_config::hub::HapController as HapConfig;
+use houseflow_config::hub::controllers::Hap as HapConfig;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -35,7 +35,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 
 pub struct HapController {
-    receiver: mpsc::Receiver<ActorMessage>,
+    receiver: mpsc::Receiver<ControllerMessage>,
     ip_server: IpServer,
     provider: ProviderHandle,
     accessory_pointers: HashMap<accessory::ID, Arc<Mutex<Box<dyn HapAccessory>>>>,
@@ -78,7 +78,7 @@ impl HapController {
 
         storage.save_config(&config).await?;
         let ip_server = IpServer::new(config, storage).await?;
-        let mut actor = HapController {
+        let mut actor = Self {
             receiver: rx,
             ip_server,
             provider,
@@ -101,9 +101,9 @@ impl HapController {
         Ok(())
     }
 
-    async fn handle_message(&mut self, message: ActorMessage) -> Result<(), anyhow::Error> {
+    async fn handle_message(&mut self, message: ControllerMessage) -> Result<(), anyhow::Error> {
         match message {
-            ActorMessage::Connected {
+            ControllerMessage::Connected {
                 configured_accessory,
             } => {
                 let accessory_ptr = match &configured_accessory.r#type {
@@ -246,11 +246,11 @@ impl HapController {
                 self.accessory_pointers
                     .insert(configured_accessory.id, accessory_ptr);
             }
-            ActorMessage::Disconnected { accessory_id } => {
+            ControllerMessage::Disconnected { accessory_id } => {
                 let accessory_pointer = self.accessory_pointers.remove(&accessory_id).unwrap();
                 self.ip_server.remove_accessory(&accessory_pointer).await?;
             }
-            ActorMessage::Updated {
+            ControllerMessage::Updated {
                 accessory_id,
                 service_name,
                 characteristic,

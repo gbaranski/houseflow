@@ -1,5 +1,4 @@
 use crate::defaults;
-use houseflow_types::hub;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -25,18 +24,16 @@ pub struct Config {
     pub tls: Option<Tls>,
     /// Configuration of the Email
     pub email: Email,
-    /// Configuration of the Google 3rd party client
     #[serde(default)]
-    pub google: Option<Google>,
+    pub controllers: Controllers,
+    #[serde(default)]
+    pub providers: Providers,
     /// Configuration for login options
     #[serde(default)]
     pub logins: Logins,
     /// Structures
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub structures: Vec<Structure>,
-    /// Hubs
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub hubs: Vec<Hub>,
     /// Users
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub users: Vec<User>,
@@ -94,15 +91,49 @@ pub struct Email {
     pub from: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Google {
-    /// OAuth2 Client ID identifying Google to your service
-    pub client_id: String,
-    /// OAuth2 Client Secret assigned to the Client ID which identifies Google to you
-    pub client_secret: String,
-    /// Google Project ID
-    pub project_id: String,
+pub struct Controllers {
+    pub meta: Option<controllers::Meta>,
+}
+
+pub mod controllers {
+    use serde::Deserialize;
+    use serde::Serialize;
+
+    #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct Meta {}
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Providers {
+    pub lighthouse: Option<providers::Lighthouse>,
+}
+
+pub mod providers {
+    use houseflow_types::hub;
+    use houseflow_types::structure;
+    use serde::Deserialize;
+    use serde::Serialize;
+
+    #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct Lighthouse {
+        /// Hubs
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub hubs: Vec<LighthouseHub>,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct LighthouseHub {
+        pub id: hub::ID,
+        pub name: String,
+        pub password_hash: String,
+        pub structure_id: structure::ID,
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -117,15 +148,6 @@ pub struct Logins {
 pub struct GoogleLogin {
     /// OAuth2 Client ID identifying your service to Google.
     pub client_id: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct Hub {
-    pub id: hub::ID,
-    pub name: String,
-    pub password_hash: String,
-    pub structure_id: structure::ID,
 }
 
 impl crate::Config for Config {
@@ -210,13 +232,6 @@ impl Config {
         self.structures.iter().find(|structure| structure.id == *id)
     }
 
-    pub fn get_structure_hubs(&self, structure_id: &structure::ID) -> Vec<&Hub> {
-        self.hubs
-            .iter()
-            .filter(|hub| hub.structure_id == *structure_id)
-            .collect()
-    }
-
     pub fn get_permission(
         &self,
         structure_id: &structure::ID,
@@ -240,22 +255,6 @@ impl Config {
             }).collect()
     }
 
-    pub fn get_user_hubs(&self, user_id: &user::ID) -> Vec<&Hub> {
-        let user_structures = self.get_user_structures(user_id);
-        self.hubs
-            .iter()
-            .filter(|hub| {
-                user_structures
-                    .iter()
-                    .any(|structure| structure.id == hub.id)
-            })
-            .collect()
-    }
-
-    pub fn get_hub(&self, id: &hub::ID) -> Option<&Hub> {
-        self.hubs.iter().find(|hub| hub.id == *id)
-    }
-
     pub fn get_base_url(&self) -> Url {
         self.network.base_url.clone().unwrap_or_else(|| {
             let (scheme, address, port) = if let Some(tls) = &self.tls {
@@ -273,6 +272,7 @@ mod tests {
     use super::*;
     use crate::Config as _;
 
+    use houseflow_types::hub;
     use std::str::FromStr;
     use url::Url;
 
@@ -308,11 +308,20 @@ mod tests {
                     .unwrap(),
                 from: String::from("houseflow@gbaranski.com"),
             },
-            google: Some(Google {
-                client_id: String::from("google-client-id"),
-                client_secret: String::from("google-client-secret"),
-                project_id: String::from("google-project-id"),
-            }),
+            controllers: Controllers {
+                meta: Some(controllers::Meta {}),
+            },
+            providers: Providers {
+                lighthouse: Some(providers::Lighthouse {
+                    hubs: [providers::LighthouseHub {
+                        id: hub::ID::from_str("c3b846ed-74f1-4fd9-90d2-e6c2669dfaa6").unwrap(),
+                        name: String::from("Simple Hub"),
+                        password_hash: String::from("some-password-hash"),
+                        structure_id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                    }]
+                    .to_vec(),
+                }),
+            },
             logins: Logins {
                 google: Some(GoogleLogin {
                     client_id: String::from("google-login-client-id"),
@@ -323,7 +332,6 @@ mod tests {
                 name: String::from("Zukago"),
             }]
             .to_vec(),
-            hubs: vec![],
             users: [User {
                 id: user::ID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
                 username: String::from("gbaranski"),

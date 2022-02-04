@@ -1,5 +1,8 @@
 # Houseflow hub configuration
 
+[hub]
+id = "2adc257a-394c-49bd-ae97-4c5a98b49d84"
+
 [[accessories]]
 id = "37c6a8bd-264c-4653-a641-c9b574207be5"
 name = "Thermometer"
@@ -11,5 +14,9 @@ mac-address = "A4:C1:38:EF:77:51"
 [controllers.hap]
 pin = "12345678"
 name = "Awesome Hub"
+
+[controllers.lighthouse]
+url = "http://lighthouse"
+password = "hard-password"
 
 [providers.mijia]

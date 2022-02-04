@@ -1,16 +1,24 @@
 use houseflow_types::accessory;
+use houseflow_types::hub;
 use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
+    pub hub: Hub,
     #[serde(default)]
     pub accessories: Vec<Accessory>,
     #[serde(default)]
     pub providers: Providers,
     #[serde(default)]
     pub controllers: Controllers,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Hub {
+    pub id: hub::ID,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -80,16 +88,31 @@ pub struct MijiaProvider {}
 #[serde(rename_all = "kebab-case")]
 pub struct Controllers {
     #[serde(default)]
-    pub hap: Option<HapController>,
+    pub hap: Option<controllers::Hap>,
+    #[serde(default)]
+    pub lighthouse: Option<controllers::Lighthouse>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub struct HapController {
-    // TODO: Make it strictly typed
-    pub pin: String,
-    /// Name of the bridge
-    pub name: String,
+pub mod controllers {
+    use serde::Deserialize;
+    use serde::Serialize;
+    use url::Url;
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct Hap {
+        // TODO: Make it strictly typed
+        pub pin: String,
+        /// Name of the bridge
+        pub name: String,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct Lighthouse {
+        pub password: String,
+        pub url: Url,
+    }
 }
 
 impl crate::Config for Config {
@@ -107,10 +130,14 @@ mod tests {
     use super::*;
     use crate::Config as _;
     use houseflow_types::accessory;
+    use url::Url;
 
     #[test]
     fn test_example() {
         let expected = Config {
+            hub: Hub {
+                id: hub::ID::parse_str("2adc257a-394c-49bd-ae97-4c5a98b49d84").unwrap(),
+            },
             accessories: vec![Accessory {
                 id: accessory::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
                 name: String::from("Thermometer"),
@@ -124,9 +151,13 @@ mod tests {
                 hive: None,
             },
             controllers: Controllers {
-                hap: Some(HapController {
+                hap: Some(controllers::Hap {
                     pin: "12345678".to_string(),
                     name: "Awesome Hub".to_string(),
+                }),
+                lighthouse: Some(controllers::Lighthouse {
+                    url: Url::parse("http://lighthouse").unwrap(),
+                    password: String::from("hard-password"),
                 }),
             },
         };

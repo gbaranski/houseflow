@@ -1,8 +1,10 @@
 mod hap;
+mod lighthouse;
 
 use std::pin::Pin;
 
 pub use self::hap::HapController as Hap;
+pub use self::lighthouse::LighthouseController as Lighthouse;
 
 use anyhow::Error;
 use futures::{Future, FutureExt};
@@ -15,11 +17,11 @@ use tokio::sync::mpsc;
 #[derive(Clone)]
 pub struct ControllerHandle {
     pub name: &'static str,
-    sender: mpsc::Sender<ActorMessage>,
+    sender: mpsc::Sender<Message>,
 }
 
 impl ControllerHandle {
-    pub fn new(name: &'static str, sender: mpsc::Sender<ActorMessage>) -> Self {
+    pub fn new(name: &'static str, sender: mpsc::Sender<Message>) -> Self {
         Self { name, sender }
     }
 
@@ -28,14 +30,14 @@ impl ControllerHandle {
     }
 
     pub async fn connected(&self, configured_accessory: Accessory) {
-        self.notify(|| ActorMessage::Connected {
+        self.notify(|| Message::Connected {
             configured_accessory,
         })
         .await
     }
 
     pub async fn disconnected(&self, accessory_id: accessory::ID) {
-        self.notify(|| ActorMessage::Disconnected { accessory_id })
+        self.notify(|| Message::Disconnected { accessory_id })
             .await
     }
 
@@ -45,7 +47,7 @@ impl ControllerHandle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) {
-        self.notify(|| ActorMessage::Updated {
+        self.notify(|| Message::Updated {
             accessory_id,
             service_name,
             characteristic,
@@ -55,7 +57,7 @@ impl ControllerHandle {
 }
 
 impl ControllerHandle {
-    async fn notify(&self, message_fn: impl FnOnce() -> ActorMessage) {
+    async fn notify(&self, message_fn: impl FnOnce() -> Message) {
         let message = message_fn();
         tracing::debug!("notify {:?} on a controller named {}", message, self.name);
         self.sender.send(message).await.unwrap();
@@ -63,7 +65,7 @@ impl ControllerHandle {
 }
 
 #[derive(Debug)]
-pub enum ActorMessage {
+pub enum Message {
     Connected {
         configured_accessory: Accessory,
     },
@@ -79,12 +81,12 @@ pub enum ActorMessage {
 }
 
 pub struct Master {
-    receiver: mpsc::Receiver<ActorMessage>,
+    receiver: mpsc::Receiver<Message>,
     slave_controllers: Vec<ControllerHandle>,
 }
 
 impl<'s> Master {
-    pub fn new(receiver: mpsc::Receiver<ActorMessage>) -> Self {
+    pub fn new(receiver: mpsc::Receiver<Message>) -> Self {
         Self {
             receiver,
             slave_controllers: vec![],
@@ -122,9 +124,9 @@ impl<'s> Master {
         Ok(())
     }
 
-    async fn handle_message(&mut self, message: ActorMessage) -> Result<(), Error> {
+    async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
         match message {
-            ActorMessage::Connected {
+            Message::Connected {
                 configured_accessory,
             } => {
                 self.execute_for_all(|controller| {
@@ -137,7 +139,7 @@ impl<'s> Master {
                 })
                 .await?;
             }
-            ActorMessage::Disconnected { accessory_id } => {
+            Message::Disconnected { accessory_id } => {
                 self.execute_for_all(|controller| {
                     async move {
                         controller.disconnected(accessory_id).await;
@@ -147,7 +149,7 @@ impl<'s> Master {
                 })
                 .await?;
             }
-            ActorMessage::Updated {
+            Message::Updated {
                 accessory_id,
                 service_name,
                 characteristic,

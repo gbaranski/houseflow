@@ -14,16 +14,17 @@ use axum::extract::TypedHeader;
 use axum::headers;
 use axum::http::StatusCode;
 use axum::response::Response;
+use axum::Router;
 use futures::stream::SplitSink;
 use futures::stream::SplitStream;
 use futures::SinkExt;
 use futures::StreamExt;
-use houseflow_config::server::Config;
-use houseflow_config::server::Hub;
+use houseflow_config::server::providers::Lighthouse as Config;
+use houseflow_config::server::providers::LighthouseHub;
 use houseflow_types::accessory;
 use houseflow_types::accessory::Accessory;
-use houseflow_types::hive;
 use houseflow_types::hub;
+use houseflow_types::lighthouse;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -33,7 +34,7 @@ use tokio::sync::oneshot;
 #[derive(Debug)]
 pub enum LighthouseMessage {
     Connected {
-        hub: Hub,
+        hub: LighthouseHub,
         session_handle: SessionHandle,
     },
     Disconnected {
@@ -47,7 +48,7 @@ pub enum LighthouseMessage {
     },
     GetHubConfiguration {
         hub_id: hub::ID,
-        respond_to: oneshot::Sender<Option<Hub>>,
+        respond_to: oneshot::Sender<Option<LighthouseHub>>,
     },
 }
 
@@ -72,7 +73,7 @@ impl From<LighthouseHandle> for Handle {
 }
 
 impl LighthouseHandle {
-    pub async fn connected(&self, hub: Hub, session_handle: SessionHandle) {
+    pub async fn connected(&self, hub: LighthouseHub, session_handle: SessionHandle) {
         self.notify_lighthouse(|| LighthouseMessage::Connected {
             hub,
             session_handle,
@@ -85,7 +86,7 @@ impl LighthouseHandle {
             .await
     }
 
-    pub async fn get_hub_configuration(&self, hub_id: hub::ID) -> Option<Hub> {
+    pub async fn get_hub_configuration(&self, hub_id: hub::ID) -> Option<LighthouseHub> {
         self.call_lighthouse(|respond_to| LighthouseMessage::GetHubConfiguration {
             hub_id,
             respond_to,
@@ -119,15 +120,11 @@ pub struct LighthouseProvider {
     controller: controllers::Handle,
     sessions: HashMap<accessory::ID, SessionHandle>,
     connected_accessories: Vec<Accessory>,
-    configured_hubs: Vec<Hub>,
+    config: Config,
 }
 
 impl LighthouseProvider {
-    pub fn create(
-        controller: controllers::Handle,
-        _config: Config,
-        configured_hubs: Vec<Hub>,
-    ) -> LighthouseHandle {
+    pub fn create(controller: controllers::Handle, config: Config) -> LighthouseHandle {
         let (provider_sender, provider_receiver) = tokio::sync::mpsc::channel(8);
         let (lighthouse_sender, lighthouse_receiver) = tokio::sync::mpsc::channel(8);
         let mut actor = Self {
@@ -135,8 +132,8 @@ impl LighthouseProvider {
             lighthouse_receiver,
             controller,
             connected_accessories: vec![],
-            configured_hubs,
             sessions: Default::default(),
+            config,
         };
 
         let handle = Handle::new(Name::Lighthouse, provider_sender);
@@ -155,7 +152,7 @@ impl LighthouseProvider {
                     self.handle_provider_message(message).await?;
                 },
                 Some(message) = self.lighthouse_receiver.recv() => {
-                    self.handle_hive_message(message).await?
+                    self.handle_lighthouse_message(message).await?
                 },
                 else => break,
             }
@@ -163,7 +160,7 @@ impl LighthouseProvider {
         Ok(())
     }
 
-    async fn handle_hive_message(
+    async fn handle_lighthouse_message(
         &mut self,
         message: LighthouseMessage,
     ) -> Result<(), anyhow::Error> {
@@ -179,7 +176,8 @@ impl LighthouseProvider {
             }
             LighthouseMessage::GetHubConfiguration { hub_id, respond_to } => {
                 let hub = self
-                    .configured_hubs
+                    .config
+                    .hubs
                     .iter()
                     .find(|hub| hub.id == hub_id)
                     .cloned();
@@ -275,13 +273,12 @@ impl axum::extract::FromRequest<Body> for HubCredentials {
     async fn from_request(
         req: &mut axum::extract::RequestParts<Body>,
     ) -> Result<Self, Self::Rejection> {
-        tracing::info!("hello world 1");
-
         let TypedHeader(headers::Authorization(authorization)) =
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await
                 .map_err(|err| ConnectError::InvalidAuthorizationHeader(err.to_string()))?;
         let accessory_id = accessory::ID::parse_str(authorization.username()).map_err(|err| {
+            dbg!();
             ConnectError::InvalidAuthorizationHeader(format!("invalid hub id: {}", err))
         })?;
 
@@ -295,6 +292,7 @@ pub async fn websocket_handler(
     Extension(controller): Extension<controllers::Handle>,
     HubCredentials(hub_id, _password): HubCredentials,
 ) -> Result<impl axum::response::IntoResponse, ConnectError> {
+    dbg!();
     let hub = provider
         .get_hub_configuration(hub_id)
         .await
@@ -316,6 +314,12 @@ pub async fn websocket_handler(
     }))
 }
 
+pub fn app() -> Router {
+    use axum::routing::get;
+
+    Router::new().route("/websocket", get(websocket_handler))
+}
+
 #[derive(Debug)]
 enum LighthouseSessionMessage {
     WebSocketMessage(ws::Message),
@@ -323,25 +327,25 @@ enum LighthouseSessionMessage {
 
 pub struct LighthouseSession {
     session_receiver: mpsc::Receiver<SessionMessage>,
-    hive_receiver: mpsc::Receiver<LighthouseSessionMessage>,
+    lighthouse_receiver: mpsc::Receiver<LighthouseSessionMessage>,
     accessory_id: accessory::ID,
     controller: controllers::Handle,
     characteristic_write_results:
-        HashMap<hive::FrameID, oneshot::Sender<Result<(), accessory::Error>>>,
+        HashMap<lighthouse::FrameID, oneshot::Sender<Result<(), accessory::Error>>>,
     characteristic_read_results: HashMap<
-        hive::FrameID,
+        lighthouse::FrameID,
         oneshot::Sender<Result<accessory::characteristics::Characteristic, accessory::Error>>,
     >,
     sink: SplitSink<WebSocket, ws::Message>,
 }
 
 #[derive(Debug, Clone)]
-pub struct HiveSessionHandle {
+pub struct LighthouseSessionHandle {
     sender: mpsc::Sender<LighthouseSessionMessage>,
     handle: SessionHandle,
 }
 
-impl HiveSessionHandle {
+impl LighthouseSessionHandle {
     pub async fn websocket_message(&self, websocket_message: ws::Message) {
         self.sender
             .send(LighthouseSessionMessage::WebSocketMessage(
@@ -352,7 +356,7 @@ impl HiveSessionHandle {
     }
 }
 
-impl std::ops::Deref for HiveSessionHandle {
+impl std::ops::Deref for LighthouseSessionHandle {
     type Target = SessionHandle;
 
     fn deref(&self) -> &Self::Target {
@@ -360,8 +364,8 @@ impl std::ops::Deref for HiveSessionHandle {
     }
 }
 
-impl From<HiveSessionHandle> for SessionHandle {
-    fn from(val: HiveSessionHandle) -> Self {
+impl From<LighthouseSessionHandle> for SessionHandle {
+    fn from(val: LighthouseSessionHandle) -> Self {
         val.handle
     }
 }
@@ -371,12 +375,12 @@ impl LighthouseSession {
         accessory_id: accessory::ID,
         stream: WebSocket,
         controller: controllers::Handle,
-    ) -> HiveSessionHandle {
+    ) -> LighthouseSessionHandle {
         let (session_sender, session_receiver) = mpsc::channel(8);
-        let (hive_sender, hive_receiver) = mpsc::channel(8);
+        let (lighthouse_sender, lighthouse_receiver) = mpsc::channel(8);
         let (sink, stream) = stream.split();
         let mut actor = Self {
-            hive_receiver,
+            lighthouse_receiver,
             session_receiver,
             accessory_id,
             characteristic_write_results: Default::default(),
@@ -385,8 +389,8 @@ impl LighthouseSession {
             controller,
         };
         let handle = SessionHandle::new(session_sender);
-        let handle = HiveSessionHandle {
-            sender: hive_sender,
+        let handle = LighthouseSessionHandle {
+            sender: lighthouse_sender,
             handle,
         };
         {
@@ -399,11 +403,12 @@ impl LighthouseSession {
 
     async fn run(
         &mut self,
-        handle: HiveSessionHandle,
+        handle: LighthouseSessionHandle,
         mut stream: SplitStream<WebSocket>,
     ) -> Result<(), anyhow::Error> {
-        tokio::spawn(async move {
+        let mut read_messages_future = tokio::spawn(async move {
             while let Some(message) = stream.next().await {
+                tracing::debug!("websocket message {:?}", message);
                 let message = message?;
                 handle.websocket_message(message).await;
             }
@@ -414,16 +419,28 @@ impl LighthouseSession {
                 Some(message) = self.session_receiver.recv() => {
                     self.handle_session_message(message).await?;
                 },
-                Some(message) = self.hive_receiver.recv() => {
-                    self.handle_hive_message(message).await?
+                Some(message) = self.lighthouse_receiver.recv() => {
+                    self.handle_lighthouse_message(message).await?
                 },
+                result = &mut read_messages_future => {
+                    let result = result.unwrap();
+                    match result {
+                        Ok(_) => {
+                            tracing::info!("reading websocket messages finished");
+                        },
+                        Err(error) => {
+                            tracing::error!("reading websocket messages failed due to `{}`", error);
+                        },
+                    }
+                    break;
+                }
                 else => break,
             }
         }
         Ok(())
     }
 
-    async fn handle_hive_message(
+    async fn handle_lighthouse_message(
         &mut self,
         message: LighthouseSessionMessage,
     ) -> Result<(), anyhow::Error> {
@@ -431,9 +448,9 @@ impl LighthouseSession {
             LighthouseSessionMessage::WebSocketMessage(message) => {
                 match message {
                     ws::Message::Text(s) => {
-                        let json = serde_json::from_str::<hive::AccessoryFrame>(&s)?;
+                        let json = serde_json::from_str::<lighthouse::HubFrame>(&s)?;
                         match json {
-                            hive::AccessoryFrame::CharacteristicUpdate(frame) => {
+                            lighthouse::HubFrame::CharacteristicUpdate(frame) => {
                                 self.controller
                                     .updated(
                                         self.accessory_id,
@@ -442,13 +459,13 @@ impl LighthouseSession {
                                     )
                                     .await;
                             }
-                            hive::AccessoryFrame::CharacteristicReadResult(frame) => self
+                            lighthouse::HubFrame::CharacteristicReadResult(frame) => self
                                 .characteristic_read_results
                                 .remove(&frame.id)
                                 .unwrap()
                                 .send(frame.result.into())
                                 .unwrap(),
-                            hive::AccessoryFrame::CharacteristicWriteResult(frame) => self
+                            lighthouse::HubFrame::CharacteristicWriteResult(frame) => self
                                 .characteristic_write_results
                                 .remove(&frame.id)
                                 .unwrap()
@@ -481,11 +498,13 @@ impl LighthouseSession {
                 respond_to,
             } => {
                 let frame_id = rand::random();
-                let frame = hive::HubFrame::CharacteristicRead(hive::CharacteristicRead {
-                    id: frame_id,
-                    service_name,
-                    characteristic_name,
-                });
+                let frame =
+                    lighthouse::ServerFrame::CharacteristicRead(lighthouse::CharacteristicRead {
+                        id: frame_id,
+                        accessory_id: self.accessory_id,
+                        service_name,
+                        characteristic_name,
+                    });
                 let text = serde_json::to_string(&frame)?;
                 let message = ws::Message::Text(text);
                 let (response_tx, response_rx) = oneshot::channel();
@@ -500,11 +519,13 @@ impl LighthouseSession {
                 respond_to,
             } => {
                 let frame_id = rand::random();
-                let frame = hive::HubFrame::CharacteristicWrite(hive::CharacteristicWrite {
-                    id: frame_id,
-                    service_name,
-                    characteristic,
-                });
+                let frame =
+                    lighthouse::ServerFrame::CharacteristicWrite(lighthouse::CharacteristicWrite {
+                        id: frame_id,
+                        accessory_id: self.accessory_id,
+                        service_name,
+                        characteristic,
+                    });
                 let text = serde_json::to_string(&frame)?;
                 let message = ws::Message::Text(text);
                 let (response_tx, response_rx) = oneshot::channel();

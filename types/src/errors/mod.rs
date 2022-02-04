@@ -1,19 +1,21 @@
 mod auth;
-mod fulfillment;
+mod controller;
 mod internal;
-mod lighthouse;
 mod oauth;
+mod provider;
 mod token;
 
 pub use auth::Error as AuthError;
-pub use fulfillment::Error as FulfillmentError;
+pub use controller::Error as ControllerError;
 pub use internal::Error as InternalError;
-pub use lighthouse::Error as LighthouseError;
+pub use provider::Error as ProviderError;
 pub use oauth::Error as OAuthError;
 pub use token::Error as TokenError;
 
 use serde::Deserialize;
 use serde::Serialize;
+
+use crate::accessory;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
@@ -32,20 +34,16 @@ pub enum ServerError {
     AuthError(#[from] AuthError),
     #[error("oauth error: {0}")]
     OAuthError(#[from] OAuthError),
-    #[error("fulfillment error: {0}")]
-    FulfillmentError(#[from] FulfillmentError),
-    #[error("lighthouse error: {0}")]
-    LighthouseError(#[from] LighthouseError),
+    #[error("controller error: {0}")]
+    ControllerError(#[from] ControllerError),
+    #[error("provider error: {0}")]
+    ProviderError(#[from] ProviderError),
 }
 
 #[cfg(feature = "axum")]
-impl axum_crate::response::IntoResponse for ServerError {
-    type Body = http_body::Full<hyper::body::Bytes>;
-
-    type BodyError = <Self::Body as axum_crate::body::HttpBody>::Error;
-
-    fn into_response(self) -> http::Response<Self::Body> {
-        use http::StatusCode;
+impl axum::response::IntoResponse for ServerError {
+    fn into_response(self) -> axum::response::Response {
+        use axum::http::StatusCode;
         let status = match self {
             Self::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
@@ -65,15 +63,20 @@ impl axum_crate::response::IntoResponse for ServerError {
                 AuthError::InvalidCsrfToken => StatusCode::UNAUTHORIZED,
             },
             Self::OAuthError(_) => StatusCode::BAD_REQUEST,
-            Self::FulfillmentError(ref err) => match err {
-                FulfillmentError::HubNotConnected => StatusCode::NOT_ACCEPTABLE,
-                FulfillmentError::Timeout => StatusCode::REQUEST_TIMEOUT,
+            Self::ControllerError(ref err) => match err {
+                ControllerError::AccessoryNotConnected => StatusCode::NOT_ACCEPTABLE,
+                ControllerError::Timeout => StatusCode::REQUEST_TIMEOUT,
+                ControllerError::AccessoryError(err) => match err {
+                    accessory::Error::CharacteristicReadOnly => StatusCode::BAD_REQUEST,
+                    accessory::Error::CharacteristicNotSupported => StatusCode::BAD_REQUEST,
+                    accessory::Error::ServiceNotSupported => StatusCode::BAD_REQUEST,
+                },
             },
-            Self::LighthouseError(ref err) => match err {
-                LighthouseError::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
+            Self::ProviderError(ref err) => match err {
+                ProviderError::AlreadyConnected => StatusCode::NOT_ACCEPTABLE,
             },
         };
-        let mut response = axum_crate::Json(self).into_response();
+        let mut response = axum::Json(self).into_response();
         *response.status_mut() = status;
 
         response

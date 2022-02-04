@@ -2,11 +2,16 @@ use axum::AddExtensionLayer;
 use axum_server::tls_rustls;
 use houseflow_config::defaults;
 use houseflow_config::server::Config;
+use houseflow_config::server::Controllers;
+use houseflow_config::server::Providers;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_server::clerk;
+use houseflow_server::controllers;
 use houseflow_server::mailer;
+use houseflow_server::providers;
 use std::net::SocketAddr;
+use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -46,9 +51,43 @@ async fn main() -> Result<(), anyhow::Error> {
     };
     let clerk = clerk::sled::Clerk::new(defaults::clerk_path())?;
     let address = SocketAddr::new(config.network.address, config.network.port);
-    let app = houseflow_server::app()
+
+    let (provider_tx, provider_rx) = mpsc::channel(8);
+    let mut master_provider = providers::Master::new(provider_rx);
+    let provider = providers::Handle::new(providers::Name::Master, provider_tx);
+
+    let (controller_tx, controller_rx) = mpsc::channel(8);
+    let mut master_controller = controllers::Master::new(controller_rx);
+    let controller = controllers::Handle::new(controllers::Name::Master, controller_tx);
+
+    let mut app = houseflow_server::app()
         .layer(AddExtensionLayer::new(clerk))
-        .layer(AddExtensionLayer::new(mailer));
+        .layer(AddExtensionLayer::new(mailer))
+        .layer(AddExtensionLayer::new(provider.clone()))
+        .layer(AddExtensionLayer::new(controller.clone()));
+
+
+    let Providers { lighthouse } = config.providers;
+    if let Some(config) = lighthouse {
+        let handle = providers::lighthouse::LighthouseProvider::create(controller.clone(), config);
+        app = app.layer(AddExtensionLayer::new(handle.clone()));
+        master_provider.insert(handle.into());
+    }
+
+    let Controllers { meta } = config.controllers;
+    if let Some(config) = meta {
+        let handle = controllers::meta::MetaController::create(provider.clone(), config);
+        app = app.layer(AddExtensionLayer::new(handle.clone()));
+        master_controller.insert(handle.into());
+    }
+
+    tokio::spawn(async move {
+        master_provider.run().await.unwrap();
+    });
+
+    tokio::spawn(async move {
+        master_controller.run().await.unwrap();
+    });
 
     if let Some(tls) = &config.tls {
         let fut = axum_server::bind(address).serve(app.clone().into_make_service());

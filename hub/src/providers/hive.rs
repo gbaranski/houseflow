@@ -29,7 +29,7 @@ use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
 #[derive(Debug)]
-pub enum HiveActorMessage {
+pub enum HiveMessage {
     Connected {
         accessory: Accessory,
         session_handle: SessionHandle,
@@ -41,7 +41,7 @@ pub enum HiveActorMessage {
 
 #[derive(Debug, Clone)]
 pub struct HiveProviderHandle {
-    sender: mpsc::Sender<HiveActorMessage>,
+    sender: mpsc::Sender<HiveMessage>,
     handle: ProviderHandle,
 }
 
@@ -62,7 +62,7 @@ impl From<HiveProviderHandle> for ProviderHandle {
 impl HiveProviderHandle {
     pub async fn connected(&self, accessory: Accessory, session_handle: SessionHandle) {
         self.sender
-            .send(HiveActorMessage::Connected {
+            .send(HiveMessage::Connected {
                 accessory,
                 session_handle,
             })
@@ -72,7 +72,7 @@ impl HiveProviderHandle {
 
     pub async fn disconnected(&self, accessory_id: accessory::ID) {
         self.sender
-            .send(HiveActorMessage::Disconnected { accessory_id })
+            .send(HiveMessage::Disconnected { accessory_id })
             .await
             .unwrap();
     }
@@ -80,7 +80,7 @@ impl HiveProviderHandle {
 
 pub struct HiveProvider {
     provider_receiver: mpsc::Receiver<ProviderMessage>,
-    hive_receiver: mpsc::Receiver<HiveActorMessage>,
+    hive_receiver: mpsc::Receiver<HiveMessage>,
     controller: ControllerHandle,
     sessions: HashMap<accessory::ID, SessionHandle>,
     configured_accessories: Vec<Accessory>,
@@ -140,17 +140,17 @@ impl HiveProvider {
 
     async fn handle_hive_message(
         &mut self,
-        message: HiveActorMessage,
+        message: HiveMessage,
     ) -> Result<(), anyhow::Error> {
         match message {
-            HiveActorMessage::Connected {
+            HiveMessage::Connected {
                 accessory,
                 session_handle,
             } => {
                 self.sessions.insert(accessory.id, session_handle);
                 self.controller.connected(accessory).await;
             }
-            HiveActorMessage::Disconnected { accessory_id } => {
+            HiveMessage::Disconnected { accessory_id } => {
                 self.sessions.remove(&accessory_id);
                 self.controller.disconnected(accessory_id).await;
             }
@@ -250,8 +250,6 @@ impl axum::extract::FromRequest<Body> for DeviceCredentials {
     async fn from_request(
         req: &mut axum::extract::RequestParts<Body>,
     ) -> Result<Self, Self::Rejection> {
-        tracing::info!("hello world 1");
-
         let TypedHeader(headers::Authorization(authorization)) =
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await

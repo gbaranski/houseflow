@@ -1,3 +1,5 @@
+pub mod meta;
+
 use anyhow::Error;
 use futures::Future;
 use futures::FutureExt;
@@ -13,6 +15,7 @@ use tokio::sync::oneshot;
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display)]
 pub enum Name {
     Master,
+    Meta,
 }
 
 #[derive(Debug)]

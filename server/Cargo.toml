@@ -35,7 +35,7 @@ tokio = { version = "1.5", features = [
     "macros",
     "rt-multi-thread",
 ] }
-axum = "0.4.4"
+axum = { version = "0.4.4", features = ["ws", "headers"]}
 tracing = "0.1.29"
 anyhow = "1.0.53"
 async-trait = "0.1.52"
