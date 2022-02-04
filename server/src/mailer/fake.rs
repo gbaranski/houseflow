@@ -5,7 +5,7 @@ use houseflow_types::code::VerificationCode;
 use tokio::sync::mpsc;
 
 pub struct Mailer {
-    receiver: mpsc::Receiver<Message>,
+    receiver: acu::Receiver<Message>,
     verification_code_sender: mpsc::Sender<(lettre::message::Mailbox, VerificationCode)>,
 }
 
@@ -13,7 +13,7 @@ impl Mailer {
     pub fn create(
         verification_code_sender: mpsc::Sender<(lettre::message::Mailbox, VerificationCode)>,
     ) -> Handle {
-        let (sender, receiver) = tokio::sync::mpsc::channel(8);
+        let (sender, receiver) = acu::channel(8, Name::Fake.into());
         let mut actor = Self {
             receiver,
             verification_code_sender,

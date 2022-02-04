@@ -2,10 +2,9 @@ pub mod fake;
 pub mod smtp;
 
 use houseflow_types::code::VerificationCode;
-use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
-#[derive(Debug, Clone, PartialEq, Eq, strum::Display)]
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
 pub enum Name {
     Master,
     Fake,
@@ -31,21 +30,11 @@ pub enum Message {
 #[derive(Debug, Clone)]
 pub struct Handle {
     name: Name,
-    sender: mpsc::Sender<Message>,
+    sender: acu::Sender<Message>,
 }
 
 impl Handle {
-    async fn call<R>(&self, message_fn: impl FnOnce(oneshot::Sender<R>) -> Message) -> R {
-        let (tx, rx) = oneshot::channel();
-        let message = message_fn(tx);
-        tracing::debug!("calling {:?} on a mailer named {}", message, self.name);
-        self.sender.send(message).await.unwrap();
-        rx.await.unwrap()
-    }
-}
-
-impl Handle {
-    pub fn new(name: Name, sender: mpsc::Sender<Message>) -> Self {
+    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
         Self { name, sender }
     }
 
@@ -55,7 +44,7 @@ impl Handle {
         to: lettre::message::Mailbox,
         code: VerificationCode,
     ) -> Result<(), Error> {
-        self.call(|respond_to| Message::SendVerificationCode {
+        self.sender.call(|respond_to| Message::SendVerificationCode {
             subject,
             to,
             code,

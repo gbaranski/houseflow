@@ -1,6 +1,7 @@
-use super::Message as ControllerMessage;
-use super::ControllerHandle;
-use crate::ProviderHandle;
+use super::Message;
+use super::Handle;
+use super::Name;
+use crate::providers;
 use futures::lock::Mutex;
 use futures::FutureExt;
 use hap::accessory::garage_door_opener::GarageDoorOpenerAccessory;
@@ -32,22 +33,21 @@ use serde::Serialize;
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::mpsc;
 
 pub struct HapController {
-    receiver: mpsc::Receiver<ControllerMessage>,
+    receiver: acu::Receiver<Message>,
     ip_server: IpServer,
-    provider: ProviderHandle,
+    provider: providers::Handle,
     accessory_pointers: HashMap<accessory::ID, Arc<Mutex<Box<dyn HapAccessory>>>>,
     accessory_instance_id: u64,
 }
 
 impl HapController {
     pub async fn create(
-        provider: ProviderHandle,
+        provider: providers::Handle,
         config: HapConfig,
-    ) -> Result<ControllerHandle, anyhow::Error> {
-        let (tx, rx) = mpsc::channel(8);
+    ) -> Result<Handle, anyhow::Error> {
+        let (sender, receiver) = acu::channel(1, Name::Hap.into());
         let mut storage =
             FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
         let config = match storage.load_config().await {
@@ -79,13 +79,13 @@ impl HapController {
         storage.save_config(&config).await?;
         let ip_server = IpServer::new(config, storage).await?;
         let mut actor = Self {
-            receiver: rx,
+            receiver,
             ip_server,
             provider,
             accessory_pointers: Default::default(),
             accessory_instance_id: 1,
         };
-        let handle = ControllerHandle::new("hap", tx);
+        let handle = Handle::new(Name::Hap, sender);
         tokio::spawn(async move { actor.run().await });
         Ok(handle)
     }
@@ -101,9 +101,9 @@ impl HapController {
         Ok(())
     }
 
-    async fn handle_message(&mut self, message: ControllerMessage) -> Result<(), anyhow::Error> {
+    async fn handle_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
         match message {
-            ControllerMessage::Connected {
+            Message::Connected {
                 configured_accessory,
             } => {
                 let accessory_ptr = match &configured_accessory.r#type {
@@ -246,11 +246,11 @@ impl HapController {
                 self.accessory_pointers
                     .insert(configured_accessory.id, accessory_ptr);
             }
-            ControllerMessage::Disconnected { accessory_id } => {
+            Message::Disconnected { accessory_id } => {
                 let accessory_pointer = self.accessory_pointers.remove(&accessory_id).unwrap();
                 self.ip_server.remove_accessory(&accessory_pointer).await?;
             }
-            ControllerMessage::Updated {
+            Message::Updated {
                 accessory_id,
                 service_name,
                 characteristic,

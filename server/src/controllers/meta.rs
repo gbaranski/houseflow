@@ -8,14 +8,13 @@ use houseflow_config::server::controllers::Meta as Config;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::errors::ControllerError;
 use houseflow_types::errors::ServerError;
-use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub enum MetaMessage {}
 
 #[derive(Debug, Clone)]
 pub struct MetaHandle {
-    sender: mpsc::Sender<MetaMessage>,
+    sender: acu::Sender<MetaMessage>,
     handle: Handle,
 }
 
@@ -34,15 +33,15 @@ impl From<MetaHandle> for Handle {
 }
 
 pub struct MetaController {
-    provider_receiver: mpsc::Receiver<Message>,
-    meta_receiver: mpsc::Receiver<MetaMessage>,
+    provider_receiver: acu::Receiver<Message>,
+    meta_receiver: acu::Receiver<MetaMessage>,
     provider: providers::Handle,
 }
 
 impl MetaController {
     pub fn create(provider: providers::Handle, _config: Config) -> MetaHandle {
-        let (provider_sender, provider_receiver) = tokio::sync::mpsc::channel(8);
-        let (meta_sender, meta_receiver) = tokio::sync::mpsc::channel(8);
+        let (provider_sender, provider_receiver) = acu::channel(8, Name::Meta.into());
+        let (meta_sender, meta_receiver) = acu::channel(8, Name::Meta.into());
         let mut actor = Self {
             provider_receiver,
             meta_receiver,

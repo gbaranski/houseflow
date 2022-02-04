@@ -4,7 +4,6 @@ use super::Name;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::SmtpTransport;
 use lettre::Transport;
-use tokio::sync::mpsc;
 
 pub struct Config {
     pub host: String,
@@ -15,14 +14,14 @@ pub struct Config {
 }
 
 pub struct Mailer {
-    receiver: mpsc::Receiver<Message>,
+    receiver: acu::Receiver<Message>,
     config: Config,
     transport: SmtpTransport,
 }
 
 impl Mailer {
     pub fn create(config: Config) -> Handle {
-        let (sender, receiver) = tokio::sync::mpsc::channel(8);
+        let (sender, receiver) = acu::channel(8, Name::Smtp.into());
         let transport = lettre::SmtpTransport::relay(config.host.as_str())
             .unwrap()
             .port(config.port)

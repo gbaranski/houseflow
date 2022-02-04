@@ -1,5 +1,4 @@
-use crate::ControllerHandle;
-use crate::ProviderHandle;
+use crate::controllers;
 use anyhow::Error;
 use futures::StreamExt;
 use houseflow_config::hub::manufacturers;
@@ -16,14 +15,14 @@ use mijia::bluetooth::DeviceId as BluetoothDeviceID;
 use mijia::MijiaEvent;
 use mijia::MijiaSession;
 use std::collections::HashMap;
-use tokio::sync::mpsc;
 
-use super::ProviderMessage;
-use super::ProviderName;
+use super::Handle;
+use super::Message;
+use super::Name;
 
 pub struct MijiaProvider {
-    receiver: mpsc::Receiver<ProviderMessage>,
-    controller: ControllerHandle,
+    receiver: acu::Receiver<Message>,
+    controller: controllers::Handle,
     connected_accessories: HashMap<BluetoothDeviceID, AccessoryID>,
     configured_accessories: Vec<Accessory>,
     last_readings: HashMap<AccessoryID, mijia::Readings>,
@@ -32,11 +31,11 @@ pub struct MijiaProvider {
 
 impl MijiaProvider {
     pub async fn create(
-        controller: ControllerHandle,
+        controller: controllers::Handle,
         _config: Config,
         configured_accessories: Vec<Accessory>,
-    ) -> Result<ProviderHandle, Error> {
-        let (sender, receiver) = tokio::sync::mpsc::channel(8);
+    ) -> Result<Handle, Error> {
+        let (sender, receiver) = acu::channel(8, Name::Mijia.into());
 
         let (_, mijia_session) = MijiaSession::new().await?;
         let mut actor = Self {
@@ -48,7 +47,7 @@ impl MijiaProvider {
             controller,
         };
 
-        let handle = ProviderHandle::new(ProviderName::Mijia, sender);
+        let handle = Handle::new(Name::Mijia, sender);
         tokio::spawn(async move { actor.run().await });
         Ok(handle)
     }
@@ -197,9 +196,9 @@ impl MijiaProvider {
         Ok(())
     }
 
-    async fn handle_provider_message(&mut self, message: ProviderMessage) -> Result<(), Error> {
+    async fn handle_provider_message(&mut self, message: Message) -> Result<(), Error> {
         match message {
-            ProviderMessage::WriteCharacteristic {
+            Message::WriteCharacteristic {
                 accessory_id: _,
                 service_name: _,
                 characteristic: _,
@@ -209,7 +208,7 @@ impl MijiaProvider {
                     .send(Err(accessory::Error::CharacteristicNotSupported))
                     .unwrap();
             }
-            ProviderMessage::ReadCharacteristic {
+            Message::ReadCharacteristic {
                 accessory_id,
                 service_name,
                 characteristic_name,
@@ -244,7 +243,7 @@ impl MijiaProvider {
                 };
                 respond_to.send(characteristic).unwrap();
             }
-            ProviderMessage::IsConnected {
+            Message::IsConnected {
                 accessory_id,
                 respond_to,
             } => {
@@ -255,7 +254,7 @@ impl MijiaProvider {
                     )
                     .unwrap();
             }
-            ProviderMessage::GetAccessoryConfiguration {
+            Message::GetAccessoryConfiguration {
                 accessory_id,
                 respond_to,
             } => {

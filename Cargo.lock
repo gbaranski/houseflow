@@ -3,6 +3,16 @@
 version = 3
 
 [[package]]
+name = "acu"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d19ccc725ec50bf996b04a15387eb2149bb846122b6b8c9c99697f1d7ad20158"
+dependencies = [
+ "log",
+ "tokio",
+]
+
+[[package]]
 name = "aead"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1230,6 +1240,7 @@ dependencies = [
 name = "houseflow-hub"
 version = "0.1.0"
 dependencies = [
+ "acu",
  "anyhow",
  "arc-swap",
  "async-trait",
@@ -1259,6 +1270,7 @@ dependencies = [
 name = "houseflow-server"
 version = "0.1.2"
 dependencies = [
+ "acu",
  "anyhow",
  "askama 0.11.0",
  "async-trait",

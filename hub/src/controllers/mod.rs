@@ -12,56 +12,12 @@ use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::ServiceName;
-use tokio::sync::mpsc;
 
-#[derive(Clone)]
-pub struct ControllerHandle {
-    pub name: &'static str,
-    sender: mpsc::Sender<Message>,
-}
-
-impl ControllerHandle {
-    pub fn new(name: &'static str, sender: mpsc::Sender<Message>) -> Self {
-        Self { name, sender }
-    }
-
-    pub async fn wait_for_stop(&self) {
-        self.sender.closed().await;
-    }
-
-    pub async fn connected(&self, configured_accessory: Accessory) {
-        self.notify(|| Message::Connected {
-            configured_accessory,
-        })
-        .await
-    }
-
-    pub async fn disconnected(&self, accessory_id: accessory::ID) {
-        self.notify(|| Message::Disconnected { accessory_id })
-            .await
-    }
-
-    pub async fn updated(
-        &self,
-        accessory_id: accessory::ID,
-        service_name: ServiceName,
-        characteristic: Characteristic,
-    ) {
-        self.notify(|| Message::Updated {
-            accessory_id,
-            service_name,
-            characteristic,
-        })
-        .await
-    }
-}
-
-impl ControllerHandle {
-    async fn notify(&self, message_fn: impl FnOnce() -> Message) {
-        let message = message_fn();
-        tracing::debug!("notify {:?} on a controller named {}", message, self.name);
-        self.sender.send(message).await.unwrap();
-    }
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
+pub enum Name {
+    Master,
+    Hap,
+    Lighthouse,
 }
 
 #[derive(Debug)]
@@ -80,13 +36,56 @@ pub enum Message {
     },
 }
 
+
+#[derive(Debug, Clone)]
+pub struct Handle {
+    pub name: Name,
+    sender: acu::Sender<Message>,
+}
+
+impl Handle {
+    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
+        Self { name, sender }
+    }
+
+    pub async fn wait_for_stop(&self) {
+        self.sender.closed().await;
+    }
+
+    pub async fn connected(&self, configured_accessory: Accessory) {
+        self.sender.notify(|| Message::Connected {
+            configured_accessory,
+        })
+        .await
+    }
+
+    pub async fn disconnected(&self, accessory_id: accessory::ID) {
+        self.sender.notify(|| Message::Disconnected { accessory_id })
+            .await
+    }
+
+    pub async fn updated(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) {
+        self.sender.notify(|| Message::Updated {
+            accessory_id,
+            service_name,
+            characteristic,
+        })
+        .await
+    }
+}
+
 pub struct Master {
-    receiver: mpsc::Receiver<Message>,
-    slave_controllers: Vec<ControllerHandle>,
+    receiver: acu::Receiver<Message>,
+    slave_controllers: Vec<Handle>,
 }
 
 impl<'s> Master {
-    pub fn new(receiver: mpsc::Receiver<Message>) -> Self {
+    pub fn new(receiver: acu::Receiver<Message>) -> Self {
         Self {
             receiver,
             slave_controllers: vec![],
@@ -102,23 +101,23 @@ impl<'s> Master {
 
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s ControllerHandle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
+        f: impl Fn(&'s Handle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
             + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
 
-        let (controller_names, futures): (Vec<&'static str>, FuturesOrdered<_>) = self
+        let (controller_names, futures): (Vec<&Name>, FuturesOrdered<_>) = self
             .slave_controllers
             .iter()
-            .map(|controller| (controller.name, f(controller)))
+            .map(|controller| (&controller.name, f(controller)))
             .unzip();
 
         let results: Vec<Result<(), Error>> = futures.collect().await;
         for (result, controller) in results.iter().zip(controller_names.iter()) {
             match result {
-                Ok(_) => tracing::debug!(controller, "task completed"),
-                Err(err) => tracing::error!(controller, "task failed due to {}", err),
+                Ok(_) => tracing::debug!(%controller, "task completed"),
+                Err(err) => tracing::error!(%controller, "task failed due to {}", err),
             };
         }
         Ok(())
@@ -171,7 +170,7 @@ impl<'s> Master {
         Ok(())
     }
 
-    pub fn insert(&mut self, handle: ControllerHandle) {
+    pub fn insert(&mut self, handle: Handle) {
         self.slave_controllers.push(handle);
     }
 }

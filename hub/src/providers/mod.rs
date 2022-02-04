@@ -10,24 +10,23 @@ use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
-use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
-#[derive(Debug, Clone, PartialEq, Eq, strum::Display)]
-pub enum ProviderName {
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
+pub enum Name {
     Master,
     Hive,
     Mijia,
 }
 
 #[derive(Debug, Clone)]
-pub struct ProviderHandle {
-    pub name: ProviderName,
-    sender: mpsc::Sender<ProviderMessage>,
+pub struct Handle {
+    pub name: Name,
+    sender: acu::Sender<Message>,
 }
 
-impl ProviderHandle {
-    pub fn new(name: ProviderName, sender: mpsc::Sender<ProviderMessage>) -> Self {
+impl Handle {
+    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
         Self { name, sender }
     }
 
@@ -41,7 +40,7 @@ impl ProviderHandle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
-        self.call(|respond_to| ProviderMessage::WriteCharacteristic {
+        self.sender.call(|respond_to| Message::WriteCharacteristic {
             accessory_id,
             service_name,
             characteristic,
@@ -56,7 +55,7 @@ impl ProviderHandle {
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
-        self.call(|respond_to| ProviderMessage::ReadCharacteristic {
+        self.sender.call(|respond_to| Message::ReadCharacteristic {
             accessory_id,
             service_name,
             characteristic_name,
@@ -66,7 +65,7 @@ impl ProviderHandle {
     }
 
     pub async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
-        self.call(|respond_to| ProviderMessage::IsConnected {
+        self.sender.call(|respond_to| Message::IsConnected {
             accessory_id,
             respond_to,
         })
@@ -76,7 +75,7 @@ impl ProviderHandle {
         &self,
         accessory_id: accessory::ID,
     ) -> Option<Accessory> {
-        self.call(|respond_to| ProviderMessage::GetAccessoryConfiguration {
+        self.sender.call(|respond_to| Message::GetAccessoryConfiguration {
             accessory_id,
             respond_to,
         })
@@ -84,18 +83,8 @@ impl ProviderHandle {
     }
 }
 
-impl ProviderHandle {
-    async fn call<R>(&self, message_fn: impl FnOnce(oneshot::Sender<R>) -> ProviderMessage) -> R {
-        let (tx, rx) = oneshot::channel();
-        let message = message_fn(tx);
-        tracing::debug!("calling {:?} on a controller named {}", message, self.name);
-        self.sender.send(message).await.unwrap();
-        rx.await.unwrap()
-    }
-}
-
 #[derive(Debug)]
-pub enum ProviderMessage {
+pub enum Message {
     ReadCharacteristic {
         accessory_id: accessory::ID,
         service_name: ServiceName,
@@ -119,19 +108,19 @@ pub enum ProviderMessage {
 }
 
 pub struct Master {
-    receiver: mpsc::Receiver<ProviderMessage>,
-    slave_providers: Vec<ProviderHandle>,
+    receiver: acu::Receiver<Message>,
+    slave_providers: Vec<Handle>,
 }
 
 impl<'s> Master {
-    pub fn new(receiver: mpsc::Receiver<ProviderMessage>) -> Self {
+    pub fn new(receiver: acu::Receiver<Message>) -> Self {
         Self {
             receiver,
             slave_providers: vec![],
         }
     }
 
-    pub fn insert(&mut self, handle: ProviderHandle) {
+    pub fn insert(&mut self, handle: Handle) {
         self.slave_providers.push(handle);
     }
 
@@ -142,9 +131,9 @@ impl<'s> Master {
         Ok(())
     }
 
-    async fn handle_message(&mut self, message: ProviderMessage) -> Result<(), Error> {
+    async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
         match message {
-            ProviderMessage::WriteCharacteristic {
+            Message::WriteCharacteristic {
                 accessory_id,
                 service_name,
                 characteristic,
@@ -172,7 +161,7 @@ impl<'s> Master {
                     .await;
                 respond_to.send(result).unwrap();
             }
-            ProviderMessage::ReadCharacteristic {
+            Message::ReadCharacteristic {
                 accessory_id,
                 service_name,
                 characteristic_name,
@@ -200,7 +189,7 @@ impl<'s> Master {
                     .await;
                 respond_to.send(result).unwrap();
             }
-            ProviderMessage::IsConnected {
+            Message::IsConnected {
                 accessory_id,
                 respond_to,
             } => {
@@ -212,7 +201,7 @@ impl<'s> Master {
                 let is_connected = results.iter().any(|v| *v);
                 respond_to.send(is_connected).unwrap();
             }
-            ProviderMessage::GetAccessoryConfiguration {
+            Message::GetAccessoryConfiguration {
                 accessory_id,
                 respond_to,
             } => {
@@ -225,6 +214,14 @@ impl<'s> Master {
         Ok(())
     }
 }
+
+
+#[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
+pub enum SessionName {
+    HiveSession,
+    MijiaSession,
+}
+
 
 #[derive(Debug)]
 pub enum SessionMessage {
@@ -242,23 +239,15 @@ pub enum SessionMessage {
 
 #[derive(Debug, Clone)]
 pub struct SessionHandle {
-    sender: mpsc::Sender<SessionMessage>,
+    sender: acu::Sender<SessionMessage>,
 }
 
 impl SessionHandle {
-    pub fn new(sender: mpsc::Sender<SessionMessage>) -> Self {
+    pub fn new(sender: acu::Sender<SessionMessage>) -> Self {
         Self { sender }
     }
     pub async fn wait_for_stop(&self) {
         self.sender.closed().await;
-    }
-
-    async fn call<R>(&self, message_fn: impl FnOnce(oneshot::Sender<R>) -> SessionMessage) -> R {
-        let (tx, rx) = oneshot::channel();
-        let message = message_fn(tx);
-        tracing::debug!("calling {:?} on a session", message);
-        self.sender.send(message).await.unwrap();
-        rx.await.unwrap()
     }
 
     pub async fn read_characteristic(
@@ -266,7 +255,7 @@ impl SessionHandle {
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
-        self.call(|oneshot| SessionMessage::ReadCharacteristic {
+        self.sender.call(|oneshot| SessionMessage::ReadCharacteristic {
             service_name,
             characteristic_name,
             respond_to: oneshot,
@@ -281,7 +270,7 @@ impl SessionHandle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
-        self.call(|oneshot| SessionMessage::WriteCharacteristic {
+        self.sender.call(|oneshot| SessionMessage::WriteCharacteristic {
             service_name,
             characteristic,
             respond_to: oneshot,

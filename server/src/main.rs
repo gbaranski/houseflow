@@ -11,7 +11,6 @@ use houseflow_server::controllers;
 use houseflow_server::mailer;
 use houseflow_server::providers;
 use std::net::SocketAddr;
-use tokio::sync::mpsc;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -52,11 +51,11 @@ async fn main() -> Result<(), anyhow::Error> {
     let clerk = clerk::sled::Clerk::new(defaults::clerk_path())?;
     let address = SocketAddr::new(config.network.address, config.network.port);
 
-    let (provider_tx, provider_rx) = mpsc::channel(8);
+    let (provider_tx, provider_rx) = acu::channel(8, providers::Name::Master.into());
     let mut master_provider = providers::Master::new(provider_rx);
     let provider = providers::Handle::new(providers::Name::Master, provider_tx);
 
-    let (controller_tx, controller_rx) = mpsc::channel(8);
+    let (controller_tx, controller_rx) = acu::channel(8, controllers::Name::Master.into());
     let mut master_controller = controllers::Master::new(controller_rx);
     let controller = controllers::Handle::new(controllers::Name::Master, controller_tx);
 

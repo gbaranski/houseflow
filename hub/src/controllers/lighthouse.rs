@@ -1,6 +1,7 @@
-use super::ControllerHandle;
+use super::Handle;
 use super::Message as ControllerMessage;
-use crate::ProviderHandle;
+use crate::controllers::Name;
+use crate::providers;
 use anyhow::Context;
 use futures::stream::SplitSink;
 use futures::stream::SplitStream;
@@ -8,7 +9,6 @@ use futures::StreamExt;
 use houseflow_config::hub::controllers::Lighthouse as Config;
 use houseflow_types::hub;
 use houseflow_types::lighthouse;
-use tokio::sync::mpsc;
 use tokio_tungstenite::tungstenite::Message as WebSocketMessage;
 use tokio_tungstenite::WebSocketStream;
 
@@ -17,9 +17,31 @@ pub enum LighthouseMessage {
     ServerFrame(lighthouse::ServerFrame),
 }
 
+#[derive(Debug, Clone)]
+pub struct LighthouseHandle {
+    sender: acu::Sender<LighthouseMessage>,
+    handle: Handle,
+}
+
+impl std::ops::Deref for LighthouseHandle {
+    type Target = Handle;
+
+    fn deref(&self) -> &Self::Target {
+        &self.handle
+    }
+}
+
+impl From<LighthouseHandle> for Handle {
+    fn from(val: LighthouseHandle) -> Self {
+        val.handle
+    }
+}
+
+impl LighthouseHandle {}
+
 pub struct LighthouseController {
-    receiver: mpsc::Receiver<ControllerMessage>,
-    handle: ControllerHandle,
+    receiver: acu::Receiver<ControllerMessage>,
+    handle: Handle,
     sink: SplitSink<
         WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
         WebSocketMessage,
@@ -28,11 +50,11 @@ pub struct LighthouseController {
 
 impl LighthouseController {
     pub async fn create(
-        provider: ProviderHandle,
+        provider: providers::Handle,
         hub_id: hub::ID,
         config: Config,
-    ) -> Result<ControllerHandle, anyhow::Error> {
-        let (sender, receiver) = mpsc::channel(8);
+    ) -> Result<Handle, anyhow::Error> {
+        let (sender, receiver) = acu::channel(1, Name::Lighthouse.into());
         tracing::debug!(
             "attempting to connect to the lighthouse websocket server on URL: {}",
             config.url
@@ -62,7 +84,7 @@ impl LighthouseController {
         );
         let (sink, stream) = stream.split();
 
-        let handle = ControllerHandle::new("hap", sender);
+        let handle = Handle::new(Name::Hap, sender);
         let mut actor = Self {
             receiver,
             handle: handle.clone(),

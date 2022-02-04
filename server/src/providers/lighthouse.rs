@@ -28,7 +28,6 @@ use houseflow_types::lighthouse;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
-use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
 #[derive(Debug)]
@@ -54,7 +53,7 @@ pub enum LighthouseMessage {
 
 #[derive(Debug, Clone)]
 pub struct LighthouseHandle {
-    sender: mpsc::Sender<LighthouseMessage>,
+    sender: acu::Sender<LighthouseMessage>,
     handle: Handle,
 }
 
@@ -74,49 +73,30 @@ impl From<LighthouseHandle> for Handle {
 
 impl LighthouseHandle {
     pub async fn connected(&self, hub: LighthouseHub, session_handle: SessionHandle) {
-        self.notify_lighthouse(|| LighthouseMessage::Connected {
-            hub,
-            session_handle,
-        })
-        .await
+        self.sender
+            .notify(|| LighthouseMessage::Connected {
+                hub,
+                session_handle,
+            })
+            .await
     }
 
     pub async fn disconnected(&self, hub_id: hub::ID) {
-        self.notify_lighthouse(|| LighthouseMessage::Disconnected { hub_id })
+        self.sender
+            .notify(|| LighthouseMessage::Disconnected { hub_id })
             .await
     }
 
     pub async fn get_hub_configuration(&self, hub_id: hub::ID) -> Option<LighthouseHub> {
-        self.call_lighthouse(|respond_to| LighthouseMessage::GetHubConfiguration {
-            hub_id,
-            respond_to,
-        })
-        .await
-    }
-}
-
-impl LighthouseHandle {
-    async fn notify_lighthouse(&self, message_fn: impl FnOnce() -> LighthouseMessage) {
-        let message = message_fn();
-        tracing::debug!("notifying {:?} on a lighthouse controller", message);
-        self.sender.send(message).await.unwrap();
-    }
-
-    async fn call_lighthouse<R>(
-        &self,
-        message_fn: impl FnOnce(oneshot::Sender<R>) -> LighthouseMessage,
-    ) -> R {
-        let (tx, rx) = oneshot::channel();
-        let message = message_fn(tx);
-        tracing::debug!("calling {:?} on a lighthouse controller", message);
-        self.sender.send(message).await.unwrap();
-        rx.await.unwrap()
+        self.sender
+            .call(|respond_to| LighthouseMessage::GetHubConfiguration { hub_id, respond_to })
+            .await
     }
 }
 
 pub struct LighthouseProvider {
-    provider_receiver: mpsc::Receiver<Message>,
-    lighthouse_receiver: mpsc::Receiver<LighthouseMessage>,
+    provider_receiver: acu::Receiver<Message>,
+    lighthouse_receiver: acu::Receiver<LighthouseMessage>,
     controller: controllers::Handle,
     sessions: HashMap<accessory::ID, SessionHandle>,
     connected_accessories: Vec<Accessory>,
@@ -125,8 +105,8 @@ pub struct LighthouseProvider {
 
 impl LighthouseProvider {
     pub fn create(controller: controllers::Handle, config: Config) -> LighthouseHandle {
-        let (provider_sender, provider_receiver) = tokio::sync::mpsc::channel(8);
-        let (lighthouse_sender, lighthouse_receiver) = tokio::sync::mpsc::channel(8);
+        let (provider_sender, provider_receiver) = acu::channel(8, Name::Lighthouse.into());
+        let (lighthouse_sender, lighthouse_receiver) = acu::channel(8, Name::Lighthouse.into());
         let mut actor = Self {
             provider_receiver,
             lighthouse_receiver,
@@ -326,8 +306,8 @@ enum LighthouseSessionMessage {
 }
 
 pub struct LighthouseSession {
-    session_receiver: mpsc::Receiver<SessionMessage>,
-    lighthouse_receiver: mpsc::Receiver<LighthouseSessionMessage>,
+    session_receiver: acu::Receiver<SessionMessage>,
+    lighthouse_receiver: acu::Receiver<LighthouseSessionMessage>,
     accessory_id: accessory::ID,
     controller: controllers::Handle,
     characteristic_write_results:
@@ -341,18 +321,15 @@ pub struct LighthouseSession {
 
 #[derive(Debug, Clone)]
 pub struct LighthouseSessionHandle {
-    sender: mpsc::Sender<LighthouseSessionMessage>,
+    sender: acu::Sender<LighthouseSessionMessage>,
     handle: SessionHandle,
 }
 
 impl LighthouseSessionHandle {
     pub async fn websocket_message(&self, websocket_message: ws::Message) {
         self.sender
-            .send(LighthouseSessionMessage::WebSocketMessage(
-                websocket_message,
-            ))
-            .await
-            .unwrap();
+            .notify(|| LighthouseSessionMessage::WebSocketMessage(websocket_message))
+            .await;
     }
 }
 
@@ -376,8 +353,8 @@ impl LighthouseSession {
         stream: WebSocket,
         controller: controllers::Handle,
     ) -> LighthouseSessionHandle {
-        let (session_sender, session_receiver) = mpsc::channel(8);
-        let (lighthouse_sender, lighthouse_receiver) = mpsc::channel(8);
+        let (session_sender, session_receiver) = acu::channel(8, "LighthouseSession");
+        let (lighthouse_sender, lighthouse_receiver) = acu::channel(8, "LighthouseSession");
         let (sink, stream) = stream.split();
         let mut actor = Self {
             lighthouse_receiver,
