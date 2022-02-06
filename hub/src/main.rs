@@ -5,7 +5,6 @@ use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_hub::controllers;
 use houseflow_hub::providers;
-use houseflow_hub::providers::Name;
 use houseflow_hub::Hub;
 
 #[tokio::main]
@@ -35,11 +34,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let (provider_tx, provider_rx) = acu::channel(8, providers::Name::Master.into());
     let mut master_provider = providers::Master::new(provider_rx);
-    let provider = providers::Handle::new(Name::Master, provider_tx);
+    let provider = providers::Handle::new(provider_tx);
 
     let (controller_tx, controller_rx) = acu::channel(8, providers::Name::Master.into());
     let mut master_controller = controllers::Master::new(controller_rx);
-    let controller = controllers::Handle::new(controllers::Name::Master, controller_tx);
+    let controller = controllers::Handle::new(controller_tx);
 
     {
         let Providers { hive, mijia } = config.providers;
@@ -74,7 +73,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let handle =
             controllers::Lighthouse::create(provider.clone(), config.hub.id, lighthouse_config)
                 .await?;
-        master_controller.insert(handle);
+        master_controller.insert(handle.into());
     }
 
     tokio::spawn(async move {

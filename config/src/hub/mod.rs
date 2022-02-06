@@ -35,12 +35,37 @@ pub struct Accessory {
     pub r#type: AccessoryType,
 }
 
+impl From<Accessory> for accessory::Accessory {
+    fn from(val: Accessory) -> Self {
+        accessory::Accessory {
+            id: val.id,
+            name: val.name,
+            room_name: val.room_name,
+            r#type: val.r#type.into(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "manufacturer", rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum AccessoryType {
     XiaomiMijia(manufacturers::XiaomiMijia),
     Houseflow(manufacturers::Houseflow),
+}
+
+impl From<AccessoryType> for accessory::Type {
+    fn from(val: AccessoryType) -> Self {
+        match val {
+            AccessoryType::XiaomiMijia(val) => accessory::Type::XiaomiMijia(match val {
+                manufacturers::XiaomiMijia::HygroThermometer { .. } => accessory::manufacturers::XiaomiMijia::HygroThermometer
+            }),
+            AccessoryType::Houseflow(val) => accessory::Type::Houseflow(match val {
+                manufacturers::Houseflow::Gate => accessory::manufacturers::Houseflow::Gate,
+                manufacturers::Houseflow::Garage => accessory::manufacturers::Houseflow::Garage,
+            }),
+        }
+    }
 }
 
 pub mod manufacturers {

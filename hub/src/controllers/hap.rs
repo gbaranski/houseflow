@@ -1,5 +1,5 @@
-use super::Message;
 use super::Handle;
+use super::Message;
 use super::Name;
 use crate::providers;
 use futures::lock::Mutex;
@@ -20,9 +20,9 @@ use hap::storage::Storage;
 use hap::HapType;
 use hap::MacAddress;
 use hap::Pin;
+use houseflow_config::hub::controllers::Hap as HapConfig;
 use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::AccessoryType;
-use houseflow_config::hub::controllers::Hap as HapConfig;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -85,7 +85,7 @@ impl HapController {
             accessory_pointers: Default::default(),
             accessory_instance_id: 1,
         };
-        let handle = Handle::new(Name::Hap, sender);
+        let handle = Handle::new(sender);
         tokio::spawn(async move { actor.run().await });
         Ok(handle)
     }
@@ -103,10 +103,8 @@ impl HapController {
 
     async fn handle_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
         match message {
-            Message::Connected {
-                configured_accessory,
-            } => {
-                let accessory_ptr = match &configured_accessory.r#type {
+            Message::Connected { accessory } => {
+                let accessory_ptr = match &accessory.r#type {
                     AccessoryType::XiaomiMijia(accessory_type) => {
                         use manufacturers::XiaomiMijia as Manufacturer;
 
@@ -119,7 +117,7 @@ impl HapController {
                                         manufacturer,
                                         model: "LYWSD03MMC".to_string(), // TODO: ensure that this one is okay
                                         name: "HygroThermometer".to_string(),
-                                        serial_number: configured_accessory.id.to_string(),
+                                        serial_number: accessory.id.to_string(),
                                         ..Default::default()
                                     }
                                     .to_service(1, self.accessory_instance_id)
@@ -188,7 +186,7 @@ impl HapController {
                                         manufacturer,
                                         model: "houseflow-garage".to_string(), // TODO: ensure that this one is okay
                                         name: "Garage".to_string(),
-                                        serial_number: configured_accessory.id.to_string(),
+                                        serial_number: accessory.id.to_string(),
                                         accessory_flags: None,
                                         application_matching_identifier: None,
                                         // configured_name: Some(configured_accessory.name.clone()), For some reason it causes the Home app to break
@@ -207,7 +205,7 @@ impl HapController {
 
                                 let provider = self.provider.clone();
 
-                                let accessory_id = configured_accessory.id;
+                                let accessory_id = accessory.id;
                                 garage_door_opener
                                     .garage_door_opener
                                     .target_door_state
@@ -244,7 +242,7 @@ impl HapController {
                 };
                 self.accessory_instance_id += 1;
                 self.accessory_pointers
-                    .insert(configured_accessory.id, accessory_ptr);
+                    .insert(accessory.id, accessory_ptr);
             }
             Message::Disconnected { accessory_id } => {
                 let accessory_pointer = self.accessory_pointers.remove(&accessory_id).unwrap();

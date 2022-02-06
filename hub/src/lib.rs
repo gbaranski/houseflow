@@ -20,10 +20,10 @@ impl Hub {
     pub async fn run(self) -> Result<(), anyhow::Error> {
         tokio::select! {
             _ = self.controller.wait_for_stop() => {
-                tracing::info!("controller {} has stopped", self.controller.name);
+                tracing::info!("controller {} has stopped", self.controller.name());
             },
             _ = self.provider.wait_for_stop() => {
-                tracing::info!("provider {} has stopped", self.provider.name);
+                tracing::info!("provider {} has stopped", self.provider.name());
             },
         }
 

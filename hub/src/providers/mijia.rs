@@ -47,7 +47,7 @@ impl MijiaProvider {
             controller,
         };
 
-        let handle = Handle::new(Name::Mijia, sender);
+        let handle = Handle::new(sender);
         tokio::spawn(async move { actor.run().await });
         Ok(handle)
     }

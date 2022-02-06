@@ -1,4 +1,5 @@
 use crate::accessory;
+use crate::accessory::Accessory;
 use crate::accessory::characteristics::Characteristic;
 use crate::accessory::characteristics::CharacteristicName;
 use crate::accessory::services::ServiceName;
@@ -18,6 +19,8 @@ pub enum ServerFrame {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum HubFrame {
+    AccessoryConnected(Accessory),
+    AccessoryDisconnected(accessory::ID),
     CharacteristicUpdate(CharacteristicUpdate),
     CharacteristicReadResult(CharacteristicReadResult),
     CharacteristicWriteResult(CharateristicWriteResult),
@@ -25,6 +28,7 @@ pub enum HubFrame {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CharacteristicUpdate {
+    pub accessory_id: accessory::ID,
     pub service_name: ServiceName,
     pub characteristic: Characteristic,
 }

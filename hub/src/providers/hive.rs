@@ -100,7 +100,7 @@ impl HiveProvider {
             sessions: Default::default(),
         };
 
-        let handle = Handle::new(Name::Hive, provider_sender);
+        let handle = Handle::new(provider_sender);
         let handle = HiveProviderHandle {
             sender: hive_sender,
             handle,

@@ -52,6 +52,8 @@ pub mod manufacturers {
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case")]
 pub enum Error {
+    /// Accessory is not connected
+    NotConnected,
     CharacteristicReadOnly,
     /// Accessory service does not support the specified characteristic
     CharacteristicNotSupported,
@@ -146,31 +148,37 @@ pub mod characteristics {
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub struct CurrentTemperature {
         pub temperature: f32,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub struct CurrentHumidity {
         pub humidity: f32,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub struct CurrentDoorState {
         pub open_percent: u8,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub struct TargetDoorState {
         pub open_percent: u8,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub struct BatteryLevel {
         pub battery_level_percent: u8,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub enum ChargingState {
         NotCharging,
         Charging,

@@ -18,7 +18,7 @@ impl Mailer {
             receiver,
             verification_code_sender,
         };
-        let handle = Handle::new(Name::Smtp, sender);
+        let handle = Handle::new(sender);
         tokio::spawn(async move { actor.run().await });
         handle
     }

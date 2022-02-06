@@ -20,7 +20,7 @@ pub enum Name {
 #[derive(Debug)]
 pub enum Message {
     Connected {
-        configured_accessory: Accessory,
+        accessory: Accessory,
     },
     Disconnected {
         accessory_id: accessory::ID,
@@ -48,9 +48,9 @@ impl Handle {
         self.sender.closed().await;
     }
 
-    pub async fn connected(&self, configured_accessory: Accessory) {
+    pub async fn connected(&self, accessory: Accessory) {
         self.sender.notify(|| Message::Connected {
-            configured_accessory,
+            accessory,
         })
         .await
     }
@@ -124,10 +124,10 @@ impl<'s> Master {
     async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
         match message {
             Message::Connected {
-                configured_accessory,
+                accessory,
             } => {
                 self.execute_for_all(|controller| {
-                    let configured_accessory = configured_accessory.to_owned();
+                    let configured_accessory = accessory.to_owned();
                     async move {
                         controller.connected(configured_accessory).await;
                         Ok(())

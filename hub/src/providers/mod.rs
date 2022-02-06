@@ -21,13 +21,16 @@ pub enum Name {
 
 #[derive(Debug, Clone)]
 pub struct Handle {
-    pub name: Name,
     sender: acu::Sender<Message>,
 }
 
 impl Handle {
-    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
-        Self { name, sender }
+    pub fn new(sender: acu::Sender<Message>) -> Self {
+        Self { sender }
+    }
+
+    pub fn name(&self) -> &'static str {
+        self.sender.name
     }
 
     pub async fn wait_for_stop(&self) {

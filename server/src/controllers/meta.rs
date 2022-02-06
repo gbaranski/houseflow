@@ -74,14 +74,14 @@ impl MetaController {
     async fn handle_controller_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
         match message {
             Message::Connected {
-                configured_accessory,
-            } => {}
-            Message::Disconnected { accessory_id } => {}
+                accessory: _,
+            } => {},
+            Message::Disconnected { accessory_id: _ } => {},
             Message::Updated {
-                accessory_id,
-                service_name,
-                characteristic,
-            } => {}
+                accessory_id: _,
+                service_name: _,
+                characteristic: _,
+            } => {},
         };
         Ok(())
     }
@@ -115,9 +115,11 @@ use houseflow_types::accessory::services::ServiceName;
 
 pub async fn read_characteristic(
     Extension(provider): Extension<providers::Handle>,
-    Path(accessory_id): Path<accessory::ID>,
-    Path(service_name): Path<ServiceName>,
-    Path(characteristic_name): Path<CharacteristicName>,
+    Path((accessory_id, service_name, characteristic_name)): Path<(
+        accessory::ID,
+        ServiceName,
+        CharacteristicName,
+    )>,
 ) -> Result<Json<Characteristic>, ServerError> {
     let characteristic = provider
         .read_characteristic(accessory_id, service_name, characteristic_name)
@@ -128,8 +130,7 @@ pub async fn read_characteristic(
 
 pub async fn write_characteristic(
     Extension(provider): Extension<providers::Handle>,
-    Path(accessory_id): Path<accessory::ID>,
-    Path(service_name): Path<ServiceName>,
+    Path((accessory_id, service_name)): Path<(accessory::ID, ServiceName)>,
     Json(characteristic): Json<Characteristic>,
 ) -> Result<(), ServerError> {
     provider

@@ -35,7 +35,7 @@ impl Mailer {
             config,
             transport,
         };
-        let handle = Handle::new(Name::Smtp, sender);
+        let handle = Handle::new(sender);
         tokio::spawn(async move { actor.run().await });
         handle
     }

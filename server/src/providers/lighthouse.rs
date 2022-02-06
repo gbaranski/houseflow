@@ -1,9 +1,8 @@
 use super::Handle;
 use super::Message;
 use super::Name;
-use super::SessionHandle;
-use super::SessionMessage;
 use crate::controllers;
+use anyhow::Context;
 use anyhow::Error;
 use async_trait::async_trait;
 use axum::body::Body;
@@ -15,35 +14,30 @@ use axum::headers;
 use axum::http::StatusCode;
 use axum::response::Response;
 use axum::Router;
-use futures::stream::SplitSink;
-use futures::stream::SplitStream;
-use futures::SinkExt;
 use futures::StreamExt;
 use houseflow_config::server::providers::Lighthouse as Config;
 use houseflow_config::server::providers::LighthouseHub;
 use houseflow_types::accessory;
-use houseflow_types::accessory::Accessory;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::characteristics::CharacteristicName;
+use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::hub;
 use houseflow_types::lighthouse;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use tokio::sync::oneshot;
 
 #[derive(Debug)]
 pub enum LighthouseMessage {
     Connected {
         hub: LighthouseHub,
-        session_handle: SessionHandle,
+        websocket_stream: WebSocket,
+        respond_to: oneshot::Sender<LighthouseHubSessionHandle>,
     },
     Disconnected {
         hub_id: hub::ID,
-    },
-    AccessoryConnected {
-        accessory: Accessory,
-    },
-    AccessoryDisconnected {
-        accessory_id: accessory::ID,
     },
     GetHubConfiguration {
         hub_id: hub::ID,
@@ -72,11 +66,16 @@ impl From<LighthouseHandle> for Handle {
 }
 
 impl LighthouseHandle {
-    pub async fn connected(&self, hub: LighthouseHub, session_handle: SessionHandle) {
+    pub async fn connected(
+        &self,
+        hub: LighthouseHub,
+        websocket_stream: WebSocket,
+    ) -> LighthouseHubSessionHandle {
         self.sender
-            .notify(|| LighthouseMessage::Connected {
+            .call(|respond_to| LighthouseMessage::Connected {
                 hub,
-                session_handle,
+                websocket_stream,
+                respond_to,
             })
             .await
     }
@@ -98,8 +97,7 @@ pub struct LighthouseProvider {
     provider_receiver: acu::Receiver<Message>,
     lighthouse_receiver: acu::Receiver<LighthouseMessage>,
     controller: controllers::Handle,
-    sessions: HashMap<accessory::ID, SessionHandle>,
-    connected_accessories: Vec<Accessory>,
+    sessions: HashMap<hub::ID, LighthouseHubSessionHandle>,
     config: Config,
 }
 
@@ -111,7 +109,6 @@ impl LighthouseProvider {
             provider_receiver,
             lighthouse_receiver,
             controller,
-            connected_accessories: vec![],
             sessions: Default::default(),
             config,
         };
@@ -147,9 +144,13 @@ impl LighthouseProvider {
         match message {
             LighthouseMessage::Connected {
                 hub,
-                session_handle,
+                websocket_stream,
+                respond_to,
             } => {
-                self.sessions.insert(hub.id, session_handle);
+                let session =
+                    LighthouseHubSession::create(websocket_stream, self.controller.clone()).await;
+                self.sessions.insert(hub.id, session.clone());
+                respond_to.send(session).unwrap()
             }
             LighthouseMessage::Disconnected { hub_id } => {
                 self.sessions.remove(&hub_id);
@@ -163,17 +164,21 @@ impl LighthouseProvider {
                     .cloned();
                 respond_to.send(hub).unwrap();
             }
-            LighthouseMessage::AccessoryConnected { accessory } => {
-                self.connected_accessories.push(accessory.clone());
-                self.controller.connected(accessory).await;
-            }
-            LighthouseMessage::AccessoryDisconnected { accessory_id } => {
-                self.connected_accessories
-                    .retain(|accessory| accessory.id != accessory_id);
-                self.controller.disconnected(accessory_id).await;
-            }
         };
         Ok(())
+    }
+
+    async fn find_accessory_session(
+        &mut self,
+        accessory_id: accessory::ID,
+    ) -> Option<&LighthouseHubSessionHandle> {
+        let values = self.sessions.iter().map(|(_, session)| async move {
+            (session, session.is_accessory_connected(accessory_id).await)
+        });
+        let accessories = futures::future::join_all(values).await;
+        accessories
+            .into_iter()
+            .find_map(|(session, is_connected)| if is_connected { Some(session) } else { None })
     }
 
     async fn handle_provider_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
@@ -184,9 +189,12 @@ impl LighthouseProvider {
                 characteristic_name,
                 respond_to,
             } => {
-                let session = self.sessions.get(&accessory_id).unwrap();
-                let result = session
-                    .read_characteristic(service_name, characteristic_name)
+                let hub_session = self
+                    .find_accessory_session(accessory_id)
+                    .await
+                    .context("hub with the accessory is not connected")?;
+                let result = hub_session
+                    .read_characteristic(accessory_id, service_name, characteristic_name)
                     .await;
                 respond_to.send(result).unwrap();
             }
@@ -196,25 +204,34 @@ impl LighthouseProvider {
                 characteristic,
                 respond_to,
             } => {
-                let session = self.sessions.get(&accessory_id).unwrap();
-                let result = session
-                    .write_characteristic(service_name, characteristic)
+                let hub_session = self
+                    .find_accessory_session(accessory_id)
+                    .await
+                    .context("hub with the accessory is not connected")?;
+                let result = hub_session
+                    .write_characteristic(accessory_id, service_name, characteristic)
                     .await;
                 respond_to.send(result).unwrap();
             }
             Message::GetAccessories { respond_to } => {
                 let accessories = self
-                    .connected_accessories
-                    .iter()
-                    .map(|accessory| accessory.id)
-                    .collect();
+                    .sessions
+                    .values()
+                    .map(|session| session.get_accessories());
+                let accessories = futures::future::join_all(accessories).await;
+                let accessories = accessories.into_iter().flatten().collect();
                 respond_to.send(accessories).unwrap();
             }
             Message::IsConnected {
                 accessory_id,
                 respond_to,
             } => {
-                let is_connected = self.sessions.get(&accessory_id).is_some();
+                let values = self
+                    .sessions
+                    .iter()
+                    .map(|(_, session)| session.is_accessory_connected(accessory_id));
+                let values = futures::future::join_all(values).await;
+                let is_connected = values.iter().any(|is_connected| *is_connected);
                 respond_to.send(is_connected).unwrap();
             }
         };
@@ -257,22 +274,20 @@ impl axum::extract::FromRequest<Body> for HubCredentials {
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await
                 .map_err(|err| ConnectError::InvalidAuthorizationHeader(err.to_string()))?;
-        let accessory_id = accessory::ID::parse_str(authorization.username()).map_err(|err| {
+        let hub_id = hub::ID::parse_str(authorization.username()).map_err(|err| {
             dbg!();
             ConnectError::InvalidAuthorizationHeader(format!("invalid hub id: {}", err))
         })?;
 
-        Ok(Self(accessory_id, authorization.password().to_owned()))
+        Ok(Self(hub_id, authorization.password().to_owned()))
     }
 }
 
 pub async fn websocket_handler(
     websocket: axum::extract::ws::WebSocketUpgrade,
     Extension(provider): Extension<LighthouseHandle>,
-    Extension(controller): Extension<controllers::Handle>,
     HubCredentials(hub_id, _password): HubCredentials,
 ) -> Result<impl axum::response::IntoResponse, ConnectError> {
-    dbg!();
     let hub = provider
         .get_hub_configuration(hub_id)
         .await
@@ -286,9 +301,8 @@ pub async fn websocket_handler(
     tracing::warn!("{} connected without password", hub_id);
 
     Ok(websocket.on_upgrade(move |stream| async move {
-        let session = LighthouseSession::create(hub_id, stream, controller).await;
         let hub_id = hub.id;
-        provider.connected(hub, session.clone().into()).await;
+        let session = provider.connected(hub, stream).await;
         session.wait_for_stop().await;
         provider.disconnected(hub_id).await;
     }))
@@ -301,115 +315,142 @@ pub fn app() -> Router {
 }
 
 #[derive(Debug)]
-enum LighthouseSessionMessage {
-    WebSocketMessage(ws::Message),
+enum LighthouseHubSessionMessage {
+    GetAccessories {
+        respond_to: oneshot::Sender<Vec<accessory::ID>>,
+    },
+    IsAccessoryConnected {
+        accessory_id: accessory::ID,
+        respond_to: oneshot::Sender<bool>,
+    },
+    ReadCharacteristic {
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+        respond_to: oneshot::Sender<oneshot::Receiver<Result<Characteristic, accessory::Error>>>,
+    },
+    WriteCharacteristic {
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+        respond_to: oneshot::Sender<oneshot::Receiver<Result<(), accessory::Error>>>,
+    },
 }
 
-pub struct LighthouseSession {
-    session_receiver: acu::Receiver<SessionMessage>,
-    lighthouse_receiver: acu::Receiver<LighthouseSessionMessage>,
-    accessory_id: accessory::ID,
+pub struct LighthouseHubSession {
+    lighthouse_hub_session_receiver: acu::Receiver<LighthouseHubSessionMessage>,
     controller: controllers::Handle,
+    connected_accessories: HashSet<accessory::ID>,
+    websocket_stream: WebSocket,
     characteristic_write_results:
         HashMap<lighthouse::FrameID, oneshot::Sender<Result<(), accessory::Error>>>,
     characteristic_read_results: HashMap<
         lighthouse::FrameID,
         oneshot::Sender<Result<accessory::characteristics::Characteristic, accessory::Error>>,
     >,
-    sink: SplitSink<WebSocket, ws::Message>,
 }
 
 #[derive(Debug, Clone)]
-pub struct LighthouseSessionHandle {
-    sender: acu::Sender<LighthouseSessionMessage>,
-    handle: SessionHandle,
+pub struct LighthouseHubSessionHandle {
+    sender: acu::Sender<LighthouseHubSessionMessage>,
 }
 
-impl LighthouseSessionHandle {
-    pub async fn websocket_message(&self, websocket_message: ws::Message) {
-        self.sender
-            .notify(|| LighthouseSessionMessage::WebSocketMessage(websocket_message))
-            .await;
+impl LighthouseHubSessionHandle {
+    pub async fn wait_for_stop(&self) {
+        self.sender.closed().await
     }
-}
 
-impl std::ops::Deref for LighthouseSessionHandle {
-    type Target = SessionHandle;
-
-    fn deref(&self) -> &Self::Target {
-        &self.handle
-    }
-}
-
-impl From<LighthouseSessionHandle> for SessionHandle {
-    fn from(val: LighthouseSessionHandle) -> Self {
-        val.handle
-    }
-}
-
-impl LighthouseSession {
-    pub async fn create(
+    pub async fn read_characteristic(
+        &self,
         accessory_id: accessory::ID,
-        stream: WebSocket,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error> {
+        self.sender
+            .call(
+                |respond_to| LighthouseHubSessionMessage::ReadCharacteristic {
+                    accessory_id,
+                    service_name,
+                    characteristic_name,
+                    respond_to,
+                },
+            )
+            .await
+            .await
+            .unwrap()
+    }
+
+    pub async fn write_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error> {
+        self.sender
+            .call(
+                |respond_to| LighthouseHubSessionMessage::WriteCharacteristic {
+                    accessory_id,
+                    service_name,
+                    characteristic,
+                    respond_to,
+                },
+            )
+            .await
+            .await
+            .unwrap()
+    }
+
+    pub async fn get_accessories(&self) -> Vec<accessory::ID> {
+        self.sender
+            .call(|respond_to| LighthouseHubSessionMessage::GetAccessories { respond_to })
+            .await
+    }
+
+    pub async fn is_accessory_connected(&self, accessory_id: accessory::ID) -> bool {
+        self.sender
+            .call(
+                |respond_to| LighthouseHubSessionMessage::IsAccessoryConnected {
+                    accessory_id,
+                    respond_to,
+                },
+            )
+            .await
+    }
+}
+
+impl LighthouseHubSession {
+    pub async fn create(
+        websocket_stream: WebSocket,
         controller: controllers::Handle,
-    ) -> LighthouseSessionHandle {
-        let (session_sender, session_receiver) = acu::channel(8, "LighthouseSession");
-        let (lighthouse_sender, lighthouse_receiver) = acu::channel(8, "LighthouseSession");
-        let (sink, stream) = stream.split();
+    ) -> LighthouseHubSessionHandle {
+        let (lighthouse_hub_session_sender, lighthouse_hub_session_receiver) =
+            acu::channel(8, "LighthouseHubSession");
         let mut actor = Self {
-            lighthouse_receiver,
-            session_receiver,
-            accessory_id,
-            characteristic_write_results: Default::default(),
-            characteristic_read_results: Default::default(),
-            sink,
+            lighthouse_hub_session_receiver,
+            connected_accessories: HashSet::new(),
+            websocket_stream,
             controller,
+            characteristic_write_results: HashMap::new(),
+            characteristic_read_results: HashMap::new(),
         };
-        let handle = SessionHandle::new(session_sender);
-        let handle = LighthouseSessionHandle {
-            sender: lighthouse_sender,
-            handle,
+        let handle = LighthouseHubSessionHandle {
+            sender: lighthouse_hub_session_sender,
         };
-        {
-            let handle = handle.clone();
-            tokio::spawn(async move { actor.run(handle, stream).await });
-        }
+        tokio::spawn(async move { actor.run().await });
 
         handle
     }
 
-    async fn run(
-        &mut self,
-        handle: LighthouseSessionHandle,
-        mut stream: SplitStream<WebSocket>,
-    ) -> Result<(), anyhow::Error> {
-        let mut read_messages_future = tokio::spawn(async move {
-            while let Some(message) = stream.next().await {
-                tracing::debug!("websocket message {:?}", message);
-                let message = message?;
-                handle.websocket_message(message).await;
-            }
-            Ok::<_, anyhow::Error>(())
-        });
+    async fn run(&mut self) -> Result<(), anyhow::Error> {
         loop {
             tokio::select! {
-                Some(message) = self.session_receiver.recv() => {
-                    self.handle_session_message(message).await?;
+                Some(message) = self.lighthouse_hub_session_receiver.recv() => {
+                    self.handle_lighthouse_hub_session_message(message).await?
                 },
-                Some(message) = self.lighthouse_receiver.recv() => {
-                    self.handle_lighthouse_message(message).await?
-                },
-                result = &mut read_messages_future => {
-                    let result = result.unwrap();
-                    match result {
-                        Ok(_) => {
-                            tracing::info!("reading websocket messages finished");
-                        },
-                        Err(error) => {
-                            tracing::error!("reading websocket messages failed due to `{}`", error);
-                        },
-                    }
-                    break;
+                Some(message) = self.websocket_stream.next() => {
+                    tracing::debug!("websocket message {:?}", message);
+                    let message = message?;
+                    self.handle_websocket_message(message).await?;
                 }
                 else => break,
             }
@@ -417,99 +458,117 @@ impl LighthouseSession {
         Ok(())
     }
 
-    async fn handle_lighthouse_message(
+    async fn send_websocket(&mut self, frame: lighthouse::ServerFrame) {
+        let text = serde_json::to_string(&frame)
+            .context("serializing frame failed")
+            .unwrap();
+        self.websocket_stream
+            .send(ws::Message::Text(text))
+            .await
+            .unwrap();
+    }
+
+    async fn handle_websocket_message(
         &mut self,
-        message: LighthouseSessionMessage,
+        message: ws::Message,
     ) -> Result<(), anyhow::Error> {
         match message {
-            LighthouseSessionMessage::WebSocketMessage(message) => {
-                match message {
-                    ws::Message::Text(s) => {
-                        let json = serde_json::from_str::<lighthouse::HubFrame>(&s)?;
-                        match json {
-                            lighthouse::HubFrame::CharacteristicUpdate(frame) => {
-                                self.controller
-                                    .updated(
-                                        self.accessory_id,
-                                        frame.service_name,
-                                        frame.characteristic,
-                                    )
-                                    .await;
-                            }
-                            lighthouse::HubFrame::CharacteristicReadResult(frame) => self
-                                .characteristic_read_results
-                                .remove(&frame.id)
-                                .unwrap()
-                                .send(frame.result.into())
-                                .unwrap(),
-                            lighthouse::HubFrame::CharacteristicWriteResult(frame) => self
-                                .characteristic_write_results
-                                .remove(&frame.id)
-                                .unwrap()
-                                .send(frame.result.into())
-                                .unwrap(),
-                        }
+            ws::Message::Text(text) => {
+                let frame = serde_json::from_str::<lighthouse::HubFrame>(&text)?;
+                match frame {
+                    lighthouse::HubFrame::AccessoryConnected(accessory) => {
+                        self.connected_accessories.insert(accessory.id);
+                        self.controller.connected(accessory).await;
                     }
-                    ws::Message::Binary(_) => todo!(),
-                    ws::Message::Ping(bytes) => {
-                        self.sink.send(ws::Message::Pong(bytes)).await?;
+                    lighthouse::HubFrame::AccessoryDisconnected(accessory_id) => {
+                        self.connected_accessories.remove(&accessory_id);
+                        self.controller.disconnected(accessory_id).await;
                     }
-                    ws::Message::Pong(bytes) => {
-                        tracing::info!("pong: {:?}", bytes);
+                    lighthouse::HubFrame::CharacteristicUpdate(frame) => {
+                        self.controller
+                            .updated(frame.accessory_id, frame.service_name, frame.characteristic)
+                            .await;
                     }
-                    ws::Message::Close(_) => todo!(),
+                    lighthouse::HubFrame::CharacteristicReadResult(frame) => {
+                        self.characteristic_read_results
+                            .remove(&frame.id)
+                            .unwrap()
+                            .send(frame.result.into())
+                            .unwrap();
+                    }
+                    lighthouse::HubFrame::CharacteristicWriteResult(frame) => {
+                        self.characteristic_write_results
+                            .remove(&frame.id)
+                            .unwrap()
+                            .send(frame.result.into())
+                            .unwrap();
+                    }
                 };
             }
-        };
+            ws::Message::Binary(_) => todo!(),
+            ws::Message::Ping(_) => todo!(),
+            ws::Message::Pong(_) => todo!(),
+            ws::Message::Close(_) => todo!(),
+        }
         Ok(())
     }
 
-    async fn handle_session_message(
+    async fn handle_lighthouse_hub_session_message(
         &mut self,
-        message: SessionMessage,
+        message: LighthouseHubSessionMessage,
     ) -> Result<(), anyhow::Error> {
         match message {
-            SessionMessage::ReadCharacteristic {
+            LighthouseHubSessionMessage::GetAccessories { respond_to } => respond_to
+                .send(
+                    self.connected_accessories
+                        .clone()
+                        .into_iter()
+                        .collect::<Vec<_>>(),
+                )
+                .unwrap(),
+            LighthouseHubSessionMessage::IsAccessoryConnected {
+                accessory_id,
+                respond_to,
+            } => respond_to
+                .send(self.connected_accessories.contains(&accessory_id))
+                .unwrap(),
+            LighthouseHubSessionMessage::ReadCharacteristic {
+                accessory_id,
                 service_name,
                 characteristic_name,
                 respond_to,
             } => {
-                let frame_id = rand::random();
-                let frame =
-                    lighthouse::ServerFrame::CharacteristicRead(lighthouse::CharacteristicRead {
-                        id: frame_id,
-                        accessory_id: self.accessory_id,
-                        service_name,
-                        characteristic_name,
-                    });
-                let text = serde_json::to_string(&frame)?;
-                let message = ws::Message::Text(text);
-                let (response_tx, response_rx) = oneshot::channel();
-                self.characteristic_read_results
-                    .insert(frame_id, response_tx);
-                self.sink.send(message).await?;
-                respond_to.send(response_rx).unwrap();
+                let id = rand::random();
+                let frame = lighthouse::CharacteristicRead {
+                    id,
+                    accessory_id,
+                    service_name,
+                    characteristic_name,
+                };
+                let (sender, receiver) = oneshot::channel();
+                self.characteristic_read_results.insert(id, sender);
+                self.send_websocket(lighthouse::ServerFrame::CharacteristicRead(frame))
+                    .await;
+                respond_to.send(receiver).unwrap();
             }
-            SessionMessage::WriteCharacteristic {
+            LighthouseHubSessionMessage::WriteCharacteristic {
+                accessory_id,
                 service_name,
                 characteristic,
                 respond_to,
             } => {
-                let frame_id = rand::random();
-                let frame =
-                    lighthouse::ServerFrame::CharacteristicWrite(lighthouse::CharacteristicWrite {
-                        id: frame_id,
-                        accessory_id: self.accessory_id,
-                        service_name,
-                        characteristic,
-                    });
-                let text = serde_json::to_string(&frame)?;
-                let message = ws::Message::Text(text);
-                let (response_tx, response_rx) = oneshot::channel();
-                self.characteristic_write_results
-                    .insert(frame_id, response_tx);
-                self.sink.send(message).await?;
-                respond_to.send(response_rx).unwrap();
+                let id = rand::random();
+                let frame = lighthouse::CharacteristicWrite {
+                    id,
+                    accessory_id,
+                    service_name,
+                    characteristic,
+                };
+                let (sender, receiver) = oneshot::channel();
+                self.characteristic_write_results.insert(id, sender);
+                self.send_websocket(lighthouse::ServerFrame::CharacteristicWrite(frame))
+                    .await;
+                respond_to.send(receiver).unwrap();
             }
         };
         Ok(())

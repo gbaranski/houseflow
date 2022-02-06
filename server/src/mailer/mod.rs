@@ -29,13 +29,12 @@ pub enum Message {
 
 #[derive(Debug, Clone)]
 pub struct Handle {
-    name: Name,
     sender: acu::Sender<Message>,
 }
 
 impl Handle {
-    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
-        Self { name, sender }
+    pub fn new(sender: acu::Sender<Message>) -> Self {
+        Self { sender }
     }
 
     pub async fn send_verification_code(

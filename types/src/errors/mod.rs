@@ -70,6 +70,7 @@ impl axum::response::IntoResponse for ServerError {
                     accessory::Error::CharacteristicReadOnly => StatusCode::BAD_REQUEST,
                     accessory::Error::CharacteristicNotSupported => StatusCode::BAD_REQUEST,
                     accessory::Error::ServiceNotSupported => StatusCode::BAD_REQUEST,
+                    accessory::Error::NotConnected => StatusCode::SERVICE_UNAVAILABLE,
                 },
             },
             Self::ProviderError(ref err) => match err {

@@ -1,51 +1,21 @@
 use super::Handle;
-use super::Message as ControllerMessage;
+use super::Message;
 use crate::controllers::Name;
 use crate::providers;
 use anyhow::Context;
-use futures::stream::SplitSink;
-use futures::stream::SplitStream;
+use futures::SinkExt;
 use futures::StreamExt;
 use houseflow_config::hub::controllers::Lighthouse as Config;
 use houseflow_types::hub;
 use houseflow_types::lighthouse;
+use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::tungstenite::Message as WebSocketMessage;
 use tokio_tungstenite::WebSocketStream;
 
-#[derive(Debug)]
-pub enum LighthouseMessage {
-    ServerFrame(lighthouse::ServerFrame),
-}
-
-#[derive(Debug, Clone)]
-pub struct LighthouseHandle {
-    sender: acu::Sender<LighthouseMessage>,
-    handle: Handle,
-}
-
-impl std::ops::Deref for LighthouseHandle {
-    type Target = Handle;
-
-    fn deref(&self) -> &Self::Target {
-        &self.handle
-    }
-}
-
-impl From<LighthouseHandle> for Handle {
-    fn from(val: LighthouseHandle) -> Self {
-        val.handle
-    }
-}
-
-impl LighthouseHandle {}
-
 pub struct LighthouseController {
-    receiver: acu::Receiver<ControllerMessage>,
-    handle: Handle,
-    sink: SplitSink<
-        WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
-        WebSocketMessage,
-    >,
+    controller_receiver: acu::Receiver<Message>,
+    websocket_stream: WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+    provider: providers::Handle,
 }
 
 impl LighthouseController {
@@ -54,7 +24,7 @@ impl LighthouseController {
         hub_id: hub::ID,
         config: Config,
     ) -> Result<Handle, anyhow::Error> {
-        let (sender, receiver) = acu::channel(1, Name::Lighthouse.into());
+        let (controller_sender, controller_receiver) = acu::channel(1, Name::Lighthouse.into());
         tracing::debug!(
             "attempting to connect to the lighthouse websocket server on URL: {}",
             config.url
@@ -75,80 +45,119 @@ impl LighthouseController {
             .body(())
             .unwrap();
 
-        let (stream, response) = tokio_tungstenite::connect_async(request)
+        let (websocket_stream, websocket_response) = tokio_tungstenite::connect_async(request)
             .await
             .context("lighthouse websocket server connect failed")?;
         tracing::debug!(
             "connected to the lighthouse server via websocket with response: {:?}",
-            response
+            websocket_response
         );
-        let (sink, stream) = stream.split();
 
-        let handle = Handle::new(Name::Hap, sender);
+        let handle = Handle::new(controller_sender);
         let mut actor = Self {
-            receiver,
-            handle: handle.clone(),
-            sink,
+            controller_receiver,
+            websocket_stream,
+            provider,
         };
-        tokio::spawn(async move { actor.run(stream).await });
+        tokio::spawn(async move { actor.run().await });
         Ok(handle)
     }
 
-    async fn run(
-        &mut self,
-        mut stream: SplitStream<
-            WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
-        >,
-    ) -> Result<(), anyhow::Error> {
-        let handle = self.handle.clone();
-        tokio::spawn(async move {
-            while let Some(message) = stream.next().await {
-                let message = message?;
-                match message {
-                    WebSocketMessage::Text(text) => {
-                        let frame = serde_json::from_str::<lighthouse::ServerFrame>(&text)?;
-                        todo!()
-                    }
-                    WebSocketMessage::Binary(_) => todo!(),
-                    WebSocketMessage::Ping(_) => todo!(),
-                    WebSocketMessage::Pong(_) => todo!(),
-                    WebSocketMessage::Close(_) => todo!(),
-                };
-            }
-
-            Ok::<_, anyhow::Error>(())
-        });
-
-        while let Some(msg) = self.receiver.recv().await {
-            self.handle_controller_message(msg).await?;
-        }
+    async fn send(&mut self, frame: lighthouse::HubFrame) -> Result<(), anyhow::Error> {
+        let text = serde_json::to_string(&frame).context("serializing outgoing hub frame")?;
+        self.websocket_stream
+            .send(tungstenite::Message::Text(text))
+            .await?;
         Ok(())
     }
 
-    async fn handle_controller_message(
+    async fn handle_websocket_message(
         &mut self,
-        message: ControllerMessage,
+        message: tungstenite::Message,
     ) -> Result<(), anyhow::Error> {
         match message {
-            ControllerMessage::Connected {
-                configured_accessory,
-            } => {}
-            ControllerMessage::Disconnected { accessory_id } => {}
-            ControllerMessage::Updated {
-                accessory_id,
-                service_name,
-                characteristic,
-            } => {}
+            WebSocketMessage::Text(text) => {
+                let frame = serde_json::from_str::<lighthouse::ServerFrame>(&text)?;
+                match frame {
+                    lighthouse::ServerFrame::CharacteristicRead(
+                        lighthouse::CharacteristicRead {
+                            id,
+                            accessory_id,
+                            service_name,
+                            characteristic_name,
+                        },
+                    ) => {
+                        let result = self
+                            .provider
+                            .read_characteristic(accessory_id, service_name, characteristic_name)
+                            .await
+                            .into();
+                        self.send(lighthouse::HubFrame::CharacteristicReadResult(
+                            lighthouse::CharacteristicReadResult { id, result },
+                        ))
+                        .await?;
+                    }
+                    lighthouse::ServerFrame::CharacteristicWrite(
+                        lighthouse::CharacteristicWrite {
+                            id,
+                            accessory_id,
+                            service_name,
+                            characteristic,
+                        },
+                    ) => {
+                        let result = self
+                            .provider
+                            .write_characteristic(accessory_id, service_name, characteristic)
+                            .await
+                            .into();
+                        self.send(lighthouse::HubFrame::CharacteristicWriteResult(
+                            lighthouse::CharateristicWriteResult { id, result },
+                        ))
+                        .await?;
+                    }
+                    _ => unimplemented!(),
+                }
+            }
+            WebSocketMessage::Binary(_) => todo!(),
+            WebSocketMessage::Ping(_) => todo!(),
+            WebSocketMessage::Pong(_) => todo!(),
+            WebSocketMessage::Close(_) => todo!(),
         };
         Ok(())
     }
 
-    async fn handle_lighthouse_message(
-        &mut self,
-        message: LighthouseMessage,
-    ) -> Result<(), anyhow::Error> {
+    async fn run(&mut self) -> Result<(), anyhow::Error> {
+        loop {
+            tokio::select! {
+                Some(message) = self.controller_receiver.recv() => {
+                    self.handle_controller_message(message).await?;
+                },
+                Some(message) = self.websocket_stream.next() => {
+                    let message = message?;
+                    self.handle_websocket_message(message).await?
+                },
+                else => break,
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn handle_controller_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
         match message {
-            LighthouseMessage::ServerFrame(frame) => {}
+            Message::Connected { accessory } => {
+                self.send(lighthouse::HubFrame::AccessoryConnected(accessory.into()))
+                    .await?;
+            }
+            Message::Disconnected { accessory_id } => {
+                self.send(lighthouse::HubFrame::AccessoryDisconnected(accessory_id))
+                    .await?;
+            }
+            Message::Updated {
+                accessory_id: _,
+                service_name: _,
+                characteristic: _,
+            } => {}
         };
         Ok(())
     }

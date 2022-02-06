@@ -23,7 +23,7 @@ pub enum Name {
 #[derive(Debug)]
 pub enum Message {
     Connected {
-        configured_accessory: Accessory,
+        accessory: Accessory,
     },
     Disconnected {
         accessory_id: accessory::ID,
@@ -39,13 +39,16 @@ pub enum Message {
 
 #[derive(Debug, Clone)]
 pub struct Handle {
-    pub name: Name,
     sender: acu::Sender<Message>,
 }
 
 impl Handle {
-    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
-        Self { name, sender }
+    pub fn new(sender: acu::Sender<Message>) -> Self {
+        Self { sender }
+    }
+
+    pub fn name(&self) -> &'static str {
+        self.sender.name
     }
 
     pub async fn wait_for_stop(&self) {
@@ -54,7 +57,7 @@ impl Handle {
 
     pub async fn connected(&self, configured_accessory: Accessory) {
         self.sender.notify(|| Message::Connected {
-            configured_accessory,
+            accessory: configured_accessory,
         })
         .await
     }
@@ -107,17 +110,17 @@ impl<'s> Master {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
 
-        let (controller_names, futures): (Vec<&Name>, FuturesOrdered<_>) = self
+        let (controller_names, futures): (Vec<&'static str>, FuturesOrdered<_>) = self
             .slave_controllers
             .iter()
-            .map(|controller| (&controller.name, f(controller)))
+            .map(|controller| (controller.name(), f(controller)))
             .unzip();
 
         let results: Vec<Result<(), Error>> = futures.collect().await;
         for (result, controller) in results.iter().zip(controller_names.iter()) {
             match result {
-                Ok(_) => tracing::debug!(%controller, "task completed"),
-                Err(err) => tracing::error!(%controller, "task failed due to {}", err),
+                Ok(_) => tracing::debug!(controller, "task completed"),
+                Err(err) => tracing::error!(controller, "task failed due to {}", err),
             };
         }
         Ok(())
@@ -126,7 +129,7 @@ impl<'s> Master {
     async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
         match message {
             Message::Connected {
-                configured_accessory,
+                accessory: configured_accessory,
             } => {
                 self.execute_for_all(|controller| {
                     let configured_accessory = configured_accessory.to_owned();
