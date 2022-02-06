@@ -79,8 +79,8 @@ impl LighthouseController {
             WebSocketMessage::Text(text) => {
                 let frame = serde_json::from_str::<lighthouse::ServerFrame>(&text)?;
                 match frame {
-                    lighthouse::ServerFrame::CharacteristicRead(
-                        lighthouse::CharacteristicRead {
+                    lighthouse::ServerFrame::ReadCharacteristic(
+                        lighthouse::ReadCharacteristic {
                             id,
                             accessory_id,
                             service_name,
@@ -92,13 +92,13 @@ impl LighthouseController {
                             .read_characteristic(accessory_id, service_name, characteristic_name)
                             .await
                             .into();
-                        self.send(lighthouse::HubFrame::CharacteristicReadResult(
-                            lighthouse::CharacteristicReadResult { id, result },
+                        self.send(lighthouse::HubFrame::ReadCharacteristicResult(
+                            lighthouse::ReadCharacteristicResult { id, result },
                         ))
                         .await?;
                     }
-                    lighthouse::ServerFrame::CharacteristicWrite(
-                        lighthouse::CharacteristicWrite {
+                    lighthouse::ServerFrame::WriteCharacteristic(
+                        lighthouse::WriteCharacteristic {
                             id,
                             accessory_id,
                             service_name,
@@ -110,8 +110,8 @@ impl LighthouseController {
                             .write_characteristic(accessory_id, service_name, characteristic)
                             .await
                             .into();
-                        self.send(lighthouse::HubFrame::CharacteristicWriteResult(
-                            lighthouse::CharateristicWriteResult { id, result },
+                        self.send(lighthouse::HubFrame::WriteCharacteristicResult(
+                            lighthouse::WriteCharacteristicResult { id, result },
                         ))
                         .await?;
                     }

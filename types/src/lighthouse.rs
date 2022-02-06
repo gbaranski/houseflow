@@ -12,8 +12,8 @@ pub type FrameID = u16;
 #[non_exhaustive]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum ServerFrame {
-    CharacteristicRead(CharacteristicRead),
-    CharacteristicWrite(CharacteristicWrite),
+    ReadCharacteristic(ReadCharacteristic),
+    WriteCharacteristic(WriteCharacteristic),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -21,20 +21,20 @@ pub enum ServerFrame {
 pub enum HubFrame {
     AccessoryConnected(Accessory),
     AccessoryDisconnected(accessory::ID),
-    CharacteristicUpdate(CharacteristicUpdate),
-    CharacteristicReadResult(CharacteristicReadResult),
-    CharacteristicWriteResult(CharateristicWriteResult),
+    UpdateCharacteristic(UpdateCharacteristic),
+    ReadCharacteristicResult(ReadCharacteristicResult),
+    WriteCharacteristicResult(WriteCharacteristicResult),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharacteristicUpdate {
+pub struct UpdateCharacteristic {
     pub accessory_id: accessory::ID,
     pub service_name: ServiceName,
     pub characteristic: Characteristic,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharacteristicRead {
+pub struct ReadCharacteristic {
     pub id: FrameID,
     pub accessory_id: accessory::ID,
     pub service_name: ServiceName,
@@ -42,7 +42,7 @@ pub struct CharacteristicRead {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharacteristicWrite {
+pub struct WriteCharacteristic {
     pub id: FrameID,
     pub accessory_id: accessory::ID,
     pub service_name: ServiceName,
@@ -50,13 +50,13 @@ pub struct CharacteristicWrite {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharacteristicReadResult {
+pub struct ReadCharacteristicResult {
     pub id: FrameID,
     pub result: accessory::Result<Characteristic>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct CharateristicWriteResult {
+pub struct WriteCharacteristicResult {
     pub id: FrameID,
     pub result: accessory::Result<()>,
 }

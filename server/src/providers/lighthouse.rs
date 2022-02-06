@@ -484,19 +484,19 @@ impl LighthouseHubSession {
                         self.connected_accessories.remove(&accessory_id);
                         self.controller.disconnected(accessory_id).await;
                     }
-                    lighthouse::HubFrame::CharacteristicUpdate(frame) => {
+                    lighthouse::HubFrame::UpdateCharacteristic(frame) => {
                         self.controller
                             .updated(frame.accessory_id, frame.service_name, frame.characteristic)
                             .await;
                     }
-                    lighthouse::HubFrame::CharacteristicReadResult(frame) => {
+                    lighthouse::HubFrame::ReadCharacteristicResult(frame) => {
                         self.characteristic_read_results
                             .remove(&frame.id)
                             .unwrap()
                             .send(frame.result.into())
                             .unwrap();
                     }
-                    lighthouse::HubFrame::CharacteristicWriteResult(frame) => {
+                    lighthouse::HubFrame::WriteCharacteristicResult(frame) => {
                         self.characteristic_write_results
                             .remove(&frame.id)
                             .unwrap()
@@ -539,7 +539,7 @@ impl LighthouseHubSession {
                 respond_to,
             } => {
                 let id = rand::random();
-                let frame = lighthouse::CharacteristicRead {
+                let frame = lighthouse::ReadCharacteristic {
                     id,
                     accessory_id,
                     service_name,
@@ -547,7 +547,7 @@ impl LighthouseHubSession {
                 };
                 let (sender, receiver) = oneshot::channel();
                 self.characteristic_read_results.insert(id, sender);
-                self.send_websocket(lighthouse::ServerFrame::CharacteristicRead(frame))
+                self.send_websocket(lighthouse::ServerFrame::ReadCharacteristic(frame))
                     .await;
                 respond_to.send(receiver).unwrap();
             }
@@ -558,7 +558,7 @@ impl LighthouseHubSession {
                 respond_to,
             } => {
                 let id = rand::random();
-                let frame = lighthouse::CharacteristicWrite {
+                let frame = lighthouse::WriteCharacteristic {
                     id,
                     accessory_id,
                     service_name,
@@ -566,7 +566,7 @@ impl LighthouseHubSession {
                 };
                 let (sender, receiver) = oneshot::channel();
                 self.characteristic_write_results.insert(id, sender);
-                self.send_websocket(lighthouse::ServerFrame::CharacteristicWrite(frame))
+                self.send_websocket(lighthouse::ServerFrame::WriteCharacteristic(frame))
                     .await;
                 respond_to.send(receiver).unwrap();
             }
