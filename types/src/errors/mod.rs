@@ -8,8 +8,8 @@ mod token;
 pub use auth::Error as AuthError;
 pub use controller::Error as ControllerError;
 pub use internal::Error as InternalError;
-pub use provider::Error as ProviderError;
 pub use oauth::Error as OAuthError;
+pub use provider::Error as ProviderError;
 pub use token::Error as TokenError;
 
 use serde::Deserialize;

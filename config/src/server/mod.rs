@@ -317,7 +317,8 @@ mod tests {
                         id: hub::ID::from_str("c3b846ed-74f1-4fd9-90d2-e6c2669dfaa6").unwrap(),
                         name: String::from("Simple Hub"),
                         password_hash: String::from("some-password-hash"),
-                        structure_id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65").unwrap(),
+                        structure_id: structure::ID::from_str("bd7feab5033940e296ed7fcdc700ba65")
+                            .unwrap(),
                     }]
                     .to_vec(),
                 }),

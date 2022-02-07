@@ -58,7 +58,9 @@ impl From<AccessoryType> for accessory::Type {
     fn from(val: AccessoryType) -> Self {
         match val {
             AccessoryType::XiaomiMijia(val) => accessory::Type::XiaomiMijia(match val {
-                manufacturers::XiaomiMijia::HygroThermometer { .. } => accessory::manufacturers::XiaomiMijia::HygroThermometer
+                manufacturers::XiaomiMijia::HygroThermometer { .. } => {
+                    accessory::manufacturers::XiaomiMijia::HygroThermometer
+                }
             }),
             AccessoryType::Houseflow(val) => accessory::Type::Houseflow(match val {
                 manufacturers::Houseflow::Gate => accessory::manufacturers::Houseflow::Gate,

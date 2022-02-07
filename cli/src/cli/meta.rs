@@ -42,19 +42,16 @@ fn read() -> clap::App<'static> {
             Arg::new("service-name")
                 .help("Name of the service to read")
                 .long("service")
-                .validator(|s| {
-                    match ServiceName::VARIANTS
-                        .iter()
-                        .find(|v| v.to_string() == s)
-                    {
+                .validator(
+                    |s| match ServiceName::VARIANTS.iter().find(|v| v.to_string() == s) {
                         Some(_) => Ok(()),
                         None => Err(format!(
                             "variant {} not found. Available variants: [{}]",
                             s,
                             ServiceName::VARIANTS.join(",")
                         )),
-                    }
-                })
+                    },
+                )
                 .takes_value(true),
         )
 }

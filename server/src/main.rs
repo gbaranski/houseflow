@@ -65,7 +65,6 @@ async fn main() -> Result<(), anyhow::Error> {
         .layer(AddExtensionLayer::new(provider.clone()))
         .layer(AddExtensionLayer::new(controller.clone()));
 
-
     let Providers { lighthouse } = config.providers;
     if let Some(config) = lighthouse {
         let handle = providers::lighthouse::LighthouseProvider::create(controller.clone(), config);

@@ -1,6 +1,6 @@
 use clap::AppSettings;
-use clap_complete::Shell;
 use clap::Arg;
+use clap_complete::Shell;
 
 pub(super) fn subcommand() -> clap::App<'static> {
     clap::App::new("completions")

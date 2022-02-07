@@ -73,15 +73,13 @@ impl MetaController {
 
     async fn handle_controller_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
         match message {
-            Message::Connected {
-                accessory: _,
-            } => {},
-            Message::Disconnected { accessory_id: _ } => {},
+            Message::Connected { accessory: _ } => {}
+            Message::Disconnected { accessory_id: _ } => {}
             Message::Updated {
                 accessory_id: _,
                 service_name: _,
                 characteristic: _,
-            } => {},
+            } => {}
         };
         Ok(())
     }

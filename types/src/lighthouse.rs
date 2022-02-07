@@ -1,8 +1,8 @@
 use crate::accessory;
-use crate::accessory::Accessory;
 use crate::accessory::characteristics::Characteristic;
 use crate::accessory::characteristics::CharacteristicName;
 use crate::accessory::services::ServiceName;
+use crate::accessory::Accessory;
 use serde::Deserialize;
 use serde::Serialize;
 

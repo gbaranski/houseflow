@@ -30,7 +30,7 @@ pub fn app(default_config_path: &'static std::ffi::OsStr) -> clap::App<'_> {
             Arg::new("config")
                 .short('c')
                 .help("Configuration path")
-                .default_value_os(default_config_path)
+                .default_value_os(default_config_path),
         )
         .subcommand(auth::subcommand())
         .subcommand(meta::subcommand())

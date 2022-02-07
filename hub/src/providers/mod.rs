@@ -43,13 +43,14 @@ impl Handle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
-        self.sender.call(|respond_to| Message::WriteCharacteristic {
-            accessory_id,
-            service_name,
-            characteristic,
-            respond_to,
-        })
-        .await
+        self.sender
+            .call(|respond_to| Message::WriteCharacteristic {
+                accessory_id,
+                service_name,
+                characteristic,
+                respond_to,
+            })
+            .await
     }
 
     pub async fn read_characteristic(
@@ -58,31 +59,34 @@ impl Handle {
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
-        self.sender.call(|respond_to| Message::ReadCharacteristic {
-            accessory_id,
-            service_name,
-            characteristic_name,
-            respond_to,
-        })
-        .await
+        self.sender
+            .call(|respond_to| Message::ReadCharacteristic {
+                accessory_id,
+                service_name,
+                characteristic_name,
+                respond_to,
+            })
+            .await
     }
 
     pub async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
-        self.sender.call(|respond_to| Message::IsConnected {
-            accessory_id,
-            respond_to,
-        })
-        .await
+        self.sender
+            .call(|respond_to| Message::IsConnected {
+                accessory_id,
+                respond_to,
+            })
+            .await
     }
     pub async fn get_accessory_configuration(
         &self,
         accessory_id: accessory::ID,
     ) -> Option<Accessory> {
-        self.sender.call(|respond_to| Message::GetAccessoryConfiguration {
-            accessory_id,
-            respond_to,
-        })
-        .await
+        self.sender
+            .call(|respond_to| Message::GetAccessoryConfiguration {
+                accessory_id,
+                respond_to,
+            })
+            .await
     }
 }
 
@@ -218,13 +222,11 @@ impl<'s> Master {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
 pub enum SessionName {
     HiveSession,
     MijiaSession,
 }
-
 
 #[derive(Debug)]
 pub enum SessionMessage {
@@ -258,14 +260,15 @@ impl SessionHandle {
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
-        self.sender.call(|oneshot| SessionMessage::ReadCharacteristic {
-            service_name,
-            characteristic_name,
-            respond_to: oneshot,
-        })
-        .await
-        .await
-        .unwrap()
+        self.sender
+            .call(|oneshot| SessionMessage::ReadCharacteristic {
+                service_name,
+                characteristic_name,
+                respond_to: oneshot,
+            })
+            .await
+            .await
+            .unwrap()
     }
 
     pub async fn write_characteristic(
@@ -273,13 +276,14 @@ impl SessionHandle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
-        self.sender.call(|oneshot| SessionMessage::WriteCharacteristic {
-            service_name,
-            characteristic,
-            respond_to: oneshot,
-        })
-        .await
-        .await
-        .unwrap()
+        self.sender
+            .call(|oneshot| SessionMessage::WriteCharacteristic {
+                service_name,
+                characteristic,
+                respond_to: oneshot,
+            })
+            .await
+            .await
+            .unwrap()
     }
 }

@@ -49,14 +49,15 @@ impl Handle {
     }
 
     pub async fn connected(&self, accessory: Accessory) {
-        self.sender.notify(|| Message::Connected {
-            accessory,
-        })
-        .await
+        self.sender
+            .notify(|| Message::Connected { accessory })
+            .await
     }
 
     pub async fn disconnected(&self, accessory_id: accessory::ID) {
-        self.sender.notify(|| Message::Disconnected { accessory_id }).await
+        self.sender
+            .notify(|| Message::Disconnected { accessory_id })
+            .await
     }
 
     pub async fn updated(
@@ -65,12 +66,13 @@ impl Handle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) {
-        self.sender.notify(|| Message::Updated {
-            accessory_id,
-            service_name,
-            characteristic,
-        })
-        .await
+        self.sender
+            .notify(|| Message::Updated {
+                accessory_id,
+                service_name,
+                characteristic,
+            })
+            .await
     }
 }
 
@@ -123,9 +125,7 @@ impl<'s> Master {
 
     async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
         match message {
-            Message::Connected {
-                accessory,
-            } => {
+            Message::Connected { accessory } => {
                 self.execute_for_all(|controller| {
                     let configured_accessory = accessory.to_owned();
                     async move {

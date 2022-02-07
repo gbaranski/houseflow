@@ -192,7 +192,7 @@ impl<'s> Master {
                 let futures = self
                     .slave_providers
                     .iter()
-                    .map(|provider| provider.is_connected(accessory_id)); 
+                    .map(|provider| provider.is_connected(accessory_id));
                 let results: Vec<_> = futures::future::join_all(futures).await;
                 let is_connected = results.iter().any(|v| *v);
                 respond_to.send(is_connected).unwrap();

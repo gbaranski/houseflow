@@ -1,6 +1,6 @@
+use crate::accessory;
 use serde::Deserialize;
 use serde::Serialize;
-use crate::accessory;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 pub enum Error {

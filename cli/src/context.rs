@@ -89,8 +89,11 @@ impl CommandContext {
             Err(err) => {
                 tracing::debug!("token verify returned error: {}", err);
                 tracing::debug!("cached access token is expired, fetching new one");
-                let raw_fetched_access_token =
-                    self.server_client()?.refresh_token(&refresh_token).await??.access_token;
+                let raw_fetched_access_token = self
+                    .server_client()?
+                    .refresh_token(&refresh_token)
+                    .await??
+                    .access_token;
                 let fetched_access_token = AccessToken::decode_unsafe(&raw_fetched_access_token)?;
                 let tokens = Tokens {
                     refresh: tokens.refresh,

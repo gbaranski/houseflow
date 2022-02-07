@@ -241,8 +241,7 @@ impl HapController {
                     _ => unimplemented!(),
                 };
                 self.accessory_instance_id += 1;
-                self.accessory_pointers
-                    .insert(accessory.id, accessory_ptr);
+                self.accessory_pointers.insert(accessory.id, accessory_ptr);
             }
             Message::Disconnected { accessory_id } => {
                 let accessory_pointer = self.accessory_pointers.remove(&accessory_id).unwrap();

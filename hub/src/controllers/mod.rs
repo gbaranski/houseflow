@@ -36,7 +36,6 @@ pub enum Message {
     },
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Handle {
     sender: acu::Sender<Message>,
@@ -56,14 +55,16 @@ impl Handle {
     }
 
     pub async fn connected(&self, configured_accessory: Accessory) {
-        self.sender.notify(|| Message::Connected {
-            accessory: configured_accessory,
-        })
-        .await
+        self.sender
+            .notify(|| Message::Connected {
+                accessory: configured_accessory,
+            })
+            .await
     }
 
     pub async fn disconnected(&self, accessory_id: accessory::ID) {
-        self.sender.notify(|| Message::Disconnected { accessory_id })
+        self.sender
+            .notify(|| Message::Disconnected { accessory_id })
             .await
     }
 
@@ -73,12 +74,13 @@ impl Handle {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) {
-        self.sender.notify(|| Message::Updated {
-            accessory_id,
-            service_name,
-            characteristic,
-        })
-        .await
+        self.sender
+            .notify(|| Message::Updated {
+                accessory_id,
+                service_name,
+                characteristic,
+            })
+            .await
     }
 }
 
@@ -104,8 +106,7 @@ impl<'s> Master {
 
     async fn execute_for_all<'a>(
         &'s self,
-        f: impl Fn(&'s Handle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>
-            + 'a,
+        f: impl Fn(&'s Handle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
     ) -> Result<(), Error> {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;

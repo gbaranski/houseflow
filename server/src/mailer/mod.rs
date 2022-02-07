@@ -43,13 +43,14 @@ impl Handle {
         to: lettre::message::Mailbox,
         code: VerificationCode,
     ) -> Result<(), Error> {
-        self.sender.call(|respond_to| Message::SendVerificationCode {
-            subject,
-            to,
-            code,
-            respond_to,
-        })
-        .await
+        self.sender
+            .call(|respond_to| Message::SendVerificationCode {
+                subject,
+                to,
+                code,
+                respond_to,
+            })
+            .await
     }
 }
 
