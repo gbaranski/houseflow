@@ -1,22 +1,23 @@
+mod auth;
 mod cli;
 mod context;
-mod auth;
-// mod fulfillment;
+mod meta;
 
 use anyhow::Context;
+use async_trait::async_trait;
 use cli::get_input;
-use cli::get_input_with_variants;
-use cli::unwrap_subcommand;
 use context::CommandContext;
 use context::Tokens;
 use houseflow_config::client::Config;
 use houseflow_config::Config as _;
 use houseflow_types::code::VerificationCode;
-use houseflow_types::accessory;
+use lazy_static::lazy_static;
 use std::path::Path;
 use std::str::FromStr;
-use strum::VariantNames;
-use async_trait::async_trait;
+
+lazy_static! {
+    static ref DEFAULT_CONFIG_PATH: std::path::PathBuf = Config::default_path();
+}
 
 #[async_trait]
 pub trait Command {
@@ -25,66 +26,56 @@ pub trait Command {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    houseflow_config::init_logging(true);
-    let config_default_path = Config::default_path();
-    let config_default_path = config_default_path.to_str().unwrap();
-    let matches = cli::app(config_default_path).get_matches();
-    let subcommand = unwrap_subcommand(matches.subcommand());
+    houseflow_config::log::init();
+    let matches = cli::app(DEFAULT_CONFIG_PATH.as_os_str()).get_matches();
+    let subcommand = matches.subcommand().unwrap();
     let config_path = Path::new(matches.value_of("config").unwrap());
     let ctx = CommandContext::new(config_path.to_path_buf())?;
 
     match subcommand {
-        ("auth", matches) => match unwrap_subcommand(matches.subcommand()) {
-            ("login", matches) => auth::login::Command {
-                email: get_value(matches, get_input, "email")?,
-                code: matches
-                    .value_of("code")
-                    .map(|str| VerificationCode::from_str(str).unwrap()),
+        ("auth", matches) => match matches.subcommand().unwrap() {
+            ("login", matches) => {
+                auth::login::Command {
+                    email: get_value(matches, get_input, "email")?,
+                    code: matches
+                        .value_of("code")
+                        .map(|str| VerificationCode::from_str(str).unwrap()),
+                }
+                .run(ctx)
+                .await
             }
-            .run(ctx).await,
             ("logout", _) => auth::logout::Command {}.run(ctx).await,
             ("refresh", _) => auth::refresh::Command {}.run(ctx).await,
-            ("status", matches) => auth::status::Command {
-                show_token: matches.is_present("show-token"),
+            ("status", matches) => {
+                auth::status::Command {
+                    show_token: matches.is_present("show-token"),
+                }
+                .run(ctx)
+                .await
             }
-            .run(ctx).await,
+            _ => unreachable!(),
+        },
+        ("meta", matches) => match matches.subcommand().unwrap() {
+            ("read", matches) => {
+                meta::read::Command {
+                    accessory_id: get_value(matches, get_input, "accessory-id")?,
+                    service_name: get_value(matches, get_input, "service-name")?,
+                    characteristic_name: get_value(matches, get_input, "characteristic-name")?,
+                }
+                .run(ctx)
+                .await
+            }
             _ => unreachable!(),
         },
         ("completions", matches) => {
-            use clap::Shell;
-            let mut app = cli::app(config_default_path);
+            use clap_complete::Shell;
+            let mut app = cli::app(DEFAULT_CONFIG_PATH.as_os_str());
             let shell = matches.value_of("shell").unwrap();
             let shell = Shell::from_str(shell).unwrap();
             let bin_name = app.get_bin_name().unwrap().to_owned();
-            app.gen_completions_to(bin_name, shell, &mut std::io::stdout());
+            clap_complete::generate(shell, &mut app, bin_name, &mut std::io::stdout());
             Ok(())
         }
-        // ("fulfillment", matches) => match unwrap_subcommand(matches.subcommand()) {
-        //     ("execute", matches) => {
-        //         let json = serde_json::json!({
-        //             "command": get_value::<String, _, _>(matches, |s| get_input_with_variants(s, accessory::Command::VARIANTS), "command").context("get command")?,
-        //             "params": get_value::<serde_json::Value, _, _>(matches, get_input, "params").context("get params")?
-        //         });
-        //         let command = serde_json::from_value(json).context("parse into command")?;
-        //         fulfillment::execute::Command {
-        //             device_id: get_value(matches, get_input, "device-id")?,
-        //             command,
-        //             params: serde_json::from_str(
-        //                 &matches
-        //                     .value_of("params")
-        //                     .map(std::string::ToString::to_string)
-        //                     .unwrap(),
-        //             )?,
-        //         }
-        //         .run(ctx)
-        //     }
-        //     ("query", matches) => fulfillment::query::Command {
-        //         device_id: get_value(matches, get_input, "device-id")?,
-        //     }
-        //     .run(ctx),
-        //     ("sync", _) => fulfillment::sync::Command {}.run(ctx),
-        //     _ => todo!(),
-        // },
         _ => unreachable!(),
     }?;
     Ok::<(), anyhow::Error>(())

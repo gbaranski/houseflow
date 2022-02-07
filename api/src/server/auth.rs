@@ -1,16 +1,25 @@
+use super::Client;
 use crate::Error;
-use crate::ServerClient;
 use houseflow_types::auth;
 use houseflow_types::errors::ServerError;
 use houseflow_types::token::AccessToken;
 use houseflow_types::token::RefreshToken;
+use reqwest::Url;
 
-impl ServerClient {
+impl Client {
+    fn auth_url(&self, path: &str) -> Url {
+        self.config
+            .server
+            .url
+            .join(&format!("auth/{}", path))
+            .unwrap()
+    }
+
     pub async fn login(
         &self,
         request: &auth::login::Request,
     ) -> Result<Result<auth::login::Response, ServerError>, Error> {
-        let url = self.auth_url.join("login").unwrap();
+        let url = self.auth_url("login");
         self.post(url, request).await
     }
 
@@ -18,7 +27,7 @@ impl ServerClient {
         &self,
         refresh_token: &RefreshToken,
     ) -> Result<Result<auth::token::Response, ServerError>, Error> {
-        let url = self.auth_url.join("refresh").unwrap();
+        let url = self.auth_url("refresh");
         self.post_with_token(url, &auth::token::Request {}, refresh_token)
             .await
     }
@@ -27,7 +36,7 @@ impl ServerClient {
         &self,
         access_token: &AccessToken,
     ) -> Result<Result<auth::whoami::Response, ServerError>, Error> {
-        let url = self.auth_url.join("whoami").unwrap();
+        let url = self.auth_url("whoami");
         self.get_with_token(url, &auth::whoami::Request {}, access_token)
             .await
     }

@@ -1,20 +1,19 @@
 use clap::AppSettings;
 use clap::Arg;
-use clap::SubCommand;
 use houseflow_types::code::VerificationCode;
 use std::str::FromStr;
 
-fn login() -> clap::App<'static, 'static> {
-    SubCommand::with_name("login")
+fn login() -> clap::App<'static> {
+    clap::App::new("login")
         .about("Log in with a Houseflow account")
         .arg(
-            Arg::with_name("email")
+            Arg::new("email")
                 .help("Email used to log in")
                 .long("email")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("code")
+            Arg::new("code")
                 .help("Verification code")
                 .long("code")
                 .validator(|s| match VerificationCode::from_str(&s) {
@@ -25,26 +24,26 @@ fn login() -> clap::App<'static, 'static> {
         )
 }
 
-fn logout() -> clap::App<'static, 'static> {
-    SubCommand::with_name("logout").about("Log out from currently logged account")
+fn logout() -> clap::App<'static> {
+    clap::App::new("logout").about("Log out from currently logged account")
 }
 
-fn refresh() -> clap::App<'static, 'static> {
-    SubCommand::with_name("refresh").about("Refresh stored authentication credentials")
+fn refresh() -> clap::App<'static> {
+    clap::App::new("refresh").about("Refresh stored authentication credentials")
 }
 
-fn status() -> clap::App<'static, 'static> {
-    SubCommand::with_name("status")
+fn status() -> clap::App<'static> {
+    clap::App::new("status")
         .about("View authentication status")
         .arg(
-            Arg::with_name("show-token")
+            Arg::new("show-token")
                 .help("Display the secret token in status")
                 .long("show-token"),
         )
 }
 
-pub(super) fn subcommand() -> clap::App<'static, 'static> {
-    SubCommand::with_name("auth")
+pub(super) fn subcommand() -> clap::App<'static> {
+    clap::App::new("auth")
         .about("Login, Logout, and refresh your authentication")
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(login())

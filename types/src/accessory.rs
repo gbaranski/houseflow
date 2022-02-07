@@ -48,16 +48,20 @@ pub mod manufacturers {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
+#[derive(thiserror::Error, Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case")]
 pub enum Error {
     /// Accessory is not connected
+    #[error("accessory is not connected")]
     NotConnected,
+    #[error("characteristic is read only")]
     CharacteristicReadOnly,
     /// Accessory service does not support the specified characteristic
+    #[error("characteristic is not supported")]
     CharacteristicNotSupported,
     /// Accessory does not support the specified service
+    #[error("service is not supported")]
     ServiceNotSupported,
 }
 
@@ -97,9 +101,19 @@ pub mod services {
     use strum::EnumDiscriminants;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants)]
-    #[strum_discriminants(derive(Hash, Serialize, Deserialize, strum::Display))]
+    #[strum_discriminants(derive(
+        Hash,
+        Serialize,
+        Deserialize,
+        strum::Display,
+        strum::EnumVariantNames,
+        strum::EnumString
+    ))]
     #[strum_discriminants(name(ServiceName))]
+    #[strum_discriminants(strum(serialize_all = "kebab-case"))]
+    #[strum_discriminants(serde(rename_all = "kebab-case"))]
     #[serde(tag = "name", rename_all = "kebab-case")]
+    #[strum(serialize_all = "kebab-case")]
     pub enum Service {
         TemperatureSensor(TemperatureSensor),
         HumiditySensor(HumiditySensor),
@@ -135,9 +149,18 @@ pub mod characteristics {
     use strum::EnumDiscriminants;
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants)]
-    #[strum_discriminants(derive(Serialize, Deserialize, strum::Display))]
+    #[strum_discriminants(derive(
+        Serialize,
+        Deserialize,
+        strum::Display,
+        strum::EnumVariantNames,
+        strum::EnumString
+    ))]
     #[strum_discriminants(name(CharacteristicName))]
+    #[strum_discriminants(strum(serialize_all = "kebab-case"))]
+    #[strum_discriminants(serde(rename_all = "kebab-case"))]
     #[serde(tag = "name", rename_all = "kebab-case")]
+    #[strum(serialize_all = "kebab-case")]
     pub enum Characteristic {
         CurrentTemperature(CurrentTemperature),
         CurrentHumidity(CurrentHumidity),

@@ -1,15 +1,15 @@
 use clap::AppSettings;
+use clap_complete::Shell;
 use clap::Arg;
-use clap::SubCommand;
 
-pub(super) fn subcommand() -> clap::App<'static, 'static> {
-    SubCommand::with_name("completions")
+pub(super) fn subcommand() -> clap::App<'static> {
+    clap::App::new("completions")
         .setting(AppSettings::Hidden)
         .about("Generate shell completions")
         .arg(
-            Arg::with_name("shell")
+            Arg::new("shell")
                 .help("Name of shell")
-                .possible_values(&clap::Shell::variants())
+                .possible_values(Shell::possible_values())
                 .takes_value(true),
         )
 }

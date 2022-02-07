@@ -1,2 +1,2 @@
-#[cfg(feature = "hive")]
+#[cfg(feature = "hub-hive")]
 pub mod hive;

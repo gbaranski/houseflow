@@ -40,5 +40,5 @@ uuid = { version = "0.8.2", features = ["v4", "serde"] }
 [features]
 token = ["chrono", "jsonwebtoken"]
 auth = ["token", "validator"]
-fulfillment = ["token", "lighthouse"]
 lighthouse = []
+meta = []

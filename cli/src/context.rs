@@ -1,5 +1,5 @@
 use anyhow::Context;
-use houseflow_api::ServerClient;
+use houseflow_api::server::Client as ServerClient;
 use houseflow_config::client::Config;
 use houseflow_config::Config as _;
 use houseflow_types::accessory::Accessory;
