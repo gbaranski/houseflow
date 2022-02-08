@@ -77,10 +77,10 @@ impl CommandContext {
             },
             Err(err) => return Err(err).context("Get tokens error"),
         };
-        let refresh_token = RefreshToken::decode_unsafe(&tokens.refresh)
+        let refresh_token = RefreshToken::decode_insecure(&tokens.refresh)
             .with_context(|| "you may need to log in again using `houseflow auth login`")?;
 
-        let access_token = AccessToken::decode_unsafe(&tokens.access);
+        let access_token = AccessToken::decode_insecure(&tokens.access);
         match access_token {
             Ok(token) => {
                 tracing::debug!("cached access token is valid");
@@ -94,7 +94,7 @@ impl CommandContext {
                     .refresh_token(&refresh_token)
                     .await??
                     .access_token;
-                let fetched_access_token = AccessToken::decode_unsafe(&raw_fetched_access_token)?;
+                let fetched_access_token = AccessToken::decode_insecure(&raw_fetched_access_token)?;
                 let tokens = Tokens {
                     refresh: tokens.refresh,
                     access: raw_fetched_access_token,
@@ -108,7 +108,7 @@ impl CommandContext {
 
     pub fn refresh_token(&mut self) -> anyhow::Result<RefreshToken> {
         let tokens = self.tokens.get().with_context(|| "get tokens")?;
-        RefreshToken::decode_unsafe(&tokens.refresh)
+        RefreshToken::decode_insecure(&tokens.refresh)
             .with_context(|| "you may need to log in again using `houseflow auth login`")
     }
 }

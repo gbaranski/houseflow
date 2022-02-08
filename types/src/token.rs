@@ -1,10 +1,8 @@
 use crate::errors::TokenError as Error;
 use chrono::DateTime;
 use chrono::Utc;
-use jsonwebtoken::dangerous_insecure_decode_with_validation;
 use jsonwebtoken::{
-    dangerous_insecure_decode, decode, encode, Algorithm, DecodingKey, EncodingKey, Header,
-    TokenData, Validation,
+    decode, encode, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation,
 };
 use serde::de;
 use serde::ser;
@@ -81,9 +79,7 @@ pub struct BaseClaims {
 
 impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
     pub fn new(key: &[u8], claims: C) -> Result<Self, Error> {
-        const ALGORITHM: Algorithm = Algorithm::HS256; // that can be changed in the future
-
-        let header = Header::new(ALGORITHM);
+        let header = Header::new(Algorithm::HS256);
         let encoded = encode(&header, &claims, &EncodingKey::from_secret(key))?;
 
         Ok(Self {
@@ -98,15 +94,11 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
     }
 
     /// Validate the expiry (if it is present) but not the signature.
-    pub fn decode_unsafe(token: &str) -> Result<Self, Error> {
-        // Hack to allow tokens without "exp", but validate it if it is present.
-        let unvalidated_data: TokenData<BaseClaims> = dangerous_insecure_decode(token)?;
-        let validation = Validation {
-            validate_exp: unvalidated_data.claims.exp.is_some(),
-            ..Validation::default()
-        };
+    pub fn decode_insecure(token: &str) -> Result<Self, Error> {
+        let mut validation = Validation::default();
+        validation.insecure_disable_signature_validation();
+        let data: TokenData<C> = decode(token, &DecodingKey::from_secret(&[]), &validation)?;
 
-        let data = dangerous_insecure_decode_with_validation(token, &validation)?;
         Ok(Self {
             header: data.header,
             claims: data.claims,
@@ -115,8 +107,11 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
     }
 
     /// Don't validate anything.
-    pub fn decode_unsafe_novalidate(token: &str) -> Result<Self, Error> {
-        let data = dangerous_insecure_decode(token)?;
+    pub fn decode_insecure_novalidate(token: &str) -> Result<Self, Error> {
+        let mut validation = Validation::default();
+        validation.validate_exp = false;
+        validation.insecure_disable_signature_validation();
+        let data = decode(token, &DecodingKey::from_secret(&[]), &validation)?;
         Ok(Self {
             header: data.header,
             claims: data.claims,
@@ -126,19 +121,15 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
 
     /// Validate the signature, and the expiry if it is present.
     pub fn decode(key: &[u8], token: &str) -> Result<Self, Error> {
-        // Hack to allow tokens without "exp", but validate it if it is present.
-        let unvalidated_data: TokenData<BaseClaims> = dangerous_insecure_decode(token)?;
-        let validation = Validation {
-            validate_exp: unvalidated_data.claims.exp.is_some(),
-            ..Validation::default()
-        };
-        let token = decode(token, &DecodingKey::from_secret(key), &validation)?;
+        let validation = Validation::default();
+        let data: TokenData<C> = decode(token, &DecodingKey::from_secret(key), &validation)?;
 
         Ok(Self {
-            header: token.header,
-            claims: token.claims,
-            encoded: String::new(),
+            header: data.header,
+            claims: data.claims,
+            encoded: token.to_owned(),
         })
+
     }
 }
 

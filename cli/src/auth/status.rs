@@ -17,8 +17,8 @@ impl crate::Command for Command {
         let response = ctx.server_client()?.whoami(&access_token).await??;
         let tokens = ctx.tokens.get()?;
         let (access_token, refresh_token) = (
-            AccessToken::decode_unsafe_novalidate(&tokens.access)?,
-            RefreshToken::decode_unsafe_novalidate(&tokens.refresh)?,
+            AccessToken::decode_insecure_novalidate(&tokens.access)?,
+            RefreshToken::decode_insecure_novalidate(&tokens.refresh)?,
         );
 
         let get_token_expiration = |exp_at: Option<&DateTime<Utc>>| match exp_at {

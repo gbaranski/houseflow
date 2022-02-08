@@ -39,5 +39,5 @@ server = []
 fs = []
 
 [dev-dependencies]
-serde_with = "1.10.0"
+serde_with = "1.12.0"
 toml = "0.5.8"
