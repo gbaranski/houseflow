@@ -1,5 +1,3 @@
-use axum::AddExtensionLayer;
-use axum_server::tls_rustls;
 use houseflow_config::defaults;
 use houseflow_config::server::Config;
 use houseflow_config::server::Controllers;
@@ -7,10 +5,12 @@ use houseflow_config::server::Providers;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
 use houseflow_server::clerk;
+use houseflow_server::clerk::Clerk;
 use houseflow_server::controllers;
 use houseflow_server::mailer;
 use houseflow_server::providers;
-use std::net::SocketAddr;
+use houseflow_server::State;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -49,7 +49,7 @@ async fn main() -> Result<(), anyhow::Error> {
         scheme => panic!("unexpected email URL scheme: {}", scheme),
     };
     let clerk = clerk::sled::Clerk::new(defaults::clerk_path())?;
-    let address = SocketAddr::new(config.network.address, config.network.port);
+    let clerk = Arc::new(clerk) as Arc<dyn Clerk>;
 
     let (provider_tx, provider_rx) = acu::channel(8, providers::Name::Master.into());
     let mut master_provider = providers::Master::new(provider_rx);
@@ -59,24 +59,18 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut master_controller = controllers::Master::new(controller_rx);
     let controller = controllers::Handle::new(controllers::Name::Master, controller_tx);
 
-    let mut app = houseflow_server::app()
-        .layer(AddExtensionLayer::new(clerk))
-        .layer(AddExtensionLayer::new(mailer))
-        .layer(AddExtensionLayer::new(provider.clone()))
-        .layer(AddExtensionLayer::new(controller.clone()));
+    let state = State::new(config.clone(), mailer, clerk, provider.clone());
 
     let Providers { lighthouse } = config.providers;
     if let Some(config) = lighthouse {
         let handle = providers::lighthouse::LighthouseProvider::create(controller.clone(), config);
-        app = app.layer(AddExtensionLayer::new(handle.clone()));
         master_provider.insert(handle.into());
     }
 
     let Controllers { meta } = config.controllers;
     if let Some(config) = meta {
         let handle = controllers::meta::MetaController::create(provider.clone(), config);
-        app = app.layer(AddExtensionLayer::new(handle.clone()));
-        master_controller.insert(handle.into());
+        master_controller.insert(handle);
     }
 
     tokio::spawn(async move {
@@ -87,25 +81,17 @@ async fn main() -> Result<(), anyhow::Error> {
         master_controller.run().await.unwrap();
     });
 
-    if let Some(tls) = &config.tls {
-        let fut = axum_server::bind(address).serve(app.clone().into_make_service());
-        tracing::info!("Starting server at {}", address);
-
-        let tls_address = SocketAddr::new(tls.address, tls.port);
-        let tls_config =
-            tls_rustls::RustlsConfig::from_pem_file(&tls.certificate, &tls.private_key).await?;
-        let tls_fut = axum_server::bind_rustls(tls_address, tls_config)
-            .serve(houseflow_server::app().into_make_service());
-        tracing::info!("Starting TLS server at {}", tls_address);
+    if let Some(tls) = config.tls {
+        let fut = houseflow_server::http_server(state.clone());
+        let tls_fut = houseflow_server::https_server(state, tls);
 
         tokio::select! {
-            val = fut => val?,
-            val = tls_fut => val?
+            _ = fut => {},
+            _ = tls_fut => {}
         };
     } else {
-        let fut = axum_server::bind(address).serve(app.clone().into_make_service());
-        tracing::info!("Starting server at {}", address);
-        fut.await?;
+        let fut = houseflow_server::http_server(state);
+        fut.await;
     }
 
     Ok(())

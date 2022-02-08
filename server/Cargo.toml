@@ -21,9 +21,11 @@ houseflow-types = { path = "../types", features = [
     "lighthouse",
 ] }
 houseflow-config = { path = "../config", version = "0.1.1", features = [
-    "server",
+    "dynamic",
     "fs",
     "log",
+
+    "server",
 ] }
 google-smart-home = { path = "../google-smart-home" }
 

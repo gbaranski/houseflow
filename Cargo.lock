@@ -1330,6 +1330,7 @@ dependencies = [
 name = "houseflow-config"
 version = "0.1.1"
 dependencies = [
+ "arc-swap",
  "hex",
  "houseflow-types",
  "rand 0.8.4",
