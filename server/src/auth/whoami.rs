@@ -23,8 +23,8 @@ pub async fn handle(
     tracing::info!(username = %user.username, email = %user.email);
 
     Ok(Json(Response {
-        username: user.username.clone(),
-        email: user.email.clone(),
+        username: user.username,
+        email: user.email,
     }))
 }
 
