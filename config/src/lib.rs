@@ -15,6 +15,9 @@ pub mod server;
 #[cfg(any(test, feature = "accessory"))]
 pub mod accessory;
 
+#[cfg(any(test, feature = "dynamic"))]
+pub mod dynamic;
+
 pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     const DEFAULT_TOML: &'static str;
     const DEFAULT_FILE: &'static str;
