@@ -13,83 +13,83 @@ use serde::Serialize;
 use uuid::Uuid;
 
 #[derive(Clone, PartialEq)]
-pub struct Token<P: ser::Serialize + de::DeserializeOwned> {
+pub struct Token<C: ser::Serialize + de::DeserializeOwned> {
     header: Header,
-    payload: P,
+    pub claims: C,
     encoded: String,
 }
 
-impl<P: ser::Serialize + de::DeserializeOwned> From<Token<P>> for TokenData<P> {
-    fn from(token: Token<P>) -> Self {
+impl<C: ser::Serialize + de::DeserializeOwned> From<Token<C>> for TokenData<C> {
+    fn from(token: Token<C>) -> Self {
         Self {
             header: token.header,
-            claims: token.payload,
+            claims: token.claims,
         }
     }
 }
 
-impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<P> {
+impl<C: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.encoded)
     }
 }
 
-impl<P: ser::Serialize + de::DeserializeOwned> std::fmt::Debug for Token<P> {
+impl<C: ser::Serialize + de::DeserializeOwned> std::fmt::Debug for Token<C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.encoded)
     }
 }
 
-impl<P: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<P> {
-    type Target = P;
+impl<C: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<C> {
+    type Target = C;
 
     fn deref(&self) -> &Self::Target {
-        &self.payload
+        &self.claims
     }
 }
 
-pub type AccessToken = Token<AccessTokenPayload>;
-pub type RefreshToken = Token<RefreshTokenPayload>;
-pub type AuthorizationCode = Token<AuthorizationCodePayload>;
+pub type AccessToken = Token<AccessTokenClaims>;
+pub type RefreshToken = Token<RefreshTokenClaims>;
+pub type AuthorizationCode = Token<AuthorizationCodeClaims>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AccessTokenPayload {
+pub struct AccessTokenClaims {
     pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub exp: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AuthorizationCodePayload {
+pub struct AuthorizationCodeClaims {
     pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub exp: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RefreshTokenPayload {
+pub struct RefreshTokenClaims {
     pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds_option")]
     pub exp: Option<DateTime<Utc>>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-struct BasePayload {
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BaseClaims {
     #[serde(with = "chrono::serde::ts_seconds_option")]
-    exp: Option<DateTime<Utc>>,
+    pub exp: Option<DateTime<Utc>>,
 }
 
-impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
-    pub fn new(key: &[u8], payload: P) -> Result<Self, Error> {
+impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
+    pub fn new(key: &[u8], claims: C) -> Result<Self, Error> {
         const ALGORITHM: Algorithm = Algorithm::HS256; // that can be changed in the future
 
         let header = Header::new(ALGORITHM);
-        let encoded = encode(&header, &payload, &EncodingKey::from_secret(key))?;
+        let encoded = encode(&header, &claims, &EncodingKey::from_secret(key))?;
 
         Ok(Self {
             header,
-            payload,
             encoded,
+            claims,
         })
     }
 
@@ -100,7 +100,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
     /// Validate the expiry (if it is present) but not the signature.
     pub fn decode_unsafe(token: &str) -> Result<Self, Error> {
         // Hack to allow tokens without "exp", but validate it if it is present.
-        let unvalidated_data: TokenData<BasePayload> = dangerous_insecure_decode(token)?;
+        let unvalidated_data: TokenData<BaseClaims> = dangerous_insecure_decode(token)?;
         let validation = Validation {
             validate_exp: unvalidated_data.claims.exp.is_some(),
             ..Validation::default()
@@ -109,7 +109,7 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         let data = dangerous_insecure_decode_with_validation(token, &validation)?;
         Ok(Self {
             header: data.header,
-            payload: data.claims,
+            claims: data.claims,
             encoded: token.to_owned(),
         })
     }
@@ -119,21 +119,26 @@ impl<P: ser::Serialize + de::DeserializeOwned> Token<P> {
         let data = dangerous_insecure_decode(token)?;
         Ok(Self {
             header: data.header,
-            payload: data.claims,
+            claims: data.claims,
             encoded: token.to_owned(),
         })
     }
 
     /// Validate the signature, and the expiry if it is present.
-    pub fn decode(key: &[u8], token: &str) -> Result<TokenData<P>, Error> {
+    pub fn decode(key: &[u8], token: &str) -> Result<Self, Error> {
         // Hack to allow tokens without "exp", but validate it if it is present.
-        let unvalidated_data: TokenData<BasePayload> = dangerous_insecure_decode(token)?;
+        let unvalidated_data: TokenData<BaseClaims> = dangerous_insecure_decode(token)?;
         let validation = Validation {
             validate_exp: unvalidated_data.claims.exp.is_some(),
             ..Validation::default()
         };
+        let token = decode(token, &DecodingKey::from_secret(key), &validation)?;
 
-        Ok(decode(token, &DecodingKey::from_secret(key), &validation)?)
+        Ok(Self {
+            header: token.header,
+            claims: token.claims,
+            encoded: String::new(),
+        })
     }
 }
 
@@ -155,7 +160,7 @@ mod tests {
         #[test]
         fn valid() {
             let key = get_key();
-            let payload = AccessTokenPayload {
+            let payload = AccessTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: Utc::now().round_subsecs(0) + chrono::Duration::hours(1),
             };
@@ -163,20 +168,20 @@ mod tests {
             let encoded = token.encode();
             let decoded = AccessToken::decode(&key, &encoded).unwrap();
             assert_eq!(token.header, decoded.header);
-            assert_eq!(token.payload, decoded.claims);
+            assert_eq!(token.claims, decoded.claims);
         }
 
         #[test]
         fn expired() {
             let key = get_key();
             let expired_by = chrono::Duration::hours(1);
-            let payload = AccessTokenPayload {
+            let payload = AccessTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: Utc::now() - expired_by,
             };
             let token = AccessToken::new(&key, payload).unwrap();
             let encoded = token.encode();
-            let err = Token::<AccessTokenPayload>::decode(&key, &encoded).unwrap_err();
+            let err = Token::<AccessTokenClaims>::decode(&key, &encoded).unwrap_err();
             assert_eq!(
                 err,
                 Error {
@@ -189,7 +194,7 @@ mod tests {
         fn invalid_signature() {
             let valid_key = get_key();
             let invalid_key = get_key();
-            let payload = AccessTokenPayload {
+            let payload = AccessTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: Utc::now() - chrono::Duration::hours(1),
             };
@@ -211,7 +216,7 @@ mod tests {
         #[test]
         fn valid_with_exp() {
             let key = get_key();
-            let payload = RefreshTokenPayload {
+            let payload = RefreshTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
             };
@@ -219,13 +224,13 @@ mod tests {
             let encoded = token.encode();
             let decoded = RefreshToken::decode(&key, &encoded).unwrap();
             assert_eq!(token.header, decoded.header);
-            assert_eq!(token.payload, decoded.claims);
+            assert_eq!(token.claims, decoded.claims);
         }
 
         #[test]
         fn valid_without_exp() {
             let key = get_key();
-            let payload = RefreshTokenPayload {
+            let payload = RefreshTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: None,
             };
@@ -233,14 +238,14 @@ mod tests {
             let encoded = token.encode();
             let decoded = RefreshToken::decode(&key, &encoded).unwrap();
             assert_eq!(token.header, decoded.header);
-            assert_eq!(token.payload, decoded.claims);
+            assert_eq!(token.claims, decoded.claims);
         }
 
         #[test]
         fn expired() {
             let key = get_key();
             let expired_by = chrono::Duration::hours(1);
-            let payload = RefreshTokenPayload {
+            let payload = RefreshTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: Some(Utc::now() - expired_by),
             };
@@ -259,7 +264,7 @@ mod tests {
         fn invalid_signature() {
             let valid_key = get_key();
             let invalid_key = get_key();
-            let payload = RefreshTokenPayload {
+            let payload = RefreshTokenClaims {
                 sub: Uuid::new_v4(),
                 exp: Some(Utc::now().round_subsecs(0) + chrono::Duration::hours(1)),
             };
