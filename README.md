@@ -7,9 +7,8 @@ Houseflow is open source home automation system, it lets you configure various a
 
 # Features
 
-- [x] Fast, written with high-performance languague, Rust.
-- [x] Integration with Google Home
-- [x] Fully configurable and reproducable from config files.
+- [x] Fast, written in high-performance languague, Rust.
+- [x] Fully configurable and fully reproducable from config files.
 
 ## Supported accessories
 
@@ -24,5 +23,4 @@ Houseflow is open source home automation system, it lets you configure various a
 Contributors are very welcome! **No contribution is too small and all contributions are valued.**
 
 # Getting help
-
 Get in touch with me on Discord gbaranski#5119, or via email me@gbaranski.com.
