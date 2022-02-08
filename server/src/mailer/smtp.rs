@@ -60,7 +60,7 @@ impl Mailer {
                 );
                 let message = lettre::Message::builder()
                     .from(self.config.from.to_owned())
-                    .to(to)
+                    .to(lettre::message::Mailbox::new(None, to))
                     .subject(subject)
                     .body(body)
                     .unwrap();

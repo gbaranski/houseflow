@@ -225,7 +225,7 @@ impl Config {
         self.users.iter().find(|user| user.id == *user_id)
     }
 
-    pub fn get_user_by_email(&self, user_email: &str) -> Option<&User> {
+    pub fn get_user_by_email(&self, user_email: &lettre::Address) -> Option<&User> {
         self.users.iter().find(|user| user.email == *user_email)
     }
 
@@ -337,7 +337,7 @@ mod tests {
             users: [User {
                 id: user::ID::from_str("861ccceaa3e349138ce2498768dbfe09").unwrap(),
                 username: String::from("gbaranski"),
-                email: String::from("root@gbaranski.com"),
+                email: lettre::Address::from_str("root@gbaranski.com").unwrap(),
                 admin: false,
             }]
             .to_vec(),

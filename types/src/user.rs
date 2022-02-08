@@ -11,7 +11,7 @@ pub struct User {
     /// Name of the user
     pub username: String,
     /// Email of the user
-    pub email: String,
+    pub email: lettre::Address,
     /// True if the user is admin.
     pub admin: bool,
 }

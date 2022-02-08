@@ -6,12 +6,12 @@ use tokio::sync::mpsc;
 
 pub struct Mailer {
     receiver: acu::Receiver<Message>,
-    verification_code_sender: mpsc::Sender<(lettre::message::Mailbox, VerificationCode)>,
+    verification_code_sender: mpsc::UnboundedSender<(lettre::Address, VerificationCode)>,
 }
 
 impl Mailer {
     pub fn create(
-        verification_code_sender: mpsc::Sender<(lettre::message::Mailbox, VerificationCode)>,
+        verification_code_sender: mpsc::UnboundedSender<(lettre::Address, VerificationCode)>,
     ) -> Handle {
         let (sender, receiver) = acu::channel(8, Name::Fake.into());
         let mut actor = Self {
@@ -40,7 +40,6 @@ impl Mailer {
                 tracing::info!("verification code for {}: {}", to, code);
                 self.verification_code_sender
                     .send((to, code))
-                    .await
                     .unwrap();
                 respond_to.send(Ok(())).unwrap();
             }

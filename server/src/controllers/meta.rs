@@ -19,7 +19,7 @@ impl MetaController {
         let (provider_sender, provider_receiver) = acu::channel(8, Name::Meta.into());
         let mut actor = Self { provider_receiver };
 
-        let handle = Handle::new(Name::Meta, provider_sender);
+        let handle = Handle::new( provider_sender);
         tokio::spawn(async move { actor.run().await });
         handle
     }

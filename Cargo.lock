@@ -1143,6 +1143,7 @@ dependencies = [
  "houseflow-config",
  "houseflow-types",
  "lazy_static",
+ "lettre",
  "rand 0.8.4",
  "serde",
  "serde_json",
@@ -1161,6 +1162,7 @@ dependencies = [
  "arc-swap",
  "hex",
  "houseflow-types",
+ "lettre",
  "rand 0.8.4",
  "regex",
  "serde",
@@ -1226,7 +1228,9 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "url",
  "urlencoding",
+ "validator",
 ]
 
 [[package]]
@@ -1238,6 +1242,7 @@ dependencies = [
  "chrono",
  "hex",
  "jsonwebtoken",
+ "lettre",
  "rand 0.8.4",
  "serde",
  "serde_json",
@@ -1470,6 +1475,7 @@ dependencies = [
  "regex",
  "rustls",
  "rustls-pemfile",
+ "serde",
  "webpki-roots",
 ]
 

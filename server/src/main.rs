@@ -53,11 +53,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let (provider_tx, provider_rx) = acu::channel(8, providers::Name::Master.into());
     let mut master_provider = providers::Master::new(provider_rx);
-    let provider = providers::Handle::new(providers::Name::Master, provider_tx);
+    let provider = providers::Handle::new(provider_tx);
 
     let (controller_tx, controller_rx) = acu::channel(8, controllers::Name::Master.into());
     let mut master_controller = controllers::Master::new(controller_rx);
-    let controller = controllers::Handle::new(controllers::Name::Master, controller_tx);
+    let controller = controllers::Handle::new(controller_tx);
 
     let state = State::new(config.clone(), mailer, clerk, provider.clone());
 

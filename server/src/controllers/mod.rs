@@ -35,14 +35,18 @@ pub enum Message {
 
 #[derive(Debug, Clone)]
 pub struct Handle {
-    pub name: Name,
     sender: acu::Sender<Message>,
 }
 
 impl Handle {
-    pub fn new(name: Name, sender: acu::Sender<Message>) -> Self {
-        Self { name, sender }
+    pub fn new(sender: acu::Sender<Message>) -> Self {
+        Self { sender }
     }
+
+    pub fn name(&self) -> &'static str {
+        self.sender.name
+    }
+
 
     pub async fn wait_for_stop(&self) {
         self.sender.closed().await;
@@ -107,10 +111,10 @@ impl<'s> Master {
         use futures::stream::FuturesOrdered;
         use futures::StreamExt;
 
-        let (controller_names, futures): (Vec<&Name>, FuturesOrdered<_>) = self
+        let (controller_names, futures): (Vec<&'static str>, FuturesOrdered<_>) = self
             .slave_controllers
             .iter()
-            .map(|controller| (&controller.name, f(controller)))
+            .map(|controller| (controller.name(), f(controller)))
             .unzip();
 
         let results: Vec<Result<(), Error>> = futures.collect().await;

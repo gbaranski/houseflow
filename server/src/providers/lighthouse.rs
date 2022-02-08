@@ -113,7 +113,7 @@ impl LighthouseProvider {
             config,
         };
 
-        let handle = Handle::new(Name::Lighthouse, provider_sender);
+        let handle = Handle::new(provider_sender);
         let handle = LighthouseHandle {
             sender: lighthouse_sender,
             handle,

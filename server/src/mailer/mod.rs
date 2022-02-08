@@ -1,6 +1,9 @@
 pub mod fake;
 pub mod smtp;
 
+pub use fake::Mailer as Fake;
+pub use smtp::Mailer as Smtp;
+
 use houseflow_types::code::VerificationCode;
 use tokio::sync::oneshot;
 
@@ -21,7 +24,7 @@ pub enum Error {
 pub enum Message {
     SendVerificationCode {
         subject: String,
-        to: lettre::message::Mailbox,
+        to: lettre::Address,
         code: VerificationCode,
         respond_to: oneshot::Sender<Result<(), Error>>,
     },
@@ -40,7 +43,7 @@ impl Handle {
     pub async fn send_verification_code(
         &self,
         subject: String,
-        to: lettre::message::Mailbox,
+        to: lettre::Address,
         code: VerificationCode,
     ) -> Result<(), Error> {
         self.sender

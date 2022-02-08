@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use houseflow_types::code::VerificationCode;
 
 pub struct Command {
-    pub email: String,
+    pub email: lettre::Address,
     pub code: Option<VerificationCode>,
 }
 

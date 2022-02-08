@@ -6,8 +6,7 @@ use validator::Validate;
 #[derive(Debug, Clone, Deserialize, Serialize, Validate)]
 #[serde(rename_all = "kebab-case")]
 pub struct Request {
-    #[validate(email)]
-    pub email: String,
+    pub email: lettre::Address,
     pub verification_code: Option<VerificationCode>,
 }
 

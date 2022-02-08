@@ -7,5 +7,5 @@ pub struct Request {}
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Response {
     pub username: String,
-    pub email: String,
+    pub email: lettre::Address,
 }
