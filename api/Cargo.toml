@@ -17,15 +17,12 @@ houseflow-config = { path = "../config", version = "0.1.1", features = [
     "client",
 ] }
 houseflow-accessory-hal = { path = "../accessories/hal", version = "0.1.0", optional = true }
-
 reqwest = { version = "0.11", features = [ "json", "rustls-tls" ], default-features = false }
 serde = "1.0"
 serde_json = "1.0"
 thiserror = "1.0"
 url = "2.2"
-
 tokio = { version = "1.6.0", features = ["sync", "macros"], default-features = false }
-
 tracing = "0.1.26"
 tokio-tungstenite = { version = "0.16.0", optional = true }
 http = { version = "0.2.5", optional = true }
@@ -33,12 +30,10 @@ base64 = { version = "0.13.0", optional = true }
 anyhow = "1.0.51"
 futures = "0.3.18"
 
-messages = { version = "0.3.0", optional = true }
-
 [features]
 server = []
 server-auth = ["server", "houseflow-types/auth"]
 server-meta = ["server", "houseflow-types/meta"]
 
 hub = []
-hub-hive = ["hub", "houseflow-config/accessory", "tokio-tungstenite", "http", "base64", "messages", "houseflow-accessory-hal"]
+hub-hive = ["hub", "houseflow-config/accessory", "tokio-tungstenite", "http", "base64", "houseflow-accessory-hal"]

@@ -27,8 +27,6 @@ houseflow-config = { path = "../config", version = "0.1.1", features = [
 
     "server",
 ] }
-google-smart-home = { path = "../google-smart-home" }
-
 askama = "0.11.0"
 tokio = { version = "1.5", features = [
     "sync",
