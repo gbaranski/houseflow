@@ -140,6 +140,7 @@ pub mod providers {
 #[serde(rename_all = "kebab-case")]
 pub struct Logins {
     /// Configuration for Google login.
+    #[serde(default)]
     pub google: Option<GoogleLogin>,
 }
 

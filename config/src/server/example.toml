@@ -18,17 +18,21 @@ port = 4321
 url = "smtp://${EMAIL_USERNAME}:${EMAIL_PASSWORD}@email.houseflow.gbaranski.com:666"
 from = "houseflow@gbaranski.com"
 
+[controllers.meta]
+
+[providers.lighthouse]
+[[providers.lighthouse.hubs]]
+id = "c3b846ed-74f1-4fd9-90d2-e6c2669dfaa6"
+name = "Simple Hub"
+password-hash = "some-password-hash"
+structure-id = "bd7feab5033940e296ed7fcdc700ba65"
+
 [logins.google]
 client-id = "google-login-client-id"
 
 [[structures]]
 id = "bd7feab5033940e296ed7fcdc700ba65"
 name = "Zukago"
-
-[[rooms]]
-id = "baafebaa0708441782cf17470dd98392"
-structure-id = "bd7feab5033940e296ed7fcdc700ba65"
-name = "Bedroom"
 
 [[users]]
 id = "861ccceaa3e349138ce2498768dbfe09"
@@ -40,12 +44,3 @@ admin = false
 structure-id = "bd7feab5033940e296ed7fcdc700ba65"
 user-id = "861ccceaa3e349138ce2498768dbfe09"
 is-manager = true
-
-[controllers.meta]
-
-[providers.lighthouse]
-[[providers.lighthouse.hub]]
-id = "c3b846ed-74f1-4fd9-90d2-e6c2669dfaa6"
-name = "Simple Hub"
-password-hash = "some-password-hash"
-structure-id = "bd7feab5033940e296ed7fcdc700ba65"
