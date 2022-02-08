@@ -129,7 +129,6 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
             claims: data.claims,
             encoded: token.to_owned(),
         })
-
     }
 }
 

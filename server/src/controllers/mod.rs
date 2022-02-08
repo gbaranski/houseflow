@@ -47,7 +47,6 @@ impl Handle {
         self.sender.name
     }
 
-
     pub async fn wait_for_stop(&self) {
         self.sender.closed().await;
     }

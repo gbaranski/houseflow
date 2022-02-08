@@ -1,5 +1,5 @@
-pub mod lighthouse;
 pub mod fake;
+pub mod lighthouse;
 
 pub use fake::FakeProvider;
 pub use lighthouse::LighthouseProvider;
