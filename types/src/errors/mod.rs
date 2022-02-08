@@ -15,8 +15,6 @@ pub use token::Error as TokenError;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::accessory;
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
     tag = "error",
@@ -43,7 +41,9 @@ pub enum ServerError {
 #[cfg(feature = "axum")]
 impl axum::response::IntoResponse for ServerError {
     fn into_response(self) -> axum::response::Response {
+        use crate::accessory;
         use axum::http::StatusCode;
+
         let status = match self {
             Self::TooManyRequests => StatusCode::TOO_MANY_REQUESTS,
             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
