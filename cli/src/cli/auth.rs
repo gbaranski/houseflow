@@ -16,7 +16,7 @@ fn login() -> clap::App<'static> {
             Arg::new("code")
                 .help("Verification code")
                 .long("code")
-                .validator(|s| match VerificationCode::from_str(&s) {
+                .validator(|s| match VerificationCode::from_str(s) {
                     Ok(_) => Ok(()),
                     Err(err) => Err(err.to_string()),
                 })

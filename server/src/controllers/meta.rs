@@ -2,6 +2,7 @@ use super::Handle;
 use super::Message;
 use super::Name;
 use crate::providers;
+use crate::State;
 use anyhow::Error;
 use axum::Json;
 use houseflow_config::server::controllers::Meta as Config;
@@ -9,51 +10,18 @@ use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::errors::ControllerError;
 use houseflow_types::errors::ServerError;
 
-#[derive(Debug)]
-pub enum MetaMessage {}
-
-#[derive(Debug, Clone)]
-pub struct MetaHandle {
-    sender: acu::Sender<MetaMessage>,
-    handle: Handle,
-}
-
-impl std::ops::Deref for MetaHandle {
-    type Target = Handle;
-
-    fn deref(&self) -> &Self::Target {
-        &self.handle
-    }
-}
-
-impl From<MetaHandle> for Handle {
-    fn from(val: MetaHandle) -> Self {
-        val.handle
-    }
-}
-
 pub struct MetaController {
     provider_receiver: acu::Receiver<Message>,
-    meta_receiver: acu::Receiver<MetaMessage>,
-    provider: providers::Handle,
 }
 
 impl MetaController {
-    pub fn create(provider: providers::Handle, _config: Config) -> MetaHandle {
+    pub fn create(_provider: providers::Handle, _config: Config) -> Handle {
         let (provider_sender, provider_receiver) = acu::channel(8, Name::Meta.into());
-        let (meta_sender, meta_receiver) = acu::channel(8, Name::Meta.into());
-        let mut actor = Self {
-            provider_receiver,
-            meta_receiver,
-            provider,
-        };
+        let mut actor = Self { provider_receiver };
 
         let handle = Handle::new(Name::Meta, provider_sender);
         tokio::spawn(async move { actor.run().await });
-        MetaHandle {
-            sender: meta_sender,
-            handle,
-        }
+        handle
     }
 
     async fn run(&mut self) -> Result<(), Error> {
@@ -61,9 +29,6 @@ impl MetaController {
             tokio::select! {
                 Some(message) = self.provider_receiver.recv() => {
                     self.handle_controller_message(message).await?;
-                },
-                Some(message) = self.meta_receiver.recv() => {
-                    self.handle_meta_message(message).await?
                 },
                 else => break,
             }
@@ -81,11 +46,6 @@ impl MetaController {
                 characteristic: _,
             } => {}
         };
-        Ok(())
-    }
-
-    async fn handle_meta_message(&mut self, message: MetaMessage) -> Result<(), anyhow::Error> {
-        match message {};
         Ok(())
     }
 }
@@ -112,14 +72,15 @@ use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 
 pub async fn read_characteristic(
-    Extension(provider): Extension<providers::Handle>,
+    Extension(state): Extension<State>,
     Path((accessory_id, service_name, characteristic_name)): Path<(
         accessory::ID,
         ServiceName,
         CharacteristicName,
     )>,
 ) -> Result<Json<Characteristic>, ServerError> {
-    let characteristic = provider
+    let characteristic = state
+        .provider
         .read_characteristic(accessory_id, service_name, characteristic_name)
         .await
         .map_err(ControllerError::AccessoryError)?;
@@ -127,11 +88,12 @@ pub async fn read_characteristic(
 }
 
 pub async fn write_characteristic(
-    Extension(provider): Extension<providers::Handle>,
+    Extension(state): Extension<State>,
     Path((accessory_id, service_name)): Path<(accessory::ID, ServiceName)>,
     Json(characteristic): Json<Characteristic>,
 ) -> Result<(), ServerError> {
-    provider
+    state
+        .provider
         .write_characteristic(accessory_id, service_name, characteristic)
         .await
         .map_err(ControllerError::AccessoryError)?;

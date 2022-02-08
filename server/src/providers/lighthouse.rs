@@ -33,7 +33,7 @@ use tokio::sync::oneshot;
 pub enum LighthouseMessage {
     Connected {
         hub: LighthouseHub,
-        websocket_stream: WebSocket,
+        websocket_stream: Box<WebSocket>,
         respond_to: oneshot::Sender<LighthouseHubSessionHandle>,
     },
     Disconnected {
@@ -74,7 +74,7 @@ impl LighthouseHandle {
         self.sender
             .call(|respond_to| LighthouseMessage::Connected {
                 hub,
-                websocket_stream,
+                websocket_stream: Box::new(websocket_stream),
                 respond_to,
             })
             .await
@@ -148,7 +148,7 @@ impl LighthouseProvider {
                 respond_to,
             } => {
                 let session =
-                    LighthouseHubSession::create(websocket_stream, self.controller.clone()).await;
+                    LighthouseHubSession::create(*websocket_stream, self.controller.clone()).await;
                 self.sessions.insert(hub.id, session.clone());
                 respond_to.send(session).unwrap()
             }

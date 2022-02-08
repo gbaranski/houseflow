@@ -73,7 +73,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let handle =
             controllers::Lighthouse::create(provider.clone(), config.hub.id, lighthouse_config)
                 .await?;
-        master_controller.insert(handle.into());
+        master_controller.insert(handle);
     }
 
     tokio::spawn(async move {
