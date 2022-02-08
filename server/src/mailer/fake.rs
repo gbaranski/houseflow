@@ -37,6 +37,7 @@ impl Mailer {
                 code,
                 respond_to,
             } => {
+                tracing::info!("verification code for {}: {}", to, code);
                 self.verification_code_sender
                     .send((to, code))
                     .await
