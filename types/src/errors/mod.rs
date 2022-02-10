@@ -18,7 +18,7 @@ use serde::Serialize;
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
     tag = "error",
-    content = "error_description",
+    content = "error-description",
     rename_all = "snake_case"
 )]
 pub enum ServerError {

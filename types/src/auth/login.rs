@@ -11,7 +11,7 @@ pub struct Request {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(tag = "status", rename_all = "snake_case")]
+#[serde(tag = "status", rename_all = "kebab-case")]
 pub enum Response {
     LoggedIn {
         access_token: String,
