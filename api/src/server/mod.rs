@@ -6,6 +6,7 @@ pub mod meta;
 
 use crate::Error;
 use houseflow_config::client::Config;
+use houseflow_types::token::TokenClaims;
 use houseflow_types::token::Token;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
@@ -52,14 +53,14 @@ impl Client {
         send_request(request).await
     }
 
-    pub(crate) async fn post_with_token<TP, B, E>(
+    pub(crate) async fn post_with_token<TC, B, E>(
         &self,
         url: Url,
         body: &impl Serialize,
-        token: &Token<TP>,
+        token: &Token<TC>,
     ) -> Result<Result<B, E>, Error>
     where
-        TP: Serialize + DeserializeOwned,
+        TC: TokenClaims,
         B: DeserializeOwned,
         E: DeserializeOwned,
     {
@@ -67,14 +68,14 @@ impl Client {
         send_request(request).await
     }
 
-    pub(crate) async fn get_with_token<TP, B, E>(
+    pub(crate) async fn get_with_token<TC, B, E>(
         &self,
         url: Url,
         body: &impl Serialize,
-        token: &Token<TP>,
+        token: &Token<TC>,
     ) -> Result<Result<B, E>, Error>
     where
-        TP: Serialize + DeserializeOwned,
+        TC: TokenClaims,
         B: DeserializeOwned,
         E: DeserializeOwned,
     {

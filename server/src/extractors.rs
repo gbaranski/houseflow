@@ -9,9 +9,8 @@ use houseflow_types::errors::TokenError;
 use houseflow_types::token::AccessTokenClaims;
 use houseflow_types::token::RefreshTokenClaims;
 use houseflow_types::token::Token;
+use houseflow_types::token::TokenClaims;
 use houseflow_types::user;
-use serde::de;
-use serde::ser;
 
 pub struct UserID(pub user::ID);
 
@@ -35,7 +34,7 @@ async fn from_request<P>(
     get_key_fn: impl FnOnce(&Secrets) -> &str,
 ) -> Result<Token<P>, AuthError>
 where
-    P: ser::Serialize + de::DeserializeOwned,
+    P: TokenClaims
 {
     let state: &State = req.extensions().unwrap().get().unwrap();
     let header_str = req

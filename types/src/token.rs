@@ -17,7 +17,7 @@ pub struct Token<C: ser::Serialize + de::DeserializeOwned> {
     encoded: String,
 }
 
-impl<C: ser::Serialize + de::DeserializeOwned> From<Token<C>> for TokenData<C> {
+impl<C: TokenClaims> From<Token<C>> for TokenData<C> {
     fn from(token: Token<C>) -> Self {
         Self {
             header: token.header,
@@ -26,19 +26,19 @@ impl<C: ser::Serialize + de::DeserializeOwned> From<Token<C>> for TokenData<C> {
     }
 }
 
-impl<C: ser::Serialize + de::DeserializeOwned> std::fmt::Display for Token<C> {
+impl<C: TokenClaims> std::fmt::Display for Token<C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.encoded)
     }
 }
 
-impl<C: ser::Serialize + de::DeserializeOwned> std::fmt::Debug for Token<C> {
+impl<C: TokenClaims> std::fmt::Debug for Token<C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.encoded)
     }
 }
 
-impl<C: ser::Serialize + de::DeserializeOwned> std::ops::Deref for Token<C> {
+impl<C: TokenClaims> std::ops::Deref for Token<C> {
     type Target = C;
 
     fn deref(&self) -> &Self::Target {
@@ -50,12 +50,20 @@ pub type AccessToken = Token<AccessTokenClaims>;
 pub type RefreshToken = Token<RefreshTokenClaims>;
 pub type AuthorizationCode = Token<AuthorizationCodeClaims>;
 
+pub trait TokenClaims: ser::Serialize + de::DeserializeOwned {
+    fn validation(_token: &str) -> Validation {
+        Validation::default()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessTokenClaims {
     pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub exp: DateTime<Utc>,
 }
+
+impl TokenClaims for AccessTokenClaims {}
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthorizationCodeClaims {
@@ -64,20 +72,39 @@ pub struct AuthorizationCodeClaims {
     pub exp: DateTime<Utc>,
 }
 
+impl TokenClaims for AuthorizationCodeClaims {}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RefreshTokenClaims {
     pub sub: Uuid,
     #[serde(with = "chrono::serde::ts_seconds_option")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub exp: Option<DateTime<Utc>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct BaseClaims {
-    #[serde(with = "chrono::serde::ts_seconds_option")]
-    pub exp: Option<DateTime<Utc>>,
+impl TokenClaims for RefreshTokenClaims {
+    // that's temporary untill https://github.com/Keats/jsonwebtoken/issues/239 resolves
+    fn validation(token: &str) -> Validation {
+        let is_exp_present = {
+            let mut validation = Validation::default();
+            validation.validate_exp = false;
+            validation.required_spec_claims.remove("exp");
+            validation.insecure_disable_signature_validation();
+            let token: TokenData<Self> = decode(token, &DecodingKey::from_secret(&[]), &validation).unwrap();
+            token.claims.exp.is_some()
+        };
+        let mut validation = Validation::default();
+        if !is_exp_present {
+            validation.validate_exp = false;
+            validation.required_spec_claims.remove("exp");
+        }
+        validation
+    }
+
 }
 
-impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
+impl<C: TokenClaims> Token<C> {
     pub fn new(key: &[u8], claims: C) -> Result<Self, Error> {
         let header = Header::new(Algorithm::HS256);
         let encoded = encode(&header, &claims, &EncodingKey::from_secret(key))?;
@@ -95,7 +122,7 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
 
     /// Validate the expiry (if it is present) but not the signature.
     pub fn decode_insecure(token: &str) -> Result<Self, Error> {
-        let mut validation = Validation::default();
+        let mut validation = C::validation(token);
         validation.insecure_disable_signature_validation();
         let data: TokenData<C> = decode(token, &DecodingKey::from_secret(&[]), &validation)?;
 
@@ -108,7 +135,7 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
 
     /// Don't validate anything.
     pub fn decode_insecure_novalidate(token: &str) -> Result<Self, Error> {
-        let mut validation = Validation::default();
+        let mut validation = C::validation(token);
         validation.validate_exp = false;
         validation.insecure_disable_signature_validation();
         let data = decode(token, &DecodingKey::from_secret(&[]), &validation)?;
@@ -121,7 +148,7 @@ impl<C: ser::Serialize + de::DeserializeOwned> Token<C> {
 
     /// Validate the signature, and the expiry if it is present.
     pub fn decode(key: &[u8], token: &str) -> Result<Self, Error> {
-        let validation = Validation::default();
+        let validation = C::validation(token);
         let data: TokenData<C> = decode(token, &DecodingKey::from_secret(key), &validation)?;
 
         Ok(Self {
@@ -226,6 +253,7 @@ mod tests {
             };
             let token = RefreshToken::new(&key, payload).unwrap();
             let encoded = token.encode();
+            dbg!(&encoded);
             let decoded = RefreshToken::decode(&key, &encoded).unwrap();
             assert_eq!(token.header, decoded.header);
             assert_eq!(token.claims, decoded.claims);
