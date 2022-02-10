@@ -6,8 +6,8 @@ pub mod meta;
 
 use crate::Error;
 use houseflow_config::client::Config;
-use houseflow_types::token::TokenClaims;
 use houseflow_types::token::Token;
+use houseflow_types::token::TokenClaims;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use url::Url;

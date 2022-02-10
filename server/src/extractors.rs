@@ -34,7 +34,7 @@ async fn from_request<P>(
     get_key_fn: impl FnOnce(&Secrets) -> &str,
 ) -> Result<Token<P>, AuthError>
 where
-    P: TokenClaims
+    P: TokenClaims,
 {
     let state: &State = req.extensions().unwrap().get().unwrap();
     let header_str = req

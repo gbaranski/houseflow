@@ -91,7 +91,8 @@ impl TokenClaims for RefreshTokenClaims {
             validation.validate_exp = false;
             validation.required_spec_claims.remove("exp");
             validation.insecure_disable_signature_validation();
-            let token: TokenData<Self> = decode(token, &DecodingKey::from_secret(&[]), &validation).unwrap();
+            let token: TokenData<Self> =
+                decode(token, &DecodingKey::from_secret(&[]), &validation).unwrap();
             token.claims.exp.is_some()
         };
         let mut validation = Validation::default();
@@ -101,7 +102,6 @@ impl TokenClaims for RefreshTokenClaims {
         }
         validation
     }
-
 }
 
 impl<C: TokenClaims> Token<C> {
