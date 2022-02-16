@@ -1,6 +1,6 @@
 pub mod defaults;
 
-#[cfg(any(test, feature = "log"))]
+#[cfg(feature = "log")]
 pub mod log;
 
 #[cfg(any(test, feature = "client"))]
@@ -48,7 +48,7 @@ pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     fn parse(s: &str) -> Result<Self, Error> {
         use regex::Regex;
 
-        let re = Regex::new(r"\$\{([a-zA-Z_]+)\}").unwrap();
+        let re = Regex::new(r"\$\{([a-zA-Z_]+)}").unwrap();
         let s = re.replace_all(s, |caps: &regex::Captures| {
             let (pos, name) = {
                 let name_match = caps.get(1).unwrap();

@@ -2,6 +2,8 @@ use super::Handle;
 use super::Message;
 use super::Name;
 use crate::controllers;
+use crate::controllers::ControllerExt;
+use crate::providers::ProviderExt;
 use anyhow::Context;
 use anyhow::Error;
 use async_trait::async_trait;
@@ -30,7 +32,7 @@ use std::collections::HashSet;
 use tokio::sync::oneshot;
 
 #[derive(Debug)]
-pub enum LighthouseMessage {
+pub enum LighthouseProviderMessage {
     Connected {
         hub: LighthouseHub,
         websocket_stream: Box<WebSocket>,
@@ -44,35 +46,58 @@ pub enum LighthouseMessage {
         respond_to: oneshot::Sender<Option<LighthouseHub>>,
     },
 }
+impl acu::Message for LighthouseProviderMessage {}
+
+type LighthouseProviderReceiver = acu::Receiver<LighthouseProviderMessage, Name>;
 
 #[derive(Debug, Clone)]
-pub struct LighthouseHandle {
-    sender: acu::Sender<LighthouseMessage>,
+pub struct LighthouseProviderHandle {
     handle: Handle,
+    lighthouse: acu::Handle<LighthouseProviderMessage, Name>,
 }
 
-impl std::ops::Deref for LighthouseHandle {
-    type Target = Handle;
+pub fn new(controller: controllers::MasterHandle, config: Config) -> LighthouseProviderHandle {
+    let (sender, receiver) = acu::channel(8, Name::Lighthouse);
+    let (lighthouse_sender, lighthouse_receiver) = acu::channel(8, Name::Lighthouse);
+    let mut actor = LighthouseProvider {
+        receiver,
+        lighthouse_receiver,
+        controller,
+        sessions: Default::default(),
+        config,
+    };
 
-    fn deref(&self) -> &Self::Target {
-        &self.handle
-    }
+    let lighthouse_handle = LighthouseProviderHandle {
+        handle: Handle { sender },
+        lighthouse: acu::Handle {
+            sender: lighthouse_sender,
+        },
+    };
+    tokio::spawn(async move { actor.run().await });
+    lighthouse_handle
 }
 
-impl From<LighthouseHandle> for Handle {
-    fn from(val: LighthouseHandle) -> Self {
-        val.handle
-    }
+#[async_trait]
+pub trait LighthouseProviderExt {
+    async fn connected(
+        &self,
+        hub: LighthouseHub,
+        websocket_stream: WebSocket,
+    ) -> LighthouseHubSessionHandle;
+    async fn disconnected(&self, hub_id: hub::ID);
+    async fn get_hub_configuration(&self, hub_id: hub::ID) -> Option<LighthouseHub>;
 }
 
-impl LighthouseHandle {
-    pub async fn connected(
+#[async_trait]
+impl LighthouseProviderExt for LighthouseProviderHandle {
+    async fn connected(
         &self,
         hub: LighthouseHub,
         websocket_stream: WebSocket,
     ) -> LighthouseHubSessionHandle {
-        self.sender
-            .call(|respond_to| LighthouseMessage::Connected {
+        self.lighthouse
+            .sender
+            .call_with(|respond_to| LighthouseProviderMessage::Connected {
                 hub,
                 websocket_stream: Box::new(websocket_stream),
                 respond_to,
@@ -80,52 +105,49 @@ impl LighthouseHandle {
             .await
     }
 
-    pub async fn disconnected(&self, hub_id: hub::ID) {
-        self.sender
-            .notify(|| LighthouseMessage::Disconnected { hub_id })
+    async fn disconnected(&self, hub_id: hub::ID) {
+        self.lighthouse
+            .sender
+            .notify(LighthouseProviderMessage::Disconnected { hub_id })
             .await
     }
 
-    pub async fn get_hub_configuration(&self, hub_id: hub::ID) -> Option<LighthouseHub> {
-        self.sender
-            .call(|respond_to| LighthouseMessage::GetHubConfiguration { hub_id, respond_to })
+    async fn get_hub_configuration(&self, hub_id: hub::ID) -> Option<LighthouseHub> {
+        self.lighthouse
+            .sender
+            .call_with(
+                |respond_to| LighthouseProviderMessage::GetHubConfiguration { hub_id, respond_to },
+            )
             .await
     }
 }
 
+impl From<LighthouseProviderHandle> for Handle {
+    fn from(handle: LighthouseProviderHandle) -> Self {
+        handle.handle
+    }
+}
+impl std::ops::Deref for LighthouseProviderHandle {
+    type Target = Handle;
+
+    fn deref(&self) -> &Self::Target {
+        &self.handle
+    }
+}
+
 pub struct LighthouseProvider {
-    provider_receiver: acu::Receiver<Message>,
-    lighthouse_receiver: acu::Receiver<LighthouseMessage>,
-    controller: controllers::Handle,
+    receiver: acu::Receiver<Message, Name>,
+    lighthouse_receiver: LighthouseProviderReceiver,
+    controller: controllers::MasterHandle,
     sessions: HashMap<hub::ID, LighthouseHubSessionHandle>,
     config: Config,
 }
 
 impl LighthouseProvider {
-    pub fn create(controller: controllers::Handle, config: Config) -> LighthouseHandle {
-        let (provider_sender, provider_receiver) = acu::channel(8, Name::Lighthouse.into());
-        let (lighthouse_sender, lighthouse_receiver) = acu::channel(8, Name::Lighthouse.into());
-        let mut actor = Self {
-            provider_receiver,
-            lighthouse_receiver,
-            controller,
-            sessions: Default::default(),
-            config,
-        };
-
-        let handle = Handle::new(provider_sender);
-        let handle = LighthouseHandle {
-            sender: lighthouse_sender,
-            handle,
-        };
-        tokio::spawn(async move { actor.run().await });
-        handle
-    }
-
     async fn run(&mut self) -> Result<(), Error> {
         loop {
             tokio::select! {
-                Some(message) = self.provider_receiver.recv() => {
+                Some(message) = self.receiver.recv() => {
                     self.handle_provider_message(message).await?;
                 },
                 Some(message) = self.lighthouse_receiver.recv() => {
@@ -139,10 +161,10 @@ impl LighthouseProvider {
 
     async fn handle_lighthouse_message(
         &mut self,
-        message: LighthouseMessage,
+        message: LighthouseProviderMessage,
     ) -> Result<(), anyhow::Error> {
         match message {
-            LighthouseMessage::Connected {
+            LighthouseProviderMessage::Connected {
                 hub,
                 websocket_stream,
                 respond_to,
@@ -152,10 +174,10 @@ impl LighthouseProvider {
                 self.sessions.insert(hub.id, session.clone());
                 respond_to.send(session).unwrap()
             }
-            LighthouseMessage::Disconnected { hub_id } => {
+            LighthouseProviderMessage::Disconnected { hub_id } => {
                 self.sessions.remove(&hub_id);
             }
-            LighthouseMessage::GetHubConfiguration { hub_id, respond_to } => {
+            LighthouseProviderMessage::GetHubConfiguration { hub_id, respond_to } => {
                 let hub = self
                     .config
                     .hubs
@@ -285,7 +307,7 @@ impl axum::extract::FromRequest<Body> for HubCredentials {
 
 pub async fn websocket_handler(
     websocket: axum::extract::ws::WebSocketUpgrade,
-    Extension(provider): Extension<LighthouseHandle>,
+    Extension(provider): Extension<LighthouseProviderHandle>,
     HubCredentials(hub_id, _password): HubCredentials,
 ) -> Result<impl axum::response::IntoResponse, ConnectError> {
     let hub = provider
@@ -308,10 +330,12 @@ pub async fn websocket_handler(
     }))
 }
 
-pub fn app() -> Router {
+pub fn app(handle: LighthouseProviderHandle) -> Router {
     use axum::routing::get;
 
-    Router::new().route("/websocket", get(websocket_handler))
+    Router::new()
+        .route("/websocket", get(websocket_handler))
+        .layer(axum::AddExtensionLayer::new(handle))
 }
 
 #[derive(Debug)]
@@ -337,9 +361,14 @@ enum LighthouseHubSessionMessage {
     },
 }
 
+impl acu::Message for LighthouseHubSessionMessage {}
+
+type LighthouseHubSessionReceiver = acu::Receiver<LighthouseHubSessionMessage, &'static str>;
+type LighthouseHubSessionSender = acu::Sender<LighthouseHubSessionMessage, &'static str>;
+
 pub struct LighthouseHubSession {
-    lighthouse_hub_session_receiver: acu::Receiver<LighthouseHubSessionMessage>,
-    controller: controllers::Handle,
+    lighthouse_hub_session_receiver: LighthouseHubSessionReceiver,
+    controller: controllers::MasterHandle,
     connected_accessories: HashSet<accessory::ID>,
     websocket_stream: WebSocket,
     characteristic_write_results:
@@ -352,7 +381,7 @@ pub struct LighthouseHubSession {
 
 #[derive(Debug, Clone)]
 pub struct LighthouseHubSessionHandle {
-    sender: acu::Sender<LighthouseHubSessionMessage>,
+    sender: LighthouseHubSessionSender,
 }
 
 impl LighthouseHubSessionHandle {
@@ -367,7 +396,7 @@ impl LighthouseHubSessionHandle {
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
         self.sender
-            .call(
+            .call_with(
                 |respond_to| LighthouseHubSessionMessage::ReadCharacteristic {
                     accessory_id,
                     service_name,
@@ -387,7 +416,7 @@ impl LighthouseHubSessionHandle {
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
         self.sender
-            .call(
+            .call_with(
                 |respond_to| LighthouseHubSessionMessage::WriteCharacteristic {
                     accessory_id,
                     service_name,
@@ -402,13 +431,13 @@ impl LighthouseHubSessionHandle {
 
     pub async fn get_accessories(&self) -> Vec<accessory::ID> {
         self.sender
-            .call(|respond_to| LighthouseHubSessionMessage::GetAccessories { respond_to })
+            .call_with(|respond_to| LighthouseHubSessionMessage::GetAccessories { respond_to })
             .await
     }
 
     pub async fn is_accessory_connected(&self, accessory_id: accessory::ID) -> bool {
         self.sender
-            .call(
+            .call_with(
                 |respond_to| LighthouseHubSessionMessage::IsAccessoryConnected {
                     accessory_id,
                     respond_to,
@@ -421,7 +450,7 @@ impl LighthouseHubSessionHandle {
 impl LighthouseHubSession {
     pub async fn create(
         websocket_stream: WebSocket,
-        controller: controllers::Handle,
+        controller: controllers::MasterHandle,
     ) -> LighthouseHubSessionHandle {
         let (lighthouse_hub_session_sender, lighthouse_hub_session_receiver) =
             acu::channel(8, "LighthouseHubSession");

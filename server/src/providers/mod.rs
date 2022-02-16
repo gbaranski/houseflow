@@ -1,10 +1,9 @@
-pub mod fake;
+pub mod dummy;
 pub mod lighthouse;
 
-pub use fake::FakeProvider;
+pub use dummy::DummyProvider;
 pub use lighthouse::LighthouseProvider;
 
-use anyhow::Error;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
@@ -14,8 +13,14 @@ use tokio::sync::oneshot;
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
 pub enum Name {
     Master,
-    Fake,
+    Dummy,
     Lighthouse,
+}
+
+impl acu::MasterName for Name {
+    fn master_name() -> Self {
+        Self::Master
+    }
 }
 
 #[derive(Debug)]
@@ -41,32 +46,40 @@ pub enum Message {
     },
 }
 
-#[derive(Debug, Clone)]
-pub struct Handle {
-    sender: acu::Sender<Message>,
+impl acu::Message for Message {}
+
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait ProviderExt {
+    async fn write_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error>;
+    async fn read_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error>;
+    async fn get_accessories(&self) -> Vec<accessory::ID>;
+    async fn is_connected(&self, accessory_id: accessory::ID) -> bool;
 }
 
-impl Handle {
-    pub fn new(sender: acu::Sender<Message>) -> Self {
-        Self { sender }
-    }
+pub type Handle = acu::Handle<Message, Name>;
 
-    pub fn name(&self) -> &'static str {
-        self.sender.name
-    }
-
-    pub async fn wait_for_stop(&self) {
-        self.sender.closed().await;
-    }
-
-    pub async fn write_characteristic(
+#[async_trait]
+impl ProviderExt for Handle {
+    async fn write_characteristic(
         &self,
         accessory_id: accessory::ID,
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
         self.sender
-            .call(|respond_to| Message::WriteCharacteristic {
+            .call_with(|respond_to| Message::WriteCharacteristic {
                 accessory_id,
                 service_name,
                 characteristic,
@@ -75,14 +88,14 @@ impl Handle {
             .await
     }
 
-    pub async fn read_characteristic(
+    async fn read_characteristic(
         &self,
         accessory_id: accessory::ID,
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
         self.sender
-            .call(|respond_to| Message::ReadCharacteristic {
+            .call_with(|respond_to| Message::ReadCharacteristic {
                 accessory_id,
                 service_name,
                 characteristic_name,
@@ -91,15 +104,15 @@ impl Handle {
             .await
     }
 
-    pub async fn get_accessories(&self) -> Vec<accessory::ID> {
+    async fn get_accessories(&self) -> Vec<accessory::ID> {
         self.sender
-            .call(|respond_to| Message::GetAccessories { respond_to })
+            .call_with(|respond_to| Message::GetAccessories { respond_to })
             .await
     }
 
-    pub async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
+    async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
         self.sender
-            .call(|respond_to| Message::IsConnected {
+            .call_with(|respond_to| Message::IsConnected {
                 accessory_id,
                 respond_to,
             })
@@ -107,114 +120,4 @@ impl Handle {
     }
 }
 
-pub struct Master {
-    receiver: acu::Receiver<Message>,
-    slave_providers: Vec<Handle>,
-}
-
-impl<'s> Master {
-    pub fn new(receiver: acu::Receiver<Message>) -> Self {
-        Self {
-            receiver,
-            slave_providers: vec![],
-        }
-    }
-
-    pub fn insert(&mut self, handle: Handle) {
-        self.slave_providers.push(handle);
-    }
-
-    pub async fn run(&mut self) -> Result<(), Error> {
-        while let Some(msg) = self.receiver.recv().await {
-            self.handle_message(msg).await?;
-        }
-        Ok(())
-    }
-
-    async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
-        match message {
-            Message::WriteCharacteristic {
-                accessory_id,
-                service_name,
-                characteristic,
-                respond_to,
-            } => {
-                let futures = self.slave_providers.iter().map(|provider| async move {
-                    (provider, provider.is_connected(accessory_id).await)
-                });
-                let results = futures::future::join_all(futures).await;
-                let provider = results
-                    .iter()
-                    .find_map(
-                        |(provider, is_connected)| {
-                            if *is_connected {
-                                Some(provider)
-                            } else {
-                                None
-                            }
-                        },
-                    )
-                    .unwrap();
-
-                let result = provider
-                    .write_characteristic(accessory_id, service_name, characteristic)
-                    .await;
-                respond_to.send(result).unwrap();
-            }
-            Message::ReadCharacteristic {
-                accessory_id,
-                service_name,
-                characteristic_name,
-                respond_to,
-            } => {
-                let futures = self.slave_providers.iter().map(|provider| async move {
-                    (provider, provider.is_connected(accessory_id).await)
-                });
-                let results = futures::future::join_all(futures).await;
-                let provider =
-                    results.iter().find_map(
-                        |(provider, is_connected)| {
-                            if *is_connected {
-                                Some(provider)
-                            } else {
-                                None
-                            }
-                        },
-                    );
-
-                let result = match provider {
-                    Some(provider) => {
-                        provider
-                            .read_characteristic(accessory_id, service_name, characteristic_name)
-                            .await
-                    }
-                    None => Err(accessory::Error::NotConnected),
-                };
-
-                respond_to.send(result).unwrap();
-            }
-            Message::IsConnected {
-                accessory_id,
-                respond_to,
-            } => {
-                let futures = self
-                    .slave_providers
-                    .iter()
-                    .map(|provider| provider.is_connected(accessory_id));
-                let results: Vec<_> = futures::future::join_all(futures).await;
-                let is_connected = results.iter().any(|v| *v);
-                respond_to.send(is_connected).unwrap();
-            }
-            Message::GetAccessories { respond_to } => {
-                let futures = self
-                    .slave_providers
-                    .iter()
-                    .map(|provider| async move { provider.get_accessories().await });
-                let results: Vec<_> = futures::future::join_all(futures).await;
-                let results = results.iter().flat_map(Clone::clone).collect::<Vec<_>>();
-                respond_to.send(results).unwrap();
-            }
-        }
-        Ok(())
-    }
-}
+pub type MasterHandle = acu::MasterHandle<Message, Name>;

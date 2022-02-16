@@ -1,42 +1,39 @@
-use super::Handle;
+pub use super::Handle;
+
 use super::Message;
 use super::Name;
 use crate::providers;
-use crate::State;
+use crate::providers::ProviderExt;
+use acu::MasterExt;
 use anyhow::Error;
+use axum::AddExtensionLayer;
 use axum::Json;
-use houseflow_config::server::controllers::Meta as Config;
+use futures::future::join_all;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::errors::ControllerError;
 use houseflow_types::errors::ServerError;
 
+pub fn new() -> Handle {
+    let (sender, receiver) = acu::channel(8, Name::Master);
+    let mut actor = MetaController { receiver };
+    let handle = Handle { sender };
+    tokio::spawn(async move { actor.run().await });
+    handle
+}
+
 pub struct MetaController {
-    provider_receiver: acu::Receiver<Message>,
+    receiver: acu::Receiver<Message, Name>,
 }
 
 impl MetaController {
-    pub fn create(_provider: providers::Handle, _config: Config) -> Handle {
-        let (provider_sender, provider_receiver) = acu::channel(8, Name::Meta.into());
-        let mut actor = Self { provider_receiver };
-
-        let handle = Handle::new(provider_sender);
-        tokio::spawn(async move { actor.run().await });
-        handle
-    }
-
     async fn run(&mut self) -> Result<(), Error> {
-        loop {
-            tokio::select! {
-                Some(message) = self.provider_receiver.recv() => {
-                    self.handle_controller_message(message).await?;
-                },
-                else => break,
-            }
+        while let Some(message) = self.receiver.recv().await {
+            self.handle_message(message).await?;
         }
         Ok(())
     }
 
-    async fn handle_controller_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
+    async fn handle_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
         match message {
             Message::Connected { accessory: _ } => {}
             Message::Disconnected { accessory_id: _ } => {}
@@ -50,7 +47,7 @@ impl MetaController {
     }
 }
 
-pub fn app() -> axum::Router {
+pub fn app(handle: Handle) -> axum::Router {
     use axum::routing::get;
     use axum::routing::post;
 
@@ -63,6 +60,7 @@ pub fn app() -> axum::Router {
             "/characteristic/:accessory_id/:service_name",
             post(write_characteristic),
         )
+        .layer(AddExtensionLayer::new(handle))
 }
 
 use axum::extract::Extension;
@@ -72,15 +70,23 @@ use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 
 pub async fn read_characteristic(
-    Extension(state): Extension<State>,
+    Extension(master_provider): Extension<providers::MasterHandle>,
     Path((accessory_id, service_name, characteristic_name)): Path<(
         accessory::ID,
         ServiceName,
         CharacteristicName,
     )>,
 ) -> Result<Json<Characteristic>, ServerError> {
-    let characteristic = state
-        .provider
+    let slaves: Vec<providers::Handle> = master_provider.slaves().await;
+    let futures = slaves
+        .iter()
+        .map(|provider| async move { (provider, provider.is_connected(accessory_id).await) });
+    let results = join_all(futures).await;
+    let provider = results
+        .into_iter()
+        .find_map(|(provider, connected)| if connected { Some(provider) } else { None })
+        .ok_or(ControllerError::AccessoryNotConnected)?;
+    let characteristic = provider
         .read_characteristic(accessory_id, service_name, characteristic_name)
         .await
         .map_err(ControllerError::AccessoryError)?;
@@ -88,12 +94,20 @@ pub async fn read_characteristic(
 }
 
 pub async fn write_characteristic(
-    Extension(state): Extension<State>,
+    Extension(master_provider): Extension<providers::MasterHandle>,
     Path((accessory_id, service_name)): Path<(accessory::ID, ServiceName)>,
     Json(characteristic): Json<Characteristic>,
 ) -> Result<(), ServerError> {
-    state
-        .provider
+    let slaves: Vec<providers::Handle> = master_provider.slaves().await;
+    let futures = slaves
+        .iter()
+        .map(|provider| async move { (provider, provider.is_connected(accessory_id).await) });
+    let results = join_all(futures).await;
+    let provider = results
+        .into_iter()
+        .find_map(|(provider, connected)| if connected { Some(provider) } else { None })
+        .ok_or(ControllerError::AccessoryNotConnected)?;
+    provider
         .write_characteristic(accessory_id, service_name, characteristic)
         .await
         .map_err(ControllerError::AccessoryError)?;

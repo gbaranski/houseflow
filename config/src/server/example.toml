@@ -14,8 +14,14 @@ private-key = "/etc/private-key"
 address = "1.2.3.4"
 port = 4321
 
-[email]
+[mailer.smtp]
 url = "smtp://${EMAIL_USERNAME}:${EMAIL_PASSWORD}@email.houseflow.gbaranski.com:666"
+from = "houseflow@gbaranski.com"
+
+[mailers.dummy]
+
+[mailers.smtp]
+url = "smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666"
 from = "houseflow@gbaranski.com"
 
 [controllers.meta]

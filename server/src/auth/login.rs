@@ -1,5 +1,5 @@
-use crate::State;
-use axum::extract::Extension;
+use crate::extensions;
+use crate::mailer::MailerExt;
 use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
@@ -19,19 +19,20 @@ const VERIFICATION_CODE_LIMIT: usize = 3;
 
 #[tracing::instrument(
     name = "Login",
-    skip(state, request),
+    skip(config, clerk, mailer, request),
     fields(
         email = %request.email,
     ),
     err,
 )]
 pub async fn handle(
-    Extension(state): Extension<State>,
+    config: extensions::Config,
+    clerk: extensions::Clerk,
+    mailer: extensions::MasterMailer,
     Json(request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
     validator::Validate::validate(&request)?;
-    let user = state
-        .config
+    let user = config
         .get()
         .get_user_by_email(&request.email)
         .ok_or(AuthError::UserNotFound)?
@@ -39,7 +40,7 @@ pub async fn handle(
 
     let response = match request.verification_code {
         Some(verification_code) => {
-            let user_id = state.clerk.get(&verification_code).await?.ok_or_else(|| {
+            let user_id = clerk.get(&verification_code).await?.ok_or_else(|| {
                 AuthError::InvalidVerificationCode("code is not known by clerk".to_string())
             })?;
             if user_id != user.id {
@@ -49,14 +50,14 @@ pub async fn handle(
                 .into());
             }
             let refresh_token = RefreshToken::new(
-                state.config.get().secrets.refresh_key.as_bytes(),
+                config.get().secrets.refresh_key.as_bytes(),
                 RefreshTokenClaims {
                     sub: user.id,
                     exp: Some(Utc::now() + Duration::days(7)),
                 },
             )?;
             let access_token = AccessToken::new(
-                state.config.get().secrets.access_key.as_bytes(),
+                config.get().secrets.access_key.as_bytes(),
                 AccessTokenClaims {
                     sub: user.id,
                     exp: Utc::now() + Duration::minutes(10),
@@ -69,26 +70,24 @@ pub async fn handle(
             }
         }
         None => {
-            if state.clerk.count_verification_codes_for_user(&user.id)? > VERIFICATION_CODE_LIMIT {
+            if clerk.count_verification_codes_for_user(&user.id)? > VERIFICATION_CODE_LIMIT {
                 return Err(ServerError::TooManyRequests);
             }
             let verification_code: VerificationCode = rand::random();
-            state
-                .clerk
+            clerk
                 .add(
                     verification_code.clone(),
                     user.id,
                     Utc::now() + chrono::Duration::from_std(VERIFICATION_CODE_DURATION).unwrap(),
                 )
                 .await?;
-            state
-                .mailer
+            mailer
                 .send_verification_code(
                     String::from("Your Houseflow account: Access from a new computer"),
                     user.email.to_owned(),
                     verification_code,
                 )
-                .await?;
+                .await;
             Response::VerificationCodeSent
         }
     };
@@ -116,13 +115,20 @@ mod tests {
     async fn valid() {
         let user = get_user();
         let (mailer_tx, mut mailer_rx) = mpsc::unbounded_channel();
-        let state = get_state(GetState {
-            mailer_tx: Some(mailer_tx),
+        let config = get_config(GetConfig {
             users: vec![user.clone()],
             ..Default::default()
-        });
+        })
+        .await;
+        let clerk = get_clerk(GetClerk::default()).await;
+        let mailer = get_master_mailer(GetMasterMailer {
+            tx: Some(mailer_tx),
+        })
+        .await;
         let Json(response) = super::handle(
-            state.clone(),
+            config.clone(),
+            clerk.clone(),
+            mailer.clone(),
             Json(Request {
                 email: user.email.clone(),
                 verification_code: None,
@@ -134,7 +140,9 @@ mod tests {
         let (address, verification_code) = mailer_rx.recv().await.unwrap();
         assert_eq!(address, user.email);
         let Json(response) = super::handle(
-            state.clone(),
+            config.clone(),
+            clerk,
+            mailer,
             Json(Request {
                 email: user.email.clone(),
                 verification_code: Some(verification_code),
@@ -150,8 +158,8 @@ mod tests {
             _ => panic!("expected Response::LoggedIn"),
         };
         let (at, rt) = (
-            AccessToken::decode(state.config.get().secrets.access_key.as_bytes(), &at).unwrap(),
-            RefreshToken::decode(state.config.get().secrets.refresh_key.as_bytes(), &rt).unwrap(),
+            AccessToken::decode(config.get().secrets.access_key.as_bytes(), &at).unwrap(),
+            RefreshToken::decode(config.get().secrets.refresh_key.as_bytes(), &rt).unwrap(),
         );
         assert_eq!(at.claims.sub, rt.claims.sub);
     }
@@ -159,13 +167,18 @@ mod tests {
     #[tokio::test]
     async fn verification_code_unknown_by_clerk() {
         let user = get_user();
-        let state = get_state(GetState {
+        let config = get_config(GetConfig {
             users: vec![user.clone()],
             ..Default::default()
-        });
+        })
+        .await;
+        let clerk = get_clerk(GetClerk::default()).await;
+        let mailer = get_master_mailer(GetMasterMailer::default()).await;
         let verification_code: VerificationCode = rand::random();
         let response = super::handle(
-            state.clone(),
+            config,
+            clerk,
+            mailer,
             Json(Request {
                 email: user.email,
                 verification_code: Some(verification_code),
@@ -180,13 +193,15 @@ mod tests {
     #[tokio::test]
     async fn verification_code_invalid_user_id() {
         let user = get_user();
-        let state = get_state(GetState {
+        let config = get_config(GetConfig {
             users: vec![user.clone()],
             ..Default::default()
-        });
+        })
+        .await;
+        let clerk = get_clerk(GetClerk::default()).await;
+        let mailer = get_master_mailer(GetMasterMailer::default()).await;
         let verification_code: VerificationCode = rand::random();
-        state
-            .clerk
+        clerk
             .add(
                 verification_code.clone(),
                 user::ID::new_v4(),
@@ -196,7 +211,9 @@ mod tests {
             .unwrap();
 
         let response = super::handle(
-            state.clone(),
+            config,
+            clerk,
+            mailer,
             Json(Request {
                 email: user.email,
                 verification_code: Some(verification_code),
@@ -211,11 +228,13 @@ mod tests {
     #[tokio::test]
     async fn not_existing_user() {
         let user = get_user();
-        let state = get_state(GetState {
-            ..Default::default()
-        });
+        let config = get_config(GetConfig::default()).await;
+        let clerk = get_clerk(GetClerk::default()).await;
+        let mailer = get_master_mailer(GetMasterMailer::default()).await;
         let response = super::handle(
-            state.clone(),
+            config,
+            clerk,
+            mailer,
             Json(Request {
                 email: user.email,
                 verification_code: None,

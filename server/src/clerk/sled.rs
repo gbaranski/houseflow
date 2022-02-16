@@ -167,7 +167,7 @@ mod tests {
         clerk
             .add(
                 verification_code.clone(),
-                user_id.clone(),
+                user_id,
                 Utc::now() + Duration::minutes(10),
             )
             .await
@@ -176,7 +176,7 @@ mod tests {
             clerk.get(&verification_code).await.unwrap().unwrap(),
             user_id
         );
-        assert_eq!(clerk.remove(&verification_code).await.unwrap(), true);
+        assert!(clerk.remove(&verification_code).await.unwrap());
         clerk.remove(&verification_code).await.unwrap();
         assert!(clerk.get(&verification_code).await.unwrap().is_none());
     }
@@ -189,7 +189,7 @@ mod tests {
         clerk
             .add(
                 verification_code.clone(),
-                user_id.clone(),
+                user_id,
                 Utc::now() - Duration::minutes(10),
             )
             .await
@@ -206,7 +206,7 @@ mod tests {
         clerk
             .add(
                 verification_code_expired.clone(),
-                user_id.clone(),
+                user_id,
                 Utc::now() - Duration::minutes(10),
             )
             .await
@@ -216,7 +216,7 @@ mod tests {
         clerk
             .add(
                 verification_code.clone(),
-                user_id.clone(),
+                user_id,
                 Utc::now() + Duration::minutes(10),
             )
             .await

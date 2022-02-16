@@ -1,4 +1,5 @@
-use super::Handle;
+pub use super::Handle;
+
 use super::Message;
 use super::Name;
 use lettre::transport::smtp::authentication::Credentials;
@@ -13,33 +14,33 @@ pub struct Config {
     pub from: lettre::message::Mailbox,
 }
 
-pub struct Mailer {
-    receiver: acu::Receiver<Message>,
+pub fn new(config: Config) -> Handle {
+    let (sender, receiver) = acu::channel(8, Name::Smtp);
+    let transport = lettre::SmtpTransport::relay(config.host.as_str())
+        .unwrap()
+        .port(config.port)
+        .credentials(Credentials::new(
+            config.username.clone(),
+            config.password.clone(),
+        ))
+        .build();
+    let mut actor = SmtpMailer {
+        receiver,
+        config,
+        transport,
+    };
+    let handle = Handle { sender };
+    tokio::spawn(async move { actor.run().await });
+    handle
+}
+
+pub struct SmtpMailer {
+    receiver: acu::Receiver<Message, Name>,
     config: Config,
     transport: SmtpTransport,
 }
 
-impl Mailer {
-    pub fn create(config: Config) -> Handle {
-        let (sender, receiver) = acu::channel(8, Name::Smtp.into());
-        let transport = lettre::SmtpTransport::relay(config.host.as_str())
-            .unwrap()
-            .port(config.port)
-            .credentials(Credentials::new(
-                config.username.clone(),
-                config.password.clone(),
-            ))
-            .build();
-        let mut actor = Self {
-            receiver,
-            config,
-            transport,
-        };
-        let handle = Handle::new(sender);
-        tokio::spawn(async move { actor.run().await });
-        handle
-    }
-
+impl SmtpMailer {
     async fn run(&mut self) {
         while let Some(message) = self.receiver.recv().await {
             self.handle_message(message).await;
@@ -48,12 +49,7 @@ impl Mailer {
 
     async fn handle_message(&mut self, message: Message) {
         match message {
-            Message::SendVerificationCode {
-                subject,
-                to,
-                code,
-                respond_to,
-            } => {
+            Message::SendVerificationCode { subject, to, code } => {
                 let body = format!(
                     "Your verification code: {}. It will be valid for next 30 minutes. Hurry up!",
                     code
@@ -65,12 +61,7 @@ impl Mailer {
                     .body(body)
                     .unwrap();
 
-                let response = self
-                    .transport
-                    .send(&message)
-                    .map(|_| ())
-                    .map_err(Into::into);
-                respond_to.send(response).unwrap();
+                self.transport.send(&message).unwrap();
             }
         }
     }

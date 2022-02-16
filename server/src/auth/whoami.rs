@@ -1,20 +1,18 @@
+use crate::extensions;
 use crate::extractors::UserID;
-use crate::State;
-use axum::extract::Extension;
 use axum::Json;
 use houseflow_types::auth::whoami::Request;
 use houseflow_types::auth::whoami::Response;
 use houseflow_types::errors::AuthError;
 use houseflow_types::errors::ServerError;
 
-#[tracing::instrument(name = "Whoami", skip(state, _request), err)]
+#[tracing::instrument(name = "Whoami", skip(config, _request), err)]
 pub async fn handle(
-    Extension(state): Extension<State>,
+    config: extensions::Config,
     UserID(user_id): UserID,
     Json(_request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
-    let user = state
-        .config
+    let user = config
         .get()
         .get_user(&user_id)
         .ok_or(AuthError::UserNotFound)?
@@ -36,12 +34,13 @@ mod tests {
     #[tokio::test]
     async fn valid() {
         let user = get_user();
-        let state = get_state(GetState {
+        let config = get_config(GetConfig {
             users: vec![user.clone()],
             ..Default::default()
-        });
+        })
+        .await;
         let Json(response) = super::handle(
-            state.clone(),
+            config.clone(),
             crate::extractors::UserID(user.id),
             Json(super::Request {}),
         )

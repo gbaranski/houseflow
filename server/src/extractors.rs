@@ -1,4 +1,4 @@
-use crate::State;
+use crate::extensions;
 use async_trait::async_trait;
 use axum::body::Body;
 use axum::http;
@@ -36,7 +36,7 @@ async fn from_request<P>(
 where
     P: TokenClaims,
 {
-    let state: &State = req.extensions().unwrap().get().unwrap();
+    let config: &extensions::Config = req.extensions().unwrap().get().unwrap();
     let header_str = req
         .headers()
         .unwrap()
@@ -56,7 +56,7 @@ where
     }
 
     Ok(Token::<P>::decode(
-        get_key_fn(&state.config.get().secrets).as_bytes(),
+        get_key_fn(&config.get().secrets).as_bytes(),
         token,
     )?)
 }

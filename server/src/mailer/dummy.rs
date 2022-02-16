@@ -1,28 +1,29 @@
-use super::Handle;
+pub use super::Handle;
+
 use super::Message;
 use super::Name;
 use houseflow_types::code::VerificationCode;
 use tokio::sync::mpsc;
 
-pub struct Mailer {
-    receiver: acu::Receiver<Message>,
+pub fn new(
+    verification_code_sender: mpsc::UnboundedSender<(lettre::Address, VerificationCode)>,
+) -> Handle {
+    let (sender, receiver) = acu::channel(8, Name::Dummy);
+    let mut actor = DummyMailer {
+        receiver,
+        verification_code_sender,
+    };
+    let handle = Handle { sender };
+    tokio::spawn(async move { actor.run().await });
+    handle
+}
+
+pub struct DummyMailer {
+    receiver: acu::Receiver<Message, Name>,
     verification_code_sender: mpsc::UnboundedSender<(lettre::Address, VerificationCode)>,
 }
 
-impl Mailer {
-    pub fn create(
-        verification_code_sender: mpsc::UnboundedSender<(lettre::Address, VerificationCode)>,
-    ) -> Handle {
-        let (sender, receiver) = acu::channel(8, Name::Fake.into());
-        let mut actor = Self {
-            receiver,
-            verification_code_sender,
-        };
-        let handle = Handle::new(sender);
-        tokio::spawn(async move { actor.run().await });
-        handle
-    }
-
+impl DummyMailer {
     async fn run(&mut self) {
         while let Some(message) = self.receiver.recv().await {
             self.handle_message(message).await;
@@ -35,11 +36,8 @@ impl Mailer {
                 subject: _,
                 to,
                 code,
-                respond_to,
             } => {
-                tracing::info!("verification code for {}: {}", to, code);
                 self.verification_code_sender.send((to, code)).unwrap();
-                respond_to.send(Ok(())).unwrap();
             }
         }
     }

@@ -40,5 +40,7 @@ server = ["lettre"]
 fs = []
 
 [dev-dependencies]
+arc-swap = "1.5.0"
+lettre = { version = "0.10.0-rc.4", features = ["serde"] }
 serde_with = "1.12.0"
 toml = "0.5.8"

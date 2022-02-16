@@ -1,6 +1,5 @@
+use crate::extensions;
 use crate::extractors::RefreshToken;
-use crate::State;
-use axum::extract::Extension;
 use axum::Json;
 use chrono::Duration;
 use chrono::Utc;
@@ -11,9 +10,9 @@ use houseflow_types::token::AccessToken;
 use houseflow_types::token::AccessTokenClaims;
 use tracing::Level;
 
-#[tracing::instrument(name = "Refresh token", skip(state, _request), err)]
+#[tracing::instrument(name = "Refresh token", skip(config, _request), err)]
 pub async fn handle(
-    Extension(state): Extension<State>,
+    config: extensions::Config,
     RefreshToken(refresh_token): RefreshToken,
     Json(_request): Json<Request>,
 ) -> Result<Json<Response>, ServerError> {
@@ -22,7 +21,7 @@ pub async fn handle(
         exp: Utc::now() + Duration::minutes(10),
     };
     let access_token = AccessToken::new(
-        state.config.get().secrets.access_key.as_bytes(),
+        config.get().secrets.access_key.as_bytes(),
         access_token_payload,
     )?;
 
@@ -44,27 +43,28 @@ mod tests {
     #[tokio::test]
     async fn valid() {
         let user = get_user();
-        let state = get_state(GetState {
+        let config = get_config(GetConfig {
             users: vec![user.clone()],
             ..Default::default()
-        });
+        })
+        .await;
         let refresh_token = RefreshToken::new(
-            state.config.get().secrets.refresh_key.as_bytes(),
+            config.get().secrets.refresh_key.as_bytes(),
             RefreshTokenClaims {
-                sub: user.id.clone(),
+                sub: user.id,
                 exp: None,
             },
         )
         .unwrap();
         let Json(response) = super::handle(
-            state.clone(),
-            crate::extractors::RefreshToken(refresh_token.clone().into()),
+            config.clone(),
+            crate::extractors::RefreshToken(refresh_token.clone()),
             Json(super::Request {}),
         )
         .await
         .unwrap();
         let access_token = houseflow_types::token::AccessToken::decode(
-            state.config.get().secrets.access_key.as_bytes(),
+            config.get().secrets.access_key.as_bytes(),
             &response.access_token,
         )
         .unwrap();

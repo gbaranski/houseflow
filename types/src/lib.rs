@@ -38,6 +38,13 @@ pub mod serde_token_expiration {
             formatter.write_str("duration in seconds")
         }
 
+        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(Some(Duration::seconds(value)))
+        }
+
         fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
         where
             E: de::Error,
@@ -48,11 +55,11 @@ pub mod serde_token_expiration {
             self.visit_i64(v)
         }
 
-        fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+        fn visit_none<E>(self) -> Result<Option<Duration>, E>
         where
             E: de::Error,
         {
-            Ok(Some(Duration::seconds(value)))
+            Ok(None)
         }
 
         fn visit_some<D>(self, d: D) -> Result<Option<Duration>, D::Error>
@@ -60,13 +67,6 @@ pub mod serde_token_expiration {
             D: de::Deserializer<'de>,
         {
             d.deserialize_i64(Self)
-        }
-
-        fn visit_none<E>(self) -> Result<Option<Duration>, E>
-        where
-            E: de::Error,
-        {
-            Ok(None)
         }
 
         fn visit_unit<E>(self) -> Result<Option<Duration>, E>

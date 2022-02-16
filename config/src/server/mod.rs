@@ -22,8 +22,8 @@ pub struct Config {
     /// Path to the TLS configuration
     #[serde(default)]
     pub tls: Option<Tls>,
-    /// Configuration of the Email
-    pub email: Email,
+    /// Mailers configuration
+    pub mailers: Mailers,
     #[serde(default)]
     pub controllers: Controllers,
     #[serde(default)]
@@ -84,11 +84,26 @@ pub struct Tls {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub struct Email {
-    /// URL of the email server
-    pub url: Url,
-    /// E-Mail from which to send emails
-    pub from: String,
+pub struct Mailers {
+    #[serde(default)]
+    pub smtp: Option<mailers::Smtp>,
+    #[serde(default)]
+    pub dummy: Option<mailers::Dummy>,
+}
+
+pub mod mailers {
+    use serde::Deserialize;
+    use serde::Serialize;
+    use url::Url;
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct Smtp {
+        pub url: Url,
+        pub from: String,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct Dummy {}
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -180,17 +195,25 @@ impl crate::Config for Config {
     }
 
     fn preprocess(&mut self) -> Result<(), String> {
-        if self.email.url.port().is_none() {
-            let scheme = self.email.url.scheme();
-            let port = match scheme {
-                "smtp" => defaults::smtp_port(),
-                _ => return Err(format!("unexpected email URL scheme: {}", scheme)),
-            };
-            self.email.url.set_port(Some(port)).unwrap();
+        if let Some(mailers::Smtp { url, from: _ }) = &mut self.mailers.smtp {
+            if url.port().is_none() {
+                let scheme = url.scheme();
+                let port = match scheme {
+                    "smtp" => defaults::smtp_port(),
+                    _ => return Err(format!("unexpected email URL scheme: {}", scheme)),
+                };
+                url.set_port(Some(port)).unwrap();
+            }
+
+            if url.username() == "" {
+                tracing::debug!("WARN: username is missing from email URL");
+            }
+
+            if url.password().is_none() {
+                tracing::debug!("WARN: password is missing from email URL");
+            }
         }
-        if self.email.url.password().is_none() {
-            return Err("missing email URL password".to_string());
-        }
+
         Ok(())
     }
 }
@@ -304,10 +327,15 @@ mod tests {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 2, 3, 4)),
                 port: 4321,
             }),
-            email: Email {
-                url: Url::from_str("smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666")
+            mailers: Mailers {
+                smtp: Some(mailers::Smtp {
+                    url: Url::from_str(
+                        "smtp://gbaranski:haslo123@email.houseflow.gbaranski.com:666",
+                    )
                     .unwrap(),
-                from: String::from("houseflow@gbaranski.com"),
+                    from: String::from("houseflow@gbaranski.com"),
+                }),
+                dummy: Some(mailers::Dummy {}),
             },
             controllers: Controllers {
                 meta: Some(controllers::Meta {}),
@@ -354,8 +382,9 @@ mod tests {
             "AUTHORIZATION_CODE_KEY",
             &expected.secrets.authorization_code_key,
         );
-        std::env::set_var("EMAIL_USERNAME", expected.email.url.username());
-        std::env::set_var("EMAIL_PASSWORD", expected.email.url.password().unwrap());
+        let smtp = expected.mailers.smtp.as_ref().unwrap();
+        std::env::set_var("EMAIL_USERNAME", smtp.url.username());
+        std::env::set_var("EMAIL_PASSWORD", smtp.url.password().unwrap());
         println!(
             "--------------------\n\n Serialized: \n{}\n\n--------------------",
             toml::to_string(&expected).unwrap()
