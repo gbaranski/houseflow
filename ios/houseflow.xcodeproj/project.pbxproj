@@ -1,0 +1,714 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6846D1FD27B2E97400AB6FA8 /* HouseflowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6846D1FC27B2E97400AB6FA8 /* HouseflowClient.swift */; };
+		6846D1FE27B2E97400AB6FA8 /* HouseflowClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6846D1FC27B2E97400AB6FA8 /* HouseflowClient.swift */; };
+		6872DDBC27B2B8BE0058BA8F /* Tests_iOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDBB27B2B8BE0058BA8F /* Tests_iOS.swift */; };
+		6872DDBE27B2B8BE0058BA8F /* Tests_iOSLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDBD27B2B8BE0058BA8F /* Tests_iOSLaunchTests.swift */; };
+		6872DDC827B2B8BE0058BA8F /* Tests_macOS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDC727B2B8BE0058BA8F /* Tests_macOS.swift */; };
+		6872DDCA27B2B8BE0058BA8F /* Tests_macOSLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDC927B2B8BE0058BA8F /* Tests_macOSLaunchTests.swift */; };
+		6872DDCB27B2B8BE0058BA8F /* houseflowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDA327B2B8BC0058BA8F /* houseflowApp.swift */; };
+		6872DDCC27B2B8BE0058BA8F /* houseflowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDA327B2B8BC0058BA8F /* houseflowApp.swift */; };
+		6872DDCD27B2B8BE0058BA8F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDA427B2B8BC0058BA8F /* ContentView.swift */; };
+		6872DDCE27B2B8BE0058BA8F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6872DDA427B2B8BC0058BA8F /* ContentView.swift */; };
+		6872DDCF27B2B8BE0058BA8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6872DDA527B2B8BE0058BA8F /* Assets.xcassets */; };
+		6872DDD027B2B8BE0058BA8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6872DDA527B2B8BE0058BA8F /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6872DDB827B2B8BE0058BA8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6872DD9E27B2B8BC0058BA8F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6872DDA927B2B8BE0058BA8F;
+			remoteInfo = "houseflow (iOS)";
+		};
+		6872DDC427B2B8BE0058BA8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6872DD9E27B2B8BC0058BA8F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6872DDAF27B2B8BE0058BA8F;
+			remoteInfo = "houseflow (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		6846D1FC27B2E97400AB6FA8 /* HouseflowClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseflowClient.swift; sourceTree = "<group>"; };
+		6872DDA327B2B8BC0058BA8F /* houseflowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = houseflowApp.swift; sourceTree = "<group>"; };
+		6872DDA427B2B8BC0058BA8F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		6872DDA527B2B8BE0058BA8F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6872DDAA27B2B8BE0058BA8F /* houseflow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = houseflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6872DDB027B2B8BE0058BA8F /* houseflow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = houseflow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6872DDB227B2B8BE0058BA8F /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		6872DDB727B2B8BE0058BA8F /* Tests iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6872DDBB27B2B8BE0058BA8F /* Tests_iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_iOS.swift; sourceTree = "<group>"; };
+		6872DDBD27B2B8BE0058BA8F /* Tests_iOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_iOSLaunchTests.swift; sourceTree = "<group>"; };
+		6872DDC327B2B8BE0058BA8F /* Tests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6872DDC727B2B8BE0058BA8F /* Tests_macOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOS.swift; sourceTree = "<group>"; };
+		6872DDC927B2B8BE0058BA8F /* Tests_macOSLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests_macOSLaunchTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6872DDA727B2B8BE0058BA8F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDAD27B2B8BE0058BA8F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDB427B2B8BE0058BA8F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDC027B2B8BE0058BA8F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6872DD9D27B2B8BC0058BA8F = {
+			isa = PBXGroup;
+			children = (
+				6872DDA227B2B8BC0058BA8F /* Shared */,
+				6872DDB127B2B8BE0058BA8F /* macOS */,
+				6872DDBA27B2B8BE0058BA8F /* Tests iOS */,
+				6872DDC627B2B8BE0058BA8F /* Tests macOS */,
+				6872DDAB27B2B8BE0058BA8F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6872DDA227B2B8BC0058BA8F /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				6872DDA327B2B8BC0058BA8F /* houseflowApp.swift */,
+				6872DDA427B2B8BC0058BA8F /* ContentView.swift */,
+				6872DDA527B2B8BE0058BA8F /* Assets.xcassets */,
+				6846D1FC27B2E97400AB6FA8 /* HouseflowClient.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		6872DDAB27B2B8BE0058BA8F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6872DDAA27B2B8BE0058BA8F /* houseflow.app */,
+				6872DDB027B2B8BE0058BA8F /* houseflow.app */,
+				6872DDB727B2B8BE0058BA8F /* Tests iOS.xctest */,
+				6872DDC327B2B8BE0058BA8F /* Tests macOS.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6872DDB127B2B8BE0058BA8F /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				6872DDB227B2B8BE0058BA8F /* macOS.entitlements */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		6872DDBA27B2B8BE0058BA8F /* Tests iOS */ = {
+			isa = PBXGroup;
+			children = (
+				6872DDBB27B2B8BE0058BA8F /* Tests_iOS.swift */,
+				6872DDBD27B2B8BE0058BA8F /* Tests_iOSLaunchTests.swift */,
+			);
+			path = "Tests iOS";
+			sourceTree = "<group>";
+		};
+		6872DDC627B2B8BE0058BA8F /* Tests macOS */ = {
+			isa = PBXGroup;
+			children = (
+				6872DDC727B2B8BE0058BA8F /* Tests_macOS.swift */,
+				6872DDC927B2B8BE0058BA8F /* Tests_macOSLaunchTests.swift */,
+			);
+			path = "Tests macOS";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6872DDA927B2B8BE0058BA8F /* houseflow (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6872DDD327B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "houseflow (iOS)" */;
+			buildPhases = (
+				6872DDA627B2B8BE0058BA8F /* Sources */,
+				6872DDA727B2B8BE0058BA8F /* Frameworks */,
+				6872DDA827B2B8BE0058BA8F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "houseflow (iOS)";
+			productName = "houseflow (iOS)";
+			productReference = 6872DDAA27B2B8BE0058BA8F /* houseflow.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6872DDAF27B2B8BE0058BA8F /* houseflow (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6872DDD627B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "houseflow (macOS)" */;
+			buildPhases = (
+				6872DDAC27B2B8BE0058BA8F /* Sources */,
+				6872DDAD27B2B8BE0058BA8F /* Frameworks */,
+				6872DDAE27B2B8BE0058BA8F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "houseflow (macOS)";
+			productName = "houseflow (macOS)";
+			productReference = 6872DDB027B2B8BE0058BA8F /* houseflow.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6872DDB627B2B8BE0058BA8F /* Tests iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6872DDD927B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "Tests iOS" */;
+			buildPhases = (
+				6872DDB327B2B8BE0058BA8F /* Sources */,
+				6872DDB427B2B8BE0058BA8F /* Frameworks */,
+				6872DDB527B2B8BE0058BA8F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6872DDB927B2B8BE0058BA8F /* PBXTargetDependency */,
+			);
+			name = "Tests iOS";
+			productName = "Tests iOS";
+			productReference = 6872DDB727B2B8BE0058BA8F /* Tests iOS.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		6872DDC227B2B8BE0058BA8F /* Tests macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6872DDDC27B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "Tests macOS" */;
+			buildPhases = (
+				6872DDBF27B2B8BE0058BA8F /* Sources */,
+				6872DDC027B2B8BE0058BA8F /* Frameworks */,
+				6872DDC127B2B8BE0058BA8F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6872DDC527B2B8BE0058BA8F /* PBXTargetDependency */,
+			);
+			name = "Tests macOS";
+			productName = "Tests macOS";
+			productReference = 6872DDC327B2B8BE0058BA8F /* Tests macOS.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6872DD9E27B2B8BC0058BA8F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1320;
+				LastUpgradeCheck = 1320;
+				TargetAttributes = {
+					6872DDA927B2B8BE0058BA8F = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					6872DDAF27B2B8BE0058BA8F = {
+						CreatedOnToolsVersion = 13.2.1;
+					};
+					6872DDB627B2B8BE0058BA8F = {
+						CreatedOnToolsVersion = 13.2.1;
+						TestTargetID = 6872DDA927B2B8BE0058BA8F;
+					};
+					6872DDC227B2B8BE0058BA8F = {
+						CreatedOnToolsVersion = 13.2.1;
+						TestTargetID = 6872DDAF27B2B8BE0058BA8F;
+					};
+				};
+			};
+			buildConfigurationList = 6872DDA127B2B8BC0058BA8F /* Build configuration list for PBXProject "houseflow" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6872DD9D27B2B8BC0058BA8F;
+			productRefGroup = 6872DDAB27B2B8BE0058BA8F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6872DDA927B2B8BE0058BA8F /* houseflow (iOS) */,
+				6872DDAF27B2B8BE0058BA8F /* houseflow (macOS) */,
+				6872DDB627B2B8BE0058BA8F /* Tests iOS */,
+				6872DDC227B2B8BE0058BA8F /* Tests macOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6872DDA827B2B8BE0058BA8F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6872DDCF27B2B8BE0058BA8F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDAE27B2B8BE0058BA8F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6872DDD027B2B8BE0058BA8F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDB527B2B8BE0058BA8F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDC127B2B8BE0058BA8F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6872DDA627B2B8BE0058BA8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6872DDCD27B2B8BE0058BA8F /* ContentView.swift in Sources */,
+				6872DDCB27B2B8BE0058BA8F /* houseflowApp.swift in Sources */,
+				6846D1FD27B2E97400AB6FA8 /* HouseflowClient.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDAC27B2B8BE0058BA8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6872DDCE27B2B8BE0058BA8F /* ContentView.swift in Sources */,
+				6872DDCC27B2B8BE0058BA8F /* houseflowApp.swift in Sources */,
+				6846D1FE27B2E97400AB6FA8 /* HouseflowClient.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDB327B2B8BE0058BA8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6872DDBE27B2B8BE0058BA8F /* Tests_iOSLaunchTests.swift in Sources */,
+				6872DDBC27B2B8BE0058BA8F /* Tests_iOS.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6872DDBF27B2B8BE0058BA8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6872DDCA27B2B8BE0058BA8F /* Tests_macOSLaunchTests.swift in Sources */,
+				6872DDC827B2B8BE0058BA8F /* Tests_macOS.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6872DDB927B2B8BE0058BA8F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6872DDA927B2B8BE0058BA8F /* houseflow (iOS) */;
+			targetProxy = 6872DDB827B2B8BE0058BA8F /* PBXContainerItemProxy */;
+		};
+		6872DDC527B2B8BE0058BA8F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6872DDAF27B2B8BE0058BA8F /* houseflow (macOS) */;
+			targetProxy = 6872DDC427B2B8BE0058BA8F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		6872DDD127B2B8BE0058BA8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		6872DDD227B2B8BE0058BA8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		6872DDD427B2B8BE0058BA8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gbaranski.houseflow;
+				PRODUCT_NAME = houseflow;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6872DDD527B2B8BE0058BA8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gbaranski.houseflow;
+				PRODUCT_NAME = houseflow;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6872DDD727B2B8BE0058BA8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gbaranski.houseflow;
+				PRODUCT_NAME = houseflow;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		6872DDD827B2B8BE0058BA8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = macOS/macOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gbaranski.houseflow;
+				PRODUCT_NAME = houseflow;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		6872DDDA27B2B8BE0058BA8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "gbaranski.Tests-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "houseflow (iOS)";
+			};
+			name = Debug;
+		};
+		6872DDDB27B2B8BE0058BA8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "gbaranski.Tests-iOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "houseflow (iOS)";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6872DDDD27B2B8BE0058BA8F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "gbaranski.Tests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "houseflow (macOS)";
+			};
+			name = Debug;
+		};
+		6872DDDE27B2B8BE0058BA8F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y9G849JS52;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 12.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "gbaranski.Tests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "houseflow (macOS)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6872DDA127B2B8BC0058BA8F /* Build configuration list for PBXProject "houseflow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6872DDD127B2B8BE0058BA8F /* Debug */,
+				6872DDD227B2B8BE0058BA8F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6872DDD327B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "houseflow (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6872DDD427B2B8BE0058BA8F /* Debug */,
+				6872DDD527B2B8BE0058BA8F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6872DDD627B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "houseflow (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6872DDD727B2B8BE0058BA8F /* Debug */,
+				6872DDD827B2B8BE0058BA8F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6872DDD927B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "Tests iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6872DDDA27B2B8BE0058BA8F /* Debug */,
+				6872DDDB27B2B8BE0058BA8F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6872DDDC27B2B8BE0058BA8F /* Build configuration list for PBXNativeTarget "Tests macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6872DDDD27B2B8BE0058BA8F /* Debug */,
+				6872DDDE27B2B8BE0058BA8F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6872DD9E27B2B8BC0058BA8F /* Project object */;
+}
