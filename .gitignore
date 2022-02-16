@@ -3,6 +3,4 @@ target
 
 # IDE/Editors
 .vscode
-
-deployment
-.env
+.idea
