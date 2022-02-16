@@ -9,7 +9,6 @@ use anyhow::Error;
 use async_trait::async_trait;
 use axum::body::Body;
 use axum::extract::ws;
-use axum::extract::ws::WebSocket;
 use axum::extract::Extension;
 use axum::extract::TypedHeader;
 use axum::headers;
@@ -29,7 +28,31 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fmt::Formatter;
 use tokio::sync::oneshot;
+
+// axum::extract::ws::WebSocket has ugly Debug log
+pub struct WebSocket(ws::WebSocket);
+
+impl std::ops::Deref for WebSocket {
+    type Target = ws::WebSocket;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for WebSocket {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl std::fmt::Debug for WebSocket {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("WebSocket")
+    }
+}
 
 #[derive(Debug)]
 pub enum LighthouseProviderMessage {
@@ -324,7 +347,7 @@ pub async fn websocket_handler(
 
     Ok(websocket.on_upgrade(move |stream| async move {
         let hub_id = hub.id;
-        let session = provider.connected(hub, stream).await;
+        let session = provider.connected(hub, WebSocket(stream)).await;
         session.wait_for_stop().await;
         provider.disconnected(hub_id).await;
     }))

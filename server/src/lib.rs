@@ -134,11 +134,14 @@ impl Server {
                     tracing::info!("https server finished with {:?}", result);
                 }
             }
+        } else {
+            let result = http_future.await;
+            tracing::info!("http server finished with {:?}", result);
         }
     }
 }
 
-#[tracing::instrument(err)]
+#[tracing::instrument(err, skip(router))]
 async fn http_server(
     router: axum::Router,
     NetworkConfig {
@@ -149,11 +152,11 @@ async fn http_server(
 ) -> Result<(), std::io::Error> {
     let address = SocketAddr::new(address, port);
     let fut = axum_server::bind(address).serve(router.clone().into_make_service());
-    tracing::info!("serving http server on {}", address);
+    tracing::info!("serving on {}", address);
     fut.await
 }
 
-#[tracing::instrument(err)]
+#[tracing::instrument(err, skip(router))]
 async fn https_server(
     router: axum::Router,
     TlsConfig {
@@ -171,7 +174,7 @@ async fn https_server(
     let address = SocketAddr::new(address, port);
     let fut =
         axum_server::bind_rustls(address, rustls_config).serve(router.clone().into_make_service());
-    tracing::info!("serving https server on {}", address);
+    tracing::info!("serving on {}", address);
     fut.await
 }
 

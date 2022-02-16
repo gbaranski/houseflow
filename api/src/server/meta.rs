@@ -12,7 +12,7 @@ impl Client {
         self.config
             .server
             .url
-            .join(&format!("controllers/meta/{}", path))
+            .join(&format!("controller/meta/{}", path))
             .unwrap()
     }
 
