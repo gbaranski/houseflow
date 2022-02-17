@@ -364,7 +364,7 @@ impl HiveSession {
             controller,
         };
         let handle = HiveSessionHandle {
-            handle: SessionHandle{sender},
+            handle: SessionHandle { sender },
             hive: acu::Handle {
                 sender: hive_sender,
             },

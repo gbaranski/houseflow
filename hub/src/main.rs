@@ -48,11 +48,8 @@ async fn main() -> Result<(), anyhow::Error> {
             master_provider.push(handle).await;
         }
         if let Some(hive_config) = hive {
-            let handle = providers::hive::new(
-                controller.clone(),
-                hive_config,
-                config.accessories.clone(),
-            );
+            let handle =
+                providers::hive::new(controller.clone(), hive_config, config.accessories.clone());
             master_provider.push(handle.into()).await;
         }
     };
@@ -65,7 +62,9 @@ async fn main() -> Result<(), anyhow::Error> {
     }
 
     if let Some(lighthouse_config) = lighthouse {
-        let handle = controllers::lighthouse::new(master_provider.clone(), config.hub.id, lighthouse_config).await?;
+        let handle =
+            controllers::lighthouse::new(master_provider.clone(), config.hub.id, lighthouse_config)
+                .await?;
         master_controller.push(handle).await;
     }
 

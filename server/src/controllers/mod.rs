@@ -1,10 +1,10 @@
 pub mod meta;
 
+use async_trait::async_trait;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::Accessory;
-use async_trait::async_trait;
 
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
 pub enum Name {
