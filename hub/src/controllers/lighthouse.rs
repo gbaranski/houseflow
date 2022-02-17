@@ -1,7 +1,7 @@
 use super::Handle;
 use super::Message;
 use crate::controllers::Name;
-use crate::providers;
+use crate::providers::ProviderExt;
 use anyhow::Context;
 use futures::SinkExt;
 use futures::StreamExt;
@@ -12,57 +12,57 @@ use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::tungstenite::Message as WebSocketMessage;
 use tokio_tungstenite::WebSocketStream;
 
-pub struct LighthouseController {
-    controller_receiver: acu::Receiver<Message>,
+pub struct LighthouseController<P: ProviderExt> {
+    receiver: acu::Receiver<Message, Name>,
     websocket_stream: WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
-    provider: providers::Handle,
+    provider: P,
 }
 
-impl LighthouseController {
-    pub async fn create(
-        provider: providers::Handle,
-        hub_id: hub::ID,
-        config: Config,
-    ) -> Result<Handle, anyhow::Error> {
-        let (controller_sender, controller_receiver) = acu::channel(1, Name::Lighthouse.into());
-        tracing::debug!(
-            "attempting to connect to the lighthouse websocket server on URL: {}",
-            config.url
-        );
+pub async fn new(
+    provider: impl ProviderExt + Send + Sync + 'static,
+    hub_id: hub::ID,
+    config: Config,
+) -> Result<Handle, anyhow::Error> {
+    let (sender, receiver) = acu::channel(1, Name::Lighthouse);
+    tracing::debug!(
+        "attempting to connect to the lighthouse websocket server on URL: {}",
+        config.url
+    );
 
-        let authorization_header = format!(
-            "Basic {}",
-            base64::encode(format!(
-                "{}:{}",
-                hub_id.to_string().as_str(),
-                config.password
-            ))
-        );
+    let authorization_header = format!(
+        "Basic {}",
+        base64::encode(format!(
+            "{}:{}",
+            hub_id.to_string().as_str(),
+            config.password
+        ))
+    );
 
-        let request = http::Request::builder()
-            .uri(config.url.as_str())
-            .header(http::header::AUTHORIZATION, authorization_header)
-            .body(())
-            .unwrap();
+    let request = http::Request::builder()
+        .uri(config.url.as_str())
+        .header(http::header::AUTHORIZATION, authorization_header)
+        .body(())
+        .unwrap();
 
-        let (websocket_stream, websocket_response) = tokio_tungstenite::connect_async(request)
-            .await
-            .context("lighthouse websocket server connect failed")?;
-        tracing::debug!(
-            "connected to the lighthouse server via websocket with response: {:?}",
-            websocket_response
-        );
+    let (websocket_stream, websocket_response) = tokio_tungstenite::connect_async(request)
+        .await
+        .context("lighthouse websocket server connect failed")?;
+    tracing::debug!(
+        "connected to the lighthouse server via websocket with response: {:?}",
+        websocket_response
+    );
 
-        let handle = Handle::new(controller_sender);
-        let mut actor = Self {
-            controller_receiver,
-            websocket_stream,
-            provider,
-        };
-        tokio::spawn(async move { actor.run().await });
-        Ok(handle)
-    }
+    let handle = Handle { sender };
+    let mut actor = LighthouseController {
+        receiver,
+        websocket_stream,
+        provider,
+    };
+    tokio::spawn(async move { actor.run().await });
+    Ok(handle)
+}
 
+impl<P: ProviderExt> LighthouseController<P> {
     async fn send(&mut self, frame: lighthouse::HubFrame) -> Result<(), anyhow::Error> {
         let text = serde_json::to_string(&frame).context("serializing outgoing hub frame")?;
         self.websocket_stream
@@ -129,7 +129,7 @@ impl LighthouseController {
     async fn run(&mut self) -> Result<(), anyhow::Error> {
         loop {
             tokio::select! {
-                Some(message) = self.controller_receiver.recv() => {
+                Some(message) = self.receiver.recv() => {
                     self.handle_controller_message(message).await?;
                 },
                 Some(message) = self.websocket_stream.next() => {

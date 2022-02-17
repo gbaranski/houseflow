@@ -1,3 +1,4 @@
+use acu::MasterExt;
 use houseflow_config::hub::Config;
 use houseflow_config::hub::Controllers;
 use houseflow_config::hub::Providers;
@@ -32,58 +33,42 @@ async fn main() -> Result<(), anyhow::Error> {
     };
     tracing::debug!("Config: {:#?}", config);
 
-    let (provider_tx, provider_rx) = acu::channel(8, providers::Name::Master.into());
-    let mut master_provider = providers::Master::new(provider_rx);
-    let provider = providers::Handle::new(provider_tx);
+    let master_provider = providers::MasterHandle::new();
 
-    let (controller_tx, controller_rx) = acu::channel(8, providers::Name::Master.into());
-    let mut master_controller = controllers::Master::new(controller_rx);
-    let controller = controllers::Handle::new(controller_tx);
+    let master_controller = controllers::MasterHandle::new();
+    let controller: controllers::Handle = master_controller.clone().into();
 
     {
         let Providers { hive, mijia } = config.providers;
         // TODO: Simplify that
         if let Some(mijia_config) = mijia {
-            let handle = providers::Mijia::create(
-                controller.clone(),
-                mijia_config,
-                config.accessories.clone(),
-            )
-            .await?;
-            master_provider.insert(handle);
+            let controller: controllers::Handle = master_controller.clone().into();
+            let handle =
+                providers::mijia::new(controller, mijia_config, config.accessories.clone()).await?;
+            master_provider.push(handle).await;
         }
         if let Some(hive_config) = hive {
-            let handle = providers::Hive::create(
+            let handle = providers::hive::new(
                 controller.clone(),
                 hive_config,
                 config.accessories.clone(),
             );
-            master_provider.insert(handle.into());
+            master_provider.push(handle.into()).await;
         }
     };
 
     let Controllers { hap, lighthouse } = config.controllers;
     // Insert configured controllers
     if let Some(hap_config) = hap {
-        let handle = controllers::Hap::create(provider.clone(), hap_config).await?;
-        master_controller.insert(handle);
+        let handle = controllers::hap::new(master_provider.clone(), hap_config).await?;
+        master_controller.push(handle).await;
     }
 
     if let Some(lighthouse_config) = lighthouse {
-        let handle =
-            controllers::Lighthouse::create(provider.clone(), config.hub.id, lighthouse_config)
-                .await?;
-        master_controller.insert(handle);
+        let handle = controllers::lighthouse::new(master_provider.clone(), config.hub.id, lighthouse_config).await?;
+        master_controller.push(handle).await;
     }
 
-    tokio::spawn(async move {
-        master_provider.run().await.unwrap();
-    });
-
-    tokio::spawn(async move {
-        master_controller.run().await.unwrap();
-    });
-
-    let hub = Hub::new(controller, provider).await?;
+    let hub = Hub::new(master_controller, master_provider).await?;
     hub.run().await
 }

@@ -1,15 +1,15 @@
-mod hive;
-mod mijia;
+pub mod hive;
+pub mod mijia;
 
-pub use self::hive::HiveProvider as Hive;
-pub use self::mijia::MijiaProvider as Mijia;
-
-use anyhow::Error;
+use acu::MasterExt;
+use async_trait::async_trait;
+use futures::future;
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
+use houseflow_types::accessory::{Error, ID};
 use tokio::sync::oneshot;
 
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
@@ -19,74 +19,9 @@ pub enum Name {
     Mijia,
 }
 
-#[derive(Debug, Clone)]
-pub struct Handle {
-    sender: acu::Sender<Message>,
-}
-
-impl Handle {
-    pub fn new(sender: acu::Sender<Message>) -> Self {
-        Self { sender }
-    }
-
-    pub fn name(&self) -> &'static str {
-        self.sender.name
-    }
-
-    pub async fn wait_for_stop(&self) {
-        self.sender.closed().await;
-    }
-
-    pub async fn write_characteristic(
-        &self,
-        accessory_id: accessory::ID,
-        service_name: ServiceName,
-        characteristic: Characteristic,
-    ) -> Result<(), accessory::Error> {
-        self.sender
-            .call(|respond_to| Message::WriteCharacteristic {
-                accessory_id,
-                service_name,
-                characteristic,
-                respond_to,
-            })
-            .await
-    }
-
-    pub async fn read_characteristic(
-        &self,
-        accessory_id: accessory::ID,
-        service_name: ServiceName,
-        characteristic_name: CharacteristicName,
-    ) -> Result<Characteristic, accessory::Error> {
-        self.sender
-            .call(|respond_to| Message::ReadCharacteristic {
-                accessory_id,
-                service_name,
-                characteristic_name,
-                respond_to,
-            })
-            .await
-    }
-
-    pub async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
-        self.sender
-            .call(|respond_to| Message::IsConnected {
-                accessory_id,
-                respond_to,
-            })
-            .await
-    }
-    pub async fn get_accessory_configuration(
-        &self,
-        accessory_id: accessory::ID,
-    ) -> Option<Accessory> {
-        self.sender
-            .call(|respond_to| Message::GetAccessoryConfiguration {
-                accessory_id,
-                respond_to,
-            })
-            .await
+impl acu::MasterName for Name {
+    fn master_name() -> Self {
+        Self::Master
     }
 }
 
@@ -114,111 +49,138 @@ pub enum Message {
     },
 }
 
-pub struct Master {
-    receiver: acu::Receiver<Message>,
-    slave_providers: Vec<Handle>,
+impl acu::Message for Message {}
+
+pub type Handle = acu::Handle<Message, Name>;
+
+#[async_trait]
+pub trait ProviderExt {
+    async fn read_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error>;
+    async fn write_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error>;
+    async fn is_connected(&self, accessory_id: accessory::ID) -> bool;
+    async fn get_accessory_configuration(&self, accessory_id: accessory::ID) -> Option<Accessory>;
 }
 
-impl<'s> Master {
-    pub fn new(receiver: acu::Receiver<Message>) -> Self {
-        Self {
-            receiver,
-            slave_providers: vec![],
-        }
-    }
-
-    pub fn insert(&mut self, handle: Handle) {
-        self.slave_providers.push(handle);
-    }
-
-    pub async fn run(&mut self) -> Result<(), Error> {
-        while let Some(msg) = self.receiver.recv().await {
-            self.handle_message(msg).await?;
-        }
-        Ok(())
-    }
-
-    async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
-        match message {
-            Message::WriteCharacteristic {
-                accessory_id,
-                service_name,
-                characteristic,
-                respond_to,
-            } => {
-                let futures = self.slave_providers.iter().map(|provider| async move {
-                    (provider, provider.is_connected(accessory_id).await)
-                });
-                let results = futures::future::join_all(futures).await;
-                let provider = results
-                    .iter()
-                    .find_map(
-                        |(provider, is_connected)| {
-                            if *is_connected {
-                                Some(provider)
-                            } else {
-                                None
-                            }
-                        },
-                    )
-                    .unwrap();
-
-                let result = provider
-                    .write_characteristic(accessory_id, service_name, characteristic)
-                    .await;
-                respond_to.send(result).unwrap();
-            }
-            Message::ReadCharacteristic {
+#[async_trait]
+impl ProviderExt for Handle {
+    async fn read_characteristic(
+        &self,
+        accessory_id: ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, Error> {
+        self.sender
+            .call_with(|respond_to| Message::ReadCharacteristic {
                 accessory_id,
                 service_name,
                 characteristic_name,
                 respond_to,
-            } => {
-                let futures = self.slave_providers.iter().map(|provider| async move {
-                    (provider, provider.is_connected(accessory_id).await)
-                });
-                let results = futures::future::join_all(futures).await;
-                let provider = results
-                    .iter()
-                    .find_map(
-                        |(provider, is_connected)| {
-                            if *is_connected {
-                                Some(provider)
-                            } else {
-                                None
-                            }
-                        },
-                    )
-                    .unwrap();
+            })
+            .await
+    }
 
-                let result = provider
-                    .read_characteristic(accessory_id, service_name, characteristic_name)
-                    .await;
-                respond_to.send(result).unwrap();
-            }
-            Message::IsConnected {
+    async fn write_characteristic(
+        &self,
+        accessory_id: ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), Error> {
+        self.sender
+            .call_with(|respond_to| Message::WriteCharacteristic {
+                accessory_id,
+                service_name,
+                characteristic,
+                respond_to,
+            })
+            .await
+    }
+
+    async fn is_connected(&self, accessory_id: ID) -> bool {
+        self.sender
+            .call_with(|respond_to| Message::IsConnected {
                 accessory_id,
                 respond_to,
-            } => {
-                let futures = self
-                    .slave_providers
-                    .iter()
-                    .map(|provider| provider.is_connected(accessory_id));
-                let results: Vec<_> = futures::future::join_all(futures).await;
-                let is_connected = results.iter().any(|v| *v);
-                respond_to.send(is_connected).unwrap();
-            }
-            Message::GetAccessoryConfiguration {
+            })
+            .await
+    }
+
+    async fn get_accessory_configuration(&self, accessory_id: ID) -> Option<Accessory> {
+        self.sender
+            .call_with(|respond_to| Message::GetAccessoryConfiguration {
                 accessory_id,
                 respond_to,
-            } => {
-                let provider = self.slave_providers.get(0).unwrap(); // TODO: Do something else there
-                let accessory_configuration =
-                    provider.get_accessory_configuration(accessory_id).await;
-                respond_to.send(accessory_configuration).unwrap();
-            }
-        }
-        Ok(())
+            })
+            .await
+    }
+}
+
+pub type MasterHandle = acu::MasterHandle<Message, Name>;
+
+#[async_trait]
+impl ProviderExt for MasterHandle {
+    async fn read_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error> {
+        let slaves = self.slaves().await;
+        let futures = slaves
+            .iter()
+            .map(|handle| async move { (handle, handle.is_connected(accessory_id).await) });
+        let results = future::join_all(futures).await;
+        let slave = results
+            .iter()
+            .find_map(|(handle, connected)| if *connected { Some(handle) } else { None })
+            .ok_or(accessory::Error::NotConnected)?;
+        slave
+            .read_characteristic(accessory_id, service_name, characteristic_name)
+            .await
+    }
+
+    async fn write_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error> {
+        let slaves = self.slaves().await;
+        let futures = slaves
+            .iter()
+            .map(|handle| async move { (handle, handle.is_connected(accessory_id).await) });
+        let results = future::join_all(futures).await;
+        let slave = results
+            .iter()
+            .find_map(|(handle, connected)| if *connected { Some(handle) } else { None })
+            .ok_or(accessory::Error::NotConnected)?;
+        slave
+            .write_characteristic(accessory_id, service_name, characteristic)
+            .await
+    }
+
+    async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
+        let slaves = self.slaves().await;
+        let futures = slaves
+            .iter()
+            .map(|handle| handle.is_connected(accessory_id));
+        let results = future::join_all(futures).await;
+        results.iter().any(|connected| *connected)
+    }
+
+    async fn get_accessory_configuration(&self, accessory_id: accessory::ID) -> Option<Accessory> {
+        let slaves = self.slaves().await;
+        let slave = slaves.first().unwrap(); // TODO: Do something different maybe?
+        slave.get_accessory_configuration(accessory_id).await
     }
 }
 
@@ -227,6 +189,8 @@ pub enum SessionName {
     HiveSession,
     MijiaSession,
 }
+
+impl acu::Name for SessionName {}
 
 #[derive(Debug)]
 pub enum SessionMessage {
@@ -242,45 +206,53 @@ pub enum SessionMessage {
     },
 }
 
-#[derive(Debug, Clone)]
-pub struct SessionHandle {
-    sender: acu::Sender<SessionMessage>,
+impl acu::Message for SessionMessage {}
+
+pub type SessionHandle = acu::Handle<SessionMessage, SessionName>;
+
+#[async_trait]
+pub trait SessionExt {
+    async fn read_characteristic(
+        &self,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error>;
+
+    async fn write_characteristic(
+        &self,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error>;
 }
 
-impl SessionHandle {
-    pub fn new(sender: acu::Sender<SessionMessage>) -> Self {
-        Self { sender }
-    }
-    pub async fn wait_for_stop(&self) {
-        self.sender.closed().await;
-    }
-
-    pub async fn read_characteristic(
+#[async_trait]
+impl SessionExt for SessionHandle {
+    async fn read_characteristic(
         &self,
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error> {
         self.sender
-            .call(|oneshot| SessionMessage::ReadCharacteristic {
+            .call_with(|respond_to| SessionMessage::ReadCharacteristic {
                 service_name,
                 characteristic_name,
-                respond_to: oneshot,
+                respond_to,
             })
             .await
             .await
             .unwrap()
     }
 
-    pub async fn write_characteristic(
+    async fn write_characteristic(
         &self,
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), accessory::Error> {
         self.sender
-            .call(|oneshot| SessionMessage::WriteCharacteristic {
+            .call_with(|respond_to| SessionMessage::WriteCharacteristic {
                 service_name,
                 characteristic,
-                respond_to: oneshot,
+                respond_to,
             })
             .await
             .await

@@ -1,4 +1,4 @@
-use crate::controllers;
+use crate::controllers::ControllerExt;
 use anyhow::Error;
 use futures::StreamExt;
 use houseflow_config::hub::manufacturers;
@@ -20,38 +20,38 @@ use super::Handle;
 use super::Message;
 use super::Name;
 
-pub struct MijiaProvider {
-    receiver: acu::Receiver<Message>,
-    controller: controllers::Handle,
+pub async fn new(
+    controller: impl ControllerExt + Send + Sync + 'static,
+    _config: Config,
+    configured_accessories: Vec<Accessory>,
+) -> Result<Handle, Error> {
+    let (sender, receiver) = acu::channel(8, Name::Mijia);
+
+    let (_, mijia_session) = MijiaSession::new().await?;
+    let mut actor = MijiaProvider {
+        receiver,
+        controller,
+        connected_accessories: Default::default(),
+        configured_accessories,
+        last_readings: Default::default(),
+        mijia_session,
+    };
+
+    let handle = Handle { sender };
+    tokio::spawn(async move { actor.run().await });
+    Ok(handle)
+}
+
+pub struct MijiaProvider<C: ControllerExt> {
+    receiver: acu::Receiver<Message, Name>,
+    controller: C,
     connected_accessories: HashMap<BluetoothDeviceID, AccessoryID>,
     configured_accessories: Vec<Accessory>,
     last_readings: HashMap<AccessoryID, mijia::Readings>,
     mijia_session: MijiaSession,
 }
 
-impl MijiaProvider {
-    pub async fn create(
-        controller: controllers::Handle,
-        _config: Config,
-        configured_accessories: Vec<Accessory>,
-    ) -> Result<Handle, Error> {
-        let (sender, receiver) = acu::channel(8, Name::Mijia.into());
-
-        let (_, mijia_session) = MijiaSession::new().await?;
-        let mut actor = Self {
-            receiver,
-            connected_accessories: Default::default(),
-            configured_accessories,
-            last_readings: Default::default(),
-            mijia_session,
-            controller,
-        };
-
-        let handle = Handle::new(sender);
-        tokio::spawn(async move { actor.run().await });
-        Ok(handle)
-    }
-
+impl<C: ControllerExt> MijiaProvider<C> {
     async fn run(&mut self) -> Result<(), anyhow::Error> {
         self.mijia_session.bt_session.start_discovery().await?;
         let sensors = self.mijia_session.get_sensors().await?;

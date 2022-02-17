@@ -2,14 +2,14 @@ pub mod controllers;
 pub mod providers;
 
 pub struct Hub {
-    controller: controllers::Handle,
-    provider: providers::Handle,
+    controller: controllers::MasterHandle,
+    provider: providers::MasterHandle,
 }
 
 impl Hub {
     pub async fn new(
-        controller: controllers::Handle,
-        provider: providers::Handle,
+        controller: controllers::MasterHandle,
+        provider: providers::MasterHandle,
     ) -> Result<Self, anyhow::Error> {
         Ok(Self {
             controller,

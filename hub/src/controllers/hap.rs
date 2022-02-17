@@ -1,7 +1,7 @@
 use super::Handle;
 use super::Message;
 use super::Name;
-use crate::providers;
+use crate::providers::ProviderExt;
 use futures::lock::Mutex;
 use futures::FutureExt;
 use hap::accessory::garage_door_opener::GarageDoorOpenerAccessory;
@@ -34,62 +34,62 @@ use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-pub struct HapController {
-    receiver: acu::Receiver<Message>,
+pub struct HapController<P: ProviderExt + Clone> {
+    receiver: acu::Receiver<Message, Name>,
     ip_server: IpServer,
-    provider: providers::Handle,
+    provider: P,
     accessory_pointers: HashMap<accessory::ID, Arc<Mutex<Box<dyn HapAccessory>>>>,
     accessory_instance_id: u64,
 }
 
-impl HapController {
-    pub async fn create(
-        provider: providers::Handle,
-        config: HapConfig,
-    ) -> Result<Handle, anyhow::Error> {
-        let (sender, receiver) = acu::channel(1, Name::Hap.into());
-        let mut storage =
-            FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
-        let config = match storage.load_config().await {
-            Ok(mut config) => {
-                config.redetermine_local_ip();
-                storage.save_config(&config).await?;
-                config
+pub async fn new(
+    provider: impl ProviderExt + Clone + Send + Sync + 'static,
+    config: HapConfig,
+) -> Result<Handle, anyhow::Error> {
+    let (sender, receiver) = acu::channel(1, Name::Hap);
+    let mut storage =
+        FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
+    let config = match storage.load_config().await {
+        Ok(mut config) => {
+            config.redetermine_local_ip();
+            storage.save_config(&config).await?;
+            config
+        }
+        Err(_) => {
+            let pin = config
+                .pin
+                .chars()
+                .map(|char| char.to_digit(10).unwrap() as u8)
+                .collect::<Vec<_>>()
+                .as_slice()
+                .try_into()
+                .unwrap();
+            hap::Config {
+                pin: Pin::new(pin)?,
+                name: config.name.clone(),
+                device_id: MacAddress::from_bytes(&get_mac_address().unwrap().unwrap().bytes())
+                    .unwrap(),
+                category: AccessoryCategory::Bridge,
+                ..Default::default()
             }
-            Err(_) => {
-                let pin = config
-                    .pin
-                    .chars()
-                    .map(|char| char.to_digit(10).unwrap() as u8)
-                    .collect::<Vec<_>>()
-                    .as_slice()
-                    .try_into()
-                    .unwrap();
-                hap::Config {
-                    pin: Pin::new(pin)?,
-                    name: config.name.clone(),
-                    device_id: MacAddress::from_bytes(&get_mac_address().unwrap().unwrap().bytes())
-                        .unwrap(),
-                    category: AccessoryCategory::Bridge,
-                    ..Default::default()
-                }
-            }
-        };
+        }
+    };
 
-        storage.save_config(&config).await?;
-        let ip_server = IpServer::new(config, storage).await?;
-        let mut actor = Self {
-            receiver,
-            ip_server,
-            provider,
-            accessory_pointers: Default::default(),
-            accessory_instance_id: 1,
-        };
-        let handle = Handle::new(sender);
-        tokio::spawn(async move { actor.run().await });
-        Ok(handle)
-    }
+    storage.save_config(&config).await?;
+    let ip_server = IpServer::new(config, storage).await?;
+    let mut actor = HapController {
+        receiver,
+        ip_server,
+        provider,
+        accessory_pointers: Default::default(),
+        accessory_instance_id: 1,
+    };
+    let handle = Handle { sender };
+    tokio::spawn(async move { actor.run().await });
+    Ok(handle)
+}
 
+impl<P: ProviderExt + Clone + Send + Sync + 'static> HapController<P> {
     pub async fn run(&mut self) -> Result<(), anyhow::Error> {
         let ip_server = self.ip_server.clone();
         tokio::spawn(async move {

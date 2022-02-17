@@ -4,6 +4,7 @@ use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::Accessory;
+use async_trait::async_trait;
 
 #[derive(Debug, Clone, PartialEq, Eq, strum::Display, strum::IntoStaticStr)]
 pub enum Name {
@@ -36,8 +37,6 @@ pub enum Message {
 impl acu::Message for Message {}
 
 pub type Handle = acu::Handle<Message, Name>;
-
-use async_trait::async_trait;
 
 #[async_trait]
 pub trait ControllerExt {

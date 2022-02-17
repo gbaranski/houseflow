@@ -55,7 +55,7 @@ impl std::fmt::Debug for WebSocket {
 }
 
 #[derive(Debug)]
-pub enum LighthouseProviderMessage {
+enum LighthouseProviderMessage {
     Connected {
         hub: LighthouseHub,
         websocket_stream: Box<WebSocket>,
@@ -69,9 +69,8 @@ pub enum LighthouseProviderMessage {
         respond_to: oneshot::Sender<Option<LighthouseHub>>,
     },
 }
-impl acu::Message for LighthouseProviderMessage {}
 
-type LighthouseProviderReceiver = acu::Receiver<LighthouseProviderMessage, Name>;
+impl acu::Message for LighthouseProviderMessage {}
 
 #[derive(Debug, Clone)]
 pub struct LighthouseProviderHandle {
@@ -101,7 +100,7 @@ pub fn new(controller: controllers::MasterHandle, config: Config) -> LighthouseP
 }
 
 #[async_trait]
-pub trait LighthouseProviderExt {
+trait LighthouseProviderExt {
     async fn connected(
         &self,
         hub: LighthouseHub,
@@ -160,7 +159,7 @@ impl std::ops::Deref for LighthouseProviderHandle {
 
 pub struct LighthouseProvider {
     receiver: acu::Receiver<Message, Name>,
-    lighthouse_receiver: LighthouseProviderReceiver,
+    lighthouse_receiver: acu::Receiver<LighthouseProviderMessage, Name>,
     controller: controllers::MasterHandle,
     sessions: HashMap<hub::ID, LighthouseHubSessionHandle>,
     config: Config,
@@ -193,7 +192,7 @@ impl LighthouseProvider {
                 respond_to,
             } => {
                 let session =
-                    LighthouseHubSession::create(*websocket_stream, self.controller.clone()).await;
+                    new_lighthouse_hub_session(*websocket_stream, self.controller.clone()).await;
                 self.sessions.insert(hub.id, session.clone());
                 respond_to.send(session).unwrap()
             }
@@ -386,11 +385,8 @@ enum LighthouseHubSessionMessage {
 
 impl acu::Message for LighthouseHubSessionMessage {}
 
-type LighthouseHubSessionReceiver = acu::Receiver<LighthouseHubSessionMessage, &'static str>;
-type LighthouseHubSessionSender = acu::Sender<LighthouseHubSessionMessage, &'static str>;
-
 pub struct LighthouseHubSession {
-    lighthouse_hub_session_receiver: LighthouseHubSessionReceiver,
+    lighthouse_hub_session_receiver: acu::Receiver<LighthouseHubSessionMessage, &'static str>,
     controller: controllers::MasterHandle,
     connected_accessories: HashSet<accessory::ID>,
     websocket_stream: WebSocket,
@@ -402,17 +398,29 @@ pub struct LighthouseHubSession {
     >,
 }
 
-#[derive(Debug, Clone)]
-pub struct LighthouseHubSessionHandle {
-    sender: LighthouseHubSessionSender,
+#[async_trait]
+trait LighthouseHubSessionExt {
+    async fn read_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error>;
+    async fn write_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error>;
+    async fn get_accessories(&self) -> Vec<accessory::ID>;
+    async fn is_accessory_connected(&self, accessory_id: accessory::ID) -> bool;
 }
 
-impl LighthouseHubSessionHandle {
-    pub async fn wait_for_stop(&self) {
-        self.sender.closed().await
-    }
+type LighthouseHubSessionHandle = acu::Handle<LighthouseHubSessionMessage, &'static str>;
 
-    pub async fn read_characteristic(
+#[async_trait]
+impl LighthouseHubSessionExt for LighthouseHubSessionHandle {
+    async fn read_characteristic(
         &self,
         accessory_id: accessory::ID,
         service_name: ServiceName,
@@ -432,7 +440,7 @@ impl LighthouseHubSessionHandle {
             .unwrap()
     }
 
-    pub async fn write_characteristic(
+    async fn write_characteristic(
         &self,
         accessory_id: accessory::ID,
         service_name: ServiceName,
@@ -452,13 +460,13 @@ impl LighthouseHubSessionHandle {
             .unwrap()
     }
 
-    pub async fn get_accessories(&self) -> Vec<accessory::ID> {
+    async fn get_accessories(&self) -> Vec<accessory::ID> {
         self.sender
             .call_with(|respond_to| LighthouseHubSessionMessage::GetAccessories { respond_to })
             .await
     }
 
-    pub async fn is_accessory_connected(&self, accessory_id: accessory::ID) -> bool {
+    async fn is_accessory_connected(&self, accessory_id: accessory::ID) -> bool {
         self.sender
             .call_with(
                 |respond_to| LighthouseHubSessionMessage::IsAccessoryConnected {
@@ -470,29 +478,29 @@ impl LighthouseHubSessionHandle {
     }
 }
 
+async fn new_lighthouse_hub_session(
+    websocket_stream: WebSocket,
+    controller: controllers::MasterHandle,
+) -> LighthouseHubSessionHandle {
+    let (lighthouse_hub_session_sender, lighthouse_hub_session_receiver) =
+        acu::channel(8, "LighthouseHubSession");
+    let mut actor = LighthouseHubSession {
+        lighthouse_hub_session_receiver,
+        connected_accessories: HashSet::new(),
+        websocket_stream,
+        controller,
+        characteristic_write_results: HashMap::new(),
+        characteristic_read_results: HashMap::new(),
+    };
+    let handle = LighthouseHubSessionHandle {
+        sender: lighthouse_hub_session_sender,
+    };
+    tokio::spawn(async move { actor.run().await });
+
+    handle
+}
+
 impl LighthouseHubSession {
-    pub async fn create(
-        websocket_stream: WebSocket,
-        controller: controllers::MasterHandle,
-    ) -> LighthouseHubSessionHandle {
-        let (lighthouse_hub_session_sender, lighthouse_hub_session_receiver) =
-            acu::channel(8, "LighthouseHubSession");
-        let mut actor = Self {
-            lighthouse_hub_session_receiver,
-            connected_accessories: HashSet::new(),
-            websocket_stream,
-            controller,
-            characteristic_write_results: HashMap::new(),
-            characteristic_read_results: HashMap::new(),
-        };
-        let handle = LighthouseHubSessionHandle {
-            sender: lighthouse_hub_session_sender,
-        };
-        tokio::spawn(async move { actor.run().await });
-
-        handle
-    }
-
     async fn run(&mut self) -> Result<(), anyhow::Error> {
         loop {
             tokio::select! {

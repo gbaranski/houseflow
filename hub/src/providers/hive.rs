@@ -4,7 +4,9 @@ use super::SessionHandle;
 use super::SessionMessage;
 use super::SessionName;
 use crate::controllers;
+use crate::controllers::ControllerExt;
 use crate::providers::Name;
+use crate::providers::{ProviderExt, SessionExt};
 use anyhow::Error;
 use async_trait::async_trait;
 use axum::body::Body;
@@ -28,21 +30,80 @@ use serde::Serialize;
 use std::collections::HashMap;
 use tokio::sync::oneshot;
 
-#[derive(Debug)]
-pub enum HiveMessage {
+#[derive(Debug, Clone)]
+pub enum HiveProviderMessage {
     Connected {
         accessory: Accessory,
-        session_handle: SessionHandle,
+        session_handle: HiveSessionHandle,
     },
     Disconnected {
         accessory_id: accessory::ID,
     },
 }
 
+impl acu::Message for HiveProviderMessage {}
+
 #[derive(Debug, Clone)]
 pub struct HiveProviderHandle {
-    sender: acu::Sender<HiveMessage>,
     handle: Handle,
+    hive: acu::Handle<HiveProviderMessage, Name>,
+}
+
+pub fn new(
+    controller: impl ControllerExt + Send + Sync + Clone + 'static,
+    _config: Config,
+    configured_accessories: Vec<Accessory>,
+) -> HiveProviderHandle {
+    let (sender, receiver) = acu::channel(8, Name::Hive);
+    let (hive_sender, hive_receiver) = acu::channel(8, Name::Hive);
+    let mut actor = HiveProvider {
+        receiver,
+        hive_receiver,
+        controller,
+        configured_accessories,
+        sessions: Default::default(),
+    };
+
+    let handle = HiveProviderHandle {
+        handle: Handle { sender },
+        hive: acu::Handle {
+            sender: hive_sender,
+        },
+    };
+
+    let app = app(actor.controller.clone(), handle.clone());
+    tokio::spawn(async move { actor.run().await });
+    tokio::spawn(async move {
+        use std::net::Ipv4Addr;
+        use std::net::SocketAddr;
+        use std::net::SocketAddrV4;
+
+        let address = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 8080));
+        axum::Server::bind(&address)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+    });
+    handle
+}
+
+impl HiveProviderHandle {
+    pub async fn connected(&self, accessory: Accessory, session_handle: HiveSessionHandle) {
+        self.hive
+            .sender
+            .notify(HiveProviderMessage::Connected {
+                accessory,
+                session_handle,
+            })
+            .await
+    }
+
+    pub async fn disconnected(&self, accessory_id: accessory::ID) {
+        self.hive
+            .sender
+            .notify(HiveProviderMessage::Disconnected { accessory_id })
+            .await
+    }
 }
 
 impl std::ops::Deref for HiveProviderHandle {
@@ -59,72 +120,19 @@ impl From<HiveProviderHandle> for Handle {
     }
 }
 
-impl HiveProviderHandle {
-    pub async fn connected(&self, accessory: Accessory, session_handle: SessionHandle) {
-        self.sender
-            .notify(|| HiveMessage::Connected {
-                accessory,
-                session_handle,
-            })
-            .await
-    }
-
-    pub async fn disconnected(&self, accessory_id: accessory::ID) {
-        self.sender
-            .notify(|| HiveMessage::Disconnected { accessory_id })
-            .await
-    }
-}
-
-pub struct HiveProvider {
-    provider_receiver: acu::Receiver<Message>,
-    hive_receiver: acu::Receiver<HiveMessage>,
-    controller: controllers::Handle,
-    sessions: HashMap<accessory::ID, SessionHandle>,
+pub struct HiveProvider<C: ControllerExt> {
+    receiver: acu::Receiver<Message, Name>,
+    hive_receiver: acu::Receiver<HiveProviderMessage, Name>,
+    controller: C,
+    sessions: HashMap<accessory::ID, HiveSessionHandle>,
     configured_accessories: Vec<Accessory>,
 }
 
-impl HiveProvider {
-    pub fn create(
-        controller: controllers::Handle,
-        _config: Config,
-        configured_accessories: Vec<Accessory>,
-    ) -> HiveProviderHandle {
-        let (provider_sender, provider_receiver) = acu::channel(8, Name::Hive.into());
-        let (hive_sender, hive_receiver) = acu::channel(8, Name::Hive.into());
-        let mut actor = Self {
-            provider_receiver,
-            hive_receiver,
-            controller,
-            configured_accessories,
-            sessions: Default::default(),
-        };
-
-        let handle = Handle::new(provider_sender);
-        let handle = HiveProviderHandle {
-            sender: hive_sender,
-            handle,
-        };
-        let app = app(actor.controller.clone(), handle.clone());
-        tokio::spawn(async move { actor.run().await });
-        tokio::spawn(async move {
-            use std::net::Ipv4Addr;
-            use std::net::SocketAddr;
-            use std::net::SocketAddrV4;
-
-            let address = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 8080));
-            axum::Server::bind(&address)
-                .serve(app.into_make_service())
-                .await
-                .unwrap();
-        });
-        handle
-    }
-
+impl<C: ControllerExt> HiveProvider<C> {
     async fn run(&mut self) -> Result<(), Error> {
         loop {
             tokio::select! {
-                Some(message) = self.provider_receiver.recv() => {
+                Some(message) = self.receiver.recv() => {
                     self.handle_provider_message(message).await?;
                 },
                 Some(message) = self.hive_receiver.recv() => {
@@ -136,16 +144,19 @@ impl HiveProvider {
         Ok(())
     }
 
-    async fn handle_hive_message(&mut self, message: HiveMessage) -> Result<(), anyhow::Error> {
+    async fn handle_hive_message(
+        &mut self,
+        message: HiveProviderMessage,
+    ) -> Result<(), anyhow::Error> {
         match message {
-            HiveMessage::Connected {
+            HiveProviderMessage::Connected {
                 accessory,
                 session_handle,
             } => {
                 self.sessions.insert(accessory.id, session_handle);
                 self.controller.connected(accessory).await;
             }
-            HiveMessage::Disconnected { accessory_id } => {
+            HiveProviderMessage::Disconnected { accessory_id } => {
                 self.sessions.remove(&accessory_id);
                 self.controller.disconnected(accessory_id).await;
             }
@@ -202,7 +213,10 @@ impl HiveProvider {
     }
 }
 
-pub fn app(controller: controllers::Handle, hive_provider: HiveProviderHandle) -> axum::Router {
+pub fn app(
+    controller: impl ControllerExt + Send + Sync + Clone + 'static,
+    hive_provider: HiveProviderHandle,
+) -> axum::Router {
     use axum::routing::get;
 
     axum::Router::new()
@@ -275,7 +289,7 @@ pub async fn websocket_handler(
     Ok(websocket.on_upgrade(move |stream| async move {
         let session = HiveSession::create(accessory_id, stream, controller).await;
         let accessory_id = accessory.id;
-        provider.connected(accessory, session.clone().into()).await;
+        provider.connected(accessory, session.clone()).await;
         session.wait_for_stop().await;
         provider.disconnected(accessory_id).await;
     }))
@@ -286,9 +300,11 @@ enum HiveSessionMessage {
     WebSocketMessage(ws::Message),
 }
 
+impl acu::Message for HiveSessionMessage {}
+
 pub struct HiveSession {
-    session_receiver: acu::Receiver<SessionMessage>,
-    hive_receiver: acu::Receiver<HiveSessionMessage>,
+    receiver: acu::Receiver<SessionMessage, SessionName>,
+    hive_receiver: acu::Receiver<HiveSessionMessage, SessionName>,
     accessory_id: accessory::ID,
     controller: controllers::Handle,
     characteristic_write_results:
@@ -302,16 +318,8 @@ pub struct HiveSession {
 
 #[derive(Debug, Clone)]
 pub struct HiveSessionHandle {
-    sender: acu::Sender<HiveSessionMessage>,
     handle: SessionHandle,
-}
-
-impl HiveSessionHandle {
-    pub async fn websocket_message(&self, websocket_message: ws::Message) {
-        self.sender
-            .notify(|| HiveSessionMessage::WebSocketMessage(websocket_message))
-            .await
-    }
+    hive: acu::Handle<HiveSessionMessage, SessionName>,
 }
 
 impl std::ops::Deref for HiveSessionHandle {
@@ -319,6 +327,15 @@ impl std::ops::Deref for HiveSessionHandle {
 
     fn deref(&self) -> &Self::Target {
         &self.handle
+    }
+}
+
+impl HiveSessionHandle {
+    pub async fn websocket_message(&self, websocket_message: ws::Message) {
+        self.hive
+            .sender
+            .notify(HiveSessionMessage::WebSocketMessage(websocket_message))
+            .await
     }
 }
 
@@ -334,22 +351,23 @@ impl HiveSession {
         stream: WebSocket,
         controller: controllers::Handle,
     ) -> HiveSessionHandle {
-        let (session_sender, session_receiver) = acu::channel(8, SessionName::HiveSession.into());
-        let (hive_sender, hive_receiver) = acu::channel(8, SessionName::HiveSession.into());
+        let (sender, receiver) = acu::channel(8, SessionName::HiveSession);
+        let (hive_sender, hive_receiver) = acu::channel(8, SessionName::HiveSession);
         let (sink, stream) = stream.split();
         let mut actor = Self {
             hive_receiver,
-            session_receiver,
+            receiver,
             accessory_id,
             characteristic_write_results: Default::default(),
             characteristic_read_results: Default::default(),
             sink,
             controller,
         };
-        let handle = SessionHandle::new(session_sender);
         let handle = HiveSessionHandle {
-            sender: hive_sender,
-            handle,
+            handle: SessionHandle{sender},
+            hive: acu::Handle {
+                sender: hive_sender,
+            },
         };
         {
             let handle = handle.clone();
@@ -373,7 +391,7 @@ impl HiveSession {
         });
         loop {
             tokio::select! {
-                Some(message) = self.session_receiver.recv() => {
+                Some(message) = self.receiver.recv() => {
                     self.handle_session_message(message).await?;
                 },
                 Some(message) = self.hive_receiver.recv() => {

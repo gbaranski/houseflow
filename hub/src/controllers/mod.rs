@@ -1,13 +1,9 @@
-mod hap;
-mod lighthouse;
-
-use std::pin::Pin;
+pub mod hap;
+pub mod lighthouse;
 
 pub use self::hap::HapController as Hap;
 pub use self::lighthouse::LighthouseController as Lighthouse;
 
-use anyhow::Error;
-use futures::{Future, FutureExt};
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -20,7 +16,13 @@ pub enum Name {
     Lighthouse,
 }
 
-#[derive(Debug)]
+impl acu::MasterName for Name {
+    fn master_name() -> Self {
+        Self::Master
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum Message {
     Connected {
         accessory: Accessory,
@@ -36,46 +38,48 @@ pub enum Message {
     },
 }
 
-#[derive(Debug, Clone)]
-pub struct Handle {
-    sender: acu::Sender<Message>,
+impl acu::Message for Message {}
+
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait ControllerExt {
+    async fn connected(&self, configured_accessory: Accessory);
+    async fn disconnected(&self, accessory_id: accessory::ID);
+    async fn updated(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    );
 }
 
-impl Handle {
-    pub fn new(sender: acu::Sender<Message>) -> Self {
-        Self { sender }
-    }
+pub type Handle = acu::Handle<Message, Name>;
 
-    pub fn name(&self) -> &'static str {
-        self.sender.name
-    }
-
-    pub async fn wait_for_stop(&self) {
-        self.sender.closed().await;
-    }
-
-    pub async fn connected(&self, configured_accessory: Accessory) {
+#[async_trait]
+impl ControllerExt for Handle {
+    async fn connected(&self, configured_accessory: Accessory) {
         self.sender
-            .notify(|| Message::Connected {
+            .notify(Message::Connected {
                 accessory: configured_accessory,
             })
             .await
     }
 
-    pub async fn disconnected(&self, accessory_id: accessory::ID) {
+    async fn disconnected(&self, accessory_id: accessory::ID) {
         self.sender
-            .notify(|| Message::Disconnected { accessory_id })
+            .notify(Message::Disconnected { accessory_id })
             .await
     }
 
-    pub async fn updated(
+    async fn updated(
         &self,
         accessory_id: accessory::ID,
         service_name: ServiceName,
         characteristic: Characteristic,
     ) {
         self.sender
-            .notify(|| Message::Updated {
+            .notify(Message::Updated {
                 accessory_id,
                 service_name,
                 characteristic,
@@ -84,97 +88,4 @@ impl Handle {
     }
 }
 
-pub struct Master {
-    receiver: acu::Receiver<Message>,
-    slave_controllers: Vec<Handle>,
-}
-
-impl<'s> Master {
-    pub fn new(receiver: acu::Receiver<Message>) -> Self {
-        Self {
-            receiver,
-            slave_controllers: vec![],
-        }
-    }
-
-    pub async fn run(&mut self) -> Result<(), Error> {
-        while let Some(msg) = self.receiver.recv().await {
-            self.handle_message(msg).await?;
-        }
-        Ok(())
-    }
-
-    async fn execute_for_all<'a>(
-        &'s self,
-        f: impl Fn(&'s Handle) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> + 'a,
-    ) -> Result<(), Error> {
-        use futures::stream::FuturesOrdered;
-        use futures::StreamExt;
-
-        let (controller_names, futures): (Vec<&'static str>, FuturesOrdered<_>) = self
-            .slave_controllers
-            .iter()
-            .map(|controller| (controller.name(), f(controller)))
-            .unzip();
-
-        let results: Vec<Result<(), Error>> = futures.collect().await;
-        for (result, controller) in results.iter().zip(controller_names.iter()) {
-            match result {
-                Ok(_) => tracing::debug!(controller, "task completed"),
-                Err(err) => tracing::error!(controller, "task failed due to {}", err),
-            };
-        }
-        Ok(())
-    }
-
-    async fn handle_message(&mut self, message: Message) -> Result<(), Error> {
-        match message {
-            Message::Connected {
-                accessory: configured_accessory,
-            } => {
-                self.execute_for_all(|controller| {
-                    let configured_accessory = configured_accessory.to_owned();
-                    async move {
-                        controller.connected(configured_accessory).await;
-                        Ok(())
-                    }
-                    .boxed()
-                })
-                .await?;
-            }
-            Message::Disconnected { accessory_id } => {
-                self.execute_for_all(|controller| {
-                    async move {
-                        controller.disconnected(accessory_id).await;
-                        Ok(())
-                    }
-                    .boxed()
-                })
-                .await?;
-            }
-            Message::Updated {
-                accessory_id,
-                service_name,
-                characteristic,
-            } => {
-                self.execute_for_all(|controller| {
-                    let service_name = service_name.to_owned();
-                    let characteristic = characteristic.to_owned();
-                    async move {
-                        controller
-                            .updated(accessory_id, service_name, characteristic)
-                            .await;
-                        Ok(())
-                    }
-                    .boxed()
-                })
-                .await?;
-            }
-        }
-        Ok(())
-    }
-
-    pub fn insert(&mut self, handle: Handle) {
-        self.slave_controllers.push(handle);
-    }
-}
+pub type MasterHandle = acu::BroadcasterMasterHandle<Message, Name>;
