@@ -413,7 +413,7 @@ impl HiveSession {
                     ws::Message::Text(s) => {
                         let json = serde_json::from_str::<hive::AccessoryFrame>(&s)?;
                         match json {
-                            hive::AccessoryFrame::CharacteristicUpdate(frame) => {
+                            hive::AccessoryFrame::UpdateCharacteristic(frame) => {
                                 self.controller
                                     .updated(
                                         self.accessory_id,
@@ -461,7 +461,7 @@ impl HiveSession {
                 respond_to,
             } => {
                 let frame_id = rand::random();
-                let frame = hive::HubFrame::CharacteristicRead(hive::CharacteristicRead {
+                let frame = hive::HubFrame::ReadCharacteristic(hive::ReadCharacteristic {
                     id: frame_id,
                     service_name,
                     characteristic_name,
@@ -480,7 +480,7 @@ impl HiveSession {
                 respond_to,
             } => {
                 let frame_id = rand::random();
-                let frame = hive::HubFrame::CharacteristicWrite(hive::CharacteristicWrite {
+                let frame = hive::HubFrame::WriteCharacteristic(hive::WriteCharacteristic {
                     id: frame_id,
                     service_name,
                     characteristic,

@@ -101,8 +101,8 @@ impl Session {
                     service_name,
                     characteristic,
                 } => {
-                    events.send(Event::AccessoryFrame(AccessoryFrame::CharacteristicUpdate(
-                        hive::CharacteristicUpdate {
+                    events.send(Event::AccessoryFrame(AccessoryFrame::UpdateCharacteristic(
+                        hive::UpdateCharacteristic {
                             service_name,
                             characteristic,
                         },
@@ -131,7 +131,7 @@ impl Session {
                     let frame: HubFrame = serde_json::from_str(&text)?;
                     tracing::debug!("Parsed frame: {:?}", frame);
                     match frame {
-                        HubFrame::CharacteristicRead(frame) => {
+                        HubFrame::ReadCharacteristic(frame) => {
                             let result = accessory
                                 .read_characteristic(frame.service_name, frame.characteristic_name)
                                 .await;
@@ -143,7 +143,7 @@ impl Session {
                             let response_event = Event::AccessoryFrame(frame);
                             events.send(response_event).unwrap()
                         }
-                        HubFrame::CharacteristicWrite(frame) => {
+                        HubFrame::WriteCharacteristic(frame) => {
                             let result = accessory
                                 .write_characteristic(frame.service_name, frame.characteristic)
                                 .await;
