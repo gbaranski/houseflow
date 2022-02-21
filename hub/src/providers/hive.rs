@@ -1,4 +1,5 @@
-use super::Handle;
+pub use super::Handle;
+
 use super::Message;
 use super::SessionHandle;
 use super::SessionMessage;
@@ -50,8 +51,8 @@ pub struct HiveProviderHandle {
 }
 
 pub fn new(
-    controller: impl ControllerExt + Send + Sync + Clone + 'static,
     _config: Config,
+    controller: controllers::MasterHandle,
     configured_accessories: Vec<Accessory>,
 ) -> HiveProviderHandle {
     let (sender, receiver) = acu::channel(8, Name::Hive);
@@ -71,19 +72,7 @@ pub fn new(
         },
     };
 
-    let app = app(actor.controller.clone(), handle.clone());
     tokio::spawn(async move { actor.run().await });
-    tokio::spawn(async move {
-        use std::net::Ipv4Addr;
-        use std::net::SocketAddr;
-        use std::net::SocketAddrV4;
-
-        let address = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 8080));
-        axum::Server::bind(&address)
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
-    });
     handle
 }
 
@@ -120,15 +109,15 @@ impl From<HiveProviderHandle> for Handle {
     }
 }
 
-pub struct HiveProvider<C: ControllerExt> {
+pub struct HiveProvider {
     receiver: acu::Receiver<Message, Name>,
     hive_receiver: acu::Receiver<HiveProviderMessage, Name>,
-    controller: C,
+    controller: controllers::MasterHandle,
     sessions: HashMap<accessory::ID, HiveSessionHandle>,
     configured_accessories: Vec<Accessory>,
 }
 
-impl<C: ControllerExt> HiveProvider<C> {
+impl HiveProvider {
     async fn run(&mut self) -> Result<(), Error> {
         loop {
             tokio::select! {
@@ -214,7 +203,7 @@ impl<C: ControllerExt> HiveProvider<C> {
 }
 
 pub fn app(
-    controller: impl ControllerExt + Send + Sync + Clone + 'static,
+    controller: controllers::Handle,
     hive_provider: HiveProviderHandle,
 ) -> axum::Router {
     use axum::routing::get;

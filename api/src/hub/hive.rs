@@ -55,7 +55,7 @@ impl Session {
         accessory: &impl Accessory,
         accessory_events: AccessoryEventReceiver,
     ) -> Result<(), anyhow::Error> {
-        let url = self.hub_url.join("/websocket").unwrap();
+        let url = self.hub_url.join("/provider/hive/websocket").unwrap();
 
         let http_request = http::Request::builder()
             .uri(url.to_string())

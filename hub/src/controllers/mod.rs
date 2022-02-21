@@ -1,5 +1,6 @@
 pub mod hap;
 pub mod lighthouse;
+pub mod meta;
 
 pub use self::hap::HapController as Hap;
 pub use self::lighthouse::LighthouseController as Lighthouse;

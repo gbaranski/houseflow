@@ -46,7 +46,7 @@ pub struct Config {
 #[serde(rename_all = "kebab-case")]
 pub struct Network {
     /// Server address
-    #[serde(default = "defaults::server_listen_address")]
+    #[serde(default = "defaults::listen_address")]
     pub address: std::net::IpAddr,
     /// Server port
     #[serde(default = "defaults::server_port")]
@@ -71,10 +71,10 @@ pub struct Secrets {
 #[serde(rename_all = "kebab-case")]
 pub struct Tls {
     /// Server address
-    #[serde(default = "defaults::server_listen_address")]
+    #[serde(default = "defaults::listen_address")]
     pub address: std::net::IpAddr,
     /// Server port
-    #[serde(default = "defaults::server_port")]
+    #[serde(default = "defaults::server_port_tls")]
     pub port: u16,
     /// Path to the TLS certificate
     pub certificate: std::path::PathBuf,
@@ -236,7 +236,7 @@ impl rand::distributions::Distribution<Secrets> for rand::distributions::Standar
 impl Default for Network {
     fn default() -> Self {
         Self {
-            address: defaults::server_listen_address(),
+            address: defaults::listen_address(),
             port: defaults::server_port(),
             base_url: None,
         }

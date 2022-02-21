@@ -7,6 +7,14 @@ pub fn hub_websocket_url() -> Url {
     Url::parse(&url).unwrap()
 }
 
+pub const fn hub_port() -> u16 {
+    5001
+}
+
+pub const fn hub_port_tls() -> u16 {
+    5002
+}
+
 pub fn server_websocket_url() -> Url {
     let url = format!("ws://localhost:{}", server_port());
     Url::parse(&url).unwrap()
@@ -17,7 +25,7 @@ pub fn server_http_url() -> Url {
     Url::parse(&url).unwrap()
 }
 
-pub const fn server_listen_address() -> IpAddr {
+pub const fn listen_address() -> IpAddr {
     IpAddr::V4(Ipv4Addr::LOCALHOST)
 }
 

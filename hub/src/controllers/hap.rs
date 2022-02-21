@@ -1,6 +1,8 @@
-use super::Handle;
+pub use super::Handle;
+
 use super::Message;
 use super::Name;
+use crate::providers;
 use crate::providers::ProviderExt;
 use futures::lock::Mutex;
 use futures::FutureExt;
@@ -43,8 +45,8 @@ pub struct HapController<P: ProviderExt + Clone> {
 }
 
 pub async fn new(
-    provider: impl ProviderExt + Clone + Send + Sync + 'static,
     config: HapConfig,
+    provider: providers::MasterHandle,
 ) -> Result<Handle, anyhow::Error> {
     let (sender, receiver) = acu::channel(1, Name::Hap);
     let mut storage =

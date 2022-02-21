@@ -3,7 +3,6 @@ use houseflow_api::hub::hive::Session;
 use houseflow_config::accessory::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
-use url::Url;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -29,8 +28,7 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let hub_url = Url::parse("ws://127.0.0.1:8080").unwrap();
-    let hive_session = Session::new(hub_url, config.credentials);
+    let hive_session = Session::new(config.hub.url, config.credentials);
     let (event_sender, event_receiver) = tokio::sync::mpsc::unbounded_channel();
     let accessory = VirtualAccessory::new(event_sender);
     hive_session.run(&accessory, event_receiver).await?;

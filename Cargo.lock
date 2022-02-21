@@ -1216,6 +1216,7 @@ dependencies = [
  "arc-swap",
  "async-trait",
  "axum",
+ "axum-server",
  "base64",
  "chrono",
  "futures",

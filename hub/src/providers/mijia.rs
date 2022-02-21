@@ -1,3 +1,4 @@
+use crate::controllers;
 use crate::controllers::ControllerExt;
 use anyhow::Error;
 use futures::StreamExt;
@@ -16,13 +17,13 @@ use mijia::MijiaEvent;
 use mijia::MijiaSession;
 use std::collections::HashMap;
 
-use super::Handle;
+pub use super::Handle;
 use super::Message;
 use super::Name;
 
 pub async fn new(
-    controller: impl ControllerExt + Send + Sync + 'static,
     _config: Config,
+    controller: controllers::MasterHandle,
     configured_accessories: Vec<Accessory>,
 ) -> Result<Handle, Error> {
     let (sender, receiver) = acu::channel(8, Name::Mijia);
@@ -42,16 +43,16 @@ pub async fn new(
     Ok(handle)
 }
 
-pub struct MijiaProvider<C: ControllerExt> {
+pub struct MijiaProvider {
     receiver: acu::Receiver<Message, Name>,
-    controller: C,
+    controller: controllers::MasterHandle,
     connected_accessories: HashMap<BluetoothDeviceID, AccessoryID>,
     configured_accessories: Vec<Accessory>,
     last_readings: HashMap<AccessoryID, mijia::Readings>,
     mijia_session: MijiaSession,
 }
 
-impl<C: ControllerExt> MijiaProvider<C> {
+impl MijiaProvider {
     async fn run(&mut self) -> Result<(), anyhow::Error> {
         self.mijia_session.bt_session.start_discovery().await?;
         let sensors = self.mijia_session.get_sensors().await?;

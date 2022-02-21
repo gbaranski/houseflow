@@ -1,3 +1,4 @@
+use crate::defaults;
 use houseflow_types::accessory;
 use houseflow_types::hub;
 use serde::Deserialize;
@@ -7,6 +8,8 @@ use serde::Serialize;
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     pub hub: Hub,
+    #[serde(default)]
+    pub network: Network,
     #[serde(default)]
     pub accessories: Vec<Accessory>,
     #[serde(default)]
@@ -19,6 +22,15 @@ pub struct Config {
 #[serde(rename_all = "kebab-case")]
 pub struct Hub {
     pub id: hub::ID,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Network {
+    #[serde(default = "defaults::listen_address")]
+    pub address: std::net::IpAddr,
+    #[serde(default = "defaults::hub_port")]
+    pub port: u16,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -118,6 +130,8 @@ pub struct Controllers {
     pub hap: Option<controllers::Hap>,
     #[serde(default)]
     pub lighthouse: Option<controllers::Lighthouse>,
+    #[serde(default)]
+    pub meta: Option<controllers::Meta>,
 }
 
 pub mod controllers {
@@ -140,6 +154,10 @@ pub mod controllers {
         pub password: String,
         pub url: Url,
     }
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct Meta {}
 }
 
 impl crate::Config for Config {
@@ -152,8 +170,20 @@ impl crate::Config for Config {
     }
 }
 
+impl Default for Network {
+    fn default() -> Self {
+        Self {
+            address: defaults::listen_address(),
+            port: defaults::hub_port(),
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
+    use std::net::{IpAddr, Ipv4Addr};
+
     use super::*;
     use crate::Config as _;
     use houseflow_types::accessory;
@@ -164,6 +194,10 @@ mod tests {
         let expected = Config {
             hub: Hub {
                 id: hub::ID::parse_str("2adc257a-394c-49bd-ae97-4c5a98b49d84").unwrap(),
+            },
+            network: Network {
+                address: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+                port: 1234,
             },
             accessories: vec![Accessory {
                 id: accessory::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
@@ -186,6 +220,7 @@ mod tests {
                     url: Url::parse("http://lighthouse").unwrap(),
                     password: String::from("hard-password"),
                 }),
+                meta: Some(controllers::Meta {}),
             },
         };
 

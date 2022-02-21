@@ -1,6 +1,8 @@
-use super::Handle;
+pub use super::Handle;
+
 use super::Message;
 use crate::controllers::Name;
+use crate::providers;
 use crate::providers::ProviderExt;
 use anyhow::Context;
 use futures::SinkExt;
@@ -12,16 +14,16 @@ use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::tungstenite::Message as WebSocketMessage;
 use tokio_tungstenite::WebSocketStream;
 
-pub struct LighthouseController<P: ProviderExt> {
+pub struct LighthouseController {
     receiver: acu::Receiver<Message, Name>,
     websocket_stream: WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
-    provider: P,
+    provider: providers::MasterHandle,
 }
 
 pub async fn new(
-    provider: impl ProviderExt + Send + Sync + 'static,
-    hub_id: hub::ID,
     config: Config,
+    hub_id: hub::ID,
+    provider: providers::MasterHandle,
 ) -> Result<Handle, anyhow::Error> {
     let (sender, receiver) = acu::channel(1, Name::Lighthouse);
     tracing::debug!(
@@ -62,7 +64,7 @@ pub async fn new(
     Ok(handle)
 }
 
-impl<P: ProviderExt> LighthouseController<P> {
+impl LighthouseController {
     async fn send(&mut self, frame: lighthouse::HubFrame) -> Result<(), anyhow::Error> {
         let text = serde_json::to_string(&frame).context("serializing outgoing hub frame")?;
         self.websocket_stream
