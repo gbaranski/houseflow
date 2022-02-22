@@ -202,10 +202,7 @@ impl HiveProvider {
     }
 }
 
-pub fn app(
-    controller: controllers::Handle,
-    hive_provider: HiveProviderHandle,
-) -> axum::Router {
+pub fn app(controller: controllers::Handle, hive_provider: HiveProviderHandle) -> axum::Router {
     use axum::routing::get;
 
     axum::Router::new()
@@ -360,7 +357,7 @@ impl HiveSession {
         };
         {
             let handle = handle.clone();
-            tokio::spawn(async move { actor.run(handle, stream).await });
+            tokio::spawn(async move { actor.run(handle, stream).await.unwrap() });
         }
 
         handle

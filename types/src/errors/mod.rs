@@ -19,7 +19,7 @@ use serde::Serialize;
 #[serde(
     tag = "error",
     content = "error-description",
-    rename_all = "snake_case"
+    rename_all = "kebab-case"
 )]
 pub enum ServerError {
     #[error("internal error: {0}")]
@@ -68,6 +68,7 @@ impl axum::response::IntoResponse for ServerError {
                 ControllerError::Timeout => StatusCode::REQUEST_TIMEOUT,
                 ControllerError::AccessoryError(err) => match err {
                     accessory::Error::CharacteristicReadOnly => StatusCode::BAD_REQUEST,
+                    accessory::Error::CharacteristicWriteOnly => StatusCode::BAD_REQUEST,
                     accessory::Error::CharacteristicNotSupported => StatusCode::BAD_REQUEST,
                     accessory::Error::ServiceNotSupported => StatusCode::BAD_REQUEST,
                     accessory::Error::NotConnected => StatusCode::SERVICE_UNAVAILABLE,

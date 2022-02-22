@@ -57,6 +57,8 @@ pub enum Error {
     NotConnected,
     #[error("characteristic is read only")]
     CharacteristicReadOnly,
+    #[error("characteristic is write only")]
+    CharacteristicWriteOnly,
     /// Accessory service does not support the specified characteristic
     #[error("characteristic is not supported")]
     CharacteristicNotSupported,
@@ -66,13 +68,14 @@ pub enum Error {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, strum::Display)]
-#[serde(tag = "status", content = "description")]
+#[serde(tag = "status", content = "body", rename_all = "kebab-case")]
 #[repr(u8)]
-#[serde(rename_all = "kebab-case")]
 pub enum Result<T> {
     /// Contains the success value
+    #[serde(rename = "success")]
     Ok(T),
     /// Contains the error value
+    #[serde(rename = "error")]
     Err(Error),
 }
 

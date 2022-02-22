@@ -34,6 +34,7 @@ impl axum::response::IntoResponse for Error {
         let status = match &self {
             Self::AccessoryError(err) => match err {
                 accessory::Error::CharacteristicReadOnly => StatusCode::BAD_REQUEST,
+                accessory::Error::CharacteristicWriteOnly => StatusCode::BAD_REQUEST,
                 accessory::Error::CharacteristicNotSupported => StatusCode::BAD_REQUEST,
                 accessory::Error::ServiceNotSupported => StatusCode::BAD_REQUEST,
                 accessory::Error::NotConnected => StatusCode::SERVICE_UNAVAILABLE,

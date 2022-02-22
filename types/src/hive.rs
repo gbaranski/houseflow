@@ -30,6 +30,7 @@ pub struct UpdateCharacteristic {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct ReadCharacteristic {
     pub id: FrameID,
     pub service_name: ServiceName,
@@ -37,6 +38,7 @@ pub struct ReadCharacteristic {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct WriteCharacteristic {
     pub id: FrameID,
     pub service_name: ServiceName,
@@ -44,12 +46,14 @@ pub struct WriteCharacteristic {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct CharacteristicReadResult {
     pub id: FrameID,
     pub result: accessory::Result<Characteristic>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct CharateristicWriteResult {
     pub id: FrameID,
     pub result: accessory::Result<()>,
