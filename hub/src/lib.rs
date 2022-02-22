@@ -52,13 +52,10 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
             master_provider.push(handle.into()).await;
         }
         if let Some(mijia) = mijia {
-            let handle = providers::mijia::new(
-                mijia,
-                master_controller.clone().into(),
-                config.accessories.clone(),
-            )
-            .await?;
-            master_provider.push(handle.into()).await;
+            let handle =
+                providers::mijia::new(mijia, master_controller.clone(), config.accessories.clone())
+                    .await?;
+            master_provider.push(handle).await;
         }
         router
     };
