@@ -1,0 +1,7 @@
+.ccls
+.ccls-cache
+.cache
+.pio
+include/config.hpp
+.vscode
+.env*
