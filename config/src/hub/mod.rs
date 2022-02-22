@@ -179,7 +179,6 @@ impl Default for Network {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::net::{IpAddr, Ipv4Addr};

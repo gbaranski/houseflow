@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::accessory;
+use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -14,7 +14,6 @@ pub struct Hub {
     pub password_hash: Option<String>,
 }
 
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]
 #[serde(
     tag = "error",
@@ -22,7 +21,7 @@ pub struct Hub {
     rename_all = "kebab-case"
 )]
 pub enum Error {
-    #[error("accessory: {0}",)]
+    #[error("accessory: {0}")]
     AccessoryError(#[from] accessory::Error),
 }
 
