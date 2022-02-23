@@ -16,7 +16,7 @@ Houseflow is open source home automation system, it lets you configure various a
 
 # Architecture
 
-<img src="./docs/architecture.png">
+<img src="./docs/architecture.svg">
 
 # Contributing
 Contributors are very welcome! **No contribution is too small and all contributions are valued.**
