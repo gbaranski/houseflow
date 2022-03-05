@@ -45,6 +45,7 @@ pub mod manufacturers {
     pub enum Houseflow {
         Gate,
         Garage,
+        Lightbulb,
     }
 }
 
@@ -121,6 +122,7 @@ pub mod services {
         TemperatureSensor(TemperatureSensor),
         HumiditySensor(HumiditySensor),
         GarageDoorOpener(GarageDoorOpener),
+        Light(Light),
         Battery(Battery),
     }
 
@@ -138,6 +140,12 @@ pub mod services {
     pub struct GarageDoorOpener {
         pub current_door_state: characteristics::CurrentDoorState,
         pub target_door_state: characteristics::TargetDoorState,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    pub struct Light {
+        pub on: characteristics::On,
+        pub brightness: Option<characteristics::Brightness>,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -165,12 +173,19 @@ pub mod characteristics {
     #[serde(tag = "name", rename_all = "kebab-case")]
     #[strum(serialize_all = "kebab-case")]
     pub enum Characteristic {
+        On(On),
         CurrentTemperature(CurrentTemperature),
         CurrentHumidity(CurrentHumidity),
         CurrentDoorState(CurrentDoorState),
         TargetDoorState(TargetDoorState),
         BatteryLevel(BatteryLevel),
         ChargingState(ChargingState),
+    }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct On {
+        pub on: bool,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -195,6 +210,12 @@ pub mod characteristics {
     #[serde(rename_all = "kebab-case")]
     pub struct TargetDoorState {
         pub open_percent: u8,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub struct Brightness {
+        pub percentage: u8,
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

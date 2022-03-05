@@ -7,6 +7,7 @@ use crate::providers::ProviderExt;
 use futures::lock::Mutex;
 use futures::FutureExt;
 use hap::accessory::garage_door_opener::GarageDoorOpenerAccessory;
+use hap::accessory::lightbulb::LightbulbAccessory;
 use hap::accessory::AccessoryCategory;
 use hap::accessory::AccessoryInformation;
 use hap::accessory::HapAccessory;
@@ -23,8 +24,6 @@ use hap::HapType;
 use hap::MacAddress;
 use hap::Pin;
 use houseflow_config::hub::controllers::Hap as HapConfig;
-use houseflow_config::hub::manufacturers;
-use houseflow_config::hub::AccessoryType;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -107,12 +106,15 @@ impl<P: ProviderExt + Clone + Send + Sync + 'static> HapController<P> {
         match message {
             Message::Connected { accessory } => {
                 let accessory_ptr = match &accessory.r#type {
-                    AccessoryType::XiaomiMijia(accessory_type) => {
-                        use manufacturers::XiaomiMijia as Manufacturer;
+                    accessory::Type::XiaomiMijia(accessory_type) => {
+                        use accessory::manufacturers::XiaomiMijia as Manufacturer;
 
                         let manufacturer = "Xiaomi Mijia".to_string();
                         match accessory_type {
-                            Manufacturer::HygroThermometer { mac_address: _ } => {
+                            Manufacturer::HygroThermometer => {
+                                let _ = accessory
+                                    .mac_address
+                                    .expect("xiaomi mijia must have specified mac address");
                                 let mut hygro_thermometer = HygroThermometerAccessory {
                                     id: self.accessory_instance_id,
                                     accessory_information: AccessoryInformation {
@@ -176,8 +178,8 @@ impl<P: ProviderExt + Clone + Send + Sync + 'static> HapController<P> {
                             _ => unimplemented!(),
                         }
                     }
-                    AccessoryType::Houseflow(accessory_type) => {
-                        use manufacturers::Houseflow as Manufacturer;
+                    accessory::Type::Houseflow(accessory_type) => {
+                        use accessory::manufacturers::Houseflow as Manufacturer;
 
                         let manufacturer = "Houseflow".to_string();
                         match accessory_type {
@@ -237,6 +239,57 @@ impl<P: ProviderExt + Clone + Send + Sync + 'static> HapController<P> {
                                 self.ip_server.add_accessory(garage_door_opener).await?
                             }
                             Manufacturer::Gate => todo!(),
+                            Manufacturer::Lightbulb => {
+                                let mut lightbulb = LightbulbAccessory::new(
+                                    self.accessory_instance_id,
+                                    AccessoryInformation {
+                                        manufacturer,
+                                        model: "houseflow-lightbulb".to_string(),
+                                        name: "Lightbulb".to_string(),
+                                        serial_number: accessory.id.to_string(),
+                                        accessory_flags: None,
+                                        application_matching_identifier: None,
+                                        // configured_name: Some(configured_accessory.name.clone()), For some reason it causes the Home app to break
+                                        configured_name: None,
+                                        firmware_revision: None,
+                                        hardware_finish: None,
+                                        hardware_revision: None,
+                                        product_data: None,
+                                        software_revision: None,
+                                    },
+                                )?;
+                                let brightness = lightbulb.lightbulb.brightness.as_mut().unwrap();
+                                brightness.on_read(Some(|| Ok(None)));
+
+                                let provider = self.provider.clone();
+
+                                let accessory_id = accessory.id;
+                                brightness
+                                    .on_update_async(Some(move |current: i32, new: i32| {
+                                        let provider = provider.clone();
+
+                                        async move {
+                                            println!("lightbulb target door state characteristic updated from {} to {}", current, new);
+                                            let service_name = ServiceName::GarageDoorOpener;
+                                            let characteristic = Characteristic::TargetDoorState(characteristics::TargetDoorState {
+                                                open_percent: if new == 1 {
+                                                                100
+                                                            } else if new == 0 {
+                                                                0
+                                                            } else {
+                                                                unreachable!()
+                                                            },
+                                            });
+
+                                            provider.write_characteristic(accessory_id, service_name, characteristic).await.unwrap();
+                                            Ok(())
+                                        }
+                                        .boxed()
+                                    }));
+
+                                tracing::info!("registering new lightbulb accessory");
+                                self.ip_server.add_accessory(lightbulb).await?
+                            }
                             _ => unimplemented!(),
                         }
                     }
@@ -261,6 +314,7 @@ impl<P: ProviderExt + Clone + Send + Sync + 'static> HapController<P> {
                     ServiceName::HumiditySensor => HapType::HumiditySensor,
                     ServiceName::GarageDoorOpener => HapType::GarageDoorOpener,
                     ServiceName::Battery => HapType::Battery,
+                    ServiceName::Light => HapType::Lightbulb,
                 };
                 let service = accessory.get_mut_service(service_hap_type).unwrap();
                 match characteristic {
@@ -321,6 +375,13 @@ impl<P: ProviderExt + Clone + Send + Sync + 'static> HapController<P> {
                             .await?;
                     }
                     Characteristic::ChargingState(_) => todo!(),
+                    Characteristic::On(characteristics::On { on }) => {
+                        service
+                            .get_mut_characteristic(HapType::PowerState)
+                            .unwrap()
+                            .set_value(JsonValue::Bool(on))
+                            .await?;
+                    }
                 };
             }
         };

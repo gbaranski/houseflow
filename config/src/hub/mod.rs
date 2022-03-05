@@ -44,7 +44,10 @@ pub struct Accessory {
     pub room_name: String,
     /// Type of the accessory, possibly with additional parameters
     #[serde(flatten)]
-    pub r#type: AccessoryType,
+    pub r#type: accessory::Type,
+    #[serde(default)]
+    // Only some accessories require this
+    pub mac_address: Option<String>,
 }
 
 impl From<Accessory> for accessory::Accessory {
@@ -55,54 +58,6 @@ impl From<Accessory> for accessory::Accessory {
             room_name: val.room_name,
             r#type: val.r#type.into(),
         }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "manufacturer", rename_all = "kebab-case")]
-#[non_exhaustive]
-pub enum AccessoryType {
-    XiaomiMijia(manufacturers::XiaomiMijia),
-    Houseflow(manufacturers::Houseflow),
-}
-
-impl From<AccessoryType> for accessory::Type {
-    fn from(val: AccessoryType) -> Self {
-        match val {
-            AccessoryType::XiaomiMijia(val) => accessory::Type::XiaomiMijia(match val {
-                manufacturers::XiaomiMijia::HygroThermometer { .. } => {
-                    accessory::manufacturers::XiaomiMijia::HygroThermometer
-                }
-            }),
-            AccessoryType::Houseflow(val) => accessory::Type::Houseflow(match val {
-                manufacturers::Houseflow::Gate => accessory::manufacturers::Houseflow::Gate,
-                manufacturers::Houseflow::Garage => accessory::manufacturers::Houseflow::Garage,
-            }),
-        }
-    }
-}
-
-pub mod manufacturers {
-    use serde::Deserialize;
-    use serde::Serialize;
-
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(tag = "model", rename_all = "kebab-case")]
-    #[non_exhaustive]
-    pub enum XiaomiMijia {
-        HygroThermometer {
-            // TODO: Make it strictly typed
-            #[serde(rename = "mac-address")]
-            mac_address: String,
-        },
-    }
-
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(tag = "model", rename_all = "kebab-case")]
-    #[non_exhaustive]
-    pub enum Houseflow {
-        Gate,
-        Garage,
     }
 }
 
@@ -201,9 +156,10 @@ mod tests {
             accessories: vec![Accessory {
                 id: accessory::ID::parse_str("37c6a8bd-264c-4653-a641-c9b574207be5").unwrap(),
                 name: String::from("Thermometer"),
-                r#type: AccessoryType::XiaomiMijia(manufacturers::XiaomiMijia::HygroThermometer {
-                    mac_address: String::from("A4:C1:38:EF:77:51"),
-                }),
+                r#type: accessory::Type::XiaomiMijia(
+                    accessory::manufacturers::XiaomiMijia::HygroThermometer,
+                ),
+                mac_address: Some(String::from("A4:C1:38:EF:77:51")),
                 room_name: "Bedroom".to_string(),
             }],
             providers: Providers {

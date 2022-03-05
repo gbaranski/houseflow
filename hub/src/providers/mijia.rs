@@ -2,9 +2,7 @@ use crate::controllers;
 use crate::controllers::ControllerExt;
 use anyhow::Error;
 use futures::StreamExt;
-use houseflow_config::hub::manufacturers;
 use houseflow_config::hub::Accessory;
-use houseflow_config::hub::AccessoryType;
 use houseflow_config::hub::MijiaProvider as Config;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics;
@@ -110,14 +108,11 @@ impl MijiaProvider {
 
     fn accessory_by_mac_address(&self, expected_mac_address: &str) -> Option<&Accessory> {
         self.configured_accessories.iter().find(|accessory| {
-            if let AccessoryType::XiaomiMijia(manufacturers::XiaomiMijia::HygroThermometer {
-                mac_address,
-            }) = &accessory.r#type
-            {
-                expected_mac_address == mac_address
-            } else {
-                false
-            }
+            accessory
+                .mac_address
+                .as_ref()
+                .map(|mac_address| mac_address == expected_mac_address)
+                .unwrap_or(false)
         })
     }
 
