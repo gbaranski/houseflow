@@ -14,12 +14,15 @@
 WebSocketsClient HiveClient::websocketClient = WebSocketsClient();
 std::vector<GpioTask> HiveClient::gpioQueue = std::vector<GpioTask>();
 
-void HiveClient::loop() {
+void HiveClient::loop()
+{
   websocketClient.loop();
 
   auto now = millis();
-  for (auto it = begin(gpioQueue); it != end(gpioQueue); ++it) {
-    if (now >= it->millis) {
+  for (auto it = begin(gpioQueue); it != end(gpioQueue); ++it)
+  {
+    if (now >= it->millis)
+    {
       digitalWrite(it->pin, it->val);
       gpioQueue.erase(it);
       break;
@@ -29,7 +32,8 @@ void HiveClient::loop() {
 
 #include <base64.h>
 
-void HiveClient::init() {
+void HiveClient::init()
+{
   String encoded_credentials = base64::encode(TOSTRING(ACCESSORY_ID) ":" TOSTRING(ACCESSORY_PASSWORD));
   String authorization_header = "Authorization: Basic " + encoded_credentials;
 
@@ -41,10 +45,10 @@ void HiveClient::init() {
                                   DISCONNECT_TIMEOUT_COUNT);
 }
 
-
-
-void HiveClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {
-  switch (type) {
+void HiveClient::onEvent(WStype_t type, uint8_t *payload, size_t length)
+{
+  switch (type)
+  {
   case WStype_DISCONNECTED:
     Serial.printf("[Lighthouse] disconnected\n");
     break;
@@ -82,14 +86,16 @@ void HiveClient::onEvent(WStype_t type, uint8_t *payload, size_t length) {
   }
 }
 
-void HiveClient::onText(char *text, size_t length) {
+void HiveClient::onText(char *text, size_t length)
+{
   static StaticJsonDocument<1024> requestDoc;
   static StaticJsonDocument<1024> responseDoc;
 
   auto pre_process = millis();
 
   DeserializationError error = deserializeJson(requestDoc, text);
-  if (error) {
+  if (error)
+  {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.f_str());
     return;
@@ -212,7 +218,7 @@ void HiveClient::onReadCharacteristic(const StaticJsonDocument<requestDocCapacit
   auto sendError = [&responseDoc](const char *error)
   {
     Serial.printf("[Hive] read-characteristic failed due to %s\n", error);
-    responseDoc["result"] = (char*)0;
+    responseDoc["result"] = (char *)0;
     responseDoc["result"]["status"] = "error";
     responseDoc["result"]["body"] = error;
   };
@@ -231,7 +237,7 @@ void HiveClient::onReadCharacteristic(const StaticJsonDocument<requestDocCapacit
     }
     else if (characteristicName == CharacteristicName::TargetDoorState)
     {
-      sendError("characteristic-read-only");
+      sendError("characteristic-write-only");
     }
     else
     {
@@ -250,7 +256,7 @@ void HiveClient::onWriteCharacteristic(const StaticJsonDocument<requestDocCapaci
 {
   responseDoc["type"] = "characteristic-write-result";
   responseDoc["result"]["status"] = "success";
-  responseDoc["result"]["body"] = (char*)0;
+  responseDoc["result"]["body"] = (char *)0;
   responseDoc["id"] = requestDoc["id"];
 
   auto sendError = [&responseDoc](const char *error)
@@ -269,11 +275,18 @@ void HiveClient::onWriteCharacteristic(const StaticJsonDocument<requestDocCapaci
   {
     if (characteristicName == CharacteristicName::CurrentDoorState)
     {
-      sendError("characteristic-write-only");
+      sendError("characteristic-read-only");
     }
     else if (characteristicName == CharacteristicName::TargetDoorState)
     {
+#ifdef SERVICE_GARAGE_DOOR_OPENER_PIN
       openPercent = requestDoc["characteristic"]["open-percent"];
+      digitalWrite(SERVICE_GARAGE_DOOR_OPENER_PIN, openPercent == 0 ? LOW : HIGH);
+      delay(1000);
+      digitalWrite(SERVICE_GARAGE_DOOR_OPENER_PIN, openPercent == 0 ? HIGH : LOW);
+#else
+      sendError("service-not-supported");
+#endif
     }
     else
     {
