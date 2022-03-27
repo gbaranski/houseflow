@@ -24,11 +24,13 @@ thiserror = "1.0"
 url = "2.2"
 tokio = { version = "1.6.0", features = ["sync", "macros"], default-features = false }
 tracing = "0.1.26"
-tokio-tungstenite = { version = "0.16.0", optional = true }
+ezsockets = { git = "https://github.com/gbaranski/ezsockets.git", branch = "master", features = ["client"], optional = true }
 http = { version = "0.2.5", optional = true }
 base64 = { version = "0.13.0", optional = true }
 anyhow = "1.0.51"
 futures = "0.3.18"
+async-trait = "0.1.52"
+headers = "0.3.7"
 
 [features]
 server = []
@@ -36,4 +38,4 @@ server-auth = ["server", "houseflow-types/auth"]
 server-meta = ["server", "houseflow-types/meta"]
 
 hub = []
-hub-hive = ["hub", "houseflow-config/accessory", "tokio-tungstenite", "http", "base64", "houseflow-accessory-hal"]
+hub-hive = ["hub", "houseflow-config/accessory", "ezsockets", "http", "base64", "houseflow-accessory-hal"]

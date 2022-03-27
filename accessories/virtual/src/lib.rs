@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use houseflow_accessory_hal::Accessory;
-use houseflow_accessory_hal::AccessoryEvent;
-use houseflow_accessory_hal::AccessoryEventSender;
+use houseflow_api::hub::hive::HiveClient;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::services::Service;
@@ -10,15 +9,14 @@ use houseflow_types::accessory::Error;
 use houseflow_types::accessory::{characteristics, services};
 use std::collections::HashMap;
 use std::time::Duration;
-use tokio::sync::Mutex;
 
 pub struct VirtualAccessory {
-    services: Mutex<HashMap<ServiceName, Service>>,
-    events: AccessoryEventSender,
+    client: HiveClient,
+    services: HashMap<ServiceName, Service>,
 }
 
 impl VirtualAccessory {
-    pub fn new(events: AccessoryEventSender) -> Self {
+    pub fn new(client: HiveClient) -> Self {
         let mut services = HashMap::new();
         services.insert(
             ServiceName::GarageDoorOpener,
@@ -28,22 +26,18 @@ impl VirtualAccessory {
             }),
         );
 
-        Self {
-            services: Mutex::new(services),
-            events,
-        }
+        Self { services, client }
     }
 }
 
 #[async_trait]
 impl Accessory for VirtualAccessory {
     async fn write_characteristic(
-        &self,
+        &mut self,
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), Error> {
-        let mut services = self.services.lock().await;
-        match services.get_mut(&service_name) {
+        match self.services.get_mut(&service_name) {
             Some(service) => match (service, &characteristic) {
                 (
                     Service::GarageDoorOpener(service),
@@ -54,14 +48,12 @@ impl Accessory for VirtualAccessory {
                     service.target_door_state.open_percent = *open_percent;
                     tokio::time::sleep(Duration::from_secs(1)).await;
                     service.current_door_state.open_percent = *open_percent;
-                    self.events
-                        .send(AccessoryEvent::CharacteristicUpdate {
+                    self.client
+                        .update(
                             service_name,
-                            characteristic: Characteristic::CurrentDoorState(
-                                service.current_door_state.to_owned(),
-                            ),
-                        })
-                        .unwrap();
+                            Characteristic::CurrentDoorState(service.current_door_state.to_owned()),
+                        )
+                        .await;
                 }
                 _ => return Err(accessory::Error::CharacteristicNotSupported),
             },
@@ -72,12 +64,11 @@ impl Accessory for VirtualAccessory {
     }
 
     async fn read_characteristic(
-        &self,
+        &mut self,
         service_name: ServiceName,
         characteristic_name: characteristics::CharacteristicName,
     ) -> Result<Characteristic, Error> {
-        let services = self.services.lock().await;
-        match services.get(&service_name) {
+        match self.services.get(&service_name) {
             Some(service) => match (service, characteristic_name) {
                 (
                     Service::TemperatureSensor(sensor),

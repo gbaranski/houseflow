@@ -1,230 +1,119 @@
-use anyhow::anyhow;
-use futures::Sink;
-use futures::SinkExt;
-use futures::StreamExt;
+use async_trait::async_trait;
+use ezsockets::BoxError;
+use ezsockets::ClientConfig;
 use houseflow_accessory_hal::Accessory;
-use houseflow_accessory_hal::AccessoryEvent;
-use houseflow_accessory_hal::AccessoryEventReceiver;
 use houseflow_config::accessory::Credentials;
-use houseflow_types::hive;
+use houseflow_types::accessory::characteristics::Characteristic;
+use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::hive::AccessoryFrame;
 use houseflow_types::hive::CharacteristicReadResult;
 use houseflow_types::hive::CharateristicWriteResult;
 use houseflow_types::hive::HubFrame;
-use std::borrow::Cow;
-use std::time::Duration;
-use std::time::Instant;
-use tokio::sync::mpsc;
-use tokio::sync::Mutex;
-use tokio_tungstenite::tungstenite;
-use tungstenite::Message as WebsocketMessage;
-use url::Url;
+use houseflow_types::hive::ReadCharacteristic;
+use houseflow_types::hive::UpdateCharacteristic;
+use houseflow_types::hive::WriteCharacteristic;
+use reqwest::Url;
 
-const PING_TIMEOUT: Duration = Duration::from_secs(10);
-const PING_INTERVAL: Duration = Duration::from_secs(5);
-
-#[derive(Debug, Clone)]
-pub enum Event {
-    #[allow(dead_code)]
-    Ping,
-    Pong,
-    Close(Option<tungstenite::protocol::CloseFrame<'static>>),
-    AccessoryFrame(hive::AccessoryFrame),
+#[derive(Clone)]
+pub struct HiveClient {
+    client: ezsockets::Client<()>,
 }
 
-pub type EventSender = mpsc::UnboundedSender<Event>;
-pub type EventReceiver = mpsc::UnboundedReceiver<Event>;
+impl HiveClient {
+    pub async fn connect<A: Accessory + Send + Sync + 'static>(
+        accessory_fn: impl FnOnce(Self) -> A,
+        credentials: Credentials,
+        hub_url: Url,
+    ) -> Result<(), BoxError> {
+        let hive_url = hub_url.join("provider/hive/websocket").unwrap();
+        let (_, future) = ezsockets::connect(
+            |client| {
+                let client = Self { client };
+                let accessory = accessory_fn(client.clone());
+                HiveClientActor { accessory, client }
+            },
+            ClientConfig::new(hive_url).basic(
+                &credentials.id.to_string(),
+                &credentials.password.to_string(),
+            ),
+        )
+        .await;
+        future.await?;
+        Ok(())
+    }
 
-pub struct Session {
-    heartbeat: Mutex<Instant>,
-    hub_url: Url,
-    credentials: Credentials,
+    async fn frame(&self, frame: AccessoryFrame) {
+        let s = serde_json::to_string(&frame).unwrap();
+        self.client.text(s).await;
+    }
+
+    pub async fn update(&self, service_name: ServiceName, characteristic: Characteristic) {
+        self.frame(AccessoryFrame::UpdateCharacteristic(UpdateCharacteristic {
+            service_name,
+            characteristic,
+        }))
+        .await;
+    }
 }
 
-impl Session {
-    pub fn new(hub_url: Url, credentials: Credentials) -> Self {
-        Self {
-            heartbeat: Mutex::new(Instant::now()),
-            hub_url,
-            credentials,
+struct HiveClientActor<A: Accessory + Send + Sync + 'static> {
+    accessory: A,
+    client: HiveClient,
+}
+
+#[async_trait]
+impl<A: Accessory + Send + Sync + 'static> ezsockets::ClientExt for HiveClientActor<A> {
+    type Message = ();
+
+    async fn call(&mut self, message: Self::Message) {
+        match message {
+            () => {}
         }
     }
 
-    pub async fn run(
-        self,
-        accessory: &impl Accessory,
-        accessory_events: AccessoryEventReceiver,
-    ) -> Result<(), anyhow::Error> {
-        let url = self.hub_url.join("/provider/hive/websocket").unwrap();
-
-        let http_request = http::Request::builder()
-            .uri(url.to_string())
-            .header(
-                http::header::AUTHORIZATION,
-                format!(
-                    "Basic {}",
-                    base64::encode(format!(
-                        "{}:{}",
-                        self.credentials.id, self.credentials.password
-                    ))
-                ),
-            )
-            .body(())
-            .unwrap();
-
-        let (stream, _) = tokio_tungstenite::connect_async(http_request).await?;
-        let (event_sender, event_receiver) = mpsc::unbounded_channel::<Event>();
-        let (stream_sender, stream_receiver) = stream.split();
-
-        tokio::select! {
-            v = self.stream_read(stream_receiver, event_sender.clone(), accessory) => { v }
-            v = self.stream_write(stream_sender, event_receiver) => { v }
-            v = self.accessory_events_read(accessory_events, event_sender.clone()) => { v }
-            v = self.heartbeat(event_sender.clone()) => {
-                event_sender.send(Event::Close(Some(tungstenite::protocol::CloseFrame{
-                    code: tungstenite::protocol::frame::coding::CloseCode::Error,
-                    reason: Cow::from("heartbeat timeout"),
-                })))?;
-                v
-             }
+    async fn text(&mut self, text: String) -> Result<(), BoxError> {
+        let frame = serde_json::from_str::<HubFrame>(&text)?;
+        let frame = match frame {
+            HubFrame::ReadCharacteristic(ReadCharacteristic {
+                id,
+                service_name,
+                characteristic_name,
+            }) => {
+                let result = self
+                    .accessory
+                    .read_characteristic(service_name, characteristic_name)
+                    .await;
+                let frame = CharacteristicReadResult {
+                    id,
+                    result: result.into(),
+                };
+                Some(AccessoryFrame::CharacteristicReadResult(frame))
+            }
+            HubFrame::WriteCharacteristic(WriteCharacteristic {
+                id,
+                service_name,
+                characteristic,
+            }) => {
+                let result = self
+                    .accessory
+                    .write_characteristic(service_name, characteristic)
+                    .await;
+                let frame = CharateristicWriteResult {
+                    id,
+                    result: result.into(),
+                };
+                Some(AccessoryFrame::CharacteristicWriteResult(frame))
+            }
+            _ => unimplemented!(),
+        };
+        if let Some(frame) = frame {
+            self.client.frame(frame).await;
         }
-    }
 
-    async fn accessory_events_read(
-        &self,
-        mut accessory_events: AccessoryEventReceiver,
-        events: EventSender,
-    ) -> Result<(), anyhow::Error> {
-        while let Some(event) = accessory_events.recv().await {
-            match event {
-                AccessoryEvent::CharacteristicUpdate {
-                    service_name,
-                    characteristic,
-                } => {
-                    events.send(Event::AccessoryFrame(AccessoryFrame::UpdateCharacteristic(
-                        hive::UpdateCharacteristic {
-                            service_name,
-                            characteristic,
-                        },
-                    )))?;
-                }
-            };
-        }
         Ok(())
     }
 
-    async fn stream_read<S, A>(
-        &self,
-        mut stream: S,
-        events: EventSender,
-        accessory: &A,
-    ) -> anyhow::Result<()>
-    where
-        S: futures::Stream<Item = Result<WebsocketMessage, tungstenite::Error>> + Unpin,
-        A: Accessory,
-    {
-        while let Some(message) = stream.next().await {
-            let message = message?;
-            match message {
-                WebsocketMessage::Text(text) => {
-                    tracing::debug!("Raw frame: `{}`", text);
-                    let frame: HubFrame = serde_json::from_str(&text)?;
-                    tracing::debug!("Parsed frame: {:?}", frame);
-                    match frame {
-                        HubFrame::ReadCharacteristic(frame) => {
-                            let result = accessory
-                                .read_characteristic(frame.service_name, frame.characteristic_name)
-                                .await;
-                            let frame = CharacteristicReadResult {
-                                id: frame.id,
-                                result: result.into(),
-                            };
-                            let frame = AccessoryFrame::CharacteristicReadResult(frame);
-                            let response_event = Event::AccessoryFrame(frame);
-                            events.send(response_event).unwrap()
-                        }
-                        HubFrame::WriteCharacteristic(frame) => {
-                            let result = accessory
-                                .write_characteristic(frame.service_name, frame.characteristic)
-                                .await;
-                            let frame = CharateristicWriteResult {
-                                id: frame.id,
-                                result: result.into(),
-                            };
-                            let frame = AccessoryFrame::CharacteristicWriteResult(frame);
-                            let event = Event::AccessoryFrame(frame);
-                            events.send(event).unwrap()
-                        }
-                        _ => {
-                            panic!("Unexpected frame received")
-                        }
-                    }
-                }
-                WebsocketMessage::Binary(bytes) => {
-                    tracing::debug!("received binary: {:?}", bytes);
-                }
-                WebsocketMessage::Ping(payload) => {
-                    tracing::debug!("received ping, payload: {:?}", payload);
-                    events
-                        .send(Event::Pong)
-                        .expect("message receiver half is down");
-                }
-                WebsocketMessage::Pong(payload) => {
-                    tracing::debug!("Received pong, payload: {:?}", payload);
-                    *self.heartbeat.lock().await = Instant::now();
-                }
-                WebsocketMessage::Close(frame) => {
-                    tracing::info!("Received close frame: {:?}", frame);
-                    return Ok(());
-                }
-            }
-        }
-        Ok(())
-    }
-
-    async fn stream_write<S>(
-        &self,
-        mut stream: S,
-        mut events: EventReceiver,
-    ) -> Result<(), anyhow::Error>
-    where
-        S: Sink<WebsocketMessage, Error = tungstenite::Error> + Unpin,
-    {
-        while let Some(event) = events.recv().await {
-            match event {
-                Event::Ping => {
-                    tracing::debug!("sending ping message");
-                    stream.send(WebsocketMessage::Ping(Vec::new())).await?;
-                }
-                Event::Pong => {
-                    tracing::debug!("sending pong message");
-                    stream.send(WebsocketMessage::Pong(Vec::new())).await?;
-                }
-                Event::AccessoryFrame(frame) => {
-                    let json = serde_json::to_string(&frame).unwrap();
-                    tracing::debug!("sending text message: {}", json);
-                    stream.send(WebsocketMessage::Text(json)).await?;
-                }
-                Event::Close(frame) => {
-                    tracing::debug!("sending close frame: {:?}", frame);
-                    stream.send(WebsocketMessage::Close(frame)).await?;
-                    stream.close().await?;
-                }
-            }
-        }
-        Ok(())
-    }
-
-    async fn heartbeat(&self, events: EventSender) -> anyhow::Result<()> {
-        let mut interval = tokio::time::interval(PING_INTERVAL);
-        interval.tick().await;
-        loop {
-            interval.tick().await;
-            if Instant::now().duration_since(*self.heartbeat.lock().await) > PING_TIMEOUT {
-                return Err(anyhow!("server heartbeat failed"));
-            } else {
-                events.send(Event::Ping)?;
-            }
-        }
+    async fn binary(&mut self, _bytes: Vec<u8>) -> Result<(), BoxError> {
+        unimplemented!()
     }
 }

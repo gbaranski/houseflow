@@ -1,5 +1,5 @@
 use houseflow_accessory_virtual::VirtualAccessory;
-use houseflow_api::hub::hive::Session;
+use houseflow_api::hub::hive::HiveClient;
 use houseflow_config::accessory::Config;
 use houseflow_config::Config as _;
 use houseflow_config::Error as ConfigError;
@@ -28,10 +28,9 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    let hive_session = Session::new(config.hub.url, config.credentials);
-    let (event_sender, event_receiver) = tokio::sync::mpsc::unbounded_channel();
-    let accessory = VirtualAccessory::new(event_sender);
-    hive_session.run(&accessory, event_receiver).await?;
+    HiveClient::connect(VirtualAccessory::new, config.credentials, config.hub.url)
+        .await
+        .unwrap();
 
     Ok(())
 }
