@@ -1,4 +1,6 @@
 pub mod hive;
+
+#[cfg(feature = "providers-mijia")]
 pub mod mijia;
 
 use acu::MasterExt;

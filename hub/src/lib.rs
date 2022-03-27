@@ -51,12 +51,19 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
             router = router.nest("/hive", app);
             master_provider.push(handle.into()).await;
         }
+
+        #[cfg(feature = "mijia")]
         if let Some(mijia) = mijia {
             let handle =
                 providers::mijia::new(mijia, master_controller.clone(), config.accessories.clone())
                     .await?;
             master_provider.push(handle).await;
         }
+        #[cfg(not(feature = "mijia"))]
+        if mijia.is_some() {
+            panic!("houseflow-hub hasn't been compiled with `mijia` feature enabled. Please enable it and recompile, or remove `providers.mijia` from configuration")
+        }
+
         router
     };
 
