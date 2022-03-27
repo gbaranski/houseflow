@@ -237,7 +237,7 @@ impl axum::response::IntoResponse for ConnectError {
 
 #[async_trait]
 impl axum::extract::FromRequest<Body> for DeviceCredentials {
-    type Rejection = axum::Json<ConnectError>;
+    type Rejection = ConnectError;
 
     async fn from_request(
         req: &mut axum::extract::RequestParts<Body>,
@@ -246,6 +246,7 @@ impl axum::extract::FromRequest<Body> for DeviceCredentials {
             TypedHeader::<headers::Authorization<headers::authorization::Basic>>::from_request(req)
                 .await
                 .map_err(|err| ConnectError::InvalidAuthorizationHeader(err.to_string()))?;
+
         let accessory_id = accessory::ID::parse_str(authorization.username()).map_err(|err| {
             ConnectError::InvalidAuthorizationHeader(format!("invalid hub id: {}", err))
         })?;
