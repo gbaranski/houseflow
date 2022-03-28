@@ -1,10 +1,10 @@
-use clap::AppSettings;
+use clap::Command;
 use clap::Arg;
 use houseflow_types::code::VerificationCode;
 use std::str::FromStr;
 
-fn login() -> clap::App<'static> {
-    clap::App::new("login")
+fn login() -> Command<'static> {
+    Command::new("login")
         .about("Log in with a Houseflow account")
         .arg(
             Arg::new("email")
@@ -24,16 +24,16 @@ fn login() -> clap::App<'static> {
         )
 }
 
-fn logout() -> clap::App<'static> {
-    clap::App::new("logout").about("Log out from currently logged account")
+fn logout() -> Command<'static> {
+    Command::new("logout").about("Log out from currently logged account")
 }
 
-fn refresh() -> clap::App<'static> {
-    clap::App::new("refresh").about("Refresh stored authentication credentials")
+fn refresh() -> Command<'static> {
+    Command::new("refresh").about("Refresh stored authentication credentials")
 }
 
-fn status() -> clap::App<'static> {
-    clap::App::new("status")
+fn status() -> Command<'static> {
+    Command::new("status")
         .about("View authentication status")
         .arg(
             Arg::new("show-token")
@@ -42,12 +42,13 @@ fn status() -> clap::App<'static> {
         )
 }
 
-pub(super) fn subcommand() -> clap::App<'static> {
-    clap::App::new("auth")
+pub(super) fn subcommand() -> clap::Command<'static> {
+    Command::new("auth")
         .about("Login, Logout, and refresh your authentication")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(login())
         .subcommand(logout())
         .subcommand(refresh())
         .subcommand(status())
+        .subcommand_required(true)
+        .arg_required_else_help(true)
 }

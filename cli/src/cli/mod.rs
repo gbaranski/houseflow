@@ -2,8 +2,7 @@ mod auth;
 mod completions;
 mod meta;
 
-use clap::App;
-use clap::AppSettings;
+use clap::Command;
 use clap::Arg;
 
 pub(crate) fn dialoguer_theme() -> impl dialoguer::theme::Theme {
@@ -12,13 +11,12 @@ pub(crate) fn dialoguer_theme() -> impl dialoguer::theme::Theme {
     }
 }
 
-pub fn app(default_config_path: &'static std::ffi::OsStr) -> clap::App<'_> {
-    App::new("Houseflow")
+pub fn app(default_config_path: &'static std::ffi::OsStr) -> Command<'_> {
+    Command::new("Houseflow")
         .bin_name(clap::crate_name!())
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
         .about("Client for the Houseflow project")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
         .arg(
             Arg::new("config")
                 .short('c')
@@ -28,6 +26,8 @@ pub fn app(default_config_path: &'static std::ffi::OsStr) -> clap::App<'_> {
         .subcommand(auth::subcommand())
         .subcommand(meta::subcommand())
         .subcommand(completions::subcommand())
+        .subcommand_required(true)
+        .arg_required_else_help(true)
 }
 
 pub fn get_input(prompt: impl Into<String>) -> String {

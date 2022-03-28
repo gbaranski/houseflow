@@ -1,13 +1,13 @@
-use clap::AppSettings;
 use clap::Arg;
+use clap::Command;
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 use std::str::FromStr;
 use strum::VariantNames;
 
-fn read() -> clap::App<'static> {
-    clap::App::new("read")
+fn read() -> Command<'static> {
+    Command::new("read")
         .about("Read characteristic of the accessory")
         .arg(
             Arg::new("accessory-id")
@@ -56,9 +56,10 @@ fn read() -> clap::App<'static> {
         )
 }
 
-pub(super) fn subcommand() -> clap::App<'static> {
-    clap::App::new("meta")
+pub(super) fn subcommand() -> Command<'static> {
+    Command::new("meta")
         .about("Read or write characteristic of the accessory")
-        .setting(AppSettings::SubcommandRequiredElseHelp)
         .subcommand(read())
+        .subcommand_required(true)
+        .arg_required_else_help(true)
 }
