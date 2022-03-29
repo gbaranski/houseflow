@@ -753,13 +753,15 @@ dependencies = [
 [[package]]
 name = "ezsockets"
 version = "0.1.0"
-source = "git+https://github.com/gbaranski/ezsockets.git?branch=master#f20ac79b6e5c79992819fecc373f743c284ae599"
+source = "git+https://github.com/gbaranski/ezsockets.git?branch=master#a4110d3a4dad857526265770548d9011a64d4e0a"
 dependencies = [
  "async-trait",
+ "axum",
  "base64",
  "cfg-if",
  "futures",
  "http",
+ "thiserror",
  "tokio",
  "tokio-tungstenite 0.17.1",
  "tracing",

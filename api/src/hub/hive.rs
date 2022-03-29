@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use ezsockets::BoxError;
 use ezsockets::ClientConfig;
 use houseflow_accessory_hal::Accessory;
 use houseflow_config::accessory::Credentials;
@@ -24,7 +23,7 @@ impl HiveClient {
         accessory_fn: impl FnOnce(Self) -> A,
         credentials: Credentials,
         hub_url: Url,
-    ) -> Result<(), BoxError> {
+    ) -> Result<(), ezsockets::Error> {
         let hive_url = hub_url.join("provider/hive/websocket").unwrap();
         let (_, future) = ezsockets::connect(
             |client| {
@@ -65,14 +64,14 @@ struct HiveClientActor<A: Accessory + Send + Sync + 'static> {
 impl<A: Accessory + Send + Sync + 'static> ezsockets::ClientExt for HiveClientActor<A> {
     type Params = ();
 
-    async fn call(&mut self, params: Self::Params) -> Result<(), BoxError> {
+    async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::Error> {
         match params {
             () => {}
         };
         Ok(())
     }
 
-    async fn text(&mut self, text: String) -> Result<(), BoxError> {
+    async fn text(&mut self, text: String) -> Result<(), ezsockets::Error> {
         let frame = serde_json::from_str::<HubFrame>(&text)?;
         let frame = match frame {
             HubFrame::ReadCharacteristic(ReadCharacteristic {
@@ -114,7 +113,7 @@ impl<A: Accessory + Send + Sync + 'static> ezsockets::ClientExt for HiveClientAc
         Ok(())
     }
 
-    async fn binary(&mut self, _bytes: Vec<u8>) -> Result<(), BoxError> {
+    async fn binary(&mut self, _bytes: Vec<u8>) -> Result<(), ezsockets::Error> {
         unimplemented!()
     }
 }

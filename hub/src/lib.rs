@@ -2,7 +2,10 @@ pub mod controllers;
 pub mod providers;
 
 use std::net::SocketAddr;
+use std::sync::Arc;
 
+use arc_swap::ArcSwap;
+use houseflow_config::hub::Accessory;
 use houseflow_config::hub::Config;
 use houseflow_config::hub::Controllers;
 use houseflow_config::hub::Providers;
@@ -39,6 +42,8 @@ macro_rules! optional_provider {
     };
 }
 
+pub type ConfiguredAccessories = Arc<ArcSwap<Vec<Accessory>>>;
+
 pub async fn run(config: Config) -> Result<(), anyhow::Error> {
     #[allow(unused_imports)]
     use acu::MasterExt;
@@ -46,6 +51,8 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
     use axum::Router;
 
     let router = Router::new().route("/health-check", get(health_check));
+
+    let configured_accessories = Arc::new(ArcSwap::from(Arc::new(config.accessories)));
 
     #[allow(unused_variables)]
     let master_controller = controllers::MasterHandle::new();
@@ -89,15 +96,19 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
         let mut router = Router::new();
 
         optional_provider!(hive, {
-            let handle =
-                providers::hive::new(hive, master_controller.clone(), config.accessories.clone());
-            let app = providers::hive::app(master_controller.clone().into(), handle.clone());
+            let server =
+                providers::hive::new(hive, master_controller.clone(), configured_accessories.clone());
+
+            let handle = providers::Handle {
+                sender: acu::Sender::new_from_mpsc(server.clone().into(), providers::Name::Hive),
+            };
+            let app = providers::hive::app(server, configured_accessories.clone(), master_provider.clone());
             router = router.nest("/hive", app);
             master_provider.push(handle.into()).await;
         });
         optional_provider!(mijia, {
             let handle =
-                providers::mijia::new(mijia, master_controller.clone(), config.accessories.clone())
+                providers::mijia::new(mijia, master_controller.clone(), configured_accessories.clone())
                     .await?;
             master_provider.push(handle).await;
         });
@@ -110,7 +121,11 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
         .nest("/provider", provider_router);
 
     let address = SocketAddr::new(config.network.address, config.network.port);
-    let fut = axum_server::bind(address).serve(router.clone().into_make_service());
+    let fut = axum_server::bind(address).serve(
+        router
+            .clone()
+            .into_make_service_with_connect_info::<SocketAddr, _>(),
+    );
     tracing::info!("serving http server on {}", address);
     fut.await?;
 

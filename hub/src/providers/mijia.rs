@@ -1,5 +1,6 @@
 use crate::controllers;
 use crate::controllers::ControllerExt;
+use crate::ConfiguredAccessories;
 use anyhow::Error;
 use futures::StreamExt;
 use houseflow_config::hub::Accessory;
@@ -22,7 +23,7 @@ use super::Name;
 pub async fn new(
     _config: Config,
     controller: controllers::MasterHandle,
-    configured_accessories: Vec<Accessory>,
+    configured_accessories: ConfiguredAccessories,
 ) -> Result<Handle, Error> {
     let (sender, receiver) = acu::channel(Name::Mijia);
 
@@ -45,7 +46,7 @@ pub struct MijiaProvider {
     receiver: acu::Receiver<Message, Name>,
     controller: controllers::MasterHandle,
     connected_accessories: HashMap<BluetoothDeviceID, AccessoryID>,
-    configured_accessories: Vec<Accessory>,
+    configured_accessories: ConfiguredAccessories,
     last_readings: HashMap<AccessoryID, mijia::Readings>,
     mijia_session: MijiaSession,
 }
@@ -55,9 +56,7 @@ impl MijiaProvider {
         self.mijia_session.bt_session.start_discovery().await?;
         let sensors = self.mijia_session.get_sensors().await?;
         for sensor in sensors {
-            let accessory = self
-                .accessory_by_mac_address(sensor.mac_address.to_string().as_str())
-                .cloned();
+            let accessory = self.accessory_by_mac_address(sensor.mac_address.to_string().as_str());
             if let Some(accessory) = accessory {
                 tracing::info!(mac = %sensor.mac_address, id = %accessory.id, "discovered");
                 if let Err(err) = self.connect(accessory.clone(), &sensor.id).await {
@@ -106,14 +105,18 @@ impl MijiaProvider {
         )
     }
 
-    fn accessory_by_mac_address(&self, expected_mac_address: &str) -> Option<&Accessory> {
-        self.configured_accessories.iter().find(|accessory| {
-            accessory
-                .mac_address
-                .as_ref()
-                .map(|mac_address| mac_address == expected_mac_address)
-                .unwrap_or(false)
-        })
+    fn accessory_by_mac_address(&self, expected_mac_address: &str) -> Option<Accessory> {
+        self.configured_accessories
+            .load()
+            .iter()
+            .find(|accessory| {
+                accessory
+                    .mac_address
+                    .as_ref()
+                    .map(|mac_address| mac_address == expected_mac_address)
+                    .unwrap_or(false)
+            })
+            .cloned()
     }
 
     #[tracing::instrument(skip(self, accessory, bluetooth_device_id), fields(id = %accessory.id))]
@@ -257,6 +260,7 @@ impl MijiaProvider {
                 respond_to
                     .send(
                         self.configured_accessories
+                            .load()
                             .iter()
                             .find(|accessory| accessory.id == accessory_id)
                             .cloned(),

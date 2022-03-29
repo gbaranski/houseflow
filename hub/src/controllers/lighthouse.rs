@@ -26,7 +26,7 @@ impl LighthouseController {
 impl ezsockets::ClientExt for LighthouseController {
     type Params = Message;
 
-    async fn text(&mut self, text: String) -> Result<(), ezsockets::BoxError> {
+    async fn text(&mut self, text: String) -> Result<(), ezsockets::Error> {
         let frame = serde_json::from_str::<lighthouse::ServerFrame>(&text)?;
         match frame {
             lighthouse::ServerFrame::ReadCharacteristic(lighthouse::ReadCharacteristic {
@@ -66,11 +66,11 @@ impl ezsockets::ClientExt for LighthouseController {
         Ok(())
     }
 
-    async fn binary(&mut self, _bytes: Vec<u8>) -> Result<(), ezsockets::BoxError> {
+    async fn binary(&mut self, _bytes: Vec<u8>) -> Result<(), ezsockets::Error> {
         todo!()
     }
 
-    async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::BoxError> {
+    async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::Error> {
         match params {
             Message::Connected { accessory } => {
                 self.send(lighthouse::HubFrame::AccessoryConnected(accessory.into()))
