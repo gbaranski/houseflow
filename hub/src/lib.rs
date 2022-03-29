@@ -105,14 +105,6 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
         router
     };
 
-    if master_controller.slaves().await.len() == 0 {
-        tracing::warn!("no controllers configured");
-    }
-
-    if master_provider.slaves().await.len() == 0 {
-        tracing::warn!("no providers configured");
-    }
-
     let router = router
         .nest("/controller", controller_router)
         .nest("/provider", provider_router);
