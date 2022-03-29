@@ -753,7 +753,7 @@ dependencies = [
 [[package]]
 name = "ezsockets"
 version = "0.1.0"
-source = "git+https://github.com/gbaranski/ezsockets.git?branch=master#fffa1a80bdf5bdd3c0752fe0bcf00b0200cef228"
+source = "git+https://github.com/gbaranski/ezsockets.git?branch=master#f20ac79b6e5c79992819fecc373f743c284ae599"
 dependencies = [
  "async-trait",
  "base64",
@@ -1738,9 +1738,9 @@ dependencies = [
 
 [[package]]
 name = "native-tls"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09bf6f32a3afefd0b587ee42ed19acd945c6d1f3b5424040f50b2f24ab16be77"
+checksum = "fd7e2f3618557f980e0b17e8856252eee3c97fa12c54dff0ca290fb6266ca4a9"
 dependencies = [
  "lazy_static",
  "libc",
