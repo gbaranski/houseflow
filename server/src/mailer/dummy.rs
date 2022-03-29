@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 pub fn new(
     verification_code_sender: mpsc::UnboundedSender<(lettre::Address, VerificationCode)>,
 ) -> Handle {
-    let (sender, receiver) = acu::channel(8, Name::Dummy);
+    let (sender, receiver) = acu::channel(Name::Dummy);
     let mut actor = DummyMailer {
         receiver,
         verification_code_sender,

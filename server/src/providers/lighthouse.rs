@@ -79,8 +79,8 @@ pub struct LighthouseProviderHandle {
 }
 
 pub fn new(controller: controllers::MasterHandle, config: Config) -> LighthouseProviderHandle {
-    let (sender, receiver) = acu::channel(8, Name::Lighthouse);
-    let (lighthouse_sender, lighthouse_receiver) = acu::channel(8, Name::Lighthouse);
+    let (sender, receiver) = acu::channel(Name::Lighthouse);
+    let (lighthouse_sender, lighthouse_receiver) = acu::channel(Name::Lighthouse);
     let mut actor = LighthouseProvider {
         receiver,
         lighthouse_receiver,
@@ -483,7 +483,7 @@ async fn new_lighthouse_hub_session(
     controller: controllers::MasterHandle,
 ) -> LighthouseHubSessionHandle {
     let (lighthouse_hub_session_sender, lighthouse_hub_session_receiver) =
-        acu::channel(8, "LighthouseHubSession");
+        acu::channel("LighthouseHubSession");
     let mut actor = LighthouseHubSession {
         lighthouse_hub_session_receiver,
         connected_accessories: HashSet::new(),

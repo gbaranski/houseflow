@@ -126,6 +126,10 @@ pub mod services {
         Battery(Battery),
     }
 
+    impl ServiceName {
+        pub const VARIANTS: &'static [&'static str] = <Self as strum::VariantNames>::VARIANTS;
+    }
+
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     pub struct TemperatureSensor {
         pub current_temperature: characteristics::CurrentTemperature,
@@ -180,6 +184,10 @@ pub mod characteristics {
         TargetDoorState(TargetDoorState),
         BatteryLevel(BatteryLevel),
         ChargingState(ChargingState),
+    }
+
+    impl CharacteristicName {
+        pub const VARIANTS: &'static [&'static str] = <Self as strum::VariantNames>::VARIANTS;
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -4,7 +4,7 @@ use super::Message;
 use super::Name;
 
 pub fn new() -> Handle {
-    let (sender, receiver) = acu::channel(8, Name::Dummy);
+    let (sender, receiver) = acu::channel(Name::Dummy);
     let mut actor = DummyProvider { receiver };
     let handle = Handle { sender };
     tokio::spawn(async move { actor.run().await });

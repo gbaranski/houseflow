@@ -4,7 +4,6 @@ use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 use std::str::FromStr;
-use strum::VariantNames;
 
 fn read() -> Command<'static> {
     Command::new("read")

@@ -15,7 +15,7 @@ pub struct Config {
 }
 
 pub fn new(config: Config) -> Handle {
-    let (sender, receiver) = acu::channel(8, Name::Smtp);
+    let (sender, receiver) = acu::channel(Name::Smtp);
     let transport = lettre::SmtpTransport::relay(config.host.as_str())
         .unwrap()
         .port(config.port)

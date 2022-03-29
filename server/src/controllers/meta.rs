@@ -13,7 +13,7 @@ use houseflow_types::errors::ControllerError;
 use houseflow_types::errors::ServerError;
 
 pub fn new() -> Handle {
-    let (sender, receiver) = acu::channel(8, Name::Master);
+    let (sender, receiver) = acu::channel(Name::Master);
     let mut actor = MetaController { receiver };
     let handle = Handle { sender };
     tokio::spawn(async move { actor.run().await });
