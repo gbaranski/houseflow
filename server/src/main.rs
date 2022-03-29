@@ -61,7 +61,7 @@ async fn main() -> Result<(), anyhow::Error> {
                     host: smtp.url.host_str().unwrap().to_string(),
                     port: smtp.url.port().unwrap_or(465),
                     username: smtp.url.username().to_string(),
-                    password: urlencoding::decode(&smtp.url.password().unwrap().to_string())
+                    password: urlencoding::decode(smtp.url.password().unwrap())
                         .unwrap()
                         .to_string(),
                     from: smtp.from.parse().unwrap(),
