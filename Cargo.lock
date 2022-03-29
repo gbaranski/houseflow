@@ -14,9 +14,23 @@ dependencies = [
 
 [[package]]
 name = "acu"
-version = "0.3.4"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "393e005c2bf8212b70f887f45bf865a103a8b8ec665cd4cde9ddf02c59b64366"
+checksum = "da6c23cbdae18eadcb73a60d6244c61177faf1eb6dfd2601f26ca60a2fbdcc7d"
+dependencies = [
+ "async-trait",
+ "cfg-if",
+ "futures",
+ "log",
+ "tokio",
+ "tokio-stream",
+]
+
+[[package]]
+name = "acu"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a038c3ebf49944c8fcea789d278313ceee4f375f9ec04b0a530f99f1c854ba3"
 dependencies = [
  "async-trait",
  "cfg-if",
@@ -739,7 +753,7 @@ dependencies = [
 [[package]]
 name = "ezsockets"
 version = "0.1.0"
-source = "git+https://github.com/gbaranski/ezsockets.git?branch=master#74d1a08953333cfac66eec68c85a0f75429bbb6d"
+source = "git+https://github.com/gbaranski/ezsockets.git?branch=master#fffa1a80bdf5bdd3c0752fe0bcf00b0200cef228"
 dependencies = [
  "async-trait",
  "base64",
@@ -1256,13 +1270,14 @@ dependencies = [
 name = "houseflow-hub"
 version = "0.1.0"
 dependencies = [
- "acu",
+ "acu 0.4.0",
  "anyhow",
  "arc-swap",
  "async-trait",
  "axum",
  "axum-server",
  "base64",
+ "cfg-if",
  "chrono",
  "ezsockets",
  "futures",
@@ -1286,7 +1301,7 @@ dependencies = [
 name = "houseflow-server"
 version = "0.1.2"
 dependencies = [
- "acu",
+ "acu 0.3.6",
  "anyhow",
  "askama",
  "async-trait",
@@ -2784,9 +2799,9 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "syn"
-version = "1.0.89"
+version = "1.0.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea297be220d52398dcc07ce15a209fce436d361735ac1db700cab3b6cdfb9f54"
+checksum = "704df27628939572cd88d33f171cd6f896f4eaca85252c6e0a72d8d8287ee86f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3026,14 +3041,13 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64910e1b9c1901aaf5375561e35b9c057d95ff41a44ede043a03e09279eabaf1"
+checksum = "0edfdeb067411dba2044da6d1cb2df793dd35add7888d73c16e3381ded401764"
 dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
- "log",
  "pin-project-lite",
  "tokio",
 ]
@@ -3058,7 +3072,7 @@ dependencies = [
  "pin-project",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.0",
+ "tokio-util 0.7.1",
  "tower-layer",
  "tower-service",
  "tracing",

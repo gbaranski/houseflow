@@ -24,7 +24,7 @@ pub async fn new(
     controller: controllers::MasterHandle,
     configured_accessories: Vec<Accessory>,
 ) -> Result<Handle, Error> {
-    let (sender, receiver) = acu::channel(8, Name::Mijia);
+    let (sender, receiver) = acu::channel(Name::Mijia);
 
     let (_, mijia_session) = MijiaSession::new().await?;
     let mut actor = MijiaProvider {

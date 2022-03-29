@@ -63,12 +63,13 @@ struct HiveClientActor<A: Accessory + Send + Sync + 'static> {
 
 #[async_trait]
 impl<A: Accessory + Send + Sync + 'static> ezsockets::ClientExt for HiveClientActor<A> {
-    type Message = ();
+    type Params = ();
 
-    async fn call(&mut self, message: Self::Message) {
-        match message {
+    async fn call(&mut self, params: Self::Params) -> Result<(), BoxError> {
+        match params {
             () => {}
-        }
+        };
+        Ok(())
     }
 
     async fn text(&mut self, text: String) -> Result<(), BoxError> {

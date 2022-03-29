@@ -47,7 +47,7 @@ pub async fn new(
     config: HapConfig,
     provider: providers::MasterHandle,
 ) -> Result<Handle, anyhow::Error> {
-    let (sender, receiver) = acu::channel(1, Name::Hap);
+    let (sender, receiver) = acu::channel(Name::Hap);
     let mut storage =
         FileStorage::new(&houseflow_config::defaults::data_home().join("hap")).await?;
     let config = match storage.load_config().await {

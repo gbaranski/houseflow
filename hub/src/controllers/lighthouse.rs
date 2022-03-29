@@ -1,152 +1,77 @@
 pub use super::Handle;
+use super::Name;
 
 use super::Message;
-use crate::controllers::Name;
 use crate::providers;
 use crate::providers::ProviderExt;
-use anyhow::Context;
-use futures::SinkExt;
-use futures::StreamExt;
+use async_trait::async_trait;
 use houseflow_config::hub::controllers::Lighthouse as Config;
 use houseflow_types::hub;
 use houseflow_types::lighthouse;
-use tokio_tungstenite::tungstenite;
-use tokio_tungstenite::tungstenite::Message as WebSocketMessage;
-use tokio_tungstenite::WebSocketStream;
 
 pub struct LighthouseController {
-    receiver: acu::Receiver<Message, Name>,
-    websocket_stream: WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
     provider: providers::MasterHandle,
-}
-
-pub async fn new(
-    config: Config,
-    hub_id: hub::ID,
-    provider: providers::MasterHandle,
-) -> Result<Handle, anyhow::Error> {
-    let (sender, receiver) = acu::channel(1, Name::Lighthouse);
-    tracing::debug!(
-        "attempting to connect to the lighthouse websocket server on URL: {}",
-        config.url
-    );
-
-    let authorization_header = format!(
-        "Basic {}",
-        base64::encode(format!(
-            "{}:{}",
-            hub_id.to_string().as_str(),
-            config.password
-        ))
-    );
-
-    let request = http::Request::builder()
-        .uri(config.url.as_str())
-        .header(http::header::AUTHORIZATION, authorization_header)
-        .body(())
-        .unwrap();
-
-    let (websocket_stream, websocket_response) = tokio_tungstenite::connect_async(request)
-        .await
-        .context("lighthouse websocket server connect failed")?;
-    tracing::debug!(
-        "connected to the lighthouse server via websocket with response: {:?}",
-        websocket_response
-    );
-
-    let handle = Handle { sender };
-    let mut actor = LighthouseController {
-        receiver,
-        websocket_stream,
-        provider,
-    };
-    tokio::spawn(async move { actor.run().await });
-    Ok(handle)
+    client: ezsockets::Client<Message>,
 }
 
 impl LighthouseController {
-    async fn send(&mut self, frame: lighthouse::HubFrame) -> Result<(), anyhow::Error> {
-        let text = serde_json::to_string(&frame).context("serializing outgoing hub frame")?;
-        self.websocket_stream
-            .send(tungstenite::Message::Text(text))
-            .await?;
+    async fn send(&mut self, frame: lighthouse::HubFrame) -> anyhow::Result<()> {
+        let json = serde_json::to_string(&frame)?;
+        self.client.text(json).await;
         Ok(())
     }
+}
 
-    async fn handle_websocket_message(
-        &mut self,
-        message: tungstenite::Message,
-    ) -> Result<(), anyhow::Error> {
-        match message {
-            WebSocketMessage::Text(text) => {
-                let frame = serde_json::from_str::<lighthouse::ServerFrame>(&text)?;
-                match frame {
-                    lighthouse::ServerFrame::ReadCharacteristic(
-                        lighthouse::ReadCharacteristic {
-                            id,
-                            accessory_id,
-                            service_name,
-                            characteristic_name,
-                        },
-                    ) => {
-                        let result = self
-                            .provider
-                            .read_characteristic(accessory_id, service_name, characteristic_name)
-                            .await
-                            .into();
-                        self.send(lighthouse::HubFrame::ReadCharacteristicResult(
-                            lighthouse::ReadCharacteristicResult { id, result },
-                        ))
-                        .await?;
-                    }
-                    lighthouse::ServerFrame::WriteCharacteristic(
-                        lighthouse::WriteCharacteristic {
-                            id,
-                            accessory_id,
-                            service_name,
-                            characteristic,
-                        },
-                    ) => {
-                        let result = self
-                            .provider
-                            .write_characteristic(accessory_id, service_name, characteristic)
-                            .await
-                            .into();
-                        self.send(lighthouse::HubFrame::WriteCharacteristicResult(
-                            lighthouse::WriteCharacteristicResult { id, result },
-                        ))
-                        .await?;
-                    }
-                    _ => unimplemented!(),
-                }
-            }
-            WebSocketMessage::Binary(_) => todo!(),
-            WebSocketMessage::Ping(_) => todo!(),
-            WebSocketMessage::Pong(_) => todo!(),
-            WebSocketMessage::Close(_) => todo!(),
-        };
-        Ok(())
-    }
+#[async_trait]
+impl ezsockets::ClientExt for LighthouseController {
+    type Params = Message;
 
-    async fn run(&mut self) -> Result<(), anyhow::Error> {
-        loop {
-            tokio::select! {
-                Some(message) = self.receiver.recv() => {
-                    self.handle_controller_message(message).await?;
-                },
-                Some(message) = self.websocket_stream.next() => {
-                    let message = message?;
-                    self.handle_websocket_message(message).await?
-                },
-                else => break,
+    async fn text(&mut self, text: String) -> Result<(), ezsockets::BoxError> {
+        let frame = serde_json::from_str::<lighthouse::ServerFrame>(&text)?;
+        match frame {
+            lighthouse::ServerFrame::ReadCharacteristic(lighthouse::ReadCharacteristic {
+                id,
+                accessory_id,
+                service_name,
+                characteristic_name,
+            }) => {
+                let result = self
+                    .provider
+                    .read_characteristic(accessory_id, service_name, characteristic_name)
+                    .await
+                    .into();
+                self.send(lighthouse::HubFrame::ReadCharacteristicResult(
+                    lighthouse::ReadCharacteristicResult { id, result },
+                ))
+                .await?;
             }
+            lighthouse::ServerFrame::WriteCharacteristic(lighthouse::WriteCharacteristic {
+                id,
+                accessory_id,
+                service_name,
+                characteristic,
+            }) => {
+                let result = self
+                    .provider
+                    .write_characteristic(accessory_id, service_name, characteristic)
+                    .await
+                    .into();
+                self.send(lighthouse::HubFrame::WriteCharacteristicResult(
+                    lighthouse::WriteCharacteristicResult { id, result },
+                ))
+                .await?;
+            }
+            _ => unimplemented!(),
         }
-
         Ok(())
     }
 
-    async fn handle_controller_message(&mut self, message: Message) -> Result<(), anyhow::Error> {
-        match message {
+    async fn binary(&mut self, _bytes: Vec<u8>) -> Result<(), ezsockets::BoxError> {
+        todo!()
+    }
+
+    async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::BoxError> {
+        match params {
             Message::Connected { accessory } => {
                 self.send(lighthouse::HubFrame::AccessoryConnected(accessory.into()))
                     .await?;
@@ -163,4 +88,20 @@ impl LighthouseController {
         };
         Ok(())
     }
+}
+
+pub async fn new(
+    config: Config,
+    hub_id: hub::ID,
+    provider: providers::MasterHandle,
+) -> Result<Handle, anyhow::Error> {
+    let (client, _) = ezsockets::connect(
+        |client| LighthouseController { provider, client },
+        ezsockets::ClientConfig::new(config.url).basic(&hub_id.to_string(), &config.password),
+    )
+    .await;
+
+    let sender: tokio::sync::mpsc::UnboundedSender<Message> = client.into();
+    let sender = acu::Sender::new_from_mpsc(sender, Name::Lighthouse);
+    Ok(Handle { sender })
 }

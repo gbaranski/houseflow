@@ -55,8 +55,8 @@ pub fn new(
     controller: controllers::MasterHandle,
     configured_accessories: Vec<Accessory>,
 ) -> HiveProviderHandle {
-    let (sender, receiver) = acu::channel(8, Name::Hive);
-    let (hive_sender, hive_receiver) = acu::channel(8, Name::Hive);
+    let (sender, receiver) = acu::channel(Name::Hive);
+    let (hive_sender, hive_receiver) = acu::channel(Name::Hive);
     let mut actor = HiveProvider {
         receiver,
         hive_receiver,
@@ -338,8 +338,8 @@ impl HiveSession {
         stream: WebSocket,
         controller: controllers::Handle,
     ) -> HiveSessionHandle {
-        let (sender, receiver) = acu::channel(8, SessionName::HiveSession);
-        let (hive_sender, hive_receiver) = acu::channel(8, SessionName::HiveSession);
+        let (sender, receiver) = acu::channel(SessionName::HiveSession);
+        let (hive_sender, hive_receiver) = acu::channel(SessionName::HiveSession);
         let (sink, stream) = stream.split();
         let mut actor = Self {
             hive_receiver,

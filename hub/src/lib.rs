@@ -24,19 +24,46 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
             meta,
         } = config.controllers;
         let mut router = Router::new();
-        if let Some(hap) = hap {
-            let handle = controllers::hap::new(hap, master_provider.clone()).await?;
-            master_controller.push(handle).await;
+
+        {
+            #[cfg(feature = "controllers-hap")]
+            if let Some(hap) = hap {
+                let handle = controllers::hap::new(hap, master_provider.clone()).await?;
+                master_controller.push(handle).await;
+            }
+            #[cfg(not(feature = "controllers-hap"))]
+            if hap.is_some() {
+                panic!("houseflow-hub is not compiled with `hap` feature enabled. Please enable it and recompile, or remove `providers.hap` from configuration")
+            }
         }
-        if let Some(lighthouse) = lighthouse {
-            let handle =
-                controllers::lighthouse::new(lighthouse, config.hub.id, master_provider.clone())
-                    .await?;
-            master_controller.push(handle).await;
+
+        {
+            #[cfg(feature = "controllers-lighthouse")]
+            if let Some(lighthouse) = lighthouse {
+                let handle = controllers::lighthouse::new(
+                    lighthouse,
+                    config.hub.id,
+                    master_provider.clone(),
+                )
+                .await?;
+                master_controller.push(handle).await;
+            }
+            #[cfg(not(feature = "controllers-lighthouse"))]
+            if hap.is_some() {
+                panic!("houseflow-hub is not compiled with `lighthouse` feature enabled. Please enable it and recompile, or remove `providers.lighthouse` from configuration")
+            }
         }
-        if let Some(_meta) = meta {
-            let app = controllers::meta::app(master_provider.clone());
-            router = router.nest("/meta", app);
+
+        {
+            #[cfg(feature = "controllers-meta")]
+            if let Some(_meta) = meta {
+                let app = controllers::meta::app(master_provider.clone());
+                router = router.nest("/meta", app);
+            }
+            #[cfg(not(feature = "controllers-meta"))]
+            if hap.is_some() {
+                panic!("houseflow-hub is not compiled with `meta` feature enabled. Please enable it and recompile, or remove `providers.meta` from configuration")
+            }
         }
         router
     };
@@ -44,24 +71,40 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
     let provider_router = {
         let Providers { hive, mijia } = config.providers;
         let mut router = Router::new();
-        if let Some(hive) = hive {
-            let handle =
-                providers::hive::new(hive, master_controller.clone(), config.accessories.clone());
-            let app = providers::hive::app(master_controller.clone().into(), handle.clone());
-            router = router.nest("/hive", app);
-            master_provider.push(handle.into()).await;
+
+        {
+            #[cfg(feature = "providers-hive")]
+            if let Some(hive) = hive {
+                let handle = providers::hive::new(
+                    hive,
+                    master_controller.clone(),
+                    config.accessories.clone(),
+                );
+                let app = providers::hive::app(master_controller.clone().into(), handle.clone());
+                router = router.nest("/hive", app);
+                master_provider.push(handle.into()).await;
+            }
+            #[cfg(not(feature = "controllers-meta"))]
+            if hive.is_some() {
+                panic!("houseflow-hub is not compiled with `meta` feature enabled. Please enable it and recompile, or remove `providers.meta` from configuration")
+            }
         }
 
-        #[cfg(feature = "mijia")]
-        if let Some(mijia) = mijia {
-            let handle =
-                providers::mijia::new(mijia, master_controller.clone(), config.accessories.clone())
-                    .await?;
-            master_provider.push(handle).await;
-        }
-        #[cfg(not(feature = "mijia"))]
-        if mijia.is_some() {
-            panic!("houseflow-hub hasn't been compiled with `mijia` feature enabled. Please enable it and recompile, or remove `providers.mijia` from configuration")
+        {
+            #[cfg(feature = "providers-mijia")]
+            if let Some(mijia) = mijia {
+                let handle = providers::mijia::new(
+                    mijia,
+                    master_controller.clone(),
+                    config.accessories.clone(),
+                )
+                .await?;
+                master_provider.push(handle).await;
+            }
+            #[cfg(not(feature = "providers-mijia"))]
+            if mijia.is_some() {
+                panic!("houseflow-hub is not compiled with `mijia` feature enabled. Please enable it and recompile, or remove `providers.mijia` from configuration")
+            }
         }
 
         router

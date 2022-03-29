@@ -1,3 +1,4 @@
+#[cfg(feature = "providers-hive")]
 pub mod hive;
 
 #[cfg(feature = "providers-mijia")]
