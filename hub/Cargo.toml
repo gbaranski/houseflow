@@ -32,6 +32,7 @@ mijia = { version = "0.5.0", optional = true }
 ezsockets = { git = "https://github.com/gbaranski/ezsockets.git", branch = "master", features = ["server-tungstenite", "client"], optional = true }
 hap = { version = "0.1.0-pre.14", optional = true }
 cfg-if = "1.0.0"
+paste = "1.0.7"
 
 [features]
 controllers-hap = ["hap"]
