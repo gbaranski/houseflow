@@ -1,5 +1,5 @@
 cfg_if::cfg_if!{
-    if #[cfg(feature = "controllers-hap")] {
+    if #[cfg(feature = "controllers-meta")] {
         pub mod meta;
     }
 }
