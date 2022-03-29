@@ -1,5 +1,5 @@
-use clap::Command;
 use clap::Arg;
+use clap::Command;
 use houseflow_types::code::VerificationCode;
 use std::str::FromStr;
 

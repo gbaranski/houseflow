@@ -52,6 +52,7 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
 
     let router = Router::new().route("/health-check", get(health_check));
 
+    #[allow(unused_variables)]
     let configured_accessories = Arc::new(ArcSwap::from(Arc::new(config.accessories)));
 
     #[allow(unused_variables)]
@@ -96,20 +97,30 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
         let mut router = Router::new();
 
         optional_provider!(hive, {
-            let server =
-                providers::hive::new(hive, master_controller.clone(), configured_accessories.clone());
+            let server = providers::hive::new(
+                hive,
+                master_controller.clone(),
+                configured_accessories.clone(),
+            );
 
             let handle = providers::Handle {
                 sender: acu::Sender::new_from_mpsc(server.clone().into(), providers::Name::Hive),
             };
-            let app = providers::hive::app(server, configured_accessories.clone(), master_provider.clone());
+            let app = providers::hive::app(
+                server,
+                configured_accessories.clone(),
+                master_provider.clone(),
+            );
             router = router.nest("/hive", app);
-            master_provider.push(handle.into()).await;
+            master_provider.push(handle).await;
         });
         optional_provider!(mijia, {
-            let handle =
-                providers::mijia::new(mijia, master_controller.clone(), configured_accessories.clone())
-                    .await?;
+            let handle = providers::mijia::new(
+                mijia,
+                master_controller.clone(),
+                configured_accessories.clone(),
+            )
+            .await?;
             master_provider.push(handle).await;
         });
 

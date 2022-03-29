@@ -65,9 +65,7 @@ impl<A: Accessory + Send + Sync + 'static> ezsockets::ClientExt for HiveClientAc
     type Params = ();
 
     async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::Error> {
-        match params {
-            () => {}
-        };
+        let () = params;
         Ok(())
     }
 

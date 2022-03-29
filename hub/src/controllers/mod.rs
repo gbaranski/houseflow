@@ -1,23 +1,22 @@
-cfg_if::cfg_if!{
+cfg_if::cfg_if! {
     if #[cfg(feature = "controllers-meta")] {
         pub mod meta;
     }
 }
 
-cfg_if::cfg_if!{
+cfg_if::cfg_if! {
     if #[cfg(feature = "controllers-lighthouse")] {
         pub mod lighthouse;
         pub use self::lighthouse::LighthouseController as Lighthouse;
     }
 }
 
-cfg_if::cfg_if!{
+cfg_if::cfg_if! {
     if #[cfg(feature = "controllers-hap")] {
         pub mod hap;
         pub use self::hap::HapController as Hap;
     }
 }
-
 
 use houseflow_config::hub::Accessory;
 use houseflow_types::accessory;

@@ -56,7 +56,7 @@ impl From<Accessory> for accessory::Accessory {
             id: val.id,
             name: val.name,
             room_name: val.room_name,
-            r#type: val.r#type.into(),
+            r#type: val.r#type,
         }
     }
 }

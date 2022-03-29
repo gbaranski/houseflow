@@ -2,8 +2,8 @@ mod auth;
 mod completions;
 mod meta;
 
-use clap::Command;
 use clap::Arg;
+use clap::Command;
 
 pub(crate) fn dialoguer_theme() -> impl dialoguer::theme::Theme {
     dialoguer::theme::ColorfulTheme {
