@@ -207,8 +207,8 @@ pub fn app(controller: controllers::Handle, hive_provider: HiveProviderHandle) -
 
     axum::Router::new()
         .route("/websocket", get(websocket_handler))
-        .layer(axum::AddExtensionLayer::new(controller))
-        .layer(axum::AddExtensionLayer::new(hive_provider))
+        .layer(Extension(controller))
+        .layer(Extension(hive_provider))
 }
 
 pub struct DeviceCredentials(accessory::ID, accessory::Password);

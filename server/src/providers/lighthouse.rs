@@ -357,7 +357,7 @@ pub fn app(handle: LighthouseProviderHandle) -> Router {
 
     Router::new()
         .route("/websocket", get(websocket_handler))
-        .layer(axum::AddExtensionLayer::new(handle))
+        .layer(Extension(handle))
 }
 
 #[derive(Debug)]

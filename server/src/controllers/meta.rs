@@ -6,7 +6,6 @@ use crate::providers;
 use crate::providers::ProviderExt;
 use acu::MasterExt;
 use anyhow::Error;
-use axum::AddExtensionLayer;
 use axum::Json;
 use futures::future::join_all;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -60,7 +59,7 @@ pub fn app(handle: Handle) -> axum::Router {
             "/characteristic/:accessory_id/:service_name",
             post(write_characteristic),
         )
-        .layer(AddExtensionLayer::new(handle))
+        .layer(Extension(handle))
 }
 
 use axum::extract::Extension;

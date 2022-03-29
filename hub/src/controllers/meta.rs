@@ -1,7 +1,6 @@
 pub fn app(master_provider: providers::MasterHandle) -> axum::Router {
     use axum::routing::get;
     use axum::routing::post;
-    use axum::AddExtensionLayer;
 
     axum::Router::new()
         .route(
@@ -12,7 +11,7 @@ pub fn app(master_provider: providers::MasterHandle) -> axum::Router {
             "/characteristic/:accessory_id/:service_name",
             post(write_characteristic),
         )
-        .layer(AddExtensionLayer::new(master_provider))
+        .layer(Extension(master_provider))
 }
 
 use crate::providers;

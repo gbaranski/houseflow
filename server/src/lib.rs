@@ -8,6 +8,7 @@ pub mod providers;
 
 use acu::MasterExt;
 use anyhow::Context;
+use axum::extract::Extension;
 use houseflow_config::dynamic;
 use houseflow_config::server::Config;
 use houseflow_config::server::Network as NetworkConfig;
@@ -113,11 +114,11 @@ impl Server {
         let router = router
             .nest("/controller", controller_router)
             .nest("/provider", provider_router)
-            .layer(axum::AddExtensionLayer::new(config.clone()))
-            .layer(axum::AddExtensionLayer::new(clerk))
-            .layer(axum::AddExtensionLayer::new(master_controller))
-            .layer(axum::AddExtensionLayer::new(master_provider))
-            .layer(axum::AddExtensionLayer::new(master_mailer));
+            .layer(Extension(config.clone()))
+            .layer(Extension(clerk))
+            .layer(Extension(master_controller))
+            .layer(Extension(master_provider))
+            .layer(Extension(master_mailer));
 
         Self { router, config }
     }
