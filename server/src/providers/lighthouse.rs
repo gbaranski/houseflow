@@ -405,7 +405,8 @@ impl ezsockets::SessionExt for LighthouseSession {
                         service_name,
                         characteristic_name,
                     },
-                )).await?;
+                ))
+                .await?;
                 respond_to.send(receiver).unwrap();
             }
             SessionMessage::WriteCharacteristic {
@@ -424,7 +425,8 @@ impl ezsockets::SessionExt for LighthouseSession {
                         service_name,
                         characteristic,
                     },
-                )).await?;
+                ))
+                .await?;
                 respond_to.send(receiver).unwrap();
             }
         };
