@@ -8,13 +8,19 @@ pub mod providers;
 
 use acu::MasterExt;
 use anyhow::Context;
+use arc_swap::ArcSwap;
 use axum::extract::Extension;
 use houseflow_config::dynamic;
 use houseflow_config::server::Config;
 use houseflow_config::server::Network as NetworkConfig;
 use houseflow_config::server::Tls as TlsConfig;
+use houseflow_types::hub::Hub;
 use std::net::SocketAddr;
 use std::sync::Arc;
+
+use crate::providers::lighthouse::LighthouseProviderMessage;
+
+pub type ConfiguredHubs = Arc<ArcSwap<Vec<Hub>>>;
 
 pub struct ArgMailers {
     pub dummy: Option<mailer::dummy::Handle>,
@@ -27,7 +33,7 @@ type ProviderCreateFn<H> = CreateFn<controllers::MasterHandle, H>;
 
 pub struct ArgProviders {
     pub dummy: ProviderCreateFn<providers::dummy::Handle>,
-    pub lighthouse: ProviderCreateFn<providers::lighthouse::LighthouseProviderHandle>,
+    pub lighthouse: ProviderCreateFn<providers::lighthouse::Server>,
 }
 
 type ControllerCreateFn<H> = CreateFn<providers::MasterHandle, H>;
@@ -91,7 +97,22 @@ impl Server {
             }
             if let Some(lighthouse) = lighthouse {
                 let lighthouse = lighthouse(master_controller.clone());
-                master_provider.push(lighthouse.clone().into()).await;
+                let sender = {
+                    let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
+                    let lighthouse = lighthouse.clone();
+                    tokio::spawn(async move {
+                        while let Some(params) = receiver.recv().await {
+                            lighthouse
+                                .call(LighthouseProviderMessage::Message(params))
+                                .await;
+                        }
+                    });
+                    sender
+                };
+                let handle = acu::Handle {
+                    sender: acu::Sender::new_from_mpsc(sender, providers::Name::Lighthouse),
+                };
+                master_provider.push(handle).await;
                 router = router.nest("/lighthouse", providers::lighthouse::app(lighthouse));
             }
             router

@@ -5,13 +5,14 @@ use uuid::Uuid;
 
 pub type ID = Uuid;
 pub type Password = String;
+pub type PasswordHash = String;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Hub {
     pub id: ID,
     pub name: String,
-    pub password_hash: Option<String>,
+    pub password_hash: Option<PasswordHash>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, thiserror::Error)]

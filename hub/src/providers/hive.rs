@@ -24,20 +24,20 @@ use serde::Serialize;
 use std::collections::HashMap;
 use tokio::sync::oneshot;
 
-#[derive(Debug)]
-pub struct HiveProvider {
-    controller: controllers::MasterHandle,
-    sessions: HashMap<accessory::ID, Session>,
-    configured_accessories: ConfiguredAccessories,
-}
+type Server = ezsockets::Server<HiveProvider>;
+type Session = ezsockets::Session<accessory::ID, SessionMessage>;
 
 #[derive(Debug)]
 pub struct Args {
     accessory: Accessory,
 }
 
-type Server = ezsockets::Server<HiveProvider>;
-type Session = ezsockets::Session<accessory::ID, SessionMessage>;
+#[derive(Debug)]
+pub struct HiveProvider {
+    controller: controllers::MasterHandle,
+    sessions: HashMap<accessory::ID, Session>,
+    configured_accessories: ConfiguredAccessories,
+}
 
 pub fn new(
     _config: Config,

@@ -36,10 +36,9 @@ async fn from_request<P>(
 where
     P: TokenClaims,
 {
-    let config: &extensions::Config = req.extensions().unwrap().get().unwrap();
+    let config: &extensions::Config = req.extensions().get().unwrap();
     let header_str = req
         .headers()
-        .unwrap()
         .get(http::header::AUTHORIZATION)
         .ok_or(TokenError {
             description: "MissingHeader".to_string(),

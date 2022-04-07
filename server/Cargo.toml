@@ -35,7 +35,7 @@ tokio = { version = "1.5", features = [
     "macros",
     "rt-multi-thread",
 ] }
-axum = { version = "0.4.4", features = ["ws", "headers"]}
+axum = { version = "0.5.1", features = ["ws", "headers"]}
 tracing = "0.1.29"
 anyhow = "1.0.53"
 async-trait = "0.1.52"
@@ -54,5 +54,7 @@ serde_json = "1.0.78"
 acu = { version = "0.4.1", features = ["master-slave"] }
 validator = "0.14.0"
 url = "2.2.2"
+ezsockets = { version = "0.2.0", features = ["server-axum"] }
+arc-swap = "1.5.0"
 
 [features]

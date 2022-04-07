@@ -135,7 +135,7 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
     let fut = axum_server::bind(address).serve(
         router
             .clone()
-            .into_make_service_with_connect_info::<SocketAddr, _>(),
+            .into_make_service_with_connect_info::<SocketAddr>(),
     );
     tracing::info!("serving http server on {}", address);
     fut.await?;
