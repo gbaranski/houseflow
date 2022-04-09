@@ -24,7 +24,7 @@ thiserror = "1.0"
 url = "2.2"
 tokio = { version = "1.6.0", features = ["sync", "macros"], default-features = false }
 tracing = "0.1.26"
-ezsockets = { git = "https://github.com/gbaranski/ezsockets.git", branch = "master", features = ["client"], optional = true }
+ezsockets = { version = "0.2.0", optional = true }
 http = { version = "0.2.5", optional = true }
 base64 = { version = "0.13.0", optional = true }
 anyhow = "1.0.51"
