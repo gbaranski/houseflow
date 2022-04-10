@@ -146,28 +146,3 @@ pub async fn run(config: Config) -> Result<(), anyhow::Error> {
 async fn health_check() -> &'static str {
     "I'm alive!"
 }
-
-// impl Hub {
-//     pub async fn new(
-//         controller: controllers::MasterHandle,
-//         provider: providers::MasterHandle,
-//     ) -> Result<Self, anyhow::Error> {
-//         Ok(Self {
-//             controller,
-//             provider,
-//         })
-//     }
-
-//     pub async fn run(self) -> Result<(), anyhow::Error> {
-//         tokio::select! {
-//             _ = self.controller.wait_for_stop() => {
-//                 tracing::info!("controller {} has stopped", self.controller.name());
-//             },
-//             _ = self.provider.wait_for_stop() => {
-//                 tracing::info!("provider {} has stopped", self.provider.name());
-//             },
-//         }
-
-//         Ok(())
-//     }
-// }
