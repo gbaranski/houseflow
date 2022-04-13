@@ -11,6 +11,7 @@ pub struct Config {
     #[serde(default)]
     pub hub: Hub,
     pub credentials: Credentials,
+    #[serde(default)]
     pub services: Services,
 }
 
