@@ -26,5 +26,4 @@ password = "hard-password"
 
 
 [providers.mijia]
-
-[providers.meta]
+[providers.hive]

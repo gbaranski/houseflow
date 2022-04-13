@@ -34,7 +34,8 @@ pub struct Network {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+// #[serde(rename_all = "kebab-case", deny_unknown_fields)] TODO: Uncomment when https://github.com/serde-rs/serde/issues/1600 is closed
+#[serde(rename_all = "kebab-case")]
 pub struct Accessory {
     /// ID of the accessory
     pub id: accessory::ID,
@@ -164,7 +165,7 @@ mod tests {
             }],
             providers: Providers {
                 mijia: Some(MijiaProvider {}),
-                hive: None,
+                hive: Some(HiveProvider{}),
             },
             controllers: Controllers {
                 hap: Some(controllers::Hap {
