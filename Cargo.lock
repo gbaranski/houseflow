@@ -747,6 +747,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ezsockets"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f150cbec10daba70d3fe7451ffcf4a68788ce71ffb506916ca3848f91de4412e"
+dependencies = [
+ "async-trait",
+ "base64",
+ "cfg-if",
+ "futures",
+ "http",
+ "tokio",
+ "tokio-tungstenite",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1181,7 +1198,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "base64",
- "ezsockets",
+ "ezsockets 0.3.0",
  "futures",
  "headers",
  "houseflow-accessory-hal",
@@ -1259,7 +1276,7 @@ dependencies = [
  "base64",
  "cfg-if",
  "chrono",
- "ezsockets",
+ "ezsockets 0.2.0",
  "futures",
  "hap",
  "houseflow-config",
@@ -1291,7 +1308,7 @@ dependencies = [
  "axum-server",
  "bincode",
  "chrono",
- "ezsockets",
+ "ezsockets 0.2.0",
  "futures",
  "houseflow-config",
  "houseflow-types",

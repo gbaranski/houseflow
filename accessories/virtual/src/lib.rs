@@ -1,32 +1,39 @@
 use async_trait::async_trait;
 use houseflow_accessory_hal::Accessory;
 use houseflow_api::hub::hive::HiveClient;
+use houseflow_config::accessory::Services;
 use houseflow_types::accessory;
+use houseflow_types::accessory::characteristics;
 use houseflow_types::accessory::characteristics::Characteristic;
-use houseflow_types::accessory::services::Service;
+use houseflow_types::accessory::characteristics::CharacteristicName;
+use houseflow_types::accessory::characteristics::CurrentTemperature;
 use houseflow_types::accessory::services::ServiceName;
 use houseflow_types::accessory::Error;
-use houseflow_types::accessory::{characteristics, services};
-use std::collections::HashMap;
-use std::time::Duration;
+use std::str::FromStr;
 
 pub struct VirtualAccessory {
-    client: HiveClient,
-    services: HashMap<ServiceName, Service>,
+    services: Services,
 }
 
 impl VirtualAccessory {
-    pub fn new(client: HiveClient) -> Self {
-        let mut services = HashMap::new();
-        services.insert(
-            ServiceName::GarageDoorOpener,
-            Service::GarageDoorOpener(services::GarageDoorOpener {
-                current_door_state: characteristics::CurrentDoorState { open_percent: 100 },
-                target_door_state: characteristics::TargetDoorState { open_percent: 100 },
-            }),
-        );
-
-        Self { services, client }
+    pub fn new(client: HiveClient<VirtualAccessory>, services: Services) -> Self {
+        let Services { temperature_sensor } = services.clone();
+        if let Some(service) = temperature_sensor {
+            tokio::spawn(async move {
+                loop {
+                    let temperature = service.current_temperature.command.execute().unwrap();
+                    let temperature = std::str::from_utf8(&temperature).unwrap().trim();
+                    let temperature = f32::from_str(temperature).unwrap();
+                    let characteristic =
+                        Characteristic::CurrentTemperature(CurrentTemperature { temperature });
+                    client
+                        .update(ServiceName::TemperatureSensor, characteristic)
+                        .await;
+                    tokio::time::sleep(service.current_temperature.interval).await;
+                }
+            });
+        };
+        Self { services }
     }
 }
 
@@ -37,30 +44,17 @@ impl Accessory for VirtualAccessory {
         service_name: ServiceName,
         characteristic: Characteristic,
     ) -> Result<(), Error> {
-        match self.services.get_mut(&service_name) {
-            Some(service) => match (service, &characteristic) {
-                (
-                    Service::GarageDoorOpener(service),
-                    Characteristic::TargetDoorState(characteristics::TargetDoorState {
-                        open_percent,
-                    }),
-                ) => {
-                    service.target_door_state.open_percent = *open_percent;
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-                    service.current_door_state.open_percent = *open_percent;
-                    self.client
-                        .update(
-                            service_name,
-                            Characteristic::CurrentDoorState(service.current_door_state.to_owned()),
-                        )
-                        .await;
+        match service_name {
+            ServiceName::TemperatureSensor if self.services.temperature_sensor.is_some() => {
+                match characteristic {
+                    Characteristic::CurrentTemperature(_) => {
+                        return Err(accessory::Error::CharacteristicReadOnly)
+                    }
+                    _ => return Err(accessory::Error::CharacteristicNotSupported),
                 }
-                _ => return Err(accessory::Error::CharacteristicNotSupported),
-            },
-            None => return Err(accessory::Error::ServiceNotSupported),
+            }
+            _ => return Err(accessory::Error::ServiceNotSupported),
         };
-
-        Ok(())
     }
 
     async fn read_characteristic(
@@ -68,35 +62,22 @@ impl Accessory for VirtualAccessory {
         service_name: ServiceName,
         characteristic_name: characteristics::CharacteristicName,
     ) -> Result<Characteristic, Error> {
-        match self.services.get(&service_name) {
-            Some(service) => match (service, characteristic_name) {
-                (
-                    Service::TemperatureSensor(sensor),
-                    characteristics::CharacteristicName::CurrentTemperature,
-                ) => Ok(Characteristic::CurrentTemperature(
-                    sensor.current_temperature.clone(),
-                )),
-                (
-                    Service::HumiditySensor(sensor),
-                    characteristics::CharacteristicName::CurrentHumidity,
-                ) => Ok(Characteristic::CurrentHumidity(
-                    sensor.current_humidity.clone(),
-                )),
-                (
-                    Service::GarageDoorOpener(sensor),
-                    characteristics::CharacteristicName::CurrentDoorState,
-                ) => Ok(Characteristic::CurrentDoorState(
-                    sensor.current_door_state.clone(),
-                )),
-                (
-                    Service::GarageDoorOpener(sensor),
-                    characteristics::CharacteristicName::TargetDoorState,
-                ) => Ok(Characteristic::TargetDoorState(
-                    sensor.target_door_state.clone(),
-                )),
-                _ => Err(Error::CharacteristicNotSupported),
-            },
-            None => Err(Error::ServiceNotSupported),
+        match service_name {
+            ServiceName::TemperatureSensor if self.services.temperature_sensor.is_some() => {
+                let service = self.services.temperature_sensor.as_ref().unwrap();
+                match characteristic_name {
+                    CharacteristicName::CurrentTemperature => {
+                        let temperature = service.current_temperature.command.execute().unwrap();
+                        let temperature = std::str::from_utf8(&temperature).unwrap().trim();
+                        let temperature = f32::from_str(temperature).unwrap();
+                        Ok(Characteristic::CurrentTemperature(CurrentTemperature {
+                            temperature,
+                        }))
+                    }
+                    _ => return Err(accessory::Error::CharacteristicNotSupported),
+                }
+            }
+            _ => return Err(accessory::Error::ServiceNotSupported),
         }
     }
 }

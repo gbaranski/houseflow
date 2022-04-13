@@ -28,9 +28,13 @@ async fn main() -> Result<(), anyhow::Error> {
         Err(err) => panic!("Config error: {}", err),
     };
     tracing::debug!("Config: {:#?}", config);
-    HiveClient::connect(VirtualAccessory::new, config.credentials, config.hub.url)
-        .await
-        .unwrap();
+    let (_, future) = HiveClient::connect(
+        |client| VirtualAccessory::new(client, config.services),
+        config.credentials,
+        config.hub.url,
+    )
+    .await;
+    future.await.unwrap();
 
     Ok(())
 }

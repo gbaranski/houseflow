@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use ezsockets::ClientConfig;
+use futures::Future;
 use houseflow_accessory_hal::Accessory;
 use houseflow_config::accessory::Credentials;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -13,19 +14,26 @@ use houseflow_types::hive::UpdateCharacteristic;
 use houseflow_types::hive::WriteCharacteristic;
 use reqwest::Url;
 
-#[derive(Clone)]
-pub struct HiveClient {
-    client: ezsockets::Client<()>,
+pub struct HiveClient<A: Accessory> {
+    client: ezsockets::Client<HiveClientActor<A>>,
 }
 
-impl HiveClient {
-    pub async fn connect<A: Accessory + Send + Sync + 'static>(
+impl<A: Accessory> std::clone::Clone for HiveClient<A> {
+    fn clone(&self) -> Self {
+        Self {
+            client: self.client.clone(),
+        }
+    }
+}
+
+impl<A: Accessory> HiveClient<A> {
+    pub async fn connect(
         accessory_fn: impl FnOnce(Self) -> A,
         credentials: Credentials,
         hub_url: Url,
-    ) -> Result<(), ezsockets::Error> {
+    ) -> (Self, impl Future<Output = Result<(), ezsockets::Error>>) {
         let hive_url = hub_url.join("provider/hive/websocket").unwrap();
-        let (_, future) = ezsockets::connect(
+        let (client, future) = ezsockets::connect(
             |client| {
                 let client = Self { client };
                 let accessory = accessory_fn(client.clone());
@@ -37,8 +45,7 @@ impl HiveClient {
             ),
         )
         .await;
-        future.await?;
-        Ok(())
+        (Self { client }, future)
     }
 
     async fn frame(&self, frame: AccessoryFrame) {
@@ -55,13 +62,13 @@ impl HiveClient {
     }
 }
 
-struct HiveClientActor<A: Accessory + Send + Sync + 'static> {
+struct HiveClientActor<A: Accessory> {
     accessory: A,
-    client: HiveClient,
+    client: HiveClient<A>,
 }
 
 #[async_trait]
-impl<A: Accessory + Send + Sync + 'static> ezsockets::ClientExt for HiveClientActor<A> {
+impl<A: Accessory> ezsockets::ClientExt for HiveClientActor<A> {
     type Params = ();
 
     async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::Error> {

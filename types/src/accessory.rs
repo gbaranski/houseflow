@@ -104,14 +104,14 @@ pub mod services {
     use serde::Serialize;
     use strum::EnumDiscriminants;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants)]
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants, strum::EnumProperty, strum::AsRefStr)]
     #[strum_discriminants(derive(
         Hash,
         Serialize,
         Deserialize,
         strum::Display,
         strum::EnumVariantNames,
-        strum::EnumString
+        strum::EnumString,
     ))]
     #[strum_discriminants(name(ServiceName))]
     #[strum_discriminants(strum(serialize_all = "kebab-case"))]

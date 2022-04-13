@@ -6,7 +6,7 @@ use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
 
 #[async_trait]
-pub trait Accessory {
+pub trait Accessory: Send + Sync + 'static {
     async fn write_characteristic(
         &mut self,
         service_name: ServiceName,
