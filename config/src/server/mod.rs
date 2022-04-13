@@ -12,7 +12,7 @@ use url::Url;
 use user::User;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
     /// Network configuration
     #[serde(default)]
@@ -43,7 +43,7 @@ pub struct Config {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Network {
     /// Server address
     #[serde(default = "defaults::listen_address")]
@@ -57,7 +57,7 @@ pub struct Network {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Secrets {
     /// Key used to sign refresh tokens. Must be secret and should be farily random.
     pub refresh_key: String,
@@ -68,7 +68,7 @@ pub struct Secrets {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Tls {
     /// Server address
     #[serde(default = "defaults::listen_address")]
@@ -83,7 +83,7 @@ pub struct Tls {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Mailers {
     #[serde(default)]
     pub smtp: Option<mailers::Smtp>,
@@ -97,17 +97,19 @@ pub mod mailers {
     use url::Url;
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct Smtp {
         pub url: Url,
         pub from: String,
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct Dummy {}
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Controllers {
     pub meta: Option<controllers::Meta>,
 }
@@ -117,12 +119,12 @@ pub mod controllers {
     use serde::Serialize;
 
     #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-    #[serde(rename_all = "kebab-case")]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct Meta {}
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Providers {
     pub lighthouse: Option<providers::Lighthouse>,
 }
@@ -134,7 +136,7 @@ pub mod providers {
     use serde::Serialize;
 
     #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-    #[serde(rename_all = "kebab-case")]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct Lighthouse {
         /// Hubs
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -142,7 +144,7 @@ pub mod providers {
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(rename_all = "kebab-case")]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct LighthouseHub {
         pub id: hub::ID,
         pub name: String,
@@ -152,7 +154,7 @@ pub mod providers {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Logins {
     /// Configuration for Google login.
     #[serde(default)]
@@ -160,7 +162,7 @@ pub struct Logins {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct GoogleLogin {
     /// OAuth2 Client ID identifying your service to Google.
     pub client_id: String,

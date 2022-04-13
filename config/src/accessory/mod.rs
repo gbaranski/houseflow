@@ -6,7 +6,7 @@ use serde::Serialize;
 use url::Url;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
     #[serde(default)]
     pub hub: Hub,
@@ -16,14 +16,14 @@ pub struct Config {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Hub {
     #[serde(default = "defaults::hub_websocket_url")]
     pub url: Url,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Credentials {
     /// ID of the accessory
     pub id: accessory::ID,
@@ -32,7 +32,7 @@ pub struct Credentials {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Services {
     pub temperature_sensor: Option<services::TemperatureSensor>,
 }
@@ -54,7 +54,7 @@ pub mod services {
     use serde::Serialize;
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(rename_all = "kebab-case")]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct TemperatureSensor {
         pub current_temperature: characteristics::CurrentTemperature,
     }
@@ -69,7 +69,7 @@ pub mod characteristics {
 
     #[serde_with::serde_as]
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(rename_all = "kebab-case")]
+    #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     pub struct CurrentTemperature {
         pub command: Command,
         #[serde_as(as = "DurationSeconds<u64>")]
