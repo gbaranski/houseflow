@@ -38,20 +38,19 @@ pub struct Services {
 
 impl Services {
     pub fn names(&self) -> Vec<ServiceName> {
-        let Self{ temperature_sensor } = &self;
+        let Self { temperature_sensor } = &self;
         let mut names = vec![];
         if temperature_sensor.is_some() {
             names.push(ServiceName::TemperatureSensor);
         }
         names
     }
-
 }
 
 pub mod services {
+    use super::characteristics;
     use serde::Deserialize;
     use serde::Serialize;
-    use super::characteristics;
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "kebab-case")]
@@ -64,8 +63,8 @@ pub mod characteristics {
     use crate::Command;
     use serde::Deserialize;
     use serde::Serialize;
-    use std::time::Duration;
     use serde_with::DurationSeconds;
+    use std::time::Duration;
 
     #[serde_with::serde_as]
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

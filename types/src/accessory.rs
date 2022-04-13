@@ -104,7 +104,16 @@ pub mod services {
     use serde::Serialize;
     use strum::EnumDiscriminants;
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, EnumDiscriminants, strum::EnumProperty, strum::AsRefStr)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Serialize,
+        Deserialize,
+        EnumDiscriminants,
+        strum::EnumProperty,
+        strum::AsRefStr,
+    )]
     #[strum_discriminants(derive(
         Hash,
         Serialize,

@@ -1,5 +1,5 @@
-pub mod defaults;
 pub mod command;
+pub mod defaults;
 
 pub use command::Command;
 
@@ -20,7 +20,6 @@ pub mod accessory;
 
 #[cfg(any(test, feature = "dynamic"))]
 pub mod dynamic;
-
 
 pub trait Config: serde::de::DeserializeOwned + serde::ser::Serialize {
     const DEFAULT_TOML: &'static str;
