@@ -199,13 +199,21 @@ impl MijiaProvider {
         match message {
             Message::WriteCharacteristic {
                 accessory_id: _,
-                service_name: _,
-                characteristic: _,
+                service_name,
+                characteristic,
                 respond_to,
             } => {
-                respond_to
-                    .send(Err(accessory::Error::CharacteristicNotSupported))
-                    .unwrap();
+                let error = if service_name == ServiceName::TemperatureSensor {
+                    if matches!(characteristic, Characteristic::CurrentTemperature(_)) {
+                        accessory::Error::CharacteristicReadOnly
+                    } else {
+                        accessory::Error::CharacteristicNotSupported
+                    }
+                } else {
+                    accessory::Error::ServiceNotSupported
+                };
+
+                respond_to.send(Err(error)).unwrap();
             }
             Message::ReadCharacteristic {
                 accessory_id,
