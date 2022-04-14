@@ -85,9 +85,9 @@ pub struct Controllers {
     #[serde(default)]
     pub hap: Option<controllers::Hap>,
     #[serde(default)]
-    pub lighthouse: Option<controllers::Lighthouse>,
-    #[serde(default)]
     pub meta: Option<controllers::Meta>,
+    #[serde(default)]
+    pub lighthouse: Option<controllers::Lighthouse>,
 }
 
 pub mod controllers {
