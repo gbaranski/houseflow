@@ -1,4 +1,5 @@
 pub mod meta;
+pub mod google_home;
 
 use async_trait::async_trait;
 use houseflow_types::accessory;

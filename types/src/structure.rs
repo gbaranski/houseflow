@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 pub type ID = Uuid;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Structure {
     pub id: ID,

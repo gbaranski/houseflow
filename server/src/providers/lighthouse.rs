@@ -16,12 +16,13 @@ use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
 use houseflow_types::accessory::characteristics::CharacteristicName;
 use houseflow_types::accessory::services::ServiceName;
+use houseflow_types::accessory::Accessory;
 use houseflow_types::hub;
 use houseflow_types::lighthouse;
+use houseflow_types::structure;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::collections::HashSet;
 use tokio::sync::oneshot;
 
 pub type Server = ezsockets::Server<LighthouseProvider>;
@@ -70,19 +71,18 @@ impl ezsockets::ServerExt for LighthouseProvider {
         >,
         ezsockets::Error,
     > {
-        assert_eq!(
-            self.config
-                .hubs
-                .iter()
-                .find(|hub| hub.id == hub_id)
-                .unwrap()
-                .password_hash,
-            hub_password_hash
-        );
+        let hub = self
+            .config
+            .hubs
+            .iter()
+            .find(|hub| hub.id == hub_id)
+            .unwrap();
+        assert_eq!(hub.password_hash, hub_password_hash);
         let session = Session::create(
             |handle| LighthouseSession {
                 session: handle,
                 hub_id,
+                structure_id: hub.structure_id,
                 controller: self.controller.clone(),
                 connected_accessories: Default::default(),
                 characteristic_write_results: Default::default(),
@@ -154,12 +154,22 @@ impl ezsockets::ServerExt for LighthouseProvider {
                     respond_to.send(result).unwrap();
                 }
                 Message::GetAccessories { respond_to } => {
-                    let accessories = self.sessions.values().map(|session| {
-                        session
-                            .call_with(|respond_to| SessionMessage::GetAccessories { respond_to })
+                    let accessories = self.sessions.values().map(|session| async move {
+                        (
+                            session
+                                .call_with(|respond_to| SessionMessage::GetStructureID {
+                                    respond_to,
+                                })
+                                .await,
+                            session
+                                .call_with(|respond_to| SessionMessage::GetAccessories {
+                                    respond_to,
+                                })
+                                .await,
+                        )
                     });
                     let accessories = futures::future::join_all(accessories).await;
-                    let accessories = accessories.into_iter().flatten().collect();
+                    let accessories = accessories.into_iter().collect();
                     respond_to.send(accessories).unwrap();
                 }
                 Message::IsConnected {
@@ -283,8 +293,11 @@ pub fn app(server: Server) -> Router {
 
 #[derive(Debug)]
 pub enum SessionMessage {
+    GetStructureID {
+        respond_to: oneshot::Sender<structure::ID>,
+    },
     GetAccessories {
-        respond_to: oneshot::Sender<Vec<accessory::ID>>,
+        respond_to: oneshot::Sender<Vec<Accessory>>,
     },
     IsAccessoryConnected {
         accessory_id: accessory::ID,
@@ -307,8 +320,9 @@ pub enum SessionMessage {
 pub struct LighthouseSession {
     session: ezsockets::Session<hub::ID, SessionMessage>,
     hub_id: hub::ID,
+    structure_id: structure::ID,
     controller: controllers::MasterHandle,
-    connected_accessories: HashSet<accessory::ID>,
+    connected_accessories: HashMap<accessory::ID, Accessory>,
     characteristic_write_results:
         HashMap<lighthouse::FrameID, oneshot::Sender<Result<(), accessory::Error>>>,
     characteristic_read_results: HashMap<
@@ -339,11 +353,12 @@ impl ezsockets::SessionExt for LighthouseSession {
         let frame = serde_json::from_str::<lighthouse::HubFrame>(&text)?;
         match frame {
             lighthouse::HubFrame::AccessoryConnected(accessory) => {
-                self.connected_accessories.insert(accessory.id);
+                self.connected_accessories
+                    .insert(accessory.id, accessory.clone());
                 self.controller.connected(accessory).await;
             }
             lighthouse::HubFrame::AccessoryDisconnected(accessory_id) => {
-                self.connected_accessories.remove(&accessory_id);
+                self.connected_accessories.remove(&accessory_id).unwrap();
                 self.controller.disconnected(accessory_id).await;
             }
             lighthouse::HubFrame::UpdateCharacteristic(frame) => {
@@ -375,11 +390,14 @@ impl ezsockets::SessionExt for LighthouseSession {
 
     async fn call(&mut self, params: Self::Params) -> Result<(), ezsockets::Error> {
         match params {
+            SessionMessage::GetStructureID { respond_to } => {
+                respond_to.send(self.structure_id).unwrap()
+            },
             SessionMessage::GetAccessories { respond_to } => respond_to
                 .send(
                     self.connected_accessories
                         .clone()
-                        .into_iter()
+                        .into_values()
                         .collect::<Vec<_>>(),
                 )
                 .unwrap(),
@@ -387,7 +405,7 @@ impl ezsockets::SessionExt for LighthouseSession {
                 accessory_id,
                 respond_to,
             } => respond_to
-                .send(self.connected_accessories.contains(&accessory_id))
+                .send(self.connected_accessories.get(&accessory_id).is_some())
                 .unwrap(),
             SessionMessage::ReadCharacteristic {
                 accessory_id,

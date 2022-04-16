@@ -1310,6 +1310,7 @@ dependencies = [
  "chrono",
  "ezsockets 0.2.0",
  "futures",
+ "google-smart-home",
  "houseflow-config",
  "houseflow-types",
  "lettre",

@@ -57,4 +57,9 @@ url = "2.2.2"
 ezsockets = { version = "0.2.0", features = ["server-axum"] }
 arc-swap = "1.5.0"
 
+google-smart-home = { path = "../google-smart-home", optional = true }
+
 [features]
+default = ["google-home"]
+google-home = ["google-smart-home"]
+

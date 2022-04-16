@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::defaults;
 use serde::Deserialize;
 use serde::Serialize;
@@ -268,7 +270,7 @@ impl Config {
         })
     }
 
-    pub fn get_user_structures(&self, user_id: &user::ID) -> Vec<&Structure> {
+    pub fn get_user_structures(&self, user_id: &user::ID) -> HashSet<&Structure> {
         self.permissions
             .iter()
             .filter(|permission| permission.user_id == *user_id)

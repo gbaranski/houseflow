@@ -1,8 +1,15 @@
 pub mod dummy;
 pub mod lighthouse;
 
-pub use dummy::DummyProvider;
 pub use lighthouse::LighthouseProvider;
+pub use dummy::DummyProvider;
+
+use acu::MasterExt;
+use futures::future::join_all;
+use houseflow_types::accessory::Accessory;
+use houseflow_types::hub;
+use houseflow_types::structure;
+use std::collections::HashMap;
 
 use houseflow_types::accessory;
 use houseflow_types::accessory::characteristics::Characteristic;
@@ -38,7 +45,7 @@ pub enum Message {
         respond_to: oneshot::Sender<Result<(), accessory::Error>>,
     },
     GetAccessories {
-        respond_to: oneshot::Sender<Vec<accessory::ID>>,
+        respond_to: oneshot::Sender<HashMap<hub::ID, Vec<Accessory>>>,
     },
     IsConnected {
         accessory_id: accessory::ID,
@@ -64,7 +71,7 @@ pub trait ProviderExt {
         service_name: ServiceName,
         characteristic_name: CharacteristicName,
     ) -> Result<Characteristic, accessory::Error>;
-    async fn get_accessories(&self) -> Vec<accessory::ID>;
+    async fn get_accessories(&self) -> HashMap<structure::ID, Vec<Accessory>>;
     async fn is_connected(&self, accessory_id: accessory::ID) -> bool;
 }
 
@@ -104,7 +111,7 @@ impl ProviderExt for Handle {
             .await
     }
 
-    async fn get_accessories(&self) -> Vec<accessory::ID> {
+    async fn get_accessories(&self) -> HashMap<structure::ID, Vec<Accessory>> {
         self.sender
             .call_with(|respond_to| Message::GetAccessories { respond_to })
             .await
@@ -121,3 +128,78 @@ impl ProviderExt for Handle {
 }
 
 pub type MasterHandle = acu::MasterHandle<Message, Name>;
+
+#[async_trait]
+impl ProviderExt for MasterHandle {
+    async fn write_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    ) -> Result<(), accessory::Error> {
+        let slaves = self.slaves().await;
+        let futures = slaves
+            .iter()
+            .map(|slave| async move { (slave, slave.is_connected(accessory_id).await) });
+        let results = join_all(futures).await;
+        let result = results
+            .iter()
+            .find(|(_, connected)| *connected)
+            .map(|(slave, _)| async move {
+                slave
+                    .write_characteristic(accessory_id, service_name, characteristic)
+                    .await
+            })
+            .ok_or(accessory::Error::NotConnected)?
+            .await;
+        result
+    }
+
+    async fn read_characteristic(
+        &self,
+        accessory_id: accessory::ID,
+        service_name: ServiceName,
+        characteristic_name: CharacteristicName,
+    ) -> Result<Characteristic, accessory::Error> {
+        let slaves = self.slaves().await;
+        let futures = slaves
+            .iter()
+            .map(|slave| async move { (slave, slave.is_connected(accessory_id).await) });
+        let results = join_all(futures).await;
+        let result = results
+            .iter()
+            .find(|(_, connected)| *connected)
+            .map(|(slave, _)| async move {
+                slave
+                    .read_characteristic(accessory_id, service_name, characteristic_name)
+                    .await
+            })
+            .ok_or(accessory::Error::NotConnected)?
+            .await;
+        result
+    }
+
+    async fn get_accessories(&self) -> HashMap<structure::ID, Vec<Accessory>> {
+        let slaves = self.slaves().await;
+        let futures = slaves.iter().map(|slave| slave.get_accessories());
+        let results = join_all(futures).await;
+        let mut structures = HashMap::new();
+        // sorry for the imperative style, too lazy
+        for result in results {
+            for (structure_id, accessories) in result {
+                structures
+                    .entry(structure_id)
+                    .or_insert(vec![])
+                    .extend(accessories);
+            }
+        }
+        structures
+    }
+
+    async fn is_connected(&self, accessory_id: accessory::ID) -> bool {
+        let slaves = self.slaves().await;
+        let futures = slaves.iter().map(|slave| slave.is_connected(accessory_id));
+        let results = join_all(futures).await;
+        results.iter().any(|result| *result)
+    }
+}

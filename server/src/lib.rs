@@ -6,6 +6,8 @@ pub mod extractors;
 pub mod mailer;
 pub mod providers;
 
+pub(crate) mod utils;
+
 use acu::MasterExt;
 use anyhow::Context;
 use arc_swap::ArcSwap;
