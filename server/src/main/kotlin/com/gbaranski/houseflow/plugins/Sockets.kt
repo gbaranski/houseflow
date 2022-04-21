@@ -1,5 +1,6 @@
 package com.gbaranski.houseflow.plugins
 
+import com.gbaranski.houseflow.HubFrame
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
@@ -25,6 +26,7 @@ fun Application.configureSockets() {
     routing {
         val connections = Collections.synchronizedSet<Connection?>(LinkedHashSet())
         webSocket("/") { // websocketSession
+            val frame = receiveDeserialized<HubFrame>()
             val thisConnection = Connection(this)
             connections += thisConnection
             send("You've logged in as [${thisConnection.name}]")

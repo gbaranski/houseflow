@@ -10,6 +10,7 @@ internal class ServerFrameTest {
     fun testDeserializeReadCharacteristic() {
         val json = """
         {
+            "id": 1,
             "type": "read-characteristic",
             "accessory-id": "00000000-0000-0000-0000-000000000000",
             "service": {
@@ -20,8 +21,8 @@ internal class ServerFrameTest {
             }
         }
         """
-        val expected = ServerFrame(
-                type = ServerFrameType.ReadCharacteristic,
+        val expected = ServerFrame.ReadCharacteristic(
+                id = 1,
                 accessoryID = "00000000-0000-0000-0000-000000000000",
                 service = TemperatureSensor,
                 characteristic = CurrentTemperature(null),
@@ -38,6 +39,7 @@ internal class ServerFrameTest {
     fun testDeserializeWriteCharacteristic() {
         val json = """
         {
+            "id": 1,
             "type": "write-characteristic",
             "accessory-id": "00000000-0000-0000-0000-000000000000",
             "service": {
@@ -49,8 +51,8 @@ internal class ServerFrameTest {
             }
         }
         """
-        val expected = ServerFrame(
-            type = ServerFrameType.WriteCharacteristic,
+        val expected = ServerFrame.WriteCharacteristic(
+            id = 1,
             accessoryID = "00000000-0000-0000-0000-000000000000",
             service = TemperatureSensor,
             characteristic = CurrentTemperature(22.5),
