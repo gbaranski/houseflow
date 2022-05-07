@@ -13,7 +13,7 @@ typealias AccessoryID = String
 @Serializable
 enum class AccessoryType {
     @SerialName("mijia/hygro-thermometer")
-    MijiaHygrothermometer,
+    MijiaHygroThermometer,
 
     @SerialName("houseflow/gate")
     HouseflowGate,
@@ -25,33 +25,33 @@ enum class AccessoryType {
 
 @Serializable
 data class Accessory(
-    val id: AccessoryID,
     val name: String,
     @SerialName("room-name")
     val roomName: String,
     val type: AccessoryType,
 )
 
-@Serializable
-@JsonClassDiscriminator("name")
-sealed class Service
+enum class ServiceName(val codename: String) {
+    TemperatureSensor("sensor-temperature"),
+    HumiditySensor("sensor-humidity"),
+}
+
+enum class CharacteristicName(val codename: String) {
+    CurrentTemperature("temperature-current"),
+    CurrentHumidity("humidity-current"),
+}
 
 @Serializable
-@SerialName("temperature-sensor")
-object TemperatureSensor: Service()
+sealed class Characteristic() {
+    abstract val name: CharacteristicName
+}
 
 @Serializable
-@SerialName("humidity-sensor")
-object HumiditySensor: Service()
+data class CurrentTemperature(val temperature: Double): Characteristic() {
+    override val name: CharacteristicName = CharacteristicName.CurrentTemperature
+}
 
 @Serializable
-@JsonClassDiscriminator("name")
-sealed class Characteristic
-
-@Serializable
-@SerialName("current-temperature")
-data class CurrentTemperature(val temperature: Double? = null): Characteristic()
-
-@Serializable
-@SerialName("current-humidity")
-data class CurrentHumidity(val humidity: Double? = null): Characteristic()
+data class CurrentHumidity(val humidity: Double): Characteristic() {
+    override val name: CharacteristicName = CharacteristicName.CurrentHumidity
+}

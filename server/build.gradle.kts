@@ -1,6 +1,7 @@
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
+val tcnative_version: String by project
 
 plugins {
     application
@@ -22,16 +23,33 @@ repositories {
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
 }
 
+val osName = System.getProperty("os.name").toLowerCase()
+val tcnative_classifier = when {
+    osName.contains("win") -> "windows-x86_64"
+    osName.contains("linux") -> "linux-x86_64"
+    osName.contains("mac") -> "osx-x86_64"
+    else -> null
+}
+
 dependencies {
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
+    implementation("io.ktor:ktor-server-auth:$ktor_version")
     implementation("io.ktor:ktor-server-auth-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktor_version")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
+    implementation("io.ktor:ktor-network-tls-certificates:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+
+    implementation("io.netty:netty-tcnative:$tcnative_version")
+    if (tcnative_classifier != null) {
+        implementation("io.netty:netty-tcnative-boringssl-static:$tcnative_version:$tcnative_classifier")
+    } else {
+        implementation("io.netty:netty-tcnative-boringssl-static:$tcnative_version")
+    }
+
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
