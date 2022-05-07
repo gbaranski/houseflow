@@ -12,9 +12,6 @@ pub mod client;
 #[cfg(any(test, feature = "hub"))]
 pub mod hub;
 
-#[cfg(any(test, feature = "server"))]
-pub mod server;
-
 #[cfg(any(test, feature = "accessory"))]
 pub mod accessory;
 
