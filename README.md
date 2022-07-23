@@ -2,12 +2,12 @@
 
 [![lines-of-code](https://img.shields.io/tokei/lines/github/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
 
-Houseflow is open source home automation system, it lets you configure various accessories like lights, switches, gates, sensors, and much more.
+Houseflow is an open-source home automation system supporting various accessories like lights, switches, gates, sensors, and much more.
 
 # Features
 
 - [x] Fast, written in high-performance languague, Rust.
-- [x] Fully configurable and fully reproducable from config files.
+- [x] Configurable and reproducable using config files.
 
 ## Supported accessories
 
