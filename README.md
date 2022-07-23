@@ -133,7 +133,7 @@ GET /characteristic/:accessory-id/:service-name/:characteristic-name
 
 #### Response
 
-```json
+```jsonc
 {
     "name": :characteristc_name
     // ... values of the characteristic
@@ -153,7 +153,7 @@ characteristic-name: current-temperature
 GET /characteristic/00000000-0000-0000-0000-000000000000/temperature-sensor/current-temperature
 ```
 And if the accessory is connected, and implements the service with the characteristic, it should return
-```json
+```jsonc
 {
     "name": "current-temperature",
     "temperature": 21.89 // or whatever the current temperature is
@@ -163,7 +163,7 @@ And if the accessory is connected, and implements the service with the character
 ### Write characteristic
 
 #### Request
-```
+```jsonc
 POST /characteristic/:accessory-id/:service-name
 Content-Type: application/json
 {
@@ -186,7 +186,7 @@ characteristic.name: target-door-state
 characteristic.open-percent: 80
 ```
 
-```http
+```jsonc
 POST /characteristic/00000000-0000-0000-0000-000000000000/garage-door-opener
 {
     "name": "target-door-state",
