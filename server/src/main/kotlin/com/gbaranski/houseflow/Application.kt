@@ -13,32 +13,18 @@ import java.io.File
 
 
 fun main() {
-    val keyStoreFile = File("build/keystore.jks")
-    val keystore = generateCertificate(
-        file = keyStoreFile,
-        keyAlias = "sampleAlias",
-        keyPassword = "foobar",
-        jksPassword = "foobar"
-    )
+    val credentials = credentialsFromEnv()
     val environment = applicationEngineEnvironment {
         log = LoggerFactory.getLogger("ktor.application")
         connector {
             port = 8080
         }
-        sslConnector(
-            keyStore = keystore,
-            keyAlias = "sampleAlias",
-            keyStorePassword = { "foobar".toCharArray() },
-            privateKeyPassword = { "foobar".toCharArray() }) {
-            port = 8443
-            keyStorePath = keyStoreFile
-        }
-        module(Application::module)
+        module { module(credentials) }
     }
     embeddedServer(Netty, environment).start(wait = true)
 }
 
-fun Application.module() {
-    configureRouting()
+fun Application.module(credentials: Credentials) {
+    configureRouting(credentials)
     configureSerialization()
 }
