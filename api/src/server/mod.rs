@@ -4,6 +4,9 @@ pub mod auth;
 #[cfg(feature = "server-meta")]
 pub mod meta;
 
+#[cfg(feature = "server-lighthouse")]
+pub mod lighthouse;
+
 use crate::Error;
 use houseflow_config::client::Config;
 use houseflow_types::token::Token;

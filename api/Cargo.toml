@@ -31,11 +31,20 @@ anyhow = "1.0.51"
 futures = "0.3.18"
 async-trait = "0.1.52"
 headers = "0.3.7"
+h2 = { version = "0.3.13", optional = true }
 
 [features]
 server = []
 server-auth = ["server", "houseflow-types/auth"]
 server-meta = ["server", "houseflow-types/meta"]
+server-lighthouse = ["server", "houseflow-types/lighthouse", "h2", "http"]
 
 hub = []
 hub-hive = ["hub", "houseflow-config/accessory", "ezsockets", "http", "base64", "houseflow-accessory-hal"]
+
+[dev-dependencies]
+tokio = { version = "1.6.0", features = ["full"] }
+
+[[example]]
+name = "lighthouse"
+required-features = ["server-lighthouse"]

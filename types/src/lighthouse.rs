@@ -9,54 +9,61 @@ use serde::Serialize;
 pub type FrameID = u16;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Service {
+    pub name: ServiceName
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct EmptyCharacteristic {
+    pub name: CharacteristicName
+}
+
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum ServerFrame {
-    ReadCharacteristic(ReadCharacteristic),
-    WriteCharacteristic(WriteCharacteristic),
+    ReadCharacteristic{
+        id: FrameID,
+        #[serde(rename = "accessory-id")]
+        accessory_id: accessory::ID,
+        service: Service,
+        characteristic: EmptyCharacteristic
+    },
+    WriteCharacteristic{
+        id: FrameID,
+        #[serde(rename = "accessory-id")]
+        accessory_id: accessory::ID,
+        service: Service,
+        characteristic: Characteristic,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum HubFrame {
-    AccessoryConnected(Accessory),
-    AccessoryDisconnected(accessory::ID),
-    UpdateCharacteristic(UpdateCharacteristic),
-    ReadCharacteristicResult(ReadCharacteristicResult),
-    WriteCharacteristicResult(WriteCharacteristicResult),
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UpdateCharacteristic {
-    pub accessory_id: accessory::ID,
-    pub service_name: ServiceName,
-    pub characteristic: Characteristic,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ReadCharacteristic {
-    pub id: FrameID,
-    pub accessory_id: accessory::ID,
-    pub service_name: ServiceName,
-    pub characteristic_name: CharacteristicName,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct WriteCharacteristic {
-    pub id: FrameID,
-    pub accessory_id: accessory::ID,
-    pub service_name: ServiceName,
-    pub characteristic: Characteristic,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ReadCharacteristicResult {
-    pub id: FrameID,
-    pub result: accessory::Result<Characteristic>,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct WriteCharacteristicResult {
-    pub id: FrameID,
-    pub result: accessory::Result<()>,
+    AccessoryConnected{
+        accessory: Accessory
+    },
+    AccessoryDisconnected{
+        #[serde(rename = "accessory-id")]
+        accessory_id: accessory::ID
+    },
+    UpdateCharacteristic{
+        #[serde(rename = "accessory-id")]
+        accessory_id: accessory::ID,
+        #[serde(rename = "service-name")]
+        service_name: ServiceName,
+        characteristic: Characteristic,
+    },
+    ReadCharacteristicResult{
+        id: FrameID,
+        result: accessory::Result<Characteristic>,
+    },
+    WriteCharacteristicResult{
+        id: FrameID,
+        result: accessory::Result<()>,
+    },
 }

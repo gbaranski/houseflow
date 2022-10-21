@@ -35,7 +35,6 @@ dynamic = ["arc-swap"]
 client = []
 hub = []
 accessory = []
-server = ["lettre"]
 fs = []
 
 [dev-dependencies]
