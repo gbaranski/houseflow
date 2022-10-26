@@ -12,7 +12,7 @@ Houseflow is an open-source home automation system supporting various accessorie
 ## Supported accessories
 
 - [X] [Xiaomi Mijia HygroThermometer](https://www.xiaomiproducts.nl/en/xiaomi-mijia-bluetooth-thermometer-and-hygrometer.html)
-- [ ] ESP8266/ESP32 Support(issue [#161](https://github.com/gbaranski/houseflow/issues/161))
+- [ ] ESP8266/ESP32 Support (issue [#161](https://github.com/gbaranski/houseflow/issues/161))
 
 ## Supported clients
 
