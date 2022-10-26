@@ -1,20 +1,18 @@
-# Houseflow
+# Preamble
 
-[![lines-of-code](https://img.shields.io/tokei/lines/github/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
+**Houseflow** is an open-source home automation system supporting various accessories like lights, switches, gates, sensors, and much more.
 
-Houseflow is an open-source home automation system supporting various accessories like lights, switches, gates, sensors, and much more.
-
-# Features
+## Features
 
 - [x] Fast, written in high-performance languague, Rust.
 - [x] Configurable and reproducable using config files.
 
-## Supported accessories
+#### Supported accessories
 
 - [X] [Xiaomi Mijia HygroThermometer](https://www.xiaomiproducts.nl/en/xiaomi-mijia-bluetooth-thermometer-and-hygrometer.html)
 - [ ] ESP8266/ESP32 Support(issue [#161](https://github.com/gbaranski/houseflow/issues/161))
 
-## Supported clients
+#### Supported clients
 
 - [X] iOS Apple Home application. See [HomeKit Accessory Protocol](#homekit-accessory-protocol)
 - [ ] Google Home.
@@ -124,7 +122,7 @@ Example configuration:
 
 ## Meta HTTP API Scheme
 
-### Read characteristic
+### Read the characteristics
 
 #### Request
 ```
@@ -174,7 +172,7 @@ Content-Type: application/json
 
 #### Response
 
-If status is OK, then it returns empty body, otherwise it returns error message in JSON format.
+If the status is OK, then it returns empty body, otherwise it returns error message in JSON format.
 
 #### Example
 
@@ -197,5 +195,7 @@ POST /characteristic/00000000-0000-0000-0000-000000000000/garage-door-opener
 # Contributing
 Contributors are very welcome! **No contribution is too small and all contributions are valued.**
 
-# Getting help
-Get in touch with me on Discord gbaranski#5119, or via email me@gbaranski.com.
+# Get in touch
+Discord [gbaranski#5119](https://discord.com/users/398874695069335571) or via email me@gbaranski.com.
+
+[![lines-of-code](https://img.shields.io/tokei/lines/github/gbaranski/houseflow)](https://github.com/gbaranski/houseflow)
