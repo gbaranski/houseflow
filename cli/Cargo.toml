@@ -39,6 +39,6 @@ tracing = "0.1.26"
 tracing-subscriber = "0.3.8"
 Inflector = "0.11.4"
 async-trait = "0.1.52"
-tokio = { version = "1.18.4", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.18.5", features = ["rt-multi-thread", "macros"] }
 lazy_static = "1.4.0"
 lettre = { version = "0.10.0-rc.4", features = ["serde"] }
