@@ -23,7 +23,7 @@ rand = "0.8.5"
 serde = { version = "1.0.130", features = ["derive"] }
 serde_json = "1.0.67"
 strum = { version = "0.24.0", features = ["derive"] }
-tokio = { version = "1.18.4", features = ["macros", "rt-multi-thread", "sync"] }
+tokio = { version = "1.18.5", features = ["macros", "rt-multi-thread", "sync"] }
 tracing = "0.1.26"
 uuid = { version = "0.8.2", features = ["v4"] }
 xdg = "2.4.0"
